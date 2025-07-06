@@ -44,10 +44,40 @@ let ratingMovieId = null;
 
 // Инициализация
 document.addEventListener("DOMContentLoaded", function () {
-  renderMovies();
+  loadMovies();
   renderWatchlist();
   setupRatingStars();
 });
+
+async function loadMovies() {
+  if (typeof supabase === "undefined") {
+    renderMovies();
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("movies")
+      .select("*")
+      .order("date", { ascending: false });
+    if (error) throw error;
+
+    movies = data.map((row) => ({
+      id: row.id,
+      title: row.title,
+      year: row.year,
+      rating: row.rating,
+      poster: row.poster,
+      dateAdded: row.date,
+      genre: row.genre,
+      description: row.description,
+    }));
+    renderMovies();
+  } catch (err) {
+    console.error("Failed to load movies:", err);
+    renderMovies();
+  }
+}
 
 // Отображение фильмов
 function renderMovies() {
