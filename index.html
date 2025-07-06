@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pupsik TV</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=carter-one:400" rel="stylesheet" />
+    <link rel="icon" href="images/Pupsik_TV_Icon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <img src="images/Pupsik_TV_Header_2.png" alt="PupsikTV Header">
+            <h1>PupsikTV</h1>
+        </header>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="openAddMovieModal()">
+                        ➕ Добавить фильм
+                    </button>
+                </div>
+
+                <div class="search-sort">
+                    <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..."
+                        onkeyup="searchMovies(this.value)">
+                    <select onchange="sortMovies(this.value)">
+                        <option value="date">Сортировка: По дате</option>
+                        <option value="title">По названию</option>
+                        <option value="year">По году</option>
+                        <option value="rating">По оценке</option>
+                    </select>
+                </div>
+
+                <div class="movies-grid" id="moviesGrid">
+                    <!-- Фильмы будут добавлены здесь -->
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="watchlist-section">
+                    <h3>Заказанные фильмы</h3>
+                    <div id="watchlistContainer">
+                        <!-- Список заказанных -->
+                    </div>
+                    <button class="btn btn-secondary" onclick="openAddToWatchlistModal()"
+                        style="width: 100%; margin-top: 15px;">
+                        ➕ Добавить в список
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления фильма -->
+    <div id="addMovieModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addMovieModal')">&times;</span>
+            <h2>Добавить фильм</h2>
+
+            <div class="mode-toggle">
+                <div class="mode-btn active" onclick="switchMode('auto')">Автоматический</div>
+                <div class="mode-btn" onclick="switchMode('manual')">Ручной</div>
+            </div>
+
+            <form id="addMovieForm">
+                <div id="autoMode">
+                    <div class="form-group">
+                        <label for="autoTitle">Название фильма:</label>
+                        <input type="text" id="autoTitle" placeholder="Введите название для поиска">
+                    </div>
+                    <button type="search" class="btn search">Найти</button>
+                </div>
+
+                <div id="manualMode" style="display: none;">
+                    <div class="form-group">
+                        <label for="manualTitle">Название:</label>
+                        <input type="text" id="manualTitle" placeholder="Название фильма">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualTitle">Оригинальное название:</label>
+                        <input type="text" id="manualTitle" placeholder="Оригинальное название фильма">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualYear">Год:</label>
+                        <input type="number" id="manualYear" placeholder="2023">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualPoster">Постер:</label>
+                        <input type="url" id="manualPoster" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualGenre">Жанр:</label>
+                        <input type="text" id="manualGenre" placeholder="Драма, Комедия">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Оценка:</label>
+                    <div class="rating-stars" id="ratingStars">
+                        <span class="rating-star" data-rating="1">★</span>
+                        <span class="rating-star" data-rating="2">★</span>
+                        <span class="rating-star" data-rating="3">★</span>
+                        <span class="rating-star" data-rating="4">★</span>
+                        <span class="rating-star" data-rating="5">★</span>
+                        <span class="rating-star" data-rating="6">★</span>
+                        <span class="rating-star" data-rating="7">★</span>
+                        <span class="rating-star" data-rating="8">★</span>
+                        <span class="rating-star" data-rating="9">★</span>
+                        <span class="rating-star" data-rating="10">★</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Добавить фильм</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления в watchlist -->
+    <div id="addWatchlistModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addWatchlistModal')">&times;</span>
+            <h2>Добавить в список к просмотру</h2>
+            <form id="addWatchlistForm">
+                <div class="form-group">
+                    <label for="watchlistTitle">Название фильма:</label>
+                    <input type="text" id="watchlistTitle" placeholder="Название фильма" required>
+                </div>
+                <div class="form-group">
+                    <label for="watchlistTitle">Заказ от...</label>
+                    <input type="text" id="watchlistTitle" placeholder="Кто заказал" required>
+                </div>
+                <button type="search" class="btn search">Найти</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Добавить в список</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно оценки -->
+    <div id="rateMovieModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('rateMovieModal')">&times;</span>
+            <h2>Оценить фильм</h2>
+            <p id="rateMovieTitle"></p>
+            <div class="form-group">
+                <label>Ваша оценка:</label>
+                <div class="rating-stars" id="rateMovieStars">
+                    <span class="rating-star" data-rating="1">★</span>
+                    <span class="rating-star" data-rating="2">★</span>
+                    <span class="rating-star" data-rating="3">★</span>
+                    <span class="rating-star" data-rating="4">★</span>
+                    <span class="rating-star" data-rating="5">★</span>
+                    <span class="rating-star" data-rating="6">★</span>
+                    <span class="rating-star" data-rating="7">★</span>
+                    <span class="rating-star" data-rating="8">★</span>
+                    <span class="rating-star" data-rating="9">★</span>
+                    <span class="rating-star" data-rating="10">★</span>
+                </div>
+            </div>
+            <button onclick="submitRating()" class="btn btn-primary" style="width: 100%;">Оценить и переместить</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
