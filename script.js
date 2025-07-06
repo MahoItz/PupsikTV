@@ -1,3 +1,8 @@
+const SUPABASE_KEY = window.SUPABASE_API_KEY || "";
+if (!SUPABASE_KEY) {
+  console.error("Supabase API key is missing. Set window.SUPABASE_API_KEY before loading script.js.");
+}
+
 // Данные фильмов (позже будет заменено на Supabase)
 let movies = [
   {
