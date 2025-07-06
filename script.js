@@ -1,24 +1,10 @@
-// Данные фильмов (позже будет заменено на Supabase)
-let movies = [
-  {
-    id: 1,
-    title: "Интерстеллар",
-    year: 2014,
-    rating: 5,
-    poster: "https://m.media-amazon.com/images/I/A1JVqNMI7UL._SL1500_.jpg",
-    dateAdded: "2024-01-15",
-    genre: "Научная фантастика",
-  },
-  {
-    id: 2,
-    title: "Начало",
-    year: 2010,
-    rating: 4,
-    poster: "https://m.media-amazon.com/images/I/81p+xe8cbnL._SY445_.jpg",
-    dateAdded: "2024-01-10",
-    genre: "Триллер",
-  },
-];
+// Подключение к Supabase
+const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
+const SUPABASE_KEY = window.SUPABASE_API_KEY || '';
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Данные фильмов загружаются из базы
+let movies = [];
 
 let watchlist = [
   {
@@ -42,8 +28,28 @@ let currentRating = 0;
 let editingMovieId = null;
 let ratingMovieId = null;
 
+// Загрузка фильмов из Supabase
+async function loadMovies() {
+  const { data, error } = await supabase.from('movies').select('*');
+  if (error) {
+    console.error('Ошибка загрузки фильмов:', error);
+    return;
+  }
+  movies = data.map((row) => ({
+    id: row.id,
+    title: row.title || row.origin_title,
+    year: row.year,
+    rating: row.rating_numeric || 0,
+    poster: row.poster,
+    dateAdded: row.data,
+    genre: row.genres,
+    description: '',
+  }));
+}
+
 // Инициализация
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
+  await loadMovies();
   renderMovies();
   renderWatchlist();
   setupRatingStars();
