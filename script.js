@@ -1,7 +1,10 @@
 // Подключение к Supabase
 const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
 const SUPABASE_KEY = window.SUPABASE_API_KEY || '';
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 // Данные фильмов загружаются из базы
 let movies = [];
@@ -30,7 +33,7 @@ let ratingMovieId = null;
 
 // Загрузка фильмов из Supabase
 async function loadMovies() {
-  const { data, error } = await supabase.from('movies').select('*');
+  const { data, error } = await supabaseClient.from('movies').select('*');
   if (error) {
     console.error('Ошибка загрузки фильмов:', error);
     return;
