@@ -35,7 +35,7 @@ async function loadMoviesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, origin_title, genres, poster, year, rating_numeric, date, order_by, order_type"
+        "id, title, original_title, genres, poster, year, rating_numeric, date, order_by, order_type"
       )
       .order("date", { ascending: false });
 
