@@ -1,24 +1,11 @@
-// Данные фильмов (позже будет заменено на Supabase)
-let movies = [
-  {
-    id: 1,
-    title: "Интерстеллар",
-    year: 2014,
-    rating: 5,
-    poster: "https://m.media-amazon.com/images/I/A1JVqNMI7UL._SL1500_.jpg",
-    dateAdded: "2024-01-15",
-    genre: "Научная фантастика",
-  },
-  {
-    id: 2,
-    title: "Начало",
-    year: 2010,
-    rating: 4,
-    poster: "https://m.media-amazon.com/images/I/81p+xe8cbnL._SY445_.jpg",
-    dateAdded: "2024-01-10",
-    genre: "Триллер",
-  },
-];
+// Supabase
+const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
+// Значение ключа берётся из переменной окружения на стороне Vercel
+const SUPABASE_KEY = window.SUPABASE_API_KEY || "";
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Массив фильмов будет заполняться данными из базы
+let movies = [];
 
 let watchlist = [
   {
@@ -42,11 +29,50 @@ let currentRating = 0;
 let editingMovieId = null;
 let ratingMovieId = null;
 
+// Загрузка фильмов из Supabase
+async function loadMoviesFromSupabase() {
+  try {
+    const { data, error } = await supabase
+      .from("movies")
+      .select(
+        "id, title, origin_title, genres, poster, year, rating_numeric, date, order_by, order_type"
+      )
+      .order("date", { ascending: false });
+
+    if (error) throw error;
+
+    movies = data.map((item) => ({
+      id: item.id,
+      title: item.title,
+      originTitle: item.origin_title,
+      genre: item.genres,
+      poster: item.poster,
+      year: item.year,
+      rating: item.rating_numeric,
+      dateAdded: item.date,
+      orderBy: item.order_by,
+      orderType: item.order_type,
+    }));
+
+    localStorage.setItem("moviesCache", JSON.stringify(movies));
+    renderMovies();
+  } catch (err) {
+    console.error("Error loading movies from Supabase", err);
+  }
+}
+
 // Инициализация
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
+  const cached = localStorage.getItem("moviesCache");
+  if (cached) {
+    movies = JSON.parse(cached);
+  }
+
   renderMovies();
   renderWatchlist();
   setupRatingStars();
+
+  await loadMoviesFromSupabase();
 });
 
 // Отображение фильмов
