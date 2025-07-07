@@ -44,7 +44,7 @@ async function loadMoviesFromSupabase() {
     movies = data.map((item) => ({
       id: item.id,
       title: item.title,
-      originTitle: item.origin_title,
+      originalTitle: item.original_title,
       genre: item.genres,
       poster: item.poster,
       year: item.year,
