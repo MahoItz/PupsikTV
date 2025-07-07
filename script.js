@@ -1,7 +1,7 @@
 // Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 // Значение ключа берётся из переменной окружения на стороне Vercel
-const SUPABASE_KEY = window.SUPABASE_API_KEY || "";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNod2VrdXJtenl6aXZ0d29yanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzODQ5NjEsImV4cCI6MjA2MTk2MDk2MX0.wXm1enXaPxXk1r6gjtkE2yizxZayLJh4hXmMV54Up9k";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Массив фильмов будет заполняться данными из базы
