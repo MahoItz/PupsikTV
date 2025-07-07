@@ -2,7 +2,7 @@
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 // Значение ключа берётся из переменной окружения на стороне Vercel
 const SUPABASE_KEY = window.SUPABASE_API_KEY || "";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Массив фильмов будет заполняться данными из базы
 let movies = [];
@@ -32,7 +32,7 @@ let ratingMovieId = null;
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("movies")
       .select(
         "id, title, origin_title, genres, poster, year, rating_numeric, date, order_by, order_type"
