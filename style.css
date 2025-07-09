@@ -20,6 +20,8 @@
     --border-radius-small: 8px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --glow-animation: glow 2s ease-in-out infinite alternate;
+    --rating-low: #f44336;
+    --rating-high: #4caf50;
 }
 
 /* Сброс стилей */
@@ -389,6 +391,14 @@ select option {
     transition: var(--transition);
     position: relative;
     animation: slideInGlow 0.6s ease-out forwards;
+}
+
+.movie-card.rating-low {
+    border-color: var(--rating-low);
+}
+
+.movie-card.rating-high {
+    border-color: var(--rating-high);
 }
 
 .movie-card::before {

@@ -153,7 +153,11 @@ function renderPagination() {
 // Создание карточки фильма
 function createMovieCard(movie) {
   const div = document.createElement("div");
-  div.className = "movie-card";
+  let cardClass = "movie-card";
+  if (movie.rating === 0) cardClass += " rating-low";
+  if (movie.rating === 11) cardClass += " rating-high";
+  const starsCount = Math.max(0, Math.min(movie.rating, 10));
+  div.className = cardClass;
   div.innerHTML = `
                 <img src="${movie.poster}" alt="${
     movie.title
@@ -164,8 +168,8 @@ function createMovieCard(movie) {
                     <div class="movie-year">${movie.year}</div>
                     <div class="movie-rating">
                         <span class="stars">${"★".repeat(
-                          movie.rating
-                        )}${"☆".repeat(10 - movie.rating)}</span>
+                          starsCount
+                        )}${"☆".repeat(10 - starsCount)}</span>
                         <span>${movie.rating}/10</span>
                     </div>
                     <div class="movie-date">Добавлен: ${formatDate(
