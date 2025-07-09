@@ -5,7 +5,10 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Массив фильмов будет заполняться данными из базы
+let allMovies = [];
 let movies = [];
+let currentSearchQuery = "";
+let currentSort = "date";
 
 let watchlist = [
   {
@@ -35,23 +38,18 @@ const moviesPerPage = 10;
 let totalMovies = 0;
 
 // Загрузка фильмов из Supabase
-async function loadMoviesFromSupabase(page = 1) {
+async function loadMoviesFromSupabase() {
   try {
-    currentPage = page;
-    const from = (page - 1) * moviesPerPage;
-    const to = from + moviesPerPage - 1;
-    const { data, error, count } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, date, order_by, order_type",
-        { count: "exact" }
+        "id, title, original_title, genres, poster, year, rating_numeric, date, order_by, order_type"
       )
-      .order("date", { ascending: false })
-      .range(from, to);
+      .order("date", { ascending: false });
 
     if (error) throw error;
 
-    movies = data.map((item) => ({
+    allMovies = data.map((item) => ({
       id: item.id,
       title: item.title,
       originalTitle: item.original_title,
@@ -63,11 +61,10 @@ async function loadMoviesFromSupabase(page = 1) {
       orderBy: item.order_by,
       orderType: item.order_type,
     }));
-    totalMovies = count || 0;
+    totalMovies = allMovies.length;
 
-    localStorage.setItem("moviesCache", JSON.stringify(movies));
+    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     renderMovies();
-    renderPagination();
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
   }
@@ -77,20 +74,57 @@ async function loadMoviesFromSupabase(page = 1) {
 document.addEventListener("DOMContentLoaded", async function () {
   const cached = localStorage.getItem("moviesCache");
   if (cached) {
-    movies = JSON.parse(cached);
+    allMovies = JSON.parse(cached);
+    totalMovies = allMovies.length;
   }
 
   renderMovies();
   renderWatchlist();
   setupRatingStars();
 
-  await loadMoviesFromSupabase(currentPage);
+  await loadMoviesFromSupabase();
 });
 
 // Отображение фильмов
+function getFilteredSortedMovies() {
+  let result = [...allMovies];
+
+  if (currentSearchQuery) {
+    const q = currentSearchQuery.toLowerCase();
+    result = result.filter(
+      (movie) =>
+        movie.title.toLowerCase().includes(q) ||
+        movie.year.toString().includes(q)
+    );
+  }
+
+  switch (currentSort) {
+    case "title":
+      result.sort((a, b) => a.title.localeCompare(b.title));
+      break;
+    case "year":
+      result.sort((a, b) => b.year - a.year);
+      break;
+    case "rating":
+      result.sort((a, b) => b.rating - a.rating);
+      break;
+    case "date":
+    default:
+      result.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+      break;
+  }
+
+  return result;
+}
+
 function renderMovies() {
   const grid = document.getElementById("moviesGrid");
   grid.innerHTML = "";
+
+  const filtered = getFilteredSortedMovies();
+  totalMovies = filtered.length;
+  const start = (currentPage - 1) * moviesPerPage;
+  movies = filtered.slice(start, start + moviesPerPage);
 
   movies.forEach((movie) => {
     const movieCard = createMovieCard(movie);
@@ -114,7 +148,10 @@ function renderPagination() {
     btn.className = opts.class || "page-btn";
     btn.disabled = opts.disabled || false;
     if (opts.active) btn.classList.add("active");
-    if (page) btn.onclick = () => loadMoviesFromSupabase(page);
+    if (page) btn.onclick = () => {
+      currentPage = page;
+      renderMovies();
+    };
     container.appendChild(btn);
   };
 
@@ -204,43 +241,15 @@ function renderWatchlist() {
 
 // Поиск фильмов
 function searchMovies(query) {
-  const grid = document.getElementById("moviesGrid");
-  const filteredMovies = movies.filter(
-    (movie) =>
-      movie.title.toLowerCase().includes(query.toLowerCase()) ||
-      movie.year.toString().includes(query)
-  );
-
-  grid.innerHTML = "";
-  filteredMovies.forEach((movie) => {
-    const movieCard = createMovieCard(movie);
-    grid.appendChild(movieCard);
-  });
+  currentSearchQuery = query;
+  currentPage = 1;
+  renderMovies();
 }
 
 // Сортировка фильмов
 function sortMovies(criteria) {
-  let sortedMovies = [...movies];
-
-  switch (criteria) {
-    case "title":
-      sortedMovies.sort((a, b) => a.title.localeCompare(b.title));
-      break;
-    case "year":
-      sortedMovies.sort((a, b) => b.year - a.year);
-      break;
-    case "rating":
-      sortedMovies.sort((a, b) => b.rating - a.rating);
-      break;
-    case "date":
-    default:
-      sortedMovies.sort(
-        (a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)
-      );
-      break;
-  }
-
-  movies = sortedMovies;
+  currentSort = criteria;
+  currentPage = 1;
   renderMovies();
 }
 
@@ -263,7 +272,7 @@ function openRateModal(id, title) {
 
 function openEditModal(id) {
   editingMovieId = id;
-  const movie = movies.find((m) => m.id === id);
+  const movie = allMovies.find((m) => m.id === id);
 
   document.getElementById("editTitle").value = movie.title;
   document.getElementById("editYear").value = movie.year;
@@ -403,7 +412,9 @@ document
       };
     }
 
-    movies.unshift(movieData);
+    allMovies.unshift(movieData);
+    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+    currentPage = 1;
     renderMovies();
     closeModal("addMovieModal");
   });
@@ -447,7 +458,9 @@ function submitRating() {
       genre: "",
       description: "",
     };
-    movies.unshift(watchedMovie);
+    allMovies.unshift(watchedMovie);
+    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+    currentPage = 1;
     watchlist.splice(itemIndex, 1);
     renderMovies();
     renderWatchlist();
@@ -461,7 +474,7 @@ document
   .addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const movie = movies.find((m) => m.id === editingMovieId);
+    const movie = allMovies.find((m) => m.id === editingMovieId);
     if (movie) {
       movie.title = document.getElementById("editTitle").value;
       movie.year = document.getElementById("editYear").value;
@@ -470,6 +483,7 @@ document
       movie.dateAdded =
         movie.dateAdded || new Date().toISOString().split("T")[0];
     }
+    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     renderMovies();
     closeModal("editMovieModal");
   });
