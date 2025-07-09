@@ -270,6 +270,18 @@ header img {
     box-shadow: 0 0 30px rgba(255, 235, 59, 0.6), 0 8px 25px rgba(255, 235, 59, 0.3);
 }
 
+.btn-delete {
+    background: linear-gradient(135deg, var(--rating-low), #e53935);
+    color: white;
+    box-shadow: 0 0 20px rgba(244, 67, 54, 0.4);
+    border-color: var(--rating-low);
+}
+
+.btn-delete:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 30px rgba(244, 67, 54, 0.6), 0 8px 25px rgba(244, 67, 54, 0.3);
+}
+
 .btn-rate {
     background: linear-gradient(135deg, var(--neon-pink), #e91e63);
     color: white;

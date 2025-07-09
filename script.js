@@ -259,6 +259,9 @@ function createMovieCard(movie) {
                         <button class="btn btn-edit btn-icon" onclick="openEditModal(${
                           movie.id
                         })">✏️</button>
+                        <button class="btn btn-delete btn-icon" onclick="deleteMovie(${
+                          movie.id
+                        })">🗑️</button>
                     </div>
                 </div>
             `;
@@ -339,6 +342,22 @@ function openEditModal(id) {
   setupRatingStars("editRatingStars");
 
   document.getElementById("editMovieModal").style.display = "block";
+}
+
+async function deleteMovie(id) {
+  if (!confirm("Удалить фильм?")) return;
+
+  const index = allMovies.findIndex((m) => m.id === id);
+  if (index !== -1) {
+    allMovies.splice(index, 1);
+    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+    renderMovies();
+    try {
+      await supabaseClient.from("movies").delete().eq("id", id);
+    } catch (err) {
+      console.error("Error deleting movie from Supabase", err);
+    }
+  }
 }
 
 function closeModal(modalId) {
