@@ -162,6 +162,10 @@ function renderMovies() {
 
   const filtered = getFilteredSortedMovies();
   totalMovies = filtered.length;
+  const countEl = document.getElementById("moviesCount");
+  if (countEl) {
+    countEl.textContent = totalMovies;
+  }
   const start = (currentPage - 1) * moviesPerPage;
   movies = filtered.slice(start, start + moviesPerPage);
 
