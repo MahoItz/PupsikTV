@@ -108,32 +108,46 @@ function renderPagination() {
   const totalPages = Math.ceil(totalMovies / moviesPerPage);
   if (totalPages <= 1) return;
 
-  const prevBtn = document.createElement("button");
-  prevBtn.textContent = "«";
-  prevBtn.disabled = currentPage === 1;
-  prevBtn.className = "page-btn";
-  prevBtn.onclick = () => {
-    if (currentPage > 1) loadMoviesFromSupabase(currentPage - 1);
-  };
-  container.appendChild(prevBtn);
-
-  for (let i = 1; i <= totalPages; i++) {
+  const addBtn = (label, page, opts = {}) => {
     const btn = document.createElement("button");
-    btn.textContent = i;
-    btn.className = "page-btn";
-    if (i === currentPage) btn.classList.add("active");
-    btn.onclick = () => loadMoviesFromSupabase(i);
+    btn.textContent = label;
+    btn.className = opts.class || "page-btn";
+    btn.disabled = opts.disabled || false;
+    if (opts.active) btn.classList.add("active");
+    if (page) btn.onclick = () => loadMoviesFromSupabase(page);
     container.appendChild(btn);
+  };
+
+  addBtn("«", currentPage - 1, { disabled: currentPage === 1 });
+
+  addBtn("1", 1, { active: currentPage === 1 });
+
+  let start = Math.max(2, currentPage - 2);
+  let end = Math.min(totalPages - 1, currentPage + 2);
+
+  if (start > 2) {
+    const span = document.createElement("span");
+    span.textContent = "...";
+    span.className = "ellipsis";
+    container.appendChild(span);
   }
 
-  const nextBtn = document.createElement("button");
-  nextBtn.textContent = "»";
-  nextBtn.disabled = currentPage === totalPages;
-  nextBtn.className = "page-btn";
-  nextBtn.onclick = () => {
-    if (currentPage < totalPages) loadMoviesFromSupabase(currentPage + 1);
-  };
-  container.appendChild(nextBtn);
+  for (let i = start; i <= end; i++) {
+    addBtn(String(i), i, { active: i === currentPage });
+  }
+
+  if (end < totalPages - 1) {
+    const span = document.createElement("span");
+    span.textContent = "...";
+    span.className = "ellipsis";
+    container.appendChild(span);
+  }
+
+  if (totalPages > 1) {
+    addBtn(String(totalPages), totalPages, { active: currentPage === totalPages });
+  }
+
+  addBtn("»", currentPage + 1, { disabled: currentPage === totalPages });
 }
 
 // Создание карточки фильма

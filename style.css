@@ -375,6 +375,11 @@ select option {
     cursor: default;
 }
 
+.pagination .ellipsis {
+    padding: 6px 12px;
+    color: var(--text-secondary);
+}
+
 /* Карточка фильма */
 .movie-card {
     background: var(--card-bg);
