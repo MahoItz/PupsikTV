@@ -38,6 +38,16 @@ let currentPage = 1;
 const moviesPerPage = 10;
 let totalMovies = 0;
 
+// Utility to convert file to base64 string
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
   try {
@@ -386,7 +396,7 @@ function getCurrentRating(containerId) {
 // Обработка форм
 document
   .getElementById("addMovieForm")
-  .addEventListener("submit", function (e) {
+  .addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const rating = getCurrentRating("ratingStars");
@@ -416,26 +426,49 @@ document
         description: "Описание будет загружено из API", // Будет получено из API
       };
     } else {
+      const fileInput = document.getElementById("manualPoster");
+      let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
+      if (fileInput.files && fileInput.files[0]) {
+        try {
+          poster = await readFileAsDataURL(fileInput.files[0]);
+        } catch (err) {
+          console.error("Error reading file", err);
+        }
+      }
       movieData = {
         id: Date.now(),
         title: document.getElementById("manualTitle").value,
+        originalTitle: document.getElementById("manuaOriginTitle").value,
         year:
           parseInt(document.getElementById("manualYear").value) ||
           new Date().getFullYear(),
         rating: rating,
-        poster:
-          document.getElementById("manualPoster").value ||
-          "https://via.placeholder.com/300x400?text=Нет+постера",
+        poster: poster,
         dateAdded: new Date().toISOString().split("T")[0],
         genre: document.getElementById("manualGenre").value || "Неизвестно",
         description:
-          document.getElementById("manualDescription").value ||
+          document.getElementById("manualDescription")?.value ||
           "Описание отсутствует",
       };
     }
 
     allMovies.unshift(movieData);
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+
+    try {
+      await supabaseClient.from("movies").insert({
+        title: movieData.title,
+        original_title: movieData.originalTitle || "",
+        genres: movieData.genre,
+        poster: movieData.poster,
+        year: movieData.year,
+        rating_numeric: movieData.rating,
+        date: movieData.dateAdded,
+      });
+    } catch (err) {
+      console.error("Error adding movie to Supabase", err);
+    }
+
     currentPage = 1;
     renderMovies();
     closeModal("addMovieModal");
@@ -459,7 +492,7 @@ document
   });
 
 // Оценка фильма из watchlist
-function submitRating() {
+async function submitRating() {
   const rating = getCurrentRating("rateMovieStars");
   if (rating === 0) {
     alert("Пожалуйста, выберите оценку");
@@ -486,6 +519,19 @@ function submitRating() {
     watchlist.splice(itemIndex, 1);
     renderMovies();
     renderWatchlist();
+
+    try {
+      await supabaseClient.from("movies").insert({
+        title: watchedMovie.title,
+        genres: watchedMovie.genre,
+        poster: watchedMovie.poster,
+        year: watchedMovie.year,
+        rating_numeric: watchedMovie.rating,
+        date: watchedMovie.dateAdded,
+      });
+    } catch (err) {
+      console.error("Error adding rated movie to Supabase", err);
+    }
   }
   closeModal("rateMovieModal");
 }
