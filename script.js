@@ -332,6 +332,7 @@ function openEditModal(id) {
 
   // Установка рейтинга
   setRatingStars("editRatingStars", movie.rating);
+  setupRatingStars("editRatingStars");
 
   document.getElementById("editMovieModal").style.display = "block";
 }
