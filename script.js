@@ -9,6 +9,7 @@ let allMovies = [];
 let movies = [];
 let currentSearchQuery = "";
 let currentSort = "date";
+let sortAscending = false;
 
 let watchlist = [
   {
@@ -82,6 +83,11 @@ document.addEventListener("DOMContentLoaded", async function () {
   renderWatchlist();
   setupRatingStars();
 
+  const orderBtn = document.getElementById("sortOrderBtn");
+  if (orderBtn) {
+    orderBtn.textContent = sortAscending ? "⬆️" : "⬇️";
+  }
+
   await loadMoviesFromSupabase();
 });
 
@@ -100,17 +106,23 @@ function getFilteredSortedMovies() {
 
   switch (currentSort) {
     case "title":
-      result.sort((a, b) => a.title.localeCompare(b.title));
+      result.sort((a, b) =>
+        sortAscending
+          ? a.title.localeCompare(b.title)
+          : b.title.localeCompare(a.title)
+      );
       break;
     case "year":
-      result.sort((a, b) => b.year - a.year);
+      result.sort((a, b) => (sortAscending ? a.year - b.year : b.year - a.year));
       break;
     case "rating":
-      result.sort((a, b) => b.rating - a.rating);
+      result.sort((a, b) =>
+        sortAscending ? a.rating - b.rating : b.rating - a.rating
+      );
       break;
     case "date":
     default:
-      result.sort((a, b) => b.id - a.id);
+      result.sort((a, b) => (sortAscending ? a.id - b.id : b.id - a.id));
       break;
   }
 
@@ -249,6 +261,16 @@ function searchMovies(query) {
 // Сортировка фильмов
 function sortMovies(criteria) {
   currentSort = criteria;
+  currentPage = 1;
+  renderMovies();
+}
+
+function toggleSortOrder() {
+  sortAscending = !sortAscending;
+  const btn = document.getElementById("sortOrderBtn");
+  if (btn) {
+    btn.textContent = sortAscending ? "⬆️" : "⬇️";
+  }
   currentPage = 1;
   renderMovies();
 }
