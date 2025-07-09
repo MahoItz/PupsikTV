@@ -122,8 +122,8 @@ function renderPagination() {
 
   addBtn("1", 1, { active: currentPage === 1 });
 
-  let start = Math.max(2, currentPage - 2);
-  let end = Math.min(totalPages - 1, currentPage + 2);
+  let start = Math.max(2, currentPage - 1);
+  let end = Math.min(totalPages - 1, currentPage + 1);
 
   if (start > 2) {
     const span = document.createElement("span");
