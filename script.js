@@ -45,7 +45,7 @@ async function loadMoviesFromSupabase() {
       .select(
         "id, title, original_title, genres, poster, year, rating_numeric, date, order_by, order_type"
       )
-      .order("date", { ascending: false });
+      .order("id", { ascending: false });
 
     if (error) throw error;
 
@@ -110,7 +110,7 @@ function getFilteredSortedMovies() {
       break;
     case "date":
     default:
-      result.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+      result.sort((a, b) => b.id - a.id);
       break;
   }
 
