@@ -29,15 +29,25 @@ let currentRating = 0;
 let editingMovieId = null;
 let ratingMovieId = null;
 
+// Pagination
+let currentPage = 1;
+const moviesPerPage = 10;
+let totalMovies = 0;
+
 // Загрузка фильмов из Supabase
-async function loadMoviesFromSupabase() {
+async function loadMoviesFromSupabase(page = 1) {
   try {
-    const { data, error } = await supabaseClient
+    currentPage = page;
+    const from = (page - 1) * moviesPerPage;
+    const to = from + moviesPerPage - 1;
+    const { data, error, count } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, date, order_by, order_type"
+        "id, title, original_title, genres, poster, year, rating_numeric, date, order_by, order_type",
+        { count: "exact" }
       )
-      .order("date", { ascending: false });
+      .order("date", { ascending: false })
+      .range(from, to);
 
     if (error) throw error;
 
@@ -53,9 +63,11 @@ async function loadMoviesFromSupabase() {
       orderBy: item.order_by,
       orderType: item.order_type,
     }));
+    totalMovies = count || 0;
 
     localStorage.setItem("moviesCache", JSON.stringify(movies));
     renderMovies();
+    renderPagination();
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
   }
@@ -72,7 +84,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   renderWatchlist();
   setupRatingStars();
 
-  await loadMoviesFromSupabase();
+  await loadMoviesFromSupabase(currentPage);
 });
 
 // Отображение фильмов
@@ -84,6 +96,44 @@ function renderMovies() {
     const movieCard = createMovieCard(movie);
     grid.appendChild(movieCard);
   });
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const container = document.getElementById("pagination");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const totalPages = Math.ceil(totalMovies / moviesPerPage);
+  if (totalPages <= 1) return;
+
+  const prevBtn = document.createElement("button");
+  prevBtn.textContent = "«";
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.className = "page-btn";
+  prevBtn.onclick = () => {
+    if (currentPage > 1) loadMoviesFromSupabase(currentPage - 1);
+  };
+  container.appendChild(prevBtn);
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = i;
+    btn.className = "page-btn";
+    if (i === currentPage) btn.classList.add("active");
+    btn.onclick = () => loadMoviesFromSupabase(i);
+    container.appendChild(btn);
+  }
+
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "»";
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.className = "page-btn";
+  nextBtn.onclick = () => {
+    if (currentPage < totalPages) loadMoviesFromSupabase(currentPage + 1);
+  };
+  container.appendChild(nextBtn);
 }
 
 // Создание карточки фильма

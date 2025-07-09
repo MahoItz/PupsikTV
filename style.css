@@ -348,6 +348,33 @@ select option {
     gap: 25px;
 }
 
+/* Пагинация */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    gap: 8px;
+}
+
+.pagination .page-btn {
+    padding: 6px 12px;
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.pagination .page-btn.active {
+    background: var(--primary-color);
+}
+
+.pagination .page-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 /* Карточка фильма */
 .movie-card {
     background: var(--card-bg);
