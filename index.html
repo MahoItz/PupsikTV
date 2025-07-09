@@ -167,8 +167,49 @@
             <button onclick="submitRating()" class="btn btn-primary" style="width: 100%;">Оценить и переместить</button>
         </div>
     </div>
+
+    <!-- Модальное окно редактирования фильма -->
+    <div id="editMovieModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editMovieModal')">&times;</span>
+            <h2>Редактировать фильм</h2>
+            <form id="editMovieForm">
+                <div class="poster-upload">
+                    <img id="editPosterPreview" class="movie-poster" src="" alt="Постер">
+                    <input type="file" id="editPoster" accept="image/*" style="display:none">
+                </div>
+                <div class="form-group">
+                    <label for="editTitle">Название:</label>
+                    <input type="text" id="editTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editYear">Год:</label>
+                    <input type="number" id="editYear">
+                </div>
+                <div class="form-group">
+                    <label for="editGenre">Жанр:</label>
+                    <input type="text" id="editGenre">
+                </div>
+                <div class="form-group">
+                    <label>Оценка:</label>
+                    <div class="rating-stars" id="editRatingStars">
+                        <span class="rating-star" data-rating="1">★</span>
+                        <span class="rating-star" data-rating="2">★</span>
+                        <span class="rating-star" data-rating="3">★</span>
+                        <span class="rating-star" data-rating="4">★</span>
+                        <span class="rating-star" data-rating="5">★</span>
+                        <span class="rating-star" data-rating="6">★</span>
+                        <span class="rating-star" data-rating="7">★</span>
+                        <span class="rating-star" data-rating="8">★</span>
+                        <span class="rating-star" data-rating="9">★</span>
+                        <span class="rating-star" data-rating="10">★</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить</button>
+            </form>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
-
 </html>

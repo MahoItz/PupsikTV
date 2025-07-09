@@ -32,6 +32,7 @@ let currentMode = "auto";
 let currentRating = 0;
 let editingMovieId = null;
 let ratingMovieId = null;
+let editPosterData = null;
 
 // Pagination
 let currentPage = 1;
@@ -99,6 +100,22 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   await loadMoviesFromSupabase();
+
+  const preview = document.getElementById("editPosterPreview");
+  const input = document.getElementById("editPoster");
+  if (preview && input) {
+    preview.addEventListener("click", () => input.click());
+    input.addEventListener("change", async function () {
+      if (this.files && this.files[0]) {
+        try {
+          editPosterData = await readFileAsDataURL(this.files[0]);
+          preview.src = editPosterData;
+        } catch (err) {
+          console.error("Error reading file", err);
+        }
+      }
+    });
+  }
 });
 
 // Отображение фильмов
@@ -235,9 +252,9 @@ function createMovieCard(movie) {
                       movie.dateAdded
                     )}</div>
                     <div class="movie-actions">
-                        <button class="btn btn-edit btn-small" onclick="openEditModal(${
+                        <button class="btn btn-edit btn-icon" onclick="openEditModal(${
                           movie.id
-                        })">✏️ Редактировать</button>
+                        })">✏️</button>
                     </div>
                 </div>
             `;
@@ -308,7 +325,10 @@ function openEditModal(id) {
 
   document.getElementById("editTitle").value = movie.title;
   document.getElementById("editYear").value = movie.year;
-  document.getElementById("editPoster").value = movie.poster;
+  document.getElementById("editGenre").value = movie.genre || "";
+  document.getElementById("editPosterPreview").src = movie.poster;
+  document.getElementById("editPoster").value = "";
+  editPosterData = null;
 
   // Установка рейтинга
   setRatingStars("editRatingStars", movie.rating);
@@ -539,17 +559,32 @@ async function submitRating() {
 // Редактирование фильма
 document
   .getElementById("editMovieForm")
-  .addEventListener("submit", function (e) {
+  .addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const movie = allMovies.find((m) => m.id === editingMovieId);
     if (movie) {
       movie.title = document.getElementById("editTitle").value;
-      movie.year = document.getElementById("editYear").value;
-      movie.poster = document.getElementById("editPoster").value;
+      movie.year = parseInt(document.getElementById("editYear").value) || movie.year;
+      movie.genre = document.getElementById("editGenre").value || movie.genre;
       movie.rating = getCurrentRating("editRatingStars");
-      movie.dateAdded =
-        movie.dateAdded || new Date().toISOString().split("T")[0];
+      movie.poster = editPosterData || movie.poster;
+      movie.dateAdded = movie.dateAdded || new Date().toISOString().split("T")[0];
+
+      try {
+        await supabaseClient
+          .from("movies")
+          .update({
+            title: movie.title,
+            genres: movie.genre,
+            poster: movie.poster,
+            year: movie.year,
+            rating_numeric: movie.rating,
+          })
+          .eq("id", editingMovieId);
+      } catch (err) {
+        console.error("Error updating movie in Supabase", err);
+      }
     }
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     renderMovies();
