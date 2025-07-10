@@ -61,11 +61,12 @@ function initFileUpload() {
     const label = wrapper.querySelector('.file-upload-label');
     const fileName = wrapper.parentElement.querySelector('.file-name');
     const removeBtn = wrapper.querySelector('.file-remove');
+    const preview = wrapper.parentElement.querySelector('.poster-preview');
 
-    fileInput.addEventListener('change', function (e) {
+    fileInput.addEventListener('change', async function (e) {
       const file = e.target.files[0];
       if (file) {
-        showSelectedFile(file, label, fileName, removeBtn);
+        await showSelectedFile(file, label, fileName, removeBtn, preview);
       }
     });
 
@@ -79,7 +80,7 @@ function initFileUpload() {
       label.classList.remove('drag-over');
     });
 
-    label.addEventListener('drop', function (e) {
+    label.addEventListener('drop', async function (e) {
       e.preventDefault();
       label.classList.remove('drag-over');
 
@@ -90,18 +91,18 @@ function initFileUpload() {
           const dt = new DataTransfer();
           dt.items.add(file);
           fileInput.files = dt.files;
-          showSelectedFile(file, label, fileName, removeBtn);
+          await showSelectedFile(file, label, fileName, removeBtn, preview);
         }
       }
     });
 
     removeBtn.addEventListener('click', function () {
-      clearFile(fileInput, label, fileName, removeBtn);
+      clearFile(fileInput, label, fileName, removeBtn, preview);
     });
   });
 }
 
-function showSelectedFile(file, label, fileName, removeBtn) {
+async function showSelectedFile(file, label, fileName, removeBtn, preview) {
   label.classList.add('has-file');
   label.querySelector('.main-text').textContent = 'Файл выбран';
   label.querySelector('.sub-text').textContent = 'Нажмите для замены';
@@ -109,9 +110,19 @@ function showSelectedFile(file, label, fileName, removeBtn) {
   fileName.textContent = file.name;
   fileName.style.display = 'block';
   removeBtn.style.display = 'flex';
+
+  if (preview) {
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      preview.src = dataUrl;
+      preview.style.display = 'block';
+    } catch (err) {
+      console.error('Error reading file', err);
+    }
+  }
 }
 
-function clearFile(fileInput, label, fileName, removeBtn) {
+function clearFile(fileInput, label, fileName, removeBtn, preview) {
   fileInput.value = '';
   label.classList.remove('has-file');
   label.querySelector('.main-text').textContent = 'Выберите файл изображения';
@@ -119,6 +130,11 @@ function clearFile(fileInput, label, fileName, removeBtn) {
 
   fileName.style.display = 'none';
   removeBtn.style.display = 'none';
+
+  if (preview) {
+    preview.src = '';
+    preview.style.display = 'none';
+  }
 }
 
 // Загрузка фильмов из Supabase

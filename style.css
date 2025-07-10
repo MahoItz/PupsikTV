@@ -1022,6 +1022,16 @@ body::before {
     border-left: 3px solid var(--secondary-color);
 }
 
+/* Thumbnail preview */
+.poster-preview {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: var(--border-radius-small);
+    margin-top: 10px;
+    display: none;
+}
+
 .file-remove {
     position: absolute;
     top: 5px;
