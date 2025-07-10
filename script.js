@@ -351,6 +351,7 @@ function createMovieCard(movie, showActions = true) {
                 <div class="movie-poster" style="display: none;">Нет постера</div>
                 <div class="movie-info">
                     <div class="movie-title">${movie.title}</div>
+                    ${movie.originalTitle ? `<div class="movie-original-title">${movie.originalTitle}</div>` : ''}
                     <div class="movie-year">${movie.year}</div>
                     <div class="movie-rating">
                         <span class="stars">${"★".repeat(
@@ -455,6 +456,7 @@ function showKPPreview() {
   const movie = {
     id: 0,
     title: selectedKPMovie.nameRu || selectedKPMovie.nameEn || "",
+    originalTitle: selectedKPMovie.nameEn || "",
     year: selectedKPMovie.year || "",
     rating: getCurrentRating("ratingStars"),
     poster:
