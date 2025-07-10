@@ -503,7 +503,6 @@ select option {
 .movie-date {
     font-size: 0.85rem;
     color: var(--text-secondary);
-    margin-bottom: 18px;
     font-weight: 500;
 }
 
@@ -511,6 +510,8 @@ select option {
     position: absolute;
     bottom: 15px;
     right: 15px;
+    display: flex;
+    gap: 8px;
 }
 
 .btn-icon {
