@@ -498,32 +498,59 @@ function setupRatingStars(containerId = "ratingStars") {
 }
 
 function setRatingStars(containerId, rating) {
-  const stars = document.querySelectorAll(`#${containerId} .rating-star`);
-  stars.forEach((star, index) => {
-    if (index < rating) {
-      star.classList.add("active");
-    } else {
-      star.classList.remove("active");
+  const container = document.getElementById(containerId);
+  const stars = container.querySelectorAll(".rating-star");
+  container.dataset.currentRating = rating;
+  updateRatingDisplay(containerId, rating);
+  stars.forEach((star) => star.classList.remove("active"));
+
+  if (rating === 0) {
+    stars[0]?.classList.add("active");
+  } else if (rating >= 1 && rating <= 10) {
+    for (let i = 1; i <= rating; i++) {
+      stars[i]?.classList.add("active");
     }
-  });
+  } else if (rating === 11) {
+    for (let i = 1; i <= 10; i++) {
+      stars[i]?.classList.add("active");
+    }
+    stars[11]?.classList.add("active");
+  }
 }
 
 function highlightStars(containerId, rating) {
   const stars = document.querySelectorAll(`#${containerId} .rating-star`);
-  stars.forEach((star, index) => {
-    if (index < rating) {
-      star.style.color = "#ffc107";
-    } else {
-      star.style.color = "#ddd";
-    }
+  stars.forEach((star) => {
+    star.style.color = "#ddd";
   });
+
+  if (rating === 0) {
+    stars[0].style.color = "#ffc107";
+  } else if (rating >= 1 && rating <= 10) {
+    for (let i = 1; i <= rating; i++) {
+      stars[i].style.color = "#ffc107";
+    }
+  } else if (rating === 11) {
+    for (let i = 1; i <= 10; i++) {
+      stars[i].style.color = "#ffc107";
+    }
+    stars[11].style.color = "#ffc107";
+  }
 }
 
 function getCurrentRating(containerId) {
-  const activeStars = document.querySelectorAll(
-    `#${containerId} .rating-star.active`
-  );
-  return activeStars.length;
+  const container = document.getElementById(containerId);
+  return parseInt(container.dataset.currentRating) || 0;
+}
+
+function updateRatingDisplay(containerId, rating) {
+  const container = document.getElementById(containerId);
+  const displayId = container.dataset.display;
+  if (!displayId) return;
+  const el = document.getElementById(displayId);
+  if (el) {
+    el.textContent = `${rating}/10`;
+  }
 }
 
 // Обработка форм
@@ -533,10 +560,6 @@ document
     e.preventDefault();
 
     const rating = getCurrentRating("ratingStars");
-    if (rating === 0) {
-      alert("Пожалуйста, выберите оценку");
-      return;
-    }
 
     let movieData;
 
@@ -627,10 +650,6 @@ document
 // Оценка фильма из watchlist
 async function submitRating() {
   const rating = getCurrentRating("rateMovieStars");
-  if (rating === 0) {
-    alert("Пожалуйста, выберите оценку");
-    return;
-  }
 
   // Находим фильм в watchlist по id
   const itemIndex = watchlist.findIndex((item) => item.id === ratingMovieId);

@@ -755,6 +755,11 @@ select option {
     margin-top: 8px;
 }
 
+.rating-number {
+    margin-top: 6px;
+    font-weight: 600;
+}
+
 .rating-star {
     font-size: 1.8rem;
     color: rgba(255, 235, 59, 0.3);
@@ -762,6 +767,12 @@ select option {
     transition: var(--transition);
     user-select: none;
     position: relative;
+}
+
+.rating-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
 }
 
 .rating-star:hover,
@@ -783,6 +794,11 @@ select option {
     transform: translate(-50%, -50%);
     border-radius: 50%;
     z-index: -1;
+}
+
+.rating-label:hover::before,
+.rating-label.active::before {
+    content: none;
 }
 
 /* Адаптивность */
