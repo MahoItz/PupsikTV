@@ -583,6 +583,7 @@ select option {
     background-color: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(8px);
     animation: fadeIn 0.3s ease-out;
+    overflow-y: auto;
 }
 
 @keyframes fadeIn {
@@ -598,8 +599,10 @@ select option {
     border-radius: var(--border-radius);
     width: 90%;
     max-width: 550px;
+    max-height: 90vh;
+    overflow-y: auto;
     border: 2px solid rgba(0, 212, 255, 0.3);
-    box-shadow: 
+    box-shadow:
         0 0 50px rgba(0, 0, 0, 0.5),
         0 0 100px rgba(0, 212, 255, 0.2);
     position: relative;
