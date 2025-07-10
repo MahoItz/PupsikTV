@@ -95,7 +95,18 @@
                     </div>
                     <div class="form-group">
                         <label for="manualPoster">Постер:</label>
-                        <input type="file" id="manualPoster" accept="image/*">
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="manualPoster" accept="image/*">
+                            <label for="manualPoster" class="file-upload-label">
+                                <div class="file-upload-icon">📁</div>
+                                <div class="file-upload-text">
+                                    <div class="main-text">Выберите файл изображения</div>
+                                    <div class="sub-text">или перетащите его сюда</div>
+                                </div>
+                            </label>
+                            <button type="button" class="file-remove" title="Удалить файл">×</button>
+                        </div>
+                        <div class="file-name" style="display: none;"></div>
                     </div>
                     <div class="form-group">
                         <label for="manualGenre">Жанр:</label>
