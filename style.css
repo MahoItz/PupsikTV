@@ -553,6 +553,8 @@ select option {
     border-left: 4px solid var(--primary-color);
     transition: var(--transition);
     position: relative;
+    display: flex;
+    gap: 12px;
 }
 
 .watchlist-item:hover {
@@ -574,6 +576,29 @@ select option {
     font-size: 0.9rem;
     margin-bottom: 12px;
     font-weight: 600;
+}
+
+.watchlist-poster {
+    width: 60px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: var(--border-radius-small);
+}
+
+.watchlist-info {
+    flex: 1;
+}
+
+.watchlist-original-title {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.watchlist-meta {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 4px;
 }
 
 /* Модальные окна */

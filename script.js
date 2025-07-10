@@ -18,22 +18,8 @@ let currentSearchQuery = "";
 let currentSort = "date";
 let sortAscending = false;
 
-let watchlist = [
-  {
-    id: 1,
-    title: "Матрица",
-    year: 1999,
-    poster: "https://m.media-amazon.com/images/I/81p+xe8cbnL._SY445_.jpg",
-    genre: "Триллер"
-  },
-  {
-    id: 2,
-    title: "Бойцовский клуб",
-    year: 1999,
-    poster: "https://m.media-amazon.com/images/I/81p+xe8cbnL._SY445_.jpg",
-    genre: "Триллер"
-  },
-];
+// Заказанные фильмы
+let watchlist = [];
 
 let currentMode = "auto";
 let currentRating = 0;
@@ -177,6 +163,25 @@ async function loadMoviesFromSupabase() {
   }
 }
 
+// Загрузка заказанных фильмов из Supabase
+async function loadOrdersFromSupabase() {
+  try {
+    const { data, error } = await supabaseClient
+      .from("Movie_Orders")
+      .select(
+        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster"
+      )
+      .order("id", { ascending: false });
+
+    if (error) throw error;
+
+    watchlist = data || [];
+    renderWatchlist();
+  } catch (err) {
+    console.error("Error loading movie orders from Supabase", err);
+  }
+}
+
 // Инициализация
 document.addEventListener("DOMContentLoaded", async function () {
   const cached = localStorage.getItem("moviesCache");
@@ -196,6 +201,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   await loadMoviesFromSupabase();
+  await loadOrdersFromSupabase();
 
   const searchBtn = document.getElementById("autoSearchBtn");
   const resultsSelect = document.getElementById("autoResults");
@@ -383,11 +389,26 @@ function renderWatchlist() {
   watchlist.forEach((item) => {
     const div = document.createElement("div");
     div.className = "watchlist-item";
+    const poster = item.order_poster || "";
+    const original = item.order_origin_title
+      ? `<div class="watchlist-original-title">${item.order_origin_title}</div>`
+      : "";
+    const rate = item.kinopoisk_rate
+      ? `<div class="watchlist-meta">КП: ${item.kinopoisk_rate}</div>`
+      : "";
     div.innerHTML = `
-                    <div class="watchlist-title">${item.title}</div>
-                    <div class="watchlist-year">${item.year}</div>
-                    <button class="btn btn-rate btn-small" onclick="openRateModal(${item.id}, '${item.title}')">⭐ Оценить</button>
-                `;
+        <img src="${poster}" alt="${item.order_title}" class="watchlist-poster" onerror="this.style.display='none';">
+        <div class="watchlist-info">
+            <div class="watchlist-title">${item.order_title}</div>
+            ${original}
+            <div class="watchlist-meta">Тип: ${item.order_type || ""}</div>
+            <div class="watchlist-meta">Заказал: ${item.order_by || ""}</div>
+            ${rate}
+            <div class="watchlist-meta">Жанры: ${item.order_genres || ""}</div>
+            <div class="watchlist-meta">Добавлен: ${formatDate(item.created_at)}</div>
+            <button class="btn btn-rate btn-small" onclick="openRateModal(${item.id}, '${item.order_title.replace(/'/g, "&#39;")}')">⭐ Оценить</button>
+        </div>
+    `;
     container.appendChild(div);
   });
 }
@@ -741,17 +762,22 @@ document
 
 document
   .getElementById("addWatchlistForm")
-  .addEventListener("submit", function (e) {
+  .addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const newItem = {
-      id: Date.now(),
-      title: document.getElementById("watchlistTitle").value,
-      year: document.getElementById("watchlistYear").value || "",
-    };
+    const title = document.getElementById("watchlistTitle").value;
+    const orderBy = document.getElementById("orderBy").value;
 
-    watchlist.unshift(newItem);
-    renderWatchlist();
+    try {
+      await supabaseClient.from("Movie_Orders").insert({
+        order_title: title,
+        order_by: orderBy,
+      });
+      await loadOrdersFromSupabase();
+    } catch (err) {
+      console.error("Error adding order to Supabase", err);
+    }
+
     closeModal("addWatchlistModal");
     this.reset();
   });
@@ -763,16 +789,20 @@ async function submitRating() {
   // Находим фильм в watchlist по id
   const itemIndex = watchlist.findIndex((item) => item.id === ratingMovieId);
   if (itemIndex !== -1) {
-    // Создаём новый объект фильма для основного списка
+    const order = watchlist[itemIndex];
     const watchedMovie = {
       id: Date.now(),
-      title: watchlist[itemIndex].title,
-      year: watchlist[itemIndex].year,
+      title: order.order_title,
+      originalTitle: order.order_origin_title || "",
+      year: new Date().getFullYear(),
       rating: rating,
-      poster: "https://via.placeholder.com/300x400?text=Нет+постера",
+      poster:
+        order.order_poster ||
+        "https://via.placeholder.com/300x400?text=Нет+постера",
       dateAdded: new Date().toISOString().split("T")[0],
-      genre: "",
-      description: "",
+      genre: order.order_genres || "",
+      orderBy: order.order_by || "",
+      orderType: order.order_type || "",
     };
     allMovies.unshift(watchedMovie);
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
@@ -784,14 +814,18 @@ async function submitRating() {
     try {
       await supabaseClient.from("movies").insert({
         title: watchedMovie.title,
+        original_title: watchedMovie.originalTitle,
         genres: watchedMovie.genre,
         poster: watchedMovie.poster,
         year: watchedMovie.year,
         rating_numeric: watchedMovie.rating,
         date: watchedMovie.dateAdded,
+        order_by: watchedMovie.orderBy,
+        order_type: watchedMovie.orderType,
       });
+      await supabaseClient.from("Movie_Orders").delete().eq("id", ratingMovieId);
     } catch (err) {
-      console.error("Error adding rated movie to Supabase", err);
+      console.error("Error moving rated movie in Supabase", err);
     }
   }
   closeModal("rateMovieModal");
