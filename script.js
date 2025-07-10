@@ -337,7 +337,7 @@ function renderPagination() {
 }
 
 // Создание карточки фильма
-function createMovieCard(movie) {
+function createMovieCard(movie, showActions = true) {
   const div = document.createElement("div");
   let cardClass = "movie-card";
   if (movie.rating === 0) cardClass += " rating-low";
@@ -361,14 +361,14 @@ function createMovieCard(movie) {
                     <div class="movie-date">Добавлен: ${formatDate(
                       movie.dateAdded
                     )}</div>
-                    <div class="movie-actions">
-                        <button class="btn btn-edit btn-icon" onclick="openEditModal(${
-                          movie.id
-                        })">✏️</button>
-                        <button class="btn btn-delete btn-icon" onclick="deleteMovie(${
-                          movie.id
-                        })">🗑️</button>
-                    </div>
+                    ${
+                      showActions
+                        ? `<div class="movie-actions">
+                        <button class="btn btn-edit btn-icon" onclick="openEditModal(${movie.id})">✏️</button>
+                        <button class="btn btn-delete btn-icon" onclick="deleteMovie(${movie.id})">🗑️</button>
+                    </div>`
+                        : ""
+                    }
                 </div>
             `;
   return div;
@@ -457,7 +457,7 @@ function showTMDBPreview() {
     dateAdded: new Date().toISOString().split("T")[0],
     genre: "",
   };
-  preview.appendChild(createMovieCard(movie));
+  preview.appendChild(createMovieCard(movie, false));
   preview.style.display = "block";
 }
 
