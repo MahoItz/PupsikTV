@@ -4,6 +4,13 @@ const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNod2VrdXJtenl6aXZ0d29yanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzODQ5NjEsImV4cCI6MjA2MTk2MDk2MX0.wXm1enXaPxXk1r6gjtkE2yizxZayLJh4hXmMV54Up9k";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// TMDB
+const TMDB_API_KEY = "0a3c5e2f5355f792c14d0b3fbf94886b";
+const TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie";
+const TMDB_POSTER_URL = "https://image.tmdb.org/t/p/w500";
+let tmdbResults = [];
+let selectedTMDBMovie = null;
+
 // Массив фильмов будет заполняться данными из базы
 let allMovies = [];
 let movies = [];
@@ -189,6 +196,16 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   await loadMoviesFromSupabase();
+
+  const searchBtn = document.getElementById("autoSearchBtn");
+  const resultsSelect = document.getElementById("autoResults");
+  if (searchBtn) searchBtn.addEventListener("click", handleTMDBSearch);
+  if (resultsSelect)
+    resultsSelect.addEventListener("change", function () {
+      const idx = parseInt(this.value);
+      selectedTMDBMovie = tmdbResults[idx] || null;
+      showTMDBPreview();
+    });
 
   const preview = document.getElementById("editPosterPreview");
   const input = document.getElementById("editPoster");
@@ -381,6 +398,69 @@ function searchMovies(query) {
   renderMovies();
 }
 
+async function handleTMDBSearch() {
+  const title = document.getElementById("autoTitle").value.trim();
+  if (!title) {
+    alert("Введите название фильма");
+    return;
+  }
+
+  try {
+    const url = `${TMDB_SEARCH_URL}?api_key=${TMDB_API_KEY}&language=ru-RU&query=${encodeURIComponent(title)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    tmdbResults = data.results || [];
+    const container = document.getElementById("autoResultsContainer");
+    const select = document.getElementById("autoResults");
+    select.innerHTML = "";
+    tmdbResults.forEach((m, idx) => {
+      const opt = document.createElement("option");
+      const year = m.release_date ? m.release_date.split("-")[0] : "";
+      opt.value = idx;
+      opt.textContent = `${m.title}${year ? ` (${year})` : ""}`;
+      select.appendChild(opt);
+    });
+    if (tmdbResults.length > 0) {
+      container.style.display = "block";
+      select.selectedIndex = 0;
+      selectedTMDBMovie = tmdbResults[0];
+      showTMDBPreview();
+    } else {
+      container.style.display = "none";
+      selectedTMDBMovie = null;
+      showTMDBPreview();
+      alert("Ничего не найдено");
+    }
+  } catch (err) {
+    console.error("TMDB search error", err);
+  }
+}
+
+function showTMDBPreview() {
+  const preview = document.getElementById("autoPreview");
+  if (!preview) return;
+  preview.innerHTML = "";
+  if (!selectedTMDBMovie) {
+    preview.style.display = "none";
+    return;
+  }
+  const movie = {
+    id: 0,
+    title: selectedTMDBMovie.title,
+    year: selectedTMDBMovie.release_date
+      ? parseInt(selectedTMDBMovie.release_date.split("-")[0])
+      : "",
+    rating: getCurrentRating("ratingStars"),
+    poster: selectedTMDBMovie.poster_path
+      ? TMDB_POSTER_URL + selectedTMDBMovie.poster_path
+      : "https://via.placeholder.com/300x400?text=Нет+постера",
+    dateAdded: new Date().toISOString().split("T")[0],
+    genre: "",
+  };
+  preview.appendChild(createMovieCard(movie));
+  preview.style.display = "block";
+}
+
 // Сортировка фильмов
 function sortMovies(criteria) {
   currentSort = criteria;
@@ -516,6 +596,9 @@ function setRatingStars(containerId, rating) {
     }
     stars[11]?.classList.add("active");
   }
+  if (containerId === "ratingStars") {
+    showTMDBPreview();
+  }
 }
 
 function highlightStars(containerId, rating) {
@@ -570,17 +653,31 @@ document
         return;
       }
 
-      // Имитация API запроса (здесь будет реальный API)
-      movieData = {
-        id: Date.now(),
-        title: title,
-        year: 2023, // Будет получено из API
-        rating: rating,
-        poster: "https://via.placeholder.com/300x400?text=Постер", // Будет получено из API
-        dateAdded: new Date().toISOString().split("T")[0],
-        genre: "Неизвестно", // Будет получено из API
-        description: "Описание будет загружено из API", // Будет получено из API
-      };
+      if (selectedTMDBMovie) {
+        const sel = selectedTMDBMovie;
+        movieData = {
+          id: Date.now(),
+          title: sel.title,
+          originalTitle: sel.original_title,
+          year: sel.release_date ? parseInt(sel.release_date.split("-")[0]) : new Date().getFullYear(),
+          rating: rating,
+          poster: sel.poster_path ? TMDB_POSTER_URL + sel.poster_path : "https://via.placeholder.com/300x400?text=Нет+постера",
+          dateAdded: new Date().toISOString().split("T")[0],
+          genre: "",
+          description: sel.overview || "",
+        };
+      } else {
+        movieData = {
+          id: Date.now(),
+          title: title,
+          year: new Date().getFullYear(),
+          rating: rating,
+          poster: "https://via.placeholder.com/300x400?text=Постер",
+          dateAdded: new Date().toISOString().split("T")[0],
+          genre: "Неизвестно",
+          description: "",
+        };
+      }
     } else {
       const fileInput = document.getElementById("manualPoster");
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";

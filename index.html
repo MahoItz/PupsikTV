@@ -77,7 +77,11 @@
                         <label for="autoTitle">Название фильма:</label>
                         <input type="text" id="autoTitle" placeholder="Введите название для поиска">
                     </div>
-                    <button type="search" class="btn search">Найти</button>
+                    <button id="autoSearchBtn" type="button" class="btn search">Найти</button>
+                    <div class="form-group" id="autoResultsContainer" style="display:none; margin-top:10px;">
+                        <select id="autoResults" style="width:100%;"></select>
+                    </div>
+                    <div id="autoPreview" style="display:none; margin-top:15px;"></div>
                 </div>
 
                 <div id="manualMode" style="display: none;">
