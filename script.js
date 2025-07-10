@@ -4,12 +4,11 @@ const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNod2VrdXJtenl6aXZ0d29yanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzODQ5NjEsImV4cCI6MjA2MTk2MDk2MX0.wXm1enXaPxXk1r6gjtkE2yizxZayLJh4hXmMV54Up9k";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// TMDB
-const TMDB_API_KEY = "0a3c5e2f5355f792c14d0b3fbf94886b";
-const TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie";
-const TMDB_POSTER_URL = "https://image.tmdb.org/t/p/w500";
-let tmdbResults = [];
-let selectedTMDBMovie = null;
+// Kinopoisk
+const KINOPOISK_API_KEY = "a63efc29-37be-423f-8c0d-722154bc08f4";
+const KINOPOISK_SEARCH_URL = "https://api.kinopoisk.dev/v1.4/movie/search";
+let kpResults = [];
+let selectedKPMovie = null;
 
 // Массив фильмов будет заполняться данными из базы
 let allMovies = [];
@@ -199,12 +198,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const searchBtn = document.getElementById("autoSearchBtn");
   const resultsSelect = document.getElementById("autoResults");
-  if (searchBtn) searchBtn.addEventListener("click", handleTMDBSearch);
+  if (searchBtn) searchBtn.addEventListener("click", handleKPSearch);
   if (resultsSelect)
     resultsSelect.addEventListener("change", function () {
       const idx = parseInt(this.value);
-      selectedTMDBMovie = tmdbResults[idx] || null;
-      showTMDBPreview();
+      selectedKPMovie = kpResults[idx] || null;
+      showKPPreview();
     });
 
   const preview = document.getElementById("editPosterPreview");
@@ -398,7 +397,7 @@ function searchMovies(query) {
   renderMovies();
 }
 
-async function handleTMDBSearch() {
+async function handleKPSearch() {
   const title = document.getElementById("autoTitle").value.trim();
   if (!title) {
     alert("Введите название фильма");
@@ -406,56 +405,61 @@ async function handleTMDBSearch() {
   }
 
   try {
-    const url = `${TMDB_SEARCH_URL}?api_key=${TMDB_API_KEY}&language=ru-RU&query=${encodeURIComponent(title)}`;
-    const res = await fetch(url);
+    const url = `${KINOPOISK_SEARCH_URL}?page=1&limit=10&query=${encodeURIComponent(title)}`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
     const data = await res.json();
-    tmdbResults = data.results || [];
+    kpResults = data.docs || [];
     const container = document.getElementById("autoResultsContainer");
     const select = document.getElementById("autoResults");
     select.innerHTML = "";
-    tmdbResults.forEach((m, idx) => {
+    kpResults.forEach((m, idx) => {
       const opt = document.createElement("option");
-      const year = m.release_date ? m.release_date.split("-")[0] : "";
+      const year = m.year || "";
       opt.value = idx;
-      opt.textContent = `${m.title}${year ? ` (${year})` : ""}`;
+      opt.textContent = `${m.name}${year ? ` (${year})` : ""}`;
       select.appendChild(opt);
     });
-    if (tmdbResults.length > 0) {
+    if (kpResults.length > 0) {
       container.style.display = "block";
       select.selectedIndex = 0;
-      selectedTMDBMovie = tmdbResults[0];
-      showTMDBPreview();
+      selectedKPMovie = kpResults[0];
+      showKPPreview();
     } else {
       container.style.display = "none";
-      selectedTMDBMovie = null;
-      showTMDBPreview();
+      selectedKPMovie = null;
+      showKPPreview();
       alert("Ничего не найдено");
     }
   } catch (err) {
-    console.error("TMDB search error", err);
+    console.error("Kinopoisk search error", err);
   }
 }
 
-function showTMDBPreview() {
+function showKPPreview() {
   const preview = document.getElementById("autoPreview");
   if (!preview) return;
   preview.innerHTML = "";
-  if (!selectedTMDBMovie) {
+  if (!selectedKPMovie) {
     preview.style.display = "none";
     return;
   }
   const movie = {
     id: 0,
-    title: selectedTMDBMovie.title,
-    year: selectedTMDBMovie.release_date
-      ? parseInt(selectedTMDBMovie.release_date.split("-")[0])
-      : "",
+    title: selectedKPMovie.name || "",
+    year: selectedKPMovie.year || "",
     rating: getCurrentRating("ratingStars"),
-    poster: selectedTMDBMovie.poster_path
-      ? TMDB_POSTER_URL + selectedTMDBMovie.poster_path
-      : "https://via.placeholder.com/300x400?text=Нет+постера",
+    poster:
+      selectedKPMovie.poster?.url ||
+      selectedKPMovie.posterUrl ||
+      "https://via.placeholder.com/300x400?text=Нет+постера",
     dateAdded: new Date().toISOString().split("T")[0],
-    genre: "",
+    genre:
+      selectedKPMovie.genres?.map((g) => g.name).join(", ") || "",
   };
   preview.appendChild(createMovieCard(movie, false));
   preview.style.display = "block";
@@ -597,7 +601,7 @@ function setRatingStars(containerId, rating) {
     stars[11]?.classList.add("active");
   }
   if (containerId === "ratingStars") {
-    showTMDBPreview();
+    showKPPreview();
   }
 }
 
@@ -653,18 +657,21 @@ document
         return;
       }
 
-      if (selectedTMDBMovie) {
-        const sel = selectedTMDBMovie;
+      if (selectedKPMovie) {
+        const sel = selectedKPMovie;
         movieData = {
           id: Date.now(),
-          title: sel.title,
-          originalTitle: sel.original_title,
-          year: sel.release_date ? parseInt(sel.release_date.split("-")[0]) : new Date().getFullYear(),
+          title: sel.name || "",
+          originalTitle: sel.alternativeName || "",
+          year: sel.year || new Date().getFullYear(),
           rating: rating,
-          poster: sel.poster_path ? TMDB_POSTER_URL + sel.poster_path : "https://via.placeholder.com/300x400?text=Нет+постера",
+          poster:
+            sel.poster?.url ||
+            sel.posterUrl ||
+            "https://via.placeholder.com/300x400?text=Нет+постера",
           dateAdded: new Date().toISOString().split("T")[0],
-          genre: "",
-          description: sel.overview || "",
+          genre: sel.genres?.map((g) => g.name).join(", ") || "",
+          description: sel.description || "",
         };
       } else {
         movieData = {
