@@ -4,9 +4,10 @@ const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNod2VrdXJtenl6aXZ0d29yanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzODQ5NjEsImV4cCI6MjA2MTk2MDk2MX0.wXm1enXaPxXk1r6gjtkE2yizxZayLJh4hXmMV54Up9k";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Kinopoisk
+// Kinopoisk (unofficial API)
 const KINOPOISK_API_KEY = "a63efc29-37be-423f-8c0d-722154bc08f4";
-const KINOPOISK_SEARCH_URL = "https://api.kinopoisk.dev/v1.4/movie/search";
+const KINOPOISK_SEARCH_URL =
+  "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 let kpResults = [];
 let selectedKPMovie = null;
 
@@ -405,7 +406,9 @@ async function handleKPSearch() {
   }
 
   try {
-    const url = `${KINOPOISK_SEARCH_URL}?page=1&limit=10&query=${encodeURIComponent(title)}`;
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      title
+    )}&page=1`;
     const res = await fetch(url, {
       headers: {
         "X-API-KEY": KINOPOISK_API_KEY,
@@ -413,15 +416,16 @@ async function handleKPSearch() {
       },
     });
     const data = await res.json();
-    kpResults = data.docs || [];
+    kpResults = data.films || [];
     const container = document.getElementById("autoResultsContainer");
     const select = document.getElementById("autoResults");
     select.innerHTML = "";
     kpResults.forEach((m, idx) => {
       const opt = document.createElement("option");
       const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
       opt.value = idx;
-      opt.textContent = `${m.name}${year ? ` (${year})` : ""}`;
+      opt.textContent = `${name}${year ? ` (${year})` : ""}`;
       select.appendChild(opt);
     });
     if (kpResults.length > 0) {
@@ -450,16 +454,15 @@ function showKPPreview() {
   }
   const movie = {
     id: 0,
-    title: selectedKPMovie.name || "",
+    title: selectedKPMovie.nameRu || selectedKPMovie.nameEn || "",
     year: selectedKPMovie.year || "",
     rating: getCurrentRating("ratingStars"),
     poster:
-      selectedKPMovie.poster?.url ||
+      selectedKPMovie.posterUrlPreview ||
       selectedKPMovie.posterUrl ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     dateAdded: new Date().toISOString().split("T")[0],
-    genre:
-      selectedKPMovie.genres?.map((g) => g.name).join(", ") || "",
+    genre: selectedKPMovie.genres?.map((g) => g.genre).join(", ") || "",
   };
   preview.appendChild(createMovieCard(movie, false));
   preview.style.display = "block";
@@ -661,16 +664,16 @@ document
         const sel = selectedKPMovie;
         movieData = {
           id: Date.now(),
-          title: sel.name || "",
-          originalTitle: sel.alternativeName || "",
+          title: sel.nameRu || sel.nameEn || "",
+          originalTitle: sel.nameEn || "",
           year: sel.year || new Date().getFullYear(),
           rating: rating,
           poster:
-            sel.poster?.url ||
+            sel.posterUrlPreview ||
             sel.posterUrl ||
             "https://via.placeholder.com/300x400?text=Нет+постера",
           dateAdded: new Date().toISOString().split("T")[0],
-          genre: sel.genres?.map((g) => g.name).join(", ") || "",
+          genre: sel.genres?.map((g) => g.genre).join(", ") || "",
           description: sel.description || "",
         };
       } else {
