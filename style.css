@@ -257,31 +257,6 @@ header img {
     font-size: 0.8rem;
 }
 
-.btn-edit {
-    background: linear-gradient(135deg, var(--accent-color), #fdd835);
-    color: #1a1a1a;
-    box-shadow: 0 0 20px rgba(255, 235, 59, 0.4);
-    border-color: var(--accent-color);
-    font-weight: 800;
-}
-
-.btn-edit:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 0 30px rgba(255, 235, 59, 0.6), 0 8px 25px rgba(255, 235, 59, 0.3);
-}
-
-.btn-delete {
-    background: linear-gradient(135deg, var(--rating-low), #e53935);
-    color: white;
-    box-shadow: 0 0 20px rgba(244, 67, 54, 0.4);
-    border-color: var(--rating-low);
-}
-
-.btn-delete:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 0 30px rgba(244, 67, 54, 0.6), 0 8px 25px rgba(244, 67, 54, 0.3);
-}
-
 .btn-rate {
     background: linear-gradient(135deg, var(--neon-pink), #e91e63);
     color: white;
@@ -445,7 +420,16 @@ select option {
 .movie-poster {
     width: 100%;
     height: auto;
-    object-fit: contain;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Стили для заглушки когда нет постера */
+.movie-poster-placeholder {
+    width: 100%;
+    height: 300px; /* Фиксированная высота для заглушки */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -455,9 +439,11 @@ select option {
     font-size: 1.1rem;
     position: relative;
     margin-bottom: 8px;
+    border-radius: 8px;
+    border: 2px dashed var(--text-secondary);
 }
 
-.movie-poster::after {
+.movie-poster-placeholder::after {
     content: '';
     position: absolute;
     bottom: 0;
@@ -465,10 +451,11 @@ select option {
     right: 0;
     height: 60px;
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.4));
+    border-radius: 0 0 6px 6px;
 }
 
 .movie-info {
-    padding: 25px;
+    padding: 10px;
     position: relative;
 }
 
@@ -480,13 +467,15 @@ select option {
     line-height: 1.3;
     letter-spacing: -0.01em;
 }
+
 .movie-original-title {
     font-size: 0.9rem;
     font-style: italic;
     margin-bottom: 8px;
+    color: var(--text-secondary);
 }
 
-.movie-genres{
+.movie-genres {
     color: var(--text-secondary);
     font-size: 0.9rem;
     margin-bottom: 8px;
@@ -501,18 +490,56 @@ select option {
 
 .movie-rating {
     display: flex;
-    align-items: center;
+    flex-direction: row;         /* по умолчанию, можно не писать */
     gap: 10px;
+    margin-bottom: 15px;
+    padding: 12px 0;
+}
+
+.movie-rating .rating-item {
+    flex: 1;                     /* 🔹 Каждый занимает равную часть */
+    display: flex;
+    align-items: center;
+    justify-content: center;     /* Центрирует текст и иконки */
+    gap: 8px;
+    font-weight: 700;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.movie-rating .rating-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .movie-rating img {
-    width: 30px;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.movie-rating span {
+    font-size: 1rem;
+    color: var(--text-primary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .stars {
     color: var(--accent-color);
     font-size: 1.2rem;
     text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+}
+
+.movie-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .movie-date {
@@ -522,9 +549,6 @@ select option {
 }
 
 .movie-actions {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
     display: flex;
     gap: 8px;
 }
@@ -537,7 +561,32 @@ select option {
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
+
+.btn-edit {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.btn-edit:hover {
+    background: rgba(0, 212, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-delete {
+    background: rgba(255, 108, 66, 0.1);
+    color: var(--text-primary);
+}
+
+.btn-delete:hover {
+    background: rgba(255, 108, 66, 0.2);
+    transform: translateY(-2px);
+}
+
 
 /* Список к просмотру */
 .watchlist-section h3 {
@@ -1111,3 +1160,4 @@ body::before {
         font-size: 0.8rem;
     }
 }
+

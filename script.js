@@ -1,7 +1,8 @@
 // Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 // Значение ключа берётся из переменной окружения на стороне Vercel
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNod2VrdXJtenl6aXZ0d29yanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzODQ5NjEsImV4cCI6MjA2MTk2MDk2MX0.wXm1enXaPxXk1r6gjtkE2yizxZayLJh4hXmMV54Up9k";
+const SUPABASE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNod2VrdXJtenl6aXZ0d29yanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzODQ5NjEsImV4cCI6MjA2MTk2MDk2MX0.wXm1enXaPxXk1r6gjtkE2yizxZayLJh4hXmMV54Up9k";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Kinopoisk (unofficial API)
@@ -24,14 +25,14 @@ let watchlist = [
     title: "Матрица",
     year: 1999,
     poster: "https://m.media-amazon.com/images/I/81p+xe8cbnL._SY445_.jpg",
-    genre: "Триллер"
+    genre: "Триллер",
   },
   {
     id: 2,
     title: "Бойцовский клуб",
     year: 1999,
     poster: "https://m.media-amazon.com/images/I/81p+xe8cbnL._SY445_.jpg",
-    genre: "Триллер"
+    genre: "Триллер",
   },
 ];
 
@@ -63,38 +64,38 @@ function initFileUpload() {
   );
 
   fileInputs.forEach((fileInput) => {
-    const wrapper = fileInput.closest('.file-upload-wrapper');
+    const wrapper = fileInput.closest(".file-upload-wrapper");
     if (!wrapper) return;
-    const label = wrapper.querySelector('.file-upload-label');
-    const fileName = wrapper.parentElement.querySelector('.file-name');
-    const removeBtn = wrapper.querySelector('.file-remove');
-    const preview = wrapper.parentElement.querySelector('.poster-preview');
+    const label = wrapper.querySelector(".file-upload-label");
+    const fileName = wrapper.parentElement.querySelector(".file-name");
+    const removeBtn = wrapper.querySelector(".file-remove");
+    const preview = wrapper.parentElement.querySelector(".poster-preview");
 
-    fileInput.addEventListener('change', async function (e) {
+    fileInput.addEventListener("change", async function (e) {
       const file = e.target.files[0];
       if (file) {
         await showSelectedFile(file, label, fileName, removeBtn, preview);
       }
     });
 
-    label.addEventListener('dragover', function (e) {
+    label.addEventListener("dragover", function (e) {
       e.preventDefault();
-      label.classList.add('drag-over');
+      label.classList.add("drag-over");
     });
 
-    label.addEventListener('dragleave', function (e) {
+    label.addEventListener("dragleave", function (e) {
       e.preventDefault();
-      label.classList.remove('drag-over');
+      label.classList.remove("drag-over");
     });
 
-    label.addEventListener('drop', async function (e) {
+    label.addEventListener("drop", async function (e) {
       e.preventDefault();
-      label.classList.remove('drag-over');
+      label.classList.remove("drag-over");
 
       const files = e.dataTransfer.files;
       if (files.length > 0) {
         const file = files[0];
-        if (file.type.startsWith('image/')) {
+        if (file.type.startsWith("image/")) {
           const dt = new DataTransfer();
           dt.items.add(file);
           fileInput.files = dt.files;
@@ -103,44 +104,44 @@ function initFileUpload() {
       }
     });
 
-    removeBtn.addEventListener('click', function () {
+    removeBtn.addEventListener("click", function () {
       clearFile(fileInput, label, fileName, removeBtn, preview);
     });
   });
 }
 
 async function showSelectedFile(file, label, fileName, removeBtn, preview) {
-  label.classList.add('has-file');
-  label.querySelector('.main-text').textContent = 'Файл выбран';
-  label.querySelector('.sub-text').textContent = 'Нажмите для замены';
+  label.classList.add("has-file");
+  label.querySelector(".main-text").textContent = "Файл выбран";
+  label.querySelector(".sub-text").textContent = "Нажмите для замены";
 
   fileName.textContent = file.name;
-  fileName.style.display = 'block';
-  removeBtn.style.display = 'flex';
+  fileName.style.display = "block";
+  removeBtn.style.display = "flex";
 
   if (preview) {
     try {
       const dataUrl = await readFileAsDataURL(file);
       preview.src = dataUrl;
-      preview.style.display = 'block';
+      preview.style.display = "block";
     } catch (err) {
-      console.error('Error reading file', err);
+      console.error("Error reading file", err);
     }
   }
 }
 
 function clearFile(fileInput, label, fileName, removeBtn, preview) {
-  fileInput.value = '';
-  label.classList.remove('has-file');
-  label.querySelector('.main-text').textContent = 'Выберите файл изображения';
-  label.querySelector('.sub-text').textContent = 'или перетащите его сюда';
+  fileInput.value = "";
+  label.classList.remove("has-file");
+  label.querySelector(".main-text").textContent = "Выберите файл изображения";
+  label.querySelector(".sub-text").textContent = "или перетащите его сюда";
 
-  fileName.style.display = 'none';
-  removeBtn.style.display = 'none';
+  fileName.style.display = "none";
+  removeBtn.style.display = "none";
 
   if (preview) {
-    preview.src = '';
-    preview.style.display = 'none';
+    preview.src = "";
+    preview.style.display = "none";
   }
 }
 
@@ -150,7 +151,7 @@ async function loadMoviesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, date, order_by, order_type"
+        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, date, order_by, order_type"
       )
       .order("id", { ascending: false });
 
@@ -164,6 +165,7 @@ async function loadMoviesFromSupabase() {
       poster: item.poster,
       year: item.year,
       rating: item.rating_numeric,
+      kpRating: item.rating_OMDB,
       dateAdded: item.date,
       orderBy: item.order_by,
       orderType: item.order_type,
@@ -246,7 +248,9 @@ function getFilteredSortedMovies() {
       );
       break;
     case "year":
-      result.sort((a, b) => (sortAscending ? a.year - b.year : b.year - a.year));
+      result.sort((a, b) =>
+        sortAscending ? a.year - b.year : b.year - a.year
+      );
       break;
     case "rating":
       result.sort((a, b) =>
@@ -297,10 +301,11 @@ function renderPagination() {
     btn.className = opts.class || "page-btn";
     btn.disabled = opts.disabled || false;
     if (opts.active) btn.classList.add("active");
-    if (page) btn.onclick = () => {
-      currentPage = page;
-      renderMovies();
-    };
+    if (page)
+      btn.onclick = () => {
+        currentPage = page;
+        renderMovies();
+      };
     container.appendChild(btn);
   };
 
@@ -330,7 +335,9 @@ function renderPagination() {
   }
 
   if (totalPages > 1) {
-    addBtn(String(totalPages), totalPages, { active: currentPage === totalPages });
+    addBtn(String(totalPages), totalPages, {
+      active: currentPage === totalPages,
+    });
   }
 
   addBtn("»", currentPage + 1, { disabled: currentPage === totalPages });
@@ -345,31 +352,41 @@ function createMovieCard(movie, showActions = true) {
   const starsCount = Math.max(0, Math.min(movie.rating, 10));
   div.className = cardClass;
   div.innerHTML = `
-                <img src="${movie.poster}" alt="${
+                <img src="${movie.poster}" alt="${movie.title}" <img src="${
+    movie.poster
+  }" alt="${
     movie.title
   }" class="movie-poster" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="movie-poster" style="display: none;">Нет постера</div>
+            <div class="movie-poster-placeholder" style="display: none;">
+                <span>Нет постера</span>
+            </div>
+            <div class="movie-info">
+                <div class="movie-title">${movie.title}</div>
+                <div class="movie-original-title">${movie.originalTitle}</div>
+                <div class="movie-genres">${movie.genre}</div>
+                <div class="movie-year">${movie.year}</div>
                 <div class="movie-rating">
-                    <img src="images/Pupsik_TV_Icon.png" alt="Pupsik Rate">
-                    <span>${movie.rating}/10</span>
+                    <div class="rating-item">
+                        <img src="images/Pupsik_TV_Icon.png" alt="Pupsik Rate">
+                        <span>${movie.rating}/10</span>
+                    </div>
+                    <div class="rating-item">
+                        <img src="images/kp_icon.png" alt="KP Rate">
+                        <span>${movie.kpRating ?? "-"}</span>
+                    </div>
                 </div>
-                <div class="movie-info">
-                    <div class="movie-title">${movie.title}</div>
-                    <div class="movie-original-title">${movie.originalTitle}</div>
-                    <div class="movie-genres">${movie.genre}</div>
-                    <div class="movie-year">${movie.year}</div>
-                    <div class="movie-date">Добавлен: ${formatDate(
-                      movie.dateAdded
-                    )}</div>
+                <div class="movie-footer">
+                    <div class="movie-date">Добавлен: ${formatDate(movie.dateAdded)}</div>
                     ${
                       showActions
                         ? `<div class="movie-actions">
                         <button class="btn btn-edit btn-icon" onclick="openEditModal(${movie.id})">✏️</button>
                         <button class="btn btn-delete btn-icon" onclick="deleteMovie(${movie.id})">🗑️</button>
                     </div>`
-                        : ""
-                    }
-                </div>
+            : ""
+        }
+    </div>
+</div>
             `;
   return div;
 }
@@ -458,6 +475,7 @@ function showKPPreview() {
     originalTitle: selectedKPMovie.nameEn || "",
     year: selectedKPMovie.year || "",
     rating: getCurrentRating("ratingStars"),
+    kpRating: selectedKPMovie.rating || "-",
     poster:
       selectedKPMovie.posterUrlPreview ||
       selectedKPMovie.posterUrl ||
@@ -669,6 +687,7 @@ document
           originalTitle: sel.nameEn || "",
           year: sel.year || new Date().getFullYear(),
           rating: rating,
+          kpRating: sel.rating || "-",
           poster:
             sel.posterUrlPreview ||
             sel.posterUrl ||
@@ -683,6 +702,7 @@ document
           title: title,
           year: new Date().getFullYear(),
           rating: rating,
+          kpRating: "-",
           poster: "https://via.placeholder.com/300x400?text=Постер",
           dateAdded: new Date().toISOString().split("T")[0],
           genre: "Неизвестно",
@@ -707,6 +727,7 @@ document
           parseInt(document.getElementById("manualYear").value) ||
           new Date().getFullYear(),
         rating: rating,
+        kpRating: "-",
         poster: poster,
         dateAdded: new Date().toISOString().split("T")[0],
         genre: document.getElementById("manualGenre").value || "Неизвестно",
@@ -727,6 +748,7 @@ document
         poster: movieData.poster,
         year: movieData.year,
         rating_numeric: movieData.rating,
+        rating_OMDB: movieData.kpRating,
         date: movieData.dateAdded,
       });
     } catch (err) {
@@ -805,11 +827,13 @@ document
     const movie = allMovies.find((m) => m.id === editingMovieId);
     if (movie) {
       movie.title = document.getElementById("editTitle").value;
-      movie.year = parseInt(document.getElementById("editYear").value) || movie.year;
+      movie.year =
+        parseInt(document.getElementById("editYear").value) || movie.year;
       movie.genre = document.getElementById("editGenre").value || movie.genre;
       movie.rating = getCurrentRating("editRatingStars");
       movie.poster = editPosterData || movie.poster;
-      movie.dateAdded = movie.dateAdded || new Date().toISOString().split("T")[0];
+      movie.dateAdded =
+        movie.dateAdded || new Date().toISOString().split("T")[0];
 
       try {
         await supabaseClient
@@ -820,6 +844,7 @@ document
             poster: movie.poster,
             year: movie.year,
             rating_numeric: movie.rating,
+            rating_OMDB: movie.kpRating,
           })
           .eq("id", editingMovieId);
       } catch (err) {
