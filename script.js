@@ -349,16 +349,15 @@ function createMovieCard(movie, showActions = true) {
     movie.title
   }" class="movie-poster" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <div class="movie-poster" style="display: none;">Нет постера</div>
+                <div class="movie-rating">
+                    <img src="images/Pupsik_TV_Icon.png" alt="Pupsik Rate">
+                    <span>${movie.rating}/10</span>
+                </div>
                 <div class="movie-info">
                     <div class="movie-title">${movie.title}</div>
-                    ${movie.originalTitle ? `<div class="movie-original-title">${movie.originalTitle}</div>` : ''}
+                    <div class="movie-original-title">${movie.originalTitle}</div>
+                    <div class="movie-genres">${movie.genre}</div>
                     <div class="movie-year">${movie.year}</div>
-                    <div class="movie-rating">
-                        <span class="stars">${"★".repeat(
-                          starsCount
-                        )}${"☆".repeat(10 - starsCount)}</span>
-                        <span>${movie.rating}/10</span>
-                    </div>
                     <div class="movie-date">Добавлен: ${formatDate(
                       movie.dateAdded
                     )}</div>

@@ -454,6 +454,7 @@ select option {
     font-weight: 600;
     font-size: 1.1rem;
     position: relative;
+    margin-bottom: 8px;
 }
 
 .movie-poster::after {
@@ -480,6 +481,12 @@ select option {
     letter-spacing: -0.01em;
 }
 .movie-original-title {
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-bottom: 8px;
+}
+
+.movie-genres{
     color: var(--text-secondary);
     font-size: 0.9rem;
     margin-bottom: 8px;
@@ -496,7 +503,10 @@ select option {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 12px;
+}
+
+.movie-rating img {
+    width: 30px;
 }
 
 .stars {
