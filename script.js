@@ -452,7 +452,7 @@ function createMovieCard(movie, showActions = true) {
 }
 
 // Отображение списка к просмотру
-function createOrderCard(order) {
+function createOrderCard(order, showActions = true, showOrderBy = true) {
   const card = document.createElement("div");
   card.className = "order-card";
   const iconPath = ORDER_TYPE_ICONS[order.orderType];
@@ -470,16 +470,20 @@ function createOrderCard(order) {
                 <span class="order-kp-rating"><img src="images/kp_icon.png" alt="KP Rate"> ${order.kpRating ?? "-"}</span>
             </div>
             <div class="order-meta">
-                <span class="order-by">Заказал: ${order.orderBy}</span>
+                ${showOrderBy ? `<span class="order-by">Заказал: ${order.orderBy}</span>` : ""}
                 <span class="order-type">${typeHtml}</span>
             </div>
             <div class="order-footer">
                 <div class="order-date">${formatDate(order.dateAdded)}</div>
-                <div class="order-actions">
+                ${
+                  showActions
+                    ? `<div class="order-actions">
                     <button class="btn btn-primary btn-icon" onclick="openRateModal(${order.id})">✅</button>
                     <button class="btn btn-edit btn-icon" onclick="openEditOrderModal(${order.id})">✏️</button>
                     <button class="btn btn-delete btn-icon" onclick="deleteOrder(${order.id})">🗑️</button>
-                </div>
+                </div>`
+                    : ""
+                }
             </div>
         </div>
     `;
@@ -641,7 +645,7 @@ function showWatchlistKPPreview() {
     orderType: document.getElementById("watchOrderType").value || "",
     dateAdded: new Date().toISOString().split("T")[0],
   };
-  preview.appendChild(createOrderCard(order));
+  preview.appendChild(createOrderCard(order, false, false));
   preview.style.display = "block";
 }
 
