@@ -356,12 +356,10 @@ function createMovieCard(movie, showActions = true) {
   if (movie.rating === 0) cardClass += " rating-low";
   if (movie.rating === 11) cardClass += " rating-high";
   const starsCount = Math.max(0, Math.min(movie.rating, 10));
-  const iconPath = ORDER_TYPE_ICONS[movie.orderType] || "";
+  const iconPath = ORDER_TYPE_ICONS[movie.orderType];
   const orderInfo =
-    movie.orderBy || movie.orderType
-      ? `<div class="movie-order">Заказ: ${movie.orderBy ?? ""} ${
-          movie.orderType ?? ""
-        }${iconPath ? ` <img src="${iconPath}" alt="${movie.orderType}">` : ""}</div>`
+    movie.orderBy && iconPath
+      ? `<div class="movie-order">Заказ: <span class="movie-order-name">${movie.orderBy}</span> ${movie.orderType}<img src="${iconPath}" alt="${movie.orderType}"></div>`
       : "";
   div.className = cardClass;
   div.innerHTML = `

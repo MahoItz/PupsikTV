@@ -497,6 +497,11 @@ select option {
     margin-bottom: 12px;
 }
 
+.movie-order-name {
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
 .movie-order img {
     width: 20px;
     height: 20px;
