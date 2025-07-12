@@ -363,20 +363,16 @@ function createMovieCard(movie, showActions = true) {
       : "";
   div.className = cardClass;
   div.innerHTML = `
-                <img src="${movie.poster}" alt="${movie.title}" <img src="${
-    movie.poster
-  }" alt="${
-    movie.title
-  }" class="movie-poster" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <img src="${movie.poster}" alt="${movie.title}" class="movie-poster" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="movie-poster-placeholder" style="display: none;">
                 <span>Нет постера</span>
             </div>
-            <div class="movie-info">
+                <div class="movie-info">
                 <div class="movie-title">${movie.title}</div>
+                ${orderInfo}
                 <div class="movie-original-title">${movie.originalTitle}</div>
                 <div class="movie-genres">${movie.genre}</div>
                 <div class="movie-year">${movie.year}</div>
-                ${orderInfo}
                 <div class="movie-rating">
                     <div class="rating-item">
                         <img src="images/Pupsik_TV_Icon.png" alt="Pupsik Rate">
