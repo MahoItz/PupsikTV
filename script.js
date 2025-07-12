@@ -28,6 +28,11 @@ const ORDER_TYPE_ICONS = {
   "Шары": "images/balls_icon.png",
 };
 
+// Watchlist modal helpers
+let currentWatchlistMode = "auto";
+let kpOrderResults = [];
+let selectedKPOrderMovie = null;
+
 let currentMode = "auto";
 let currentRating = 0;
 let editingMovieId = null;
@@ -231,6 +236,16 @@ document.addEventListener("DOMContentLoaded", async function () {
       const idx = parseInt(this.value);
       selectedKPMovie = kpResults[idx] || null;
       showKPPreview();
+    });
+
+  const watchSearchBtn = document.getElementById("watchAutoSearchBtn");
+  const watchResultsSelect = document.getElementById("watchAutoResults");
+  if (watchSearchBtn) watchSearchBtn.addEventListener("click", handleWatchlistSearch);
+  if (watchResultsSelect)
+    watchResultsSelect.addEventListener("change", function () {
+      const idx = parseInt(this.value);
+      selectedKPOrderMovie = kpOrderResults[idx] || null;
+      showWatchlistKPPreview();
     });
 
   const preview = document.getElementById("editPosterPreview");
@@ -509,6 +524,50 @@ async function handleKPSearch() {
   }
 }
 
+async function handleWatchlistSearch() {
+  const title = document.getElementById("watchAutoTitle").value.trim();
+  if (!title) {
+    alert("Введите название фильма");
+    return;
+  }
+
+  try {
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(title)}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    kpOrderResults = data.films || [];
+    const container = document.getElementById("watchAutoResultsContainer");
+    const select = document.getElementById("watchAutoResults");
+    select.innerHTML = "";
+    kpOrderResults.forEach((m, idx) => {
+      const opt = document.createElement("option");
+      const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
+      opt.value = idx;
+      opt.textContent = `${name}${year ? ` (${year})` : ""}`;
+      select.appendChild(opt);
+    });
+    if (kpOrderResults.length > 0) {
+      container.style.display = "block";
+      select.selectedIndex = 0;
+      selectedKPOrderMovie = kpOrderResults[0];
+      showWatchlistKPPreview();
+    } else {
+      container.style.display = "none";
+      selectedKPOrderMovie = null;
+      showWatchlistKPPreview();
+      alert("Ничего не найдено");
+    }
+  } catch (err) {
+    console.error("Kinopoisk search error", err);
+  }
+}
+
 function showKPPreview() {
   const preview = document.getElementById("autoPreview");
   if (!preview) return;
@@ -532,6 +591,33 @@ function showKPPreview() {
     genre: selectedKPMovie.genres?.map((g) => g.genre).join(", ") || "",
   };
   preview.appendChild(createMovieCard(movie, false));
+  preview.style.display = "block";
+}
+
+// Preview for watchlist modal
+function showWatchlistKPPreview() {
+  const preview = document.getElementById("watchAutoPreview");
+  if (!preview) return;
+  preview.innerHTML = "";
+  if (!selectedKPOrderMovie) {
+    preview.style.display = "none";
+    return;
+  }
+  const order = {
+    title: selectedKPOrderMovie.nameRu || selectedKPOrderMovie.nameEn || "",
+    originalTitle: selectedKPOrderMovie.nameEn || "",
+    year: selectedKPOrderMovie.year || "",
+    kpRating: selectedKPOrderMovie.rating || "-",
+    poster:
+      selectedKPOrderMovie.posterUrlPreview ||
+      selectedKPOrderMovie.posterUrl ||
+      "https://via.placeholder.com/300x400?text=Нет+постера",
+    genres: selectedKPOrderMovie.genres?.map((g) => g.genre).join(", ") || "",
+    orderBy: document.getElementById("watchOrderBy").value || "",
+    orderType: document.getElementById("watchOrderType").value || "",
+    dateAdded: new Date().toISOString().split("T")[0],
+  };
+  preview.appendChild(createOrderCard(order));
   preview.style.display = "block";
 }
 
@@ -614,7 +700,7 @@ function switchMode(mode) {
 
   // Обновление кнопок
   document
-    .querySelectorAll(".mode-btn")
+    .querySelectorAll("#addMovieModal .mode-btn")
     .forEach((btn) => btn.classList.remove("active"));
   event.target.classList.add("active");
 
@@ -625,6 +711,23 @@ function switchMode(mode) {
   } else {
     document.getElementById("autoMode").style.display = "none";
     document.getElementById("manualMode").style.display = "block";
+  }
+}
+
+function switchWatchlistMode(mode) {
+  currentWatchlistMode = mode;
+
+  document
+    .querySelectorAll("#addWatchlistModal .mode-btn")
+    .forEach((btn) => btn.classList.remove("active"));
+  event.target.classList.add("active");
+
+  if (mode === "auto") {
+    document.getElementById("watchAutoMode").style.display = "block";
+    document.getElementById("watchManualMode").style.display = "none";
+  } else {
+    document.getElementById("watchAutoMode").style.display = "none";
+    document.getElementById("watchManualMode").style.display = "block";
   }
 }
 
@@ -813,13 +916,80 @@ document
   .addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const title = document.getElementById("watchlistTitle").value;
-    const orderedBy = document.getElementById("orderBy").value;
+    const orderBy = document.getElementById("watchOrderBy").value;
+    const orderType = document.getElementById("watchOrderType").value;
+
+    let orderData;
+
+    if (currentWatchlistMode === "auto") {
+      const titleInput = document.getElementById("watchAutoTitle").value;
+      if (!titleInput) {
+        alert("Введите название фильма");
+        return;
+      }
+
+      if (selectedKPOrderMovie) {
+        const sel = selectedKPOrderMovie;
+        orderData = {
+          title: sel.nameRu || sel.nameEn || "",
+          originalTitle: sel.nameEn || "",
+          year: sel.year || "",
+          kpRating: sel.rating || "-",
+          poster:
+            sel.posterUrlPreview ||
+            sel.posterUrl ||
+            "https://via.placeholder.com/300x400?text=Нет+постера",
+          genres: sel.genres?.map((g) => g.genre).join(", ") || "",
+          orderBy: orderBy,
+          orderType: orderType,
+        };
+      } else {
+        orderData = {
+          title: titleInput,
+          originalTitle: "",
+          year: "",
+          kpRating: "-",
+          poster: "https://via.placeholder.com/300x400?text=Нет+постера",
+          genres: "",
+          orderBy: orderBy,
+          orderType: orderType,
+        };
+      }
+    } else {
+      const fileInput = document.getElementById("watchManualPoster");
+      let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
+      if (fileInput.files && fileInput.files[0]) {
+        try {
+          poster = await readFileAsDataURL(fileInput.files[0]);
+        } catch (err) {
+          console.error("Error reading file", err);
+        }
+      }
+      orderData = {
+        title: document.getElementById("watchManualTitle").value,
+        originalTitle: document.getElementById("watchManualOriginTitle").value,
+        year: document.getElementById("watchManualYear").value || "",
+        kpRating: "-",
+        poster: poster,
+        genres: document.getElementById("watchManualGenre").value || "",
+        orderBy: orderBy,
+        orderType: orderType,
+      };
+    }
 
     try {
       const { data, error } = await supabaseClient
         .from("Movie_Orders")
-        .insert({ order_title: title, order_by: orderedBy })
+        .insert({
+          order_title: orderData.title,
+          order_origin_title: orderData.originalTitle || "",
+          order_year: orderData.year,
+          order_genres: orderData.genres,
+          order_poster: orderData.poster,
+          order_by: orderData.orderBy,
+          order_type: orderData.orderType,
+          kinopoisk_rate: orderData.kpRating,
+        })
         .select()
         .single();
 
@@ -844,6 +1014,9 @@ document
 
     closeModal("addWatchlistModal");
     this.reset();
+    selectedKPOrderMovie = null;
+    kpOrderResults = [];
+    showWatchlistKPPreview();
   });
 
 // Оценка фильма из watchlist

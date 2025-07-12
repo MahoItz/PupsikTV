@@ -148,16 +148,75 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('addWatchlistModal')">&times;</span>
             <h2>Добавить в список к просмотру</h2>
+
+            <div class="mode-toggle">
+                <div class="mode-btn active" onclick="switchWatchlistMode('auto')">Автоматический</div>
+                <div class="mode-btn" onclick="switchWatchlistMode('manual')">Ручной</div>
+            </div>
+
             <form id="addWatchlistForm">
-                <div class="form-group">
-                    <label for="watchlistTitle">Название фильма:</label>
-                    <input type="text" id="watchlistTitle" placeholder="Название фильма" required>
+                <div id="watchAutoMode">
+                    <div class="form-group">
+                        <label for="watchAutoTitle">Название фильма:</label>
+                        <input type="text" id="watchAutoTitle" placeholder="Введите название для поиска">
+                    </div>
+                    <button id="watchAutoSearchBtn" type="button" class="btn search">Найти</button>
+                    <div class="form-group" id="watchAutoResultsContainer" style="display:none; margin-top:10px;">
+                        <select id="watchAutoResults" style="width:100%;"></select>
+                    </div>
+                    <div id="watchAutoPreview" style="display:none; margin-top:15px;"></div>
                 </div>
-                <div class="form-group">
-                    <label for="orderBy">Заказ от...</label>
-                    <input type="text" id="orderBy" placeholder="Кто заказал" required>
+
+                <div id="watchManualMode" style="display:none;">
+                    <div class="form-group">
+                        <label for="watchManualTitle">Название:</label>
+                        <input type="text" id="watchManualTitle" placeholder="Название фильма">
+                    </div>
+                    <div class="form-group">
+                        <label for="watchManualOriginTitle">Оригинальное название:</label>
+                        <input type="text" id="watchManualOriginTitle" placeholder="Оригинальное название фильма">
+                    </div>
+                    <div class="form-group">
+                        <label for="watchManualYear">Год:</label>
+                        <input type="number" id="watchManualYear" placeholder="2023">
+                    </div>
+                    <div class="form-group">
+                        <label for="watchManualPoster">Постер:</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="watchManualPoster" accept="image/*">
+                            <label for="watchManualPoster" class="file-upload-label">
+                                <div class="file-upload-icon">📁</div>
+                                <div class="file-upload-text">
+                                    <div class="main-text">Выберите файл изображения</div>
+                                    <div class="sub-text">или перетащите его сюда</div>
+                                </div>
+                            </label>
+                            <button type="button" class="file-remove" title="Удалить файл">×</button>
+                        </div>
+                        <div class="file-name" style="display: none;"></div>
+                        <img id="watchManualPosterPreview" class="poster-preview" src="" alt="Предпросмотр" style="display:none;">
+                    </div>
+                    <div class="form-group">
+                        <label for="watchManualGenre">Жанр:</label>
+                        <input type="text" id="watchManualGenre" placeholder="Драма,Комедия">
+                    </div>
                 </div>
-                <button type="search" class="btn search">Найти</button>
+
+                <div class="form-group">
+                    <label for="watchOrderBy">Кто заказал:</label>
+                    <input type="text" id="watchOrderBy" placeholder="Имя" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="watchOrderType">Способ заказа:</label>
+                    <select id="watchOrderType">
+                        <option value="">Не указано</option>
+                        <option value="Донат">Донат</option>
+                        <option value="Баллы канала">Баллы канала</option>
+                        <option value="Шары">Шары</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Добавить в список</button>
             </form>
         </div>
