@@ -488,6 +488,21 @@ select option {
     font-weight: 600;
 }
 
+.movie-order {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.movie-order img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
 .movie-rating {
     display: flex;
     flex-direction: row;         /* по умолчанию, можно не писать */

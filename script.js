@@ -36,6 +36,12 @@ let watchlist = [
   },
 ];
 
+const ORDER_TYPE_ICONS = {
+  "Донат": "images/donate_icon.png",
+  "Баллы канала": "images/channel_points_icon.png",
+  "Шары": "images/balls_icon.png",
+};
+
 let currentMode = "auto";
 let currentRating = 0;
 let editingMovieId = null;
@@ -350,6 +356,13 @@ function createMovieCard(movie, showActions = true) {
   if (movie.rating === 0) cardClass += " rating-low";
   if (movie.rating === 11) cardClass += " rating-high";
   const starsCount = Math.max(0, Math.min(movie.rating, 10));
+  const iconPath = ORDER_TYPE_ICONS[movie.orderType] || "";
+  const orderInfo =
+    movie.orderBy || movie.orderType
+      ? `<div class="movie-order">Заказ: ${movie.orderBy ?? ""} ${
+          movie.orderType ?? ""
+        }${iconPath ? ` <img src="${iconPath}" alt="${movie.orderType}">` : ""}</div>`
+      : "";
   div.className = cardClass;
   div.innerHTML = `
                 <img src="${movie.poster}" alt="${movie.title}" <img src="${
@@ -365,6 +378,7 @@ function createMovieCard(movie, showActions = true) {
                 <div class="movie-original-title">${movie.originalTitle}</div>
                 <div class="movie-genres">${movie.genre}</div>
                 <div class="movie-year">${movie.year}</div>
+                ${orderInfo}
                 <div class="movie-rating">
                     <div class="rating-item">
                         <img src="images/Pupsik_TV_Icon.png" alt="Pupsik Rate">
