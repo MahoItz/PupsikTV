@@ -704,6 +704,18 @@ select option {
     color: var(--text-secondary);
 }
 
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.order-actions {
+    display: flex;
+    gap: 8px;
+}
+
 /* Модальные окна */
 .modal {
     display: none;

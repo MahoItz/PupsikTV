@@ -38,6 +38,8 @@ let currentRating = 0;
 let editingMovieId = null;
 let ratingMovieId = null;
 let editPosterData = null;
+let editingOrderId = null;
+let editOrderPosterData = null;
 
 // Pagination
 let currentPage = 1;
@@ -263,6 +265,22 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
     });
   }
+
+  const orderPreview = document.getElementById("editOrderPosterPreview");
+  const orderInput = document.getElementById("editOrderPoster");
+  if (orderPreview && orderInput) {
+    orderPreview.addEventListener("click", () => orderInput.click());
+    orderInput.addEventListener("change", async function () {
+      if (this.files && this.files[0]) {
+        try {
+          editOrderPosterData = await readFileAsDataURL(this.files[0]);
+          orderPreview.src = editOrderPosterData;
+        } catch (err) {
+          console.error("Error reading file", err);
+        }
+      }
+    });
+  }
 });
 
 // Отображение фильмов
@@ -322,7 +340,6 @@ function renderMovies() {
     const movieCard = createMovieCard(movie);
     grid.appendChild(movieCard);
   });
-
   renderPagination();
 }
 
@@ -456,7 +473,14 @@ function createOrderCard(order) {
                 <span class="order-by">Заказал: ${order.orderBy}</span>
                 <span class="order-type">${typeHtml}</span>
             </div>
-            <div class="order-date">${formatDate(order.dateAdded)}</div>
+            <div class="order-footer">
+                <div class="order-date">${formatDate(order.dateAdded)}</div>
+                <div class="order-actions">
+                    <button class="btn btn-primary btn-icon" onclick="openRateModal(${order.id})">✅</button>
+                    <button class="btn btn-edit btn-icon" onclick="openEditOrderModal(${order.id})">✏️</button>
+                    <button class="btn btn-delete btn-icon" onclick="deleteOrder(${order.id})">🗑️</button>
+                </div>
+            </div>
         </div>
     `;
   return card;
@@ -648,9 +672,10 @@ function openAddToWatchlistModal() {
   document.getElementById("addWatchlistModal").style.display = "block";
 }
 
-function openRateModal(id, title) {
+function openRateModal(id) {
   ratingMovieId = id;
-  document.getElementById("rateMovieTitle").textContent = title;
+  const item = watchlist.find((w) => w.id === id);
+  document.getElementById("rateMovieTitle").textContent = item ? item.title : "";
   document.getElementById("rateMovieModal").style.display = "block";
   setupRatingStars("rateMovieStars");
 }
@@ -687,6 +712,37 @@ async function deleteMovie(id) {
       console.error("Error deleting movie from Supabase", err);
     }
   }
+}
+
+async function deleteOrder(id) {
+  if (!confirm("Удалить заказ?")) return;
+
+  const index = watchlist.findIndex((o) => o.id === id);
+  if (index !== -1) {
+    watchlist.splice(index, 1);
+    renderWatchlist();
+    try {
+      await supabaseClient.from("Movie_Orders").delete().eq("id", id);
+    } catch (err) {
+      console.error("Error deleting order from Supabase", err);
+    }
+  }
+}
+
+function openEditOrderModal(id) {
+  editingOrderId = id;
+  const order = watchlist.find((o) => o.id === id);
+  if (!order) return;
+  document.getElementById("editOrderTitle").value = order.title;
+  document.getElementById("editOrderOriginTitle").value = order.originalTitle || "";
+  document.getElementById("editOrderYear").value = order.year || "";
+  document.getElementById("editOrderGenre").value = order.genres || "";
+  document.getElementById("editOrderBy").value = order.orderBy || "";
+  document.getElementById("editOrderType").value = order.orderType || "";
+  document.getElementById("editOrderPosterPreview").src = order.poster;
+  document.getElementById("editOrderPoster").value = "";
+  editOrderPosterData = null;
+  document.getElementById("editOrderModal").style.display = "block";
 }
 
 function closeModal(modalId) {
@@ -1032,9 +1088,9 @@ async function submitRating() {
       title: watchlist[itemIndex].title,
       year: watchlist[itemIndex].year,
       rating: rating,
-      poster: "https://via.placeholder.com/300x400?text=Нет+постера",
+      poster: watchlist[itemIndex].poster || "https://via.placeholder.com/300x400?text=Нет+постера",
       dateAdded: new Date().toISOString().split("T")[0],
-      genre: "",
+      genre: watchlist[itemIndex].genres || "",
       description: "",
     };
     allMovies.unshift(watchedMovie);
@@ -1053,6 +1109,7 @@ async function submitRating() {
         rating_numeric: watchedMovie.rating,
         date: watchedMovie.dateAdded,
       });
+      await supabaseClient.from("Movie_Orders").delete().eq("id", ratingMovieId);
     } catch (err) {
       console.error("Error adding rated movie to Supabase", err);
     }
@@ -1096,6 +1153,43 @@ document
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     renderMovies();
     closeModal("editMovieModal");
+  });
+
+document
+  .getElementById("editOrderForm")
+  .addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const order = watchlist.find((o) => o.id === editingOrderId);
+    if (order) {
+      order.title = document.getElementById("editOrderTitle").value;
+      order.originalTitle = document.getElementById("editOrderOriginTitle").value;
+      order.year = document.getElementById("editOrderYear").value;
+      order.genres = document.getElementById("editOrderGenre").value;
+      order.orderBy = document.getElementById("editOrderBy").value;
+      order.orderType = document.getElementById("editOrderType").value;
+      order.poster = editOrderPosterData || order.poster;
+
+      try {
+        await supabaseClient
+          .from("Movie_Orders")
+          .update({
+            order_title: order.title,
+            order_origin_title: order.originalTitle,
+            order_year: order.year,
+            order_genres: order.genres,
+            order_poster: order.poster,
+            order_by: order.orderBy,
+            order_type: order.orderType,
+          })
+          .eq("id", editingOrderId);
+      } catch (err) {
+        console.error("Error updating order in Supabase", err);
+      }
+    }
+
+    renderWatchlist();
+    closeModal("editOrderModal");
   });
 
 // Форматирование даты
