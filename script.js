@@ -368,8 +368,10 @@ function createMovieCard(movie, showActions = true) {
                 <span>Нет постера</span>
             </div>
                 <div class="movie-info">
-                <div class="movie-title">${movie.title}</div>
-                ${orderInfo}
+                    <div class="movie-header">
+                        <div class="movie-title">${movie.title}</div>
+                        ${orderInfo}
+                    </div>
                 <div class="movie-original-title">${movie.originalTitle}</div>
                 <div class="movie-genres">${movie.genre}</div>
                 <div class="movie-year">${movie.year}</div>
