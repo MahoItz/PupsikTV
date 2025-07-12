@@ -1083,15 +1083,20 @@ async function submitRating() {
   const itemIndex = watchlist.findIndex((item) => item.id === ratingMovieId);
   if (itemIndex !== -1) {
     // Создаём новый объект фильма для основного списка
+    const source = watchlist[itemIndex];
     const watchedMovie = {
       id: Date.now(),
-      title: watchlist[itemIndex].title,
-      year: watchlist[itemIndex].year,
+      title: source.title,
+      originalTitle: source.originalTitle || "",
+      year: source.year,
       rating: rating,
-      poster: watchlist[itemIndex].poster || "https://via.placeholder.com/300x400?text=Нет+постера",
+      kpRating: source.kpRating,
+      poster: source.poster || "https://via.placeholder.com/300x400?text=Нет+постера",
       dateAdded: new Date().toISOString().split("T")[0],
-      genre: watchlist[itemIndex].genres || "",
+      genre: source.genres || "",
       description: "",
+      orderBy: source.orderBy || "",
+      orderType: source.orderType || "",
     };
     allMovies.unshift(watchedMovie);
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
@@ -1103,11 +1108,15 @@ async function submitRating() {
     try {
       await supabaseClient.from("movies").insert({
         title: watchedMovie.title,
+        original_title: watchedMovie.originalTitle,
         genres: watchedMovie.genre,
         poster: watchedMovie.poster,
         year: watchedMovie.year,
         rating_numeric: watchedMovie.rating,
+        rating_OMDB: watchedMovie.kpRating,
         date: watchedMovie.dateAdded,
+        order_by: watchedMovie.orderBy,
+        order_type: watchedMovie.orderType,
       });
       await supabaseClient.from("Movie_Orders").delete().eq("id", ratingMovieId);
     } catch (err) {
