@@ -21,6 +21,7 @@ let sortAscending = false;
 
 // Список заказанных фильмов
 let watchlist = [];
+let gameOrders = [];
 
 const ORDER_TYPE_ICONS = {
   "Донат": "images/donate_icon.png",
@@ -40,6 +41,8 @@ let ratingMovieId = null;
 let editPosterData = null;
 let editingOrderId = null;
 let editOrderPosterData = null;
+let editingGameId = null;
+let editGamePosterData = null;
 
 // Pagination
 let currentPage = 1;
@@ -209,6 +212,35 @@ async function loadWatchlistFromSupabase() {
   }
 }
 
+// Загрузка заказанных игр из Supabase
+async function loadGamesFromSupabase() {
+  try {
+    const { data, error } = await supabaseClient
+      .from("Game_Orders")
+      .select(
+        "id, created_at, order_title, order_type, order_by, order_genres, order_poster, order_year"
+      )
+      .order("id", { ascending: true });
+
+    if (error) throw error;
+
+    gameOrders = data.map((item) => ({
+      id: item.id,
+      title: item.order_title,
+      genres: item.order_genres,
+      poster: item.order_poster,
+      year: item.order_year || "",
+      orderBy: item.order_by,
+      orderType: item.order_type,
+      dateAdded: item.created_at,
+    }));
+
+    renderGames();
+  } catch (err) {
+    console.error("Error loading game orders from Supabase", err);
+  }
+}
+
 // Инициализация
 document.addEventListener("DOMContentLoaded", async function () {
   const cached = localStorage.getItem("moviesCache");
@@ -219,6 +251,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   renderMovies();
   renderWatchlist();
+  renderGames();
   setupRatingStars();
   initFileUpload();
 
@@ -229,6 +262,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   await loadMoviesFromSupabase();
   await loadWatchlistFromSupabase();
+  await loadGamesFromSupabase();
 
   const searchBtn = document.getElementById("autoSearchBtn");
   const resultsSelect = document.getElementById("autoResults");
@@ -275,6 +309,22 @@ document.addEventListener("DOMContentLoaded", async function () {
         try {
           editOrderPosterData = await readFileAsDataURL(this.files[0]);
           orderPreview.src = editOrderPosterData;
+        } catch (err) {
+          console.error("Error reading file", err);
+        }
+      }
+    });
+  }
+
+  const gamePreview = document.getElementById("editGamePosterPreview");
+  const gameInput = document.getElementById("editGamePoster");
+  if (gamePreview && gameInput) {
+    gamePreview.addEventListener("click", () => gameInput.click());
+    gameInput.addEventListener("change", async function () {
+      if (this.files && this.files[0]) {
+        try {
+          editGamePosterData = await readFileAsDataURL(this.files[0]);
+          gamePreview.src = editGamePosterData;
         } catch (err) {
           console.error("Error reading file", err);
         }
@@ -497,6 +547,49 @@ function renderWatchlist() {
   watchlist.forEach((item) => {
     container.appendChild(createOrderCard(item));
   });
+}
+
+function createGameCard(game, showActions = true) {
+  const card = document.createElement("div");
+  card.className = "order-card";
+  const iconPath = ORDER_TYPE_ICONS[game.orderType];
+  const typeHtml = iconPath
+    ? `<img src="${iconPath}" alt="${game.orderType}"> ${game.orderType}`
+    : game.orderType || "";
+  card.innerHTML = `
+        <img src="${game.poster}" alt="${game.title}" class="order-poster" onerror="this.style.display='none'">
+        <div class="order-info">
+            <div class="order-title">${game.title}</div>
+            <div class="order-genres">${game.genres || ""}</div>
+            <div class="order-meta">
+                <span class="order-year">${game.year || ""}</span>
+            </div>
+            <div class="order-meta">
+                <span class="order-by">Заказал: ${game.orderBy || ""}</span>
+                <span class="order-type">${typeHtml}</span>
+            </div>
+            <div class="order-footer">
+                <div class="order-date">${formatDate(game.dateAdded)}</div>
+                ${
+                  showActions
+                    ? `<div class="order-actions">
+                    <button class="btn btn-primary btn-icon" onclick="markGameDone(${game.id})">✅</button>
+                    <button class="btn btn-edit btn-icon" onclick="openEditGameModal(${game.id})">✏️</button>
+                    <button class="btn btn-delete btn-icon" onclick="deleteGameOrder(${game.id})">🗑️</button>
+                </div>`
+                    : ""
+                }
+            </div>
+        </div>
+    `;
+  return card;
+}
+
+function renderGames() {
+  const container = document.getElementById("gamesContainer");
+  if (!container) return;
+  container.innerHTML = "";
+  gameOrders.forEach((g) => container.appendChild(createGameCard(g)));
 }
 
 // Поиск фильмов
@@ -731,6 +824,45 @@ async function deleteOrder(id) {
       console.error("Error deleting order from Supabase", err);
     }
   }
+}
+
+async function deleteGameOrder(id) {
+  if (!confirm("Удалить игру?")) return;
+
+  const index = gameOrders.findIndex((g) => g.id === id);
+  if (index !== -1) {
+    gameOrders.splice(index, 1);
+    renderGames();
+    try {
+      await supabaseClient.from("Game_Orders").delete().eq("id", id);
+    } catch (err) {
+      console.error("Error deleting game order from Supabase", err);
+    }
+  }
+}
+
+function markGameDone(id) {
+  if (!confirm("Отметить игру пройденной?")) return;
+  deleteGameOrder(id);
+}
+
+function openEditGameModal(id) {
+  editingGameId = id;
+  const game = gameOrders.find((g) => g.id === id);
+  if (!game) return;
+  document.getElementById("editGameTitle").value = game.title;
+  document.getElementById("editGameYear").value = game.year || "";
+  document.getElementById("editGameGenres").value = game.genres || "";
+  document.getElementById("editGameOrderBy").value = game.orderBy || "";
+  document.getElementById("editGameOrderType").value = game.orderType || "";
+  document.getElementById("editGamePosterPreview").src = game.poster;
+  document.getElementById("editGamePoster").value = "";
+  editGamePosterData = null;
+  document.getElementById("editGameModal").style.display = "block";
+}
+
+function openAddGameModal() {
+  document.getElementById("addGameModal").style.display = "block";
 }
 
 function openEditOrderModal(id) {
@@ -1079,6 +1211,64 @@ document
     showWatchlistKPPreview();
   });
 
+document
+  .getElementById("addGameForm")
+  ?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const fileInput = document.getElementById("gamePoster");
+    let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
+    if (fileInput.files && fileInput.files[0]) {
+      try {
+        poster = await readFileAsDataURL(fileInput.files[0]);
+      } catch (err) {
+        console.error("Error reading file", err);
+      }
+    }
+
+    const gameData = {
+      title: document.getElementById("gameTitle").value,
+      year: document.getElementById("gameYear").value || "",
+      genres: document.getElementById("gameGenres").value || "",
+      poster: poster,
+      orderBy: document.getElementById("gameOrderBy").value,
+      orderType: document.getElementById("gameOrderType").value,
+    };
+
+    try {
+      const { data, error } = await supabaseClient
+        .from("Game_Orders")
+        .insert({
+          order_title: gameData.title,
+          order_year: gameData.year,
+          order_genres: gameData.genres,
+          order_poster: gameData.poster,
+          order_by: gameData.orderBy,
+          order_type: gameData.orderType,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      gameOrders.push({
+        id: data.id,
+        title: data.order_title,
+        genres: data.order_genres,
+        poster: data.order_poster,
+        year: data.order_year || "",
+        orderBy: data.order_by,
+        orderType: data.order_type,
+        dateAdded: data.created_at,
+      });
+      renderGames();
+    } catch (err) {
+      console.error("Error adding game", err);
+    }
+
+    closeModal("addGameModal");
+  });
+
 // Оценка фильма из watchlist
 async function submitRating() {
   const rating = getCurrentRating("rateMovieStars");
@@ -1205,6 +1395,41 @@ document
     closeModal("editOrderModal");
   });
 
+document
+  .getElementById("editGameForm")
+  ?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const game = gameOrders.find((g) => g.id === editingGameId);
+    if (game) {
+      game.title = document.getElementById("editGameTitle").value;
+      game.year = document.getElementById("editGameYear").value;
+      game.genres = document.getElementById("editGameGenres").value;
+      game.orderBy = document.getElementById("editGameOrderBy").value;
+      game.orderType = document.getElementById("editGameOrderType").value;
+      game.poster = editGamePosterData || game.poster;
+
+      try {
+        await supabaseClient
+          .from("Game_Orders")
+          .update({
+            order_title: game.title,
+            order_year: game.year,
+            order_genres: game.genres,
+            order_poster: game.poster,
+            order_by: game.orderBy,
+            order_type: game.orderType,
+          })
+          .eq("id", editingGameId);
+      } catch (err) {
+        console.error("Error updating game", err);
+      }
+    }
+
+    renderGames();
+    closeModal("editGameModal");
+  });
+
 // Форматирование даты
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -1216,6 +1441,8 @@ function formatDate(dateStr) {
 function resetForm() {
   document.getElementById("addMovieForm").reset();
   document.getElementById("addWatchlistForm").reset();
+  document.getElementById("addGameForm")?.reset();
+  document.getElementById("editGameForm")?.reset();
   setRatingStars("ratingStars", 0);
   setRatingStars("editRatingStars", 0);
   setRatingStars("rateMovieStars", 0);

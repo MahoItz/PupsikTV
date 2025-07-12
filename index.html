@@ -61,6 +61,9 @@
                     <div id="gamesContainer">
                         <!-- Список заказанных игр -->
                     </div>
+                    <button class="btn btn-secondary" onclick="openAddGameModal()" style="width: 100%; margin-top: 15px;">
+                        ➕ Добавить игру
+                    </button>
                 </div>
             </div>
         </div>
@@ -340,6 +343,97 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить</button>
+            </form>
+        </div>
+    </div>
+    <!-- Модальное окно добавления игры -->
+    <div id="addGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addGameModal')">&times;</span>
+            <h2>Добавить игру</h2>
+            <form id="addGameForm">
+                <div class="form-group">
+                    <label for="gameTitle">Название:</label>
+                    <input type="text" id="gameTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="gameYear">Год:</label>
+                    <input type="number" id="gameYear" placeholder="2024">
+                </div>
+                <div class="form-group">
+                    <label for="gamePoster">Постер:</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="gamePoster" accept="image/*">
+                        <label for="gamePoster" class="file-upload-label">
+                            <div class="file-upload-icon">📁</div>
+                            <div class="file-upload-text">
+                                <div class="main-text">Выберите файл изображения</div>
+                                <div class="sub-text">или перетащите его сюда</div>
+                            </div>
+                        </label>
+                        <button type="button" class="file-remove" title="Удалить файл">×</button>
+                    </div>
+                    <div class="file-name" style="display:none;"></div>
+                    <img id="gamePosterPreview" class="poster-preview" src="" alt="Предпросмотр" style="display:none;">
+                </div>
+                <div class="form-group">
+                    <label for="gameGenres">Жанр:</label>
+                    <input type="text" id="gameGenres" placeholder="Action, RPG">
+                </div>
+                <div class="form-group">
+                    <label for="gameOrderBy">Кто заказал:</label>
+                    <input type="text" id="gameOrderBy" required>
+                </div>
+                <div class="form-group">
+                    <label for="gameOrderType">Способ заказа:</label>
+                    <select id="gameOrderType">
+                        <option value="">Не указано</option>
+                        <option value="Донат">Донат</option>
+                        <option value="Баллы канала">Баллы канала</option>
+                        <option value="Шары">Шары</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Добавить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования игры -->
+    <div id="editGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editGameModal')">&times;</span>
+            <h2>Редактировать игру</h2>
+            <form id="editGameForm">
+                <div class="poster-upload">
+                    <img id="editGamePosterPreview" class="movie-poster" src="" alt="Постер">
+                    <input type="file" id="editGamePoster" accept="image/*" style="display:none">
+                </div>
+                <div class="form-group">
+                    <label for="editGameTitle">Название:</label>
+                    <input type="text" id="editGameTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editGameYear">Год:</label>
+                    <input type="number" id="editGameYear">
+                </div>
+                <div class="form-group">
+                    <label for="editGameGenres">Жанр:</label>
+                    <input type="text" id="editGameGenres">
+                </div>
+                <div class="form-group">
+                    <label for="editGameOrderBy">Заказал:</label>
+                    <input type="text" id="editGameOrderBy">
+                </div>
+                <div class="form-group">
+                    <label for="editGameOrderType">Способ заказа:</label>
+                    <select id="editGameOrderType">
+                        <option value="">Не указано</option>
+                        <option value="Донат">Донат</option>
+                        <option value="Баллы канала">Баллы канала</option>
+                        <option value="Шары">Шары</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
             </form>
         </div>
     </div>
