@@ -359,7 +359,7 @@ function createMovieCard(movie, showActions = true) {
   const iconPath = ORDER_TYPE_ICONS[movie.orderType];
   const orderInfo =
     movie.orderBy && iconPath
-      ? `<div class="movie-order">Заказ: <span class="movie-order-name">${movie.orderBy}</span> ${movie.orderType}<img src="${iconPath}" alt="${movie.orderType}"></div>`
+      ? `<div class="movie-order"><img src="${iconPath}" alt="${movie.orderType}"><div class="movie-order-name">${movie.orderBy}</div></div>`
       : "";
   div.className = cardClass;
   div.innerHTML = `

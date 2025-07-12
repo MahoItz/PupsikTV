@@ -490,8 +490,9 @@ select option {
 
 .movie-order {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     font-size: 0.85rem;
     color: var(--text-secondary);
     margin-bottom: 12px;
@@ -499,28 +500,29 @@ select option {
 
 .movie-order-name {
     color: var(--accent-color);
+    font-size: 1.2em;
     font-weight: 600;
 }
 
 .movie-order img {
-    width: 20px;
-    height: 20px;
+    width: 60px;
+    height: 60px;
     object-fit: contain;
 }
 
 .movie-rating {
     display: flex;
-    flex-direction: row;         /* по умолчанию, можно не писать */
+    flex-direction: row;
     gap: 10px;
     margin-bottom: 15px;
     padding: 12px 0;
 }
 
 .movie-rating .rating-item {
-    flex: 1;                     /* 🔹 Каждый занимает равную часть */
+    flex: 1;
     display: flex;
     align-items: center;
-    justify-content: center;     /* Центрирует текст и иконки */
+    justify-content: center;
     gap: 8px;
     font-weight: 700;
     padding: 6px 12px;
