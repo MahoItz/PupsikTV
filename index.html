@@ -13,14 +13,14 @@
 
 <body>
     <div class="container">
-        <header>
+        <header id="headerLogo">
             <img src="images/Pupsik_TV_Header_2.png" alt="PupsikTV Header">
             <h1>PupsikTV</h1>
         </header>
 
         <div class="main-content">
             <div class="left-panel">
-                <div class="controls">
+                <div class="controls admin-only">
                     <button class="btn btn-primary" onclick="openAddMovieModal()">
                         ➕ Добавить фильм
                     </button>
@@ -53,7 +53,7 @@
                         <div id="watchlistContainer">
                             <!-- Список заказанных -->
                         </div>
-                        <button class="btn btn-secondary" onclick="openAddToWatchlistModal()"
+                        <button class="btn btn-secondary admin-only" onclick="openAddToWatchlistModal()"
                             style="width: 100%; margin-top: 15px;">
                             ➕ Добавить в список
                         </button>
@@ -65,7 +65,7 @@
                         <div id="gamesContainer">
                             <!-- Список заказанных игр -->
                         </div>
-                        <button class="btn btn-secondary" onclick="openAddGameModal()" style="width: 100%; margin-top: 15px;">
+                        <button class="btn btn-secondary admin-only" onclick="openAddGameModal()" style="width: 100%; margin-top: 15px;">
                             ➕ Добавить игру
                         </button>
                     </div>
@@ -461,6 +461,17 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
+            </form>
+        </div>
+    </div>
+    <!-- Модальное окно администратора -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('adminModal')">&times;</span>
+            <h2>Войти как админ</h2>
+            <form id="adminLoginForm">
+                <input type="password" id="adminPassword" placeholder="Пароль" style="width:100%;margin-bottom:10px;" required>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Войти</button>
             </form>
         </div>
     </div>

@@ -279,6 +279,9 @@ header img {
 .controls {
     margin-bottom: 25px;
 }
+.admin-only {
+    display: none;
+}
 
 .search-sort {
     display: flex;

@@ -5,6 +5,8 @@ const SUPABASE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNod2VrdXJtenl6aXZ0d29yanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzODQ5NjEsImV4cCI6MjA2MTk2MDk2MX0.wXm1enXaPxXk1r6gjtkE2yizxZayLJh4hXmMV54Up9k";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const EDIT_PASSWORD = window.EDIT_PASSWORD || "";
+let isAdmin = false;
 // Kinopoisk (unofficial API)
 const KINOPOISK_API_KEY = "a63efc29-37be-423f-8c0d-722154bc08f4";
 const KINOPOISK_SEARCH_URL =
@@ -279,6 +281,29 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadWatchlistFromSupabase();
   await loadGamesFromSupabase();
 
+ isAdmin = localStorage.getItem("isAdmin") === "true";
+  if (isAdmin) {
+    showAdminControls();
+  }
+  const header = document.getElementById("headerLogo");
+  if (header)
+    header.addEventListener("click", () => {
+      document.getElementById("adminModal").style.display = "block";
+    });
+  const adminForm = document.getElementById("adminLoginForm");
+  if (adminForm)
+    adminForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const pw = document.getElementById("adminPassword").value;
+      if (pw === EDIT_PASSWORD) {
+        isAdmin = true;
+        localStorage.setItem("isAdmin", "true");
+        showAdminControls();
+        closeModal("adminModal");
+      } else {
+        alert("Неверный пароль");
+      }
+    });
   const searchBtn = document.getElementById("autoSearchBtn");
   const resultsSelect = document.getElementById("autoResults");
   if (searchBtn) searchBtn.addEventListener("click", handleKPSearch);
@@ -475,7 +500,7 @@ function renderPagination() {
 }
 
 // Создание карточки фильма
-function createMovieCard(movie, showActions = true) {
+function createMovieCard(movie, showActions = isAdmin) {
   const div = document.createElement("div");
   let cardClass = "movie-card";
   if (movie.rating === 0) cardClass += " rating-low";
@@ -528,7 +553,7 @@ function createMovieCard(movie, showActions = true) {
 }
 
 // Отображение списка к просмотру
-function createOrderCard(order, showActions = true, showOrderBy = true) {
+function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const card = document.createElement("div");
   card.className = "order-card";
   const iconPath = ORDER_TYPE_ICONS[order.orderType];
@@ -577,7 +602,7 @@ function renderWatchlist() {
   });
 }
 
-function createGameCard(game, showActions = true) {
+function createGameCard(game, showActions = isAdmin) {
   const card = document.createElement("div");
   card.className = "order-card";
   const iconPath = ORDER_TYPE_ICONS[game.orderType];
@@ -1609,3 +1634,13 @@ window.onclick = function (event) {
     }
   });
 };
+
+
+function showAdminControls() {
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = '';
+  });
+  renderMovies();
+  renderWatchlist();
+  renderGames();
+}
