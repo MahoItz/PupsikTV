@@ -184,7 +184,7 @@ async function loadMoviesFromSupabase() {
       rating: item.rating_numeric,
       kpRating: item.rating_OMDB,
       dateAdded: item.date,
-      orderBy: item.order_by,
+      orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
     }));
     totalMovies = allMovies.length;
@@ -216,7 +216,7 @@ async function loadWatchlistFromSupabase() {
       poster: item.order_poster,
       year: item.order_year || "",
       kpRating: item.kinopoisk_rate,
-      orderBy: item.order_by,
+      orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
       dateAdded: item.created_at,
     }));
@@ -245,7 +245,7 @@ async function loadGamesFromSupabase() {
       genres: item.game_genres,
       poster: item.game_poster,
       year: item.game_year || "",
-      orderBy: item.game_order_by,
+      orderBy: item.game_order_by && item.game_order_by !== "null" ? item.game_order_by : "",
       orderType: item.game_order_type,
       dateAdded: item.created_at,
     }));
@@ -482,8 +482,9 @@ function createMovieCard(movie, showActions = true) {
   if (movie.rating === 11) cardClass += " rating-high";
   const starsCount = Math.max(0, Math.min(movie.rating, 10));
   const ribbonClass = ORDER_TYPE_CLASSES[movie.orderType];
-  const orderRibbon = movie.orderBy
-    ? `<div class="order-ribbon ${ribbonClass}">${movie.orderBy}</div>`
+  const orderByText = movie.orderBy && movie.orderBy !== "null" ? movie.orderBy : "";
+  const orderRibbon = orderByText
+    ? `<div class="order-ribbon ${ribbonClass}">${orderByText}</div>`
     : "";
   div.className = cardClass;
   div.innerHTML = `
@@ -535,8 +536,9 @@ function createOrderCard(order, showActions = true, showOrderBy = true) {
     ? `<img src="${iconPath}" alt="${order.orderType}"> ${order.orderType}`
     : order.orderType || "";
   const ribbonClass = ORDER_TYPE_CLASSES[order.orderType];
-  const orderRibbon = order.orderBy && showOrderBy
-    ? `<div class="order-ribbon ${ribbonClass}">${order.orderBy}</div>`
+  const orderByText = order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
+  const orderRibbon = orderByText && showOrderBy
+    ? `<div class="order-ribbon ${ribbonClass}">${orderByText}</div>`
     : "";
   card.innerHTML = `
         <img src="${order.poster}" alt="${order.title}" class="order-poster" onerror="this.style.display='none'">
@@ -586,8 +588,9 @@ function createGameCard(game, showActions = true) {
     ? `<img src="${iconPath}" alt="${game.orderType}"> ${game.orderType}`
     : game.orderType || "";
   const ribbonClass = ORDER_TYPE_CLASSES[game.orderType];
-  const orderRibbon = game.orderBy
-    ? `<div class="order-ribbon ${ribbonClass}">${game.orderBy}</div>`
+  const orderByText = game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
+  const orderRibbon = orderByText
+    ? `<div class="order-ribbon ${ribbonClass}">${orderByText}</div>`
     : "";
   card.innerHTML = `
         <img src="${game.poster}" alt="${game.title}" class="order-poster" onerror="this.style.display='none'">

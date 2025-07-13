@@ -505,15 +505,18 @@ select option {
     position: absolute;
     top: 10px;
     left: -40px;
-    width: 160px;
+    width: 200px;
     transform: rotate(-45deg);
     text-align: center;
     color: #fff;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
     padding: 4px 0;
     z-index: 2;
     pointer-events: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .ribbon-donate {
@@ -644,7 +647,7 @@ select option {
 
 .order-card {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
     padding: 10px;
@@ -656,15 +659,15 @@ select option {
 }
 
 .order-poster {
-    width: 80px;
+    width: 100%;
     height: auto;
     object-fit: cover;
     border-radius: var(--border-radius-small);
-    flex-shrink: 0;
+    margin-bottom: 8px;
 }
 
 .order-info {
-    flex: 1;
+    width: 100%;
 }
 
 .order-title {
