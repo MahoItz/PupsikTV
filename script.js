@@ -35,6 +35,12 @@ const ORDER_TYPE_ICONS = {
   "Шары": "images/balls_icon.png",
 };
 
+const ORDER_TYPE_CLASSES = {
+  "Донат": "ribbon-donate",
+  "Баллы канала": "ribbon-points",
+  "Шары": "ribbon-balls",
+};
+
 // Watchlist modal helpers
 let currentWatchlistMode = "auto";
 let kpOrderResults = [];
@@ -475,22 +481,21 @@ function createMovieCard(movie, showActions = true) {
   if (movie.rating === 0) cardClass += " rating-low";
   if (movie.rating === 11) cardClass += " rating-high";
   const starsCount = Math.max(0, Math.min(movie.rating, 10));
-  const iconPath = ORDER_TYPE_ICONS[movie.orderType];
-  const orderInfo =
-    movie.orderBy && iconPath
-      ? `<div class="movie-order"><img src="${iconPath}" alt="${movie.orderType}"><div class="movie-order-name">${movie.orderBy}</div></div>`
-      : "";
+  const ribbonClass = ORDER_TYPE_CLASSES[movie.orderType];
+  const orderRibbon = movie.orderBy
+    ? `<div class="order-ribbon ${ribbonClass}">${movie.orderBy}</div>`
+    : "";
   div.className = cardClass;
   div.innerHTML = `
               <img src="${movie.poster}" alt="${movie.title}" class="movie-poster"
                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              ${orderRibbon}
               <div class="movie-poster-placeholder" style="display: none;">
                   <span>Нет постера</span>
               </div>
               <div class="movie-info">
                   <div class="movie-header">
                       <div class="movie-title">${movie.title}</div>
-                      ${orderInfo}
                   </div>
                   <div class="movie-original-title">${movie.originalTitle}</div>
                   <div class="movie-genres">${movie.genre}</div>
@@ -529,8 +534,13 @@ function createOrderCard(order, showActions = true, showOrderBy = true) {
   const typeHtml = iconPath
     ? `<img src="${iconPath}" alt="${order.orderType}"> ${order.orderType}`
     : order.orderType || "";
+  const ribbonClass = ORDER_TYPE_CLASSES[order.orderType];
+  const orderRibbon = order.orderBy && showOrderBy
+    ? `<div class="order-ribbon ${ribbonClass}">${order.orderBy}</div>`
+    : "";
   card.innerHTML = `
         <img src="${order.poster}" alt="${order.title}" class="order-poster" onerror="this.style.display='none'">
+        ${orderRibbon}
         <div class="order-info">
             <div class="order-title">${order.title}</div>
             <div class="order-original-title">${order.originalTitle || ""}</div>
@@ -540,7 +550,6 @@ function createOrderCard(order, showActions = true, showOrderBy = true) {
                 <span class="order-kp-rating"><img src="images/kp_icon.png" alt="KP Rate"> ${order.kpRating ?? "-"}</span>
             </div>
             <div class="order-meta">
-                ${showOrderBy ? `<span class="order-by">Заказал: ${order.orderBy}</span>` : ""}
                 <span class="order-type">${typeHtml}</span>
             </div>
             <div class="order-footer">
@@ -576,8 +585,13 @@ function createGameCard(game, showActions = true) {
   const typeHtml = iconPath
     ? `<img src="${iconPath}" alt="${game.orderType}"> ${game.orderType}`
     : game.orderType || "";
+  const ribbonClass = ORDER_TYPE_CLASSES[game.orderType];
+  const orderRibbon = game.orderBy
+    ? `<div class="order-ribbon ${ribbonClass}">${game.orderBy}</div>`
+    : "";
   card.innerHTML = `
         <img src="${game.poster}" alt="${game.title}" class="order-poster" onerror="this.style.display='none'">
+        ${orderRibbon}
         <div class="order-info">
             <div class="order-title">${game.title}</div>
             <div class="order-genres">${game.genres || ""}</div>
@@ -585,7 +599,6 @@ function createGameCard(game, showActions = true) {
                 <span class="order-year">${game.year || ""}</span>
             </div>
             <div class="order-meta">
-                <span class="order-by">Заказал: ${game.orderBy || ""}</span>
                 <span class="order-type">${typeHtml}</span>
             </div>
             <div class="order-footer">
