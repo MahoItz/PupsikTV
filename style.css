@@ -22,6 +22,14 @@
     --glow-animation: glow 2s ease-in-out infinite alternate;
     --rating-low: #f44336;
     --rating-high: #4caf50;
+} 
+
+.admin-only {
+    display: none;
+}
+
+body.admin-active .admin-only {
+    display: inline-block;
 }
 
 /* Сброс стилей */

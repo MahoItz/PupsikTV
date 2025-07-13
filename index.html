@@ -14,14 +14,14 @@
 <body>
     <div class="container">
         <header>
-            <img src="images/Pupsik_TV_Header_2.png" alt="PupsikTV Header">
+            <img src="images/Pupsik_TV_Header_2.png" alt="PupsikTV Header" onclick="openPasswordModal()">
             <h1>PupsikTV</h1>
         </header>
 
         <div class="main-content">
             <div class="left-panel">
                 <div class="controls">
-                    <button class="btn btn-primary" onclick="openAddMovieModal()">
+                    <button class="btn btn-primary admin-only" onclick="openAddMovieModal()">
                         ➕ Добавить фильм
                     </button>
                 </div>
@@ -53,7 +53,7 @@
                         <div id="watchlistContainer">
                             <!-- Список заказанных -->
                         </div>
-                        <button class="btn btn-secondary" onclick="openAddToWatchlistModal()"
+                        <button class="btn btn-secondary admin-only" onclick="openAddToWatchlistModal()"
                             style="width: 100%; margin-top: 15px;">
                             ➕ Добавить в список
                         </button>
@@ -65,7 +65,7 @@
                         <div id="gamesContainer">
                             <!-- Список заказанных игр -->
                         </div>
-                        <button class="btn btn-secondary" onclick="openAddGameModal()" style="width: 100%; margin-top: 15px;">
+                        <button class="btn btn-secondary admin-only" onclick="openAddGameModal()" style="width: 100%; margin-top: 15px;">
                             ➕ Добавить игру
                         </button>
                     </div>
@@ -462,6 +462,16 @@
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно ввода пароля -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('passwordModal')">&times;</span>
+            <h2>Введите пароль</h2>
+            <input type="password" id="passwordInput" class="text-input" placeholder="Пароль">
+            <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="submitPassword()">Войти</button>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

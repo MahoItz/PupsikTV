@@ -18,6 +18,17 @@ const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
 let rawgResults = [];
 let selectedRAWGGame = null;
 
+// Пароль для режима редактирования. Значение подставляется при деплое
+const EDIT_PASSWORD = "__EDIT_PASSWORD__";
+let isAdmin = false;
+
+function initAdmin() {
+  const stored = localStorage.getItem("isAdmin");
+  if (stored === "true") {
+    applyAdminMode(true);
+  }
+}
+
 // Массив фильмов будет заполняться данными из базы
 let allMovies = [];
 let movies = [];
@@ -258,6 +269,7 @@ async function loadGamesFromSupabase() {
 
 // Инициализация
 document.addEventListener("DOMContentLoaded", async function () {
+  initAdmin();
   const cached = localStorage.getItem("moviesCache");
   if (cached) {
     allMovies = JSON.parse(cached);
@@ -412,7 +424,7 @@ function renderMovies() {
   movies = filtered.slice(start, start + moviesPerPage);
 
   movies.forEach((movie) => {
-    const movieCard = createMovieCard(movie);
+    const movieCard = createMovieCard(movie, isAdmin);
     grid.appendChild(movieCard);
   });
   renderPagination();
@@ -573,7 +585,7 @@ function renderWatchlist() {
   container.innerHTML = "";
 
   watchlist.forEach((item) => {
-    container.appendChild(createOrderCard(item));
+    container.appendChild(createOrderCard(item, isAdmin));
   });
 }
 
@@ -619,7 +631,7 @@ function renderGames() {
   const container = document.getElementById("gamesContainer");
   if (!container) return;
   container.innerHTML = "";
-  gameOrders.forEach((g) => container.appendChild(createGameCard(g)));
+  gameOrders.forEach((g) => container.appendChild(createGameCard(g, isAdmin)));
 }
 
 // Поиск фильмов
@@ -856,15 +868,27 @@ function toggleSortOrder() {
 
 // Модальные окна
 function openAddMovieModal() {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   document.getElementById("addMovieModal").style.display = "block";
   resetForm();
 }
 
 function openAddToWatchlistModal() {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   document.getElementById("addWatchlistModal").style.display = "block";
 }
 
 function openRateModal(id) {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   ratingMovieId = id;
   const item = watchlist.find((w) => w.id === id);
   document.getElementById("rateMovieTitle").textContent = item ? item.title : "";
@@ -873,6 +897,10 @@ function openRateModal(id) {
 }
 
 function openEditModal(id) {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   editingMovieId = id;
   const movie = allMovies.find((m) => m.id === id);
 
@@ -891,6 +919,10 @@ function openEditModal(id) {
 }
 
 async function deleteMovie(id) {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   if (!confirm("Удалить фильм?")) return;
 
   const index = allMovies.findIndex((m) => m.id === id);
@@ -907,6 +939,10 @@ async function deleteMovie(id) {
 }
 
 async function deleteOrder(id) {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   if (!confirm("Удалить заказ?")) return;
 
   const index = watchlist.findIndex((o) => o.id === id);
@@ -922,6 +958,10 @@ async function deleteOrder(id) {
 }
 
 async function deleteGameOrder(id) {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   if (!confirm("Удалить игру?")) return;
 
   const index = gameOrders.findIndex((g) => g.id === id);
@@ -937,11 +977,19 @@ async function deleteGameOrder(id) {
 }
 
 function markGameDone(id) {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   if (!confirm("Отметить игру пройденной?")) return;
   deleteGameOrder(id);
 }
 
 function openEditGameModal(id) {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   editingGameId = id;
   const game = gameOrders.find((g) => g.id === id);
   if (!game) return;
@@ -957,10 +1005,18 @@ function openEditGameModal(id) {
 }
 
 function openAddGameModal() {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   document.getElementById("addGameModal").style.display = "block";
 }
 
 function openEditOrderModal(id) {
+  if (!isAdmin) {
+    alert("Нет доступа");
+    return;
+  }
   editingOrderId = id;
   const order = watchlist.find((o) => o.id === id);
   if (!order) return;
@@ -979,6 +1035,34 @@ function openEditOrderModal(id) {
 function closeModal(modalId) {
   document.getElementById(modalId).style.display = "none";
   resetForm();
+}
+
+// Работа с режимом администратора
+function openPasswordModal() {
+  if (isAdmin) return;
+  document.getElementById("passwordModal").style.display = "block";
+}
+
+function submitPassword() {
+  const input = document.getElementById("passwordInput").value;
+  if (input === EDIT_PASSWORD) {
+    document.getElementById("passwordModal").style.display = "none";
+    applyAdminMode(true);
+  } else {
+    alert("Неверный пароль");
+  }
+}
+
+function applyAdminMode(enable) {
+  isAdmin = enable;
+  localStorage.setItem("isAdmin", enable ? "true" : "false");
+  document.body.classList.toggle("admin-active", enable);
+  document.querySelectorAll(".admin-only").forEach((el) => {
+    el.style.display = enable ? "" : "none";
+  });
+  renderMovies();
+  renderWatchlist();
+  renderGames();
 }
 
 // Переключение режимов
@@ -1122,6 +1206,26 @@ document
   .getElementById("addMovieForm")
   .addEventListener("submit", async function (e) {
     e.preventDefault();
+
+    if (!isAdmin) {
+      alert("Нет доступа");
+      return;
+    }
+
+    if (!isAdmin) {
+      alert("Нет доступа");
+      return;
+    }
+
+    if (!isAdmin) {
+      alert("Нет доступа");
+      return;
+    }
+
+    if (!isAdmin) {
+      alert("Нет доступа");
+      return;
+    }
 
     const rating = getCurrentRating("ratingStars");
 
@@ -1327,6 +1431,11 @@ document
   .getElementById("addGameForm")
   ?.addEventListener("submit", async function (e) {
     e.preventDefault();
+
+    if (!isAdmin) {
+      alert("Нет доступа");
+      return;
+    }
 
     const orderBy = document.getElementById("gameOrderBy").value;
     const orderType = document.getElementById("gameOrderType").value;
@@ -1551,6 +1660,11 @@ document
   .getElementById("editGameForm")
   ?.addEventListener("submit", async function (e) {
     e.preventDefault();
+
+    if (!isAdmin) {
+      alert("Нет доступа");
+      return;
+    }
 
     const game = gameOrders.find((g) => g.id === editingGameId);
     if (game) {
