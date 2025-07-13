@@ -5,7 +5,6 @@ const SUPABASE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNod2VrdXJtenl6aXZ0d29yanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzODQ5NjEsImV4cCI6MjA2MTk2MDk2MX0.wXm1enXaPxXk1r6gjtkE2yizxZayLJh4hXmMV54Up9k";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const EDIT_PASSWORD = window.EDIT_PASSWORD || "";
 let isAdmin = false;
 // Kinopoisk (unofficial API)
 const KINOPOISK_API_KEY = "a63efc29-37be-423f-8c0d-722154bc08f4";
@@ -30,6 +29,22 @@ let sortAscending = false;
 // Список заказанных фильмов
 let watchlist = [];
 let gameOrders = [];
+
+async function verifyAdminPassword(password) {
+  try {
+    const res = await fetch('/api/verify-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return !!data.ok;
+  } catch (err) {
+    console.error('Failed to verify admin password', err);
+    return false;
+  }
+}
 
 const ORDER_TYPE_ICONS = {
   "Донат": "images/donate_icon.png",
@@ -281,7 +296,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadWatchlistFromSupabase();
   await loadGamesFromSupabase();
 
- isAdmin = localStorage.getItem("isAdmin") === "true";
+  isAdmin = localStorage.getItem("isAdmin") === "true";
   if (isAdmin) {
     showAdminControls();
   }
@@ -292,10 +307,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   const adminForm = document.getElementById("adminLoginForm");
   if (adminForm)
-    adminForm.addEventListener("submit", function (e) {
+    adminForm.addEventListener("submit", async function (e) {
       e.preventDefault();
       const pw = document.getElementById("adminPassword").value;
-      if (pw === EDIT_PASSWORD) {
+      const ok = await verifyAdminPassword(pw);
+      if (ok) {
         isAdmin = true;
         localStorage.setItem("isAdmin", "true");
         showAdminControls();
