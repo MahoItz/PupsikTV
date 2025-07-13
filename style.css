@@ -45,15 +45,6 @@ body {
 }
 
 /* Анимации */
-@keyframes glow {
-    from { box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); }
-    to { box-shadow: 0 0 40px rgba(0, 212, 255, 0.6), 0 0 60px rgba(0, 212, 255, 0.3); }
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
 
 @keyframes slideInGlow {
     from {
@@ -63,6 +54,22 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes textGlow {
+    0%, 100% {
+        text-shadow: 
+            0 0 20px rgba(0, 242, 255, 0.3),
+            0 0 40px rgba(255, 20, 147, 0.2);
+        background-position: 0% 50%;
+    }
+    50% {
+        text-shadow: 
+            0 0 30px rgba(0, 242, 255, 0.5),
+            0 0 60px rgba(255, 20, 147, 0.3),
+            0 0 80px rgba(138, 43, 226, 0.2);
+        background-position: 100% 50%;
     }
 }
 
@@ -89,12 +96,13 @@ body {
 header {
     text-align: center;
     margin-bottom: 40px;
-    background: var(--card-bg);
-    backdrop-filter: blur(40px);
-    border-radius: var(--border-radius);
+    background: rgba(20, 25, 40, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
     position: relative;
     overflow: visible;
-    padding: 60px 10px 10px;
+    padding: 40px 20px 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 header::before {
@@ -104,36 +112,39 @@ header::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, 
-        var(--neon-blue), 
-        var(--neon-pink), 
-        var(--accent-color), 
-        var(--secondary-color)
+    background: linear-gradient(135deg, 
+        rgba(0, 242, 255, 0.5), 
+        rgba(255, 20, 147, 0.5), 
+        rgba(138, 43, 226, 0.5), 
+        rgba(0, 191, 255, 0.5)
     );
     z-index: -1;
-    margin: -2px;
+    margin: -1px;
     border-radius: inherit;
-    opacity: 0.9;
+    opacity: 0.6;
 }
 
 header h1 {
     font-family: 'Carter One', display;
-    font-size: clamp(2rem, 5vw, 3rem);
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
     background: linear-gradient(135deg, 
-        var(--primary-color), 
-        var(--secondary-color), 
-        var(--neon-pink), 
-        var(--accent-color)
+        #00f2ff 0%,
+        #ff1493 25%,
+        #8a2be2 50%,
+        #00bfff 75%,
+        #00f2ff 100%
     );
-    background-size: 200% 200%;
+    background-size: 400% 400%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
-    letter-spacing: 0.03em;
-    animation: headerImageGlow 3s ease-in-out infinite;
+    text-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+    letter-spacing: 0.05em;
+    animation: textGlow 3s ease-in-out infinite alternate;
     position: relative;
     z-index: 5;
+    margin: 0;
+    line-height: 1.1;
 }
 
 header img {
@@ -165,17 +176,6 @@ header img {
     border: 1px solid rgba(0, 212, 255, 0.2);
     box-shadow: var(--shadow-neon);
     position: relative;
-}
-
-.left-panel::before {
-    content: '';
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    right: -1px;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 /* Правая панель */
@@ -402,22 +402,6 @@ select option {
     border-color: var(--rating-high);
 }
 
-.movie-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--neon-pink));
-    opacity: 0;
-    transition: var(--transition);
-}
-
-.movie-card:hover::before {
-    opacity: 1;
-}
-
 .movie-card:hover {
     transform: translateY(-10px) scale(1.02);
     box-shadow: 
@@ -438,7 +422,7 @@ select option {
 /* Стили для заглушки когда нет постера */
 .movie-poster-placeholder {
     width: 100%;
-    height: 300px; /* Фиксированная высота для заглушки */
+    height: 300px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -504,37 +488,40 @@ select option {
 
 
 /* Ribbon showing who ordered */
-.order-ribbon {
+.order-badge {
     position: absolute;
-    top: 30px;
-    left: -50px;
-    width: 200px;
-    transform: rotate(-45deg);
-    text-align: center;
-    font-size: 0.85rem;
+    top: 10px;
+    left: 15px;
+    right: 15px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     font-weight: 600;
-    color: #000000;
-    letter-spacing: 0.5px;
-    padding: 5px 0;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    z-index: 2;
+    font-size: 0.95rem;
+    text-align: center;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     pointer-events: none;
+    z-index: 2;
 }
 
+
 .ribbon-donate {
-    background: linear-gradient(45deg, #d4af37, #ffd700);
+    border-color: rgba(255, 165, 0, 0.4);
 }
 
 .ribbon-points {
-    background: var(--neon-purple);
+    border-color: rgba(138, 43, 226, 0.4);
 }
 
 .ribbon-balls {
-    background: var(--secondary-color);
+    border-color: rgba(0, 200, 255, 0.4);
 }
 
 .movie-rating {

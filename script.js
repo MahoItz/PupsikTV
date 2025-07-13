@@ -530,7 +530,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   const ribbonClass = ORDER_TYPE_CLASSES[movie.orderType];
   const orderByText = movie.orderBy && movie.orderBy !== "null" ? movie.orderBy : "";
   const orderRibbon = orderByText
-    ? `<div class="order-ribbon ${ribbonClass}">${orderByText}</div>`
+    ? `<div class="order-badge ${ribbonClass}">${orderByText}</div>`
     : "";
   div.className = cardClass;
   div.innerHTML = `
@@ -584,7 +584,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const ribbonClass = ORDER_TYPE_CLASSES[order.orderType];
   const orderByText = order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
   const orderRibbon = orderByText && showOrderBy
-    ? `<div class="order-ribbon ${ribbonClass}">${orderByText}</div>`
+    ? `<div class="order-badge ${ribbonClass}">${orderByText}</div>`
     : "";
   card.innerHTML = `
         <img src="${order.poster}" alt="${order.title}" class="order-poster" onerror="this.style.display='none'">
@@ -633,7 +633,7 @@ function createGameCard(game, showActions = isAdmin) {
   const ribbonClass = ORDER_TYPE_CLASSES[game.orderType];
   const orderByText = game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
   const orderRibbon = orderByText
-    ? `<div class="order-ribbon ${ribbonClass}">${orderByText}</div>`
+    ? `<div class="order-badge ${ribbonClass}">${orderByText}</div>`
     : "";
   card.innerHTML = `
         <img src="${game.poster}" alt="${game.title}" class="order-poster" onerror="this.style.display='none'">
