@@ -189,6 +189,14 @@ header img {
     grid-column: 2;
 }
 
+/* Контейнер правых панелей */
+.side-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    grid-column: 2;
+}
+
 /* Кнопки */
 .btn {
     padding: 14px 28px;
@@ -950,10 +958,14 @@ select option {
         grid-template-columns: 1fr;
         gap: 25px;
     }
-    
+
     .right-panel {
         position: static;
         animation: none;
+        grid-column: auto;
+    }
+
+    .side-panels {
         grid-column: auto;
     }
     
@@ -980,6 +992,10 @@ select option {
     .left-panel,
     .right-panel {
         padding: 25px;
+    }
+
+    .side-panels {
+        grid-column: auto;
     }
     
     .movies-grid {
@@ -1016,6 +1032,10 @@ select option {
     
     .main-content {
         gap: 20px;
+    }
+
+    .side-panels {
+        grid-column: auto;
     }
 }
 

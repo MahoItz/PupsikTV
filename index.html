@@ -45,27 +45,29 @@
                 <div id="pagination" class="pagination"></div>
             </div>
 
-            <div class="right-panel">
-                <div class="watchlist-section">
-                    <h3>Заказанные фильмы</h3>
-                    <div id="watchlistContainer">
-                        <!-- Список заказанных -->
+            <div class="side-panels">
+                <div class="right-panel">
+                    <div class="watchlist-section">
+                        <h3>Заказанные фильмы</h3>
+                        <div id="watchlistContainer">
+                            <!-- Список заказанных -->
+                        </div>
+                        <button class="btn btn-secondary" onclick="openAddToWatchlistModal()"
+                            style="width: 100%; margin-top: 15px;">
+                            ➕ Добавить в список
+                        </button>
                     </div>
-                    <button class="btn btn-secondary" onclick="openAddToWatchlistModal()"
-                        style="width: 100%; margin-top: 15px;">
-                        ➕ Добавить в список
-                    </button>
                 </div>
-            </div>
-            <div class="right-panel">
-                <div class="watchlist-section">
-                    <h3>Заказанные игры</h3>
-                    <div id="gamesContainer">
-                        <!-- Список заказанных игр -->
+                <div class="right-panel">
+                    <div class="watchlist-section">
+                        <h3>Заказанные игры</h3>
+                        <div id="gamesContainer">
+                            <!-- Список заказанных игр -->
+                        </div>
+                        <button class="btn btn-secondary" onclick="openAddGameModal()" style="width: 100%; margin-top: 15px;">
+                            ➕ Добавить игру
+                        </button>
                     </div>
-                    <button class="btn btn-secondary" onclick="openAddGameModal()" style="width: 100%; margin-top: 15px;">
-                        ➕ Добавить игру
-                    </button>
                 </div>
             </div>
         </div>
