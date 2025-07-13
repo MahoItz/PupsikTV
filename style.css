@@ -186,9 +186,7 @@ header img {
     padding: 30px;
     border: 1px solid rgba(255, 108, 66, 0.3);
     box-shadow: var(--shadow-glow);
-    position: sticky;
-    top: 20px;
-    animation: var(--glow-animation);
+    grid-column: 2;
 }
 
 /* Кнопки */
@@ -956,6 +954,7 @@ select option {
     .right-panel {
         position: static;
         animation: none;
+        grid-column: auto;
     }
     
     .movies-grid {
