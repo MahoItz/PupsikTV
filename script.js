@@ -6,6 +6,7 @@ const SUPABASE_KEY =
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let isAdmin = false;
+let adminElements = [];
 // Kinopoisk (unofficial API)
 const KINOPOISK_API_KEY = "a63efc29-37be-423f-8c0d-722154bc08f4";
 const KINOPOISK_SEARCH_URL =
@@ -286,6 +287,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   renderGames();
   setupRatingStars();
   initFileUpload();
+
+  adminElements = Array.from(document.querySelectorAll('.admin-only'));
+  const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+  if (adminLogoutBtn) adminLogoutBtn.addEventListener("click", logoutAdmin);
 
   const orderBtn = document.getElementById("sortOrderBtn");
   if (orderBtn) {
@@ -1653,10 +1658,26 @@ window.onclick = function (event) {
 
 
 function showAdminControls() {
-  document.querySelectorAll('.admin-only').forEach(el => {
-    el.style.display = '';
-  });
+  adminElements.forEach(el => el.classList.remove('admin-only'));
+  const logoutBtn = document.getElementById('adminLogoutBtn');
+  if (logoutBtn) logoutBtn.style.display = 'block';
   renderMovies();
   renderWatchlist();
   renderGames();
+}
+
+function hideAdminControls() {
+  adminElements.forEach(el => el.classList.add('admin-only'));
+  const logoutBtn = document.getElementById('adminLogoutBtn');
+  if (logoutBtn) logoutBtn.style.display = 'none';
+  renderMovies();
+  renderWatchlist();
+  renderGames();
+}
+
+function logoutAdmin() {
+  isAdmin = false;
+  localStorage.removeItem('isAdmin');
+  hideAdminControls();
+  closeModal('adminModal');
 }
