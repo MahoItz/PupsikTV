@@ -218,7 +218,7 @@ async function loadGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Game_Orders")
       .select(
-        "id, created_at, order_title, order_type, order_by, order_genres, order_poster, order_year"
+        "id, created_at, game_title, game_order_type, game_order_by, game_genres, game_poster, game_year"
       )
       .order("id", { ascending: true });
 
@@ -226,12 +226,12 @@ async function loadGamesFromSupabase() {
 
     gameOrders = data.map((item) => ({
       id: item.id,
-      title: item.order_title,
-      genres: item.order_genres,
-      poster: item.order_poster,
-      year: item.order_year || "",
-      orderBy: item.order_by,
-      orderType: item.order_type,
+      title: item.game_title,
+      genres: item.game_genres,
+      poster: item.game_poster,
+      year: item.game_year || "",
+      orderBy: item.game_order_by,
+      orderType: item.game_order_type,
       dateAdded: item.created_at,
     }));
 
@@ -1239,12 +1239,12 @@ document
       const { data, error } = await supabaseClient
         .from("Game_Orders")
         .insert({
-          order_title: gameData.title,
-          order_year: gameData.year,
-          order_genres: gameData.genres,
-          order_poster: gameData.poster,
-          order_by: gameData.orderBy,
-          order_type: gameData.orderType,
+          game_title: gameData.title,
+          game_year: gameData.year,
+          game_genres: gameData.genres,
+          game_poster: gameData.poster,
+          game_order_by: gameData.orderBy,
+          game_order_type: gameData.orderType,
         })
         .select()
         .single();
@@ -1253,12 +1253,12 @@ document
 
       gameOrders.push({
         id: data.id,
-        title: data.order_title,
-        genres: data.order_genres,
-        poster: data.order_poster,
-        year: data.order_year || "",
-        orderBy: data.order_by,
-        orderType: data.order_type,
+        title: data.game_title,
+        genres: data.game_genres,
+        poster: data.game_poster,
+        year: data.game_year || "",
+        orderBy: data.game_order_by,
+        orderType: data.game_order_type,
         dateAdded: data.created_at,
       });
       renderGames();
@@ -1413,12 +1413,12 @@ document
         await supabaseClient
           .from("Game_Orders")
           .update({
-            order_title: game.title,
-            order_year: game.year,
-            order_genres: game.genres,
-            order_poster: game.poster,
-            order_by: game.orderBy,
-            order_type: game.orderType,
+            game_title: game.title,
+            game_year: game.year,
+            game_genres: game.genres,
+            game_poster: game.poster,
+            game_order_by: game.orderBy,
+            game_order_type: game.orderType,
           })
           .eq("id", editingGameId);
       } catch (err) {
