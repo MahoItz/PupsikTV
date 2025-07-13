@@ -413,40 +413,41 @@ function createMovieCard(movie, showActions = true) {
       : "";
   div.className = cardClass;
   div.innerHTML = `
-                <img src="${movie.poster}" alt="${movie.title}" class="movie-poster" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="movie-poster-placeholder" style="display: none;">
-                <span>Нет постера</span>
-            </div>
-                <div class="movie-info">
-                    <div class="movie-header">
-                        <div class="movie-title">${movie.title}</div>
-                        ${orderInfo}
-                    </div>
-                <div class="movie-original-title">${movie.originalTitle}</div>
-                <div class="movie-genres">${movie.genre}</div>
-                <div class="movie-year">${movie.year}</div>
-                <div class="movie-rating">
-                    <div class="rating-item">
-                        <img src="images/Pupsik_TV_Icon.png" alt="Pupsik Rate">
-                        <span>${movie.rating}/10</span>
-                    </div>
-                    <div class="rating-item">
-                        <img src="images/kp_icon.png" alt="KP Rate">
-                        <span>${movie.kpRating ?? "-"}</span>
-                    </div>
-                </div>
-                <div class="movie-footer">
-                    <div class="movie-date">Добавлен: ${formatDate(movie.dateAdded)}</div>
-                    ${
+              <img src="${movie.poster}" alt="${movie.title}" class="movie-poster"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="movie-poster-placeholder" style="display: none;">
+                  <span>Нет постера</span>
+              </div>
+              <div class="movie-info">
+                  <div class="movie-header">
+                      <div class="movie-title">${movie.title}</div>
+                      ${orderInfo}
+                  </div>
+                  <div class="movie-original-title">${movie.originalTitle}</div>
+                  <div class="movie-genres">${movie.genre}</div>
+                  <div class="movie-year">${movie.year}</div>
+                  <div class="movie-rating">
+                      <div class="rating-item">
+                          <img src="images/Pupsik_TV_Icon.png" alt="Pupsik Rate">
+                          <span>${movie.rating}/10</span>
+                      </div>
+                      <div class="rating-item">
+                          <img src="images/kp_icon.png" alt="KP Rate">
+                          <span>${movie.kpRating ?? "-"}</span>
+                      </div>
+                  </div>
+                  <div class="movie-footer">
+                      <div class="movie-date">Добавлен: ${formatDate(movie.dateAdded)}</div>
+                      ${
                       showActions
-                        ? `<div class="movie-actions">
-                        <button class="btn btn-edit btn-icon" onclick="openEditModal(${movie.id})">✏️</button>
-                        <button class="btn btn-delete btn-icon" onclick="deleteMovie(${movie.id})">🗑️</button>
-                    </div>`
-            : ""
-        }
-    </div>
-</div>
+                      ? `<div class="movie-actions">
+                          <button class="btn btn-edit btn-icon" onclick="openEditModal(${movie.id})">✏️</button>
+                          <button class="btn btn-delete btn-icon" onclick="deleteMovie(${movie.id})">🗑️</button>
+                      </div>`
+                      : ""
+                      }
+                  </div>
+              </div>
             `;
   return div;
 }
