@@ -12,6 +12,12 @@ const KINOPOISK_SEARCH_URL =
 let kpResults = [];
 let selectedKPMovie = null;
 
+// RAWG
+const RAWG_API_KEY = "4f3245bf6f2743649e3087a72623971d";
+const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
+let rawgResults = [];
+let selectedRAWGGame = null;
+
 // Массив фильмов будет заполняться данными из базы
 let allMovies = [];
 let movies = [];
@@ -33,6 +39,9 @@ const ORDER_TYPE_ICONS = {
 let currentWatchlistMode = "auto";
 let kpOrderResults = [];
 let selectedKPOrderMovie = null;
+
+// Game modal helpers
+let currentGameMode = "auto";
 
 let currentMode = "auto";
 let currentRating = 0;
@@ -282,6 +291,16 @@ document.addEventListener("DOMContentLoaded", async function () {
       const idx = parseInt(this.value);
       selectedKPOrderMovie = kpOrderResults[idx] || null;
       showWatchlistKPPreview();
+    });
+
+  const gameSearchBtn = document.getElementById("gameAutoSearchBtn");
+  const gameResultsSelect = document.getElementById("gameAutoResults");
+  if (gameSearchBtn) gameSearchBtn.addEventListener("click", handleGameSearch);
+  if (gameResultsSelect)
+    gameResultsSelect.addEventListener("change", function () {
+      const idx = parseInt(this.value);
+      selectedRAWGGame = rawgResults[idx] || null;
+      showRAWGPreview();
     });
 
   const preview = document.getElementById("editPosterPreview");
@@ -743,6 +762,71 @@ function showWatchlistKPPreview() {
   preview.style.display = "block";
 }
 
+async function handleGameSearch() {
+  const title = document.getElementById("gameAutoTitle").value.trim();
+  if (!title) {
+    alert("Введите название игры");
+    return;
+  }
+
+  try {
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      title
+    )}&page_size=5`;
+    const res = await fetch(url);
+    const data = await res.json();
+    rawgResults = data.results || [];
+    const container = document.getElementById("gameAutoResultsContainer");
+    const select = document.getElementById("gameAutoResults");
+    select.innerHTML = "";
+    rawgResults.forEach((g, idx) => {
+      const opt = document.createElement("option");
+      const year = g.released ? g.released.split("-")[0] : "";
+      opt.value = idx;
+      opt.textContent = `${g.name}${year ? ` (${year})` : ""}`;
+      select.appendChild(opt);
+    });
+    if (rawgResults.length > 0) {
+      container.style.display = "block";
+      select.selectedIndex = 0;
+      selectedRAWGGame = rawgResults[0];
+      showRAWGPreview();
+    } else {
+      container.style.display = "none";
+      selectedRAWGGame = null;
+      showRAWGPreview();
+      alert("Ничего не найдено");
+    }
+  } catch (err) {
+    console.error("RAWG search error", err);
+  }
+}
+
+function showRAWGPreview() {
+  const preview = document.getElementById("gameAutoPreview");
+  if (!preview) return;
+  preview.innerHTML = "";
+  if (!selectedRAWGGame) {
+    preview.style.display = "none";
+    return;
+  }
+  const game = {
+    title: selectedRAWGGame.name || "",
+    genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
+    year: selectedRAWGGame.released
+      ? selectedRAWGGame.released.split("-")[0]
+      : "",
+    poster:
+      selectedRAWGGame.background_image ||
+      "https://via.placeholder.com/300x400?text=Нет+постера",
+    orderBy: document.getElementById("gameOrderBy").value || "",
+    orderType: document.getElementById("gameOrderType").value || "",
+    dateAdded: new Date().toISOString().split("T")[0],
+  };
+  preview.appendChild(createGameCard(game, false));
+  preview.style.display = "block";
+}
+
 // Сортировка фильмов
 function sortMovies(criteria) {
   currentSort = criteria;
@@ -921,6 +1005,23 @@ function switchWatchlistMode(mode) {
   } else {
     document.getElementById("watchAutoMode").style.display = "none";
     document.getElementById("watchManualMode").style.display = "block";
+  }
+}
+
+function switchGameMode(mode) {
+  currentGameMode = mode;
+
+  document
+    .querySelectorAll("#addGameModal .mode-btn")
+    .forEach((btn) => btn.classList.remove("active"));
+  event.target.classList.add("active");
+
+  if (mode === "auto") {
+    document.getElementById("gameAutoMode").style.display = "block";
+    document.getElementById("gameManualMode").style.display = "none";
+  } else {
+    document.getElementById("gameAutoMode").style.display = "none";
+    document.getElementById("gameManualMode").style.display = "block";
   }
 }
 
@@ -1217,24 +1318,60 @@ document
   ?.addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const fileInput = document.getElementById("gamePoster");
-    let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
-    if (fileInput.files && fileInput.files[0]) {
-      try {
-        poster = await readFileAsDataURL(fileInput.files[0]);
-      } catch (err) {
-        console.error("Error reading file", err);
-      }
-    }
+    const orderBy = document.getElementById("gameOrderBy").value;
+    const orderType = document.getElementById("gameOrderType").value;
 
-    const gameData = {
-      title: document.getElementById("gameTitle").value,
-      year: document.getElementById("gameYear").value || "",
-      genres: document.getElementById("gameGenres").value || "",
-      poster: poster,
-      orderBy: document.getElementById("gameOrderBy").value,
-      orderType: document.getElementById("gameOrderType").value,
-    };
+    let gameData;
+
+    if (currentGameMode === "auto") {
+      const titleInput = document.getElementById("gameAutoTitle").value;
+      if (!titleInput) {
+        alert("Введите название игры");
+        return;
+      }
+
+      if (selectedRAWGGame) {
+        const g = selectedRAWGGame;
+        gameData = {
+          title: g.name || titleInput,
+          year: g.released ? g.released.split("-")[0] : "",
+          genres: g.genres?.map((x) => x.name).join(", ") || "",
+          poster:
+            g.background_image ||
+            "https://via.placeholder.com/300x400?text=Нет+постера",
+          orderBy: orderBy,
+          orderType: orderType,
+        };
+      } else {
+        gameData = {
+          title: titleInput,
+          year: "",
+          genres: "",
+          poster: "https://via.placeholder.com/300x400?text=Нет+постера",
+          orderBy: orderBy,
+          orderType: orderType,
+        };
+      }
+    } else {
+      const fileInput = document.getElementById("gamePoster");
+      let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
+      if (fileInput.files && fileInput.files[0]) {
+        try {
+          poster = await readFileAsDataURL(fileInput.files[0]);
+        } catch (err) {
+          console.error("Error reading file", err);
+        }
+      }
+
+      gameData = {
+        title: document.getElementById("gameTitle").value,
+        year: document.getElementById("gameYear").value || "",
+        genres: document.getElementById("gameGenres").value || "",
+        poster: poster,
+        orderBy: orderBy,
+        orderType: orderType,
+      };
+    }
 
     try {
       const { data, error } = await supabaseClient
@@ -1268,6 +1405,10 @@ document
     }
 
     closeModal("addGameModal");
+    this.reset();
+    selectedRAWGGame = null;
+    rawgResults = [];
+    showRAWGPreview();
   });
 
 // Оценка фильма из watchlist
