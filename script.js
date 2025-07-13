@@ -551,9 +551,6 @@ function createOrderCard(order, showActions = true, showOrderBy = true) {
                 <span class="order-year">${order.year || ""}</span>
                 <span class="order-kp-rating"><img src="images/kp_icon.png" alt="KP Rate"> ${order.kpRating ?? "-"}</span>
             </div>
-            <div class="order-meta">
-                <span class="order-type">${typeHtml}</span>
-            </div>
             <div class="order-footer">
                 <div class="order-date">${formatDate(order.dateAdded)}</div>
                 ${
@@ -600,9 +597,6 @@ function createGameCard(game, showActions = true) {
             <div class="order-genres">${game.genres || ""}</div>
             <div class="order-meta">
                 <span class="order-year">${game.year || ""}</span>
-            </div>
-            <div class="order-meta">
-                <span class="order-type">${typeHtml}</span>
             </div>
             <div class="order-footer">
                 <div class="order-date">${formatDate(game.dateAdded)}</div>

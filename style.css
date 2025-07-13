@@ -503,20 +503,23 @@ select option {
 /* Ribbon showing who ordered */
 .order-ribbon {
     position: absolute;
-    top: 10px;
-    left: -40px;
+    top: 30px;
+    left: -50px;
     width: 200px;
     transform: rotate(-45deg);
     text-align: center;
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 4px 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #000000;
+    letter-spacing: 0.5px;
+    padding: 5px 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     z-index: 2;
-    pointer-events: none;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    pointer-events: none;
 }
 
 .ribbon-donate {
@@ -656,9 +659,11 @@ select option {
     border: 1px solid rgba(255, 108, 66, 0.2);
     transition: var(--transition);
     position: relative;
+    overflow: hidden;
 }
 
 .order-poster {
+    position: relative;
     width: 100%;
     height: auto;
     object-fit: cover;
