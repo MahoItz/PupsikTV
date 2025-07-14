@@ -652,6 +652,16 @@ select option {
     overflow: hidden;
 }
 
+.order-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.order-complete {
+    margin-top: 8px;
+}
+
 .order-poster {
     position: relative;
     width: 100%;

@@ -575,6 +575,9 @@ function createMovieCard(movie, showActions = isAdmin) {
 
 // Отображение списка к просмотру
 function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "order-wrapper";
+
   const card = document.createElement("div");
   card.className = "order-card";
   const iconPath = ORDER_TYPE_ICONS[order.orderType];
@@ -602,7 +605,6 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
                 ${
                   showActions
                     ? `<div class="order-actions">
-                    <button class="btn btn-primary btn-icon" onclick="openRateModal(${order.id})">✅</button>
                     <button class="btn btn-edit btn-icon" onclick="openEditOrderModal(${order.id})">✏️</button>
                     <button class="btn btn-delete btn-icon" onclick="deleteOrder(${order.id})">🗑️</button>
                 </div>`
@@ -611,7 +613,14 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
             </div>
         </div>
     `;
-  return card;
+  wrapper.appendChild(card);
+  if (showActions) {
+    const done = document.createElement("div");
+    done.className = "order-complete";
+    done.innerHTML = `<button class="btn btn-primary btn-icon" onclick="openRateModal(${order.id})">✅</button>`;
+    wrapper.appendChild(done);
+  }
+  return wrapper;
 }
 
 function renderWatchlist() {
@@ -624,6 +633,9 @@ function renderWatchlist() {
 }
 
 function createGameCard(game, showActions = isAdmin) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "order-wrapper";
+
   const card = document.createElement("div");
   card.className = "order-card";
   const iconPath = ORDER_TYPE_ICONS[game.orderType];
@@ -649,7 +661,6 @@ function createGameCard(game, showActions = isAdmin) {
                 ${
                   showActions
                     ? `<div class="order-actions">
-                    <button class="btn btn-primary btn-icon" onclick="markGameDone(${game.id})">✅</button>
                     <button class="btn btn-edit btn-icon" onclick="openEditGameModal(${game.id})">✏️</button>
                     <button class="btn btn-delete btn-icon" onclick="deleteGameOrder(${game.id})">🗑️</button>
                 </div>`
@@ -658,7 +669,14 @@ function createGameCard(game, showActions = isAdmin) {
             </div>
         </div>
     `;
-  return card;
+  wrapper.appendChild(card);
+  if (showActions) {
+    const done = document.createElement("div");
+    done.className = "order-complete";
+    done.innerHTML = `<button class="btn btn-primary btn-icon" onclick="markGameDone(${game.id})">✅</button>`;
+    wrapper.appendChild(done);
+  }
+  return wrapper;
 }
 
 function renderGames() {
