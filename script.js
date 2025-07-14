@@ -617,7 +617,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   if (showActions) {
     const done = document.createElement("div");
     done.className = "order-complete";
-    done.innerHTML = `<button class="btn btn-primary btn-icon" onclick="openRateModal(${order.id})">✅</button>`;
+    done.innerHTML = `<button class="watch-complete-btn" onclick="openRateModal(${order.id})">✓</button>`;
     wrapper.appendChild(done);
   }
   return wrapper;
@@ -673,7 +673,7 @@ function createGameCard(game, showActions = isAdmin) {
   if (showActions) {
     const done = document.createElement("div");
     done.className = "order-complete";
-    done.innerHTML = `<button class="btn btn-primary btn-icon" onclick="markGameDone(${game.id})">✅</button>`;
+    done.innerHTML = `<button class="watch-complete-btn" onclick="markGameDone(${game.id})">✓</button>`;
     wrapper.appendChild(done);
   }
   return wrapper;
