@@ -865,9 +865,15 @@ function searchMovies(query) {
 }
 
 async function handleKPSearch() {
+  const btn = document.getElementById("autoSearchBtn");
+  const loader = document.getElementById("autoSearchLoading");
+  if (loader) loader.style.display = "inline-block";
+  if (btn) btn.disabled = true;
   const title = document.getElementById("autoTitle").value.trim();
   if (!title) {
     alert("Введите название фильма");
+    if (loader) loader.style.display = "none";
+    if (btn) btn.disabled = false;
     return;
   }
 
@@ -908,12 +914,20 @@ async function handleKPSearch() {
   } catch (err) {
     console.error("Kinopoisk search error", err);
   }
+  if (loader) loader.style.display = "none";
+  if (btn) btn.disabled = false;
 }
 
 async function handleWatchlistSearch() {
+  const btn = document.getElementById("watchAutoSearchBtn");
+  const loader = document.getElementById("watchAutoSearchLoading");
+  if (loader) loader.style.display = "inline-block";
+  if (btn) btn.disabled = true;
   const title = document.getElementById("watchAutoTitle").value.trim();
   if (!title) {
     alert("Введите название фильма");
+    if (loader) loader.style.display = "none";
+    if (btn) btn.disabled = false;
     return;
   }
 
@@ -952,6 +966,8 @@ async function handleWatchlistSearch() {
   } catch (err) {
     console.error("Kinopoisk search error", err);
   }
+  if (loader) loader.style.display = "none";
+  if (btn) btn.disabled = false;
 }
 
 function showKPPreview() {
@@ -1008,9 +1024,15 @@ function showWatchlistKPPreview() {
 }
 
 async function handleGameSearch() {
+  const btn = document.getElementById("gameAutoSearchBtn");
+  const loader = document.getElementById("gameAutoSearchLoading");
+  if (loader) loader.style.display = "inline-block";
+  if (btn) btn.disabled = true;
   const title = document.getElementById("gameAutoTitle").value.trim();
   if (!title) {
     alert("Введите название игры");
+    if (loader) loader.style.display = "none";
+    if (btn) btn.disabled = false;
     return;
   }
 
@@ -1045,6 +1067,8 @@ async function handleGameSearch() {
   } catch (err) {
     console.error("RAWG search error", err);
   }
+  if (loader) loader.style.display = "none";
+  if (btn) btn.disabled = false;
 }
 
 function showRAWGPreview() {

@@ -275,6 +275,24 @@ header img {
     box-shadow: 0 0 30px rgba(255, 20, 147, 0.6), 0 8px 25px rgba(255, 20, 147, 0.3);
 }
 
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.loading-spinner {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid var(--secondary-color);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 /* Элементы управления */
 .controls {
     margin-bottom: 25px;
