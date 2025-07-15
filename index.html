@@ -19,7 +19,7 @@
         </header>
 
         <div class="main-content">
-            <div class="left-panel">
+            <div class="left-panel" id="moviesSection">
                 <div class="controls admin-only">
                     <button class="btn btn-primary" onclick="openAddMovieModal()">
                         ➕ Добавить фильм
@@ -47,7 +47,7 @@
             </div>
 
             <div class="side-panels">
-                <div class="right-panel">
+                <div class="right-panel" id="watchlistSection">
                     <div class="watchlist-section">
                         <h3>Заказанные фильмы</h3>
                         <div id="watchlistContainer">
@@ -59,7 +59,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="right-panel">
+                <div class="right-panel" id="gamesSection">
                     <div class="watchlist-section">
                         <h3>Заказанные игры</h3>
                         <div id="gamesContainer">
@@ -481,6 +481,11 @@
             </form>
         </div>
     </div>
+    <nav class="mobile-tabs" id="mobileTabs">
+        <button data-tab="movies" class="active">Фильмы</button>
+        <button data-tab="watchlist">Заказы</button>
+        <button data-tab="games">Игры</button>
+    </nav>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>

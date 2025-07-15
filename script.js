@@ -93,6 +93,9 @@ let currentPage = 1;
 const moviesPerPage = 12;
 let totalMovies = 0;
 
+// Mobile tabs
+let activeTab = "movies";
+
 // Utility to convert file to base64 string
 function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
@@ -301,6 +304,11 @@ document.addEventListener("DOMContentLoaded", async function () {
   initFileUpload();
 
   adminElements = Array.from(document.querySelectorAll('.admin-only'));
+
+  document
+    .querySelectorAll('#mobileTabs button')
+    .forEach((btn) => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
+  updateTabVisibility();
 
   const orderBtn = document.getElementById("sortOrderBtn");
   if (orderBtn) {
@@ -1930,3 +1938,32 @@ function logoutAdmin() {
   hideAdminControls();
   closeModal('adminModal');
 }
+
+function showTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('#mobileTabs button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  updateTabVisibility();
+}
+
+function updateTabVisibility() {
+  const isMobile = window.innerWidth <= 768;
+  const movies = document.getElementById('moviesSection');
+  const watch = document.getElementById('watchlistSection');
+  const games = document.getElementById('gamesSection');
+  const tabs = document.getElementById('mobileTabs');
+  if (isMobile) {
+    if (tabs) tabs.style.display = 'flex';
+    if (movies) movies.style.display = activeTab === 'movies' ? 'block' : 'none';
+    if (watch) watch.style.display = activeTab === 'watchlist' ? 'block' : 'none';
+    if (games) games.style.display = activeTab === 'games' ? 'block' : 'none';
+  } else {
+    if (tabs) tabs.style.display = 'none';
+    if (movies) movies.style.display = 'block';
+    if (watch) watch.style.display = 'block';
+    if (games) games.style.display = 'block';
+  }
+}
+
+window.addEventListener('resize', updateTabVisibility);

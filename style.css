@@ -1344,3 +1344,38 @@ body::before {
     }
 }
 
+/* ---------------- Mobile Tabs ---------------- */
+.mobile-tabs {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1000;
+}
+
+.mobile-tabs button {
+    flex: 1;
+    padding: 12px 0;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.mobile-tabs button.active {
+    background: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .mobile-tabs {
+        display: flex;
+    }
+    .container {
+        padding-bottom: 70px;
+    }
+}
+
