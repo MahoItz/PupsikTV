@@ -727,6 +727,12 @@ select option {
     height: 100%;
 }
 
+.order-details {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
 .order-title {
     font-weight: 700;
     color: var(--text-primary);
