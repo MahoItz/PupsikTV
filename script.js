@@ -526,55 +526,119 @@ function renderPagination() {
 
 // Создание карточки фильма
 function createMovieCard(movie, showActions = isAdmin) {
-  const div = document.createElement("div");
+  const card = document.createElement("div");
   let cardClass = "movie-card";
   if (movie.rating === 0) cardClass += " rating-low";
   if (movie.rating === 11) cardClass += " rating-high";
-  const starsCount = Math.max(0, Math.min(movie.rating, 10));
-  const ribbonClass = ORDER_TYPE_CLASSES[movie.orderType];
+  card.className = cardClass;
+
+  const poster = document.createElement("img");
+  poster.src = movie.poster;
+  poster.alt = movie.title;
+  poster.className = "movie-poster";
+  const placeholder = document.createElement("div");
+  placeholder.className = "movie-poster-placeholder";
+  placeholder.style.display = "none";
+  const placeholderText = document.createElement("span");
+  placeholderText.textContent = "Нет постера";
+  placeholder.appendChild(placeholderText);
+  poster.onerror = () => {
+    poster.style.display = "none";
+    placeholder.style.display = "flex";
+  };
+
   const orderByText = movie.orderBy && movie.orderBy !== "null" ? movie.orderBy : "";
-  const orderRibbon = orderByText
-    ? `<div class="order-badge ${ribbonClass}">${orderByText}</div>`
-    : "";
-  div.className = cardClass;
-  div.innerHTML = `
-              <img src="${movie.poster}" alt="${movie.title}" class="movie-poster"
-                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-              ${orderRibbon}
-              <div class="movie-poster-placeholder" style="display: none;">
-                  <span>Нет постера</span>
-              </div>
-              <div class="movie-info">
-                  <div class="movie-header">
-                      <div class="movie-title">${movie.title}</div>
-                  </div>
-                  <div class="movie-original-title">${movie.originalTitle}</div>
-                  <div class="movie-genres">${movie.genre}</div>
-                  <div class="movie-year">${movie.year}</div>
-                  <div class="movie-rating">
-                      <div class="rating-item">
-                          <img src="images/Pupsik_TV_Icon.png" alt="Pupsik Rate">
-                          <span>${movie.rating}/10</span>
-                      </div>
-                      <div class="rating-item">
-                          <img src="images/kp_icon.png" alt="KP Rate">
-                          <span>${movie.kpRating ?? "-"}</span>
-                      </div>
-                  </div>
-                  <div class="movie-footer">
-                      <div class="movie-date">Добавлен: ${formatDate(movie.dateAdded)}</div>
-                      ${
-                      showActions
-                      ? `<div class="movie-actions">
-                          <button class="btn btn-edit btn-icon" onclick="openEditModal(${movie.id})">✏️</button>
-                          <button class="btn btn-delete btn-icon" onclick="deleteMovie(${movie.id})">🗑️</button>
-                      </div>`
-                      : ""
-                      }
-                  </div>
-              </div>
-            `;
-  return div;
+  const ribbonClass = ORDER_TYPE_CLASSES[movie.orderType];
+  let ribbon;
+  if (orderByText) {
+    ribbon = document.createElement("div");
+    ribbon.className = `order-badge ${ribbonClass}`;
+    ribbon.textContent = orderByText;
+  }
+
+  const info = document.createElement("div");
+  info.className = "movie-info";
+
+  const header = document.createElement("div");
+  header.className = "movie-header";
+  const title = document.createElement("div");
+  title.className = "movie-title";
+  title.textContent = movie.title;
+  header.appendChild(title);
+  info.appendChild(header);
+
+  const originalTitle = document.createElement("div");
+  originalTitle.className = "movie-original-title";
+  originalTitle.textContent = movie.originalTitle;
+  info.appendChild(originalTitle);
+
+  const genres = document.createElement("div");
+  genres.className = "movie-genres";
+  genres.textContent = movie.genre;
+  info.appendChild(genres);
+
+  const year = document.createElement("div");
+  year.className = "movie-year";
+  year.textContent = movie.year;
+  info.appendChild(year);
+
+  const rating = document.createElement("div");
+  rating.className = "movie-rating";
+
+  const ratingItem1 = document.createElement("div");
+  ratingItem1.className = "rating-item";
+  const icon1 = document.createElement("img");
+  icon1.src = "images/Pupsik_TV_Icon.png";
+  icon1.alt = "Pupsik Rate";
+  const span1 = document.createElement("span");
+  span1.textContent = `${movie.rating}/10`;
+  ratingItem1.appendChild(icon1);
+  ratingItem1.appendChild(span1);
+  rating.appendChild(ratingItem1);
+
+  const ratingItem2 = document.createElement("div");
+  ratingItem2.className = "rating-item";
+  const icon2 = document.createElement("img");
+  icon2.src = "images/kp_icon.png";
+  icon2.alt = "KP Rate";
+  const span2 = document.createElement("span");
+  span2.textContent = movie.kpRating ?? "-";
+  ratingItem2.appendChild(icon2);
+  ratingItem2.appendChild(span2);
+  rating.appendChild(ratingItem2);
+  info.appendChild(rating);
+
+  const footer = document.createElement("div");
+  footer.className = "movie-footer";
+  const dateDiv = document.createElement("div");
+  dateDiv.className = "movie-date";
+  dateDiv.textContent = `Добавлен: ${formatDate(movie.dateAdded)}`;
+  footer.appendChild(dateDiv);
+
+  if (showActions) {
+    const actions = document.createElement("div");
+    actions.className = "movie-actions";
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn btn-edit btn-icon";
+    editBtn.textContent = "✏️";
+    editBtn.onclick = () => openEditModal(movie.id);
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn btn-delete btn-icon";
+    delBtn.textContent = "🗑️";
+    delBtn.onclick = () => deleteMovie(movie.id);
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    footer.appendChild(actions);
+  }
+
+  info.appendChild(footer);
+
+  card.appendChild(poster);
+  if (ribbon) card.appendChild(ribbon);
+  card.appendChild(placeholder);
+  card.appendChild(info);
+
+  return card;
 }
 
 // Отображение списка к просмотру
@@ -584,46 +648,97 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
 
   const card = document.createElement("div");
   card.className = "order-card";
-  const iconPath = ORDER_TYPE_ICONS[order.orderType];
-  const typeHtml = iconPath
-    ? `<img src="${iconPath}" alt="${order.orderType}"> ${order.orderType}`
-    : order.orderType || "";
+
+  const poster = document.createElement("img");
+  poster.src = order.poster;
+  poster.alt = order.title;
+  poster.className = "order-poster";
+  poster.onerror = () => {
+    poster.style.display = "none";
+  };
+  card.appendChild(poster);
+
+  const info = document.createElement("div");
+  info.className = "order-info";
+
+  const title = document.createElement("div");
+  title.className = "order-title";
+  title.textContent = order.title;
+  info.appendChild(title);
+
+  const orig = document.createElement("div");
+  orig.className = "order-original-title";
+  orig.textContent = order.originalTitle || "";
+  info.appendChild(orig);
+
+  const genres = document.createElement("div");
+  genres.className = "order-genres";
+  genres.textContent = order.genres || "";
+  info.appendChild(genres);
+
+  const meta = document.createElement("div");
+  meta.className = "order-meta";
+  const year = document.createElement("span");
+  year.className = "order-year";
+  year.textContent = order.year || "";
+  meta.appendChild(year);
+  const kpRating = document.createElement("span");
+  kpRating.className = "order-kp-rating";
+  const kpImg = document.createElement("img");
+  kpImg.src = "images/kp_icon.png";
+  kpImg.alt = "KP Rate";
+  kpRating.appendChild(kpImg);
+  kpRating.appendChild(document.createTextNode(` ${order.kpRating ?? "-"}`));
+  meta.appendChild(kpRating);
+  info.appendChild(meta);
+
   const ribbonClass = ORDER_TYPE_CLASSES[order.orderType];
   const orderByText = order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
-  const orderRibbon = orderByText && showOrderBy
-    ? `<div class="order-badge ${ribbonClass}">${orderByText}</div>`
-    : "";
-  card.innerHTML = `
-        <img src="${order.poster}" alt="${order.title}" class="order-poster" onerror="this.style.display='none'">
-        <div class="order-info">
-            <div class="order-title">${order.title}</div>
-            <div class="order-original-title">${order.originalTitle || ""}</div>
-            <div class="order-genres">${order.genres || ""}</div>
-            <div class="order-meta">
-                <span class="order-year">${order.year || ""}</span>
-                <span class="order-kp-rating"><img src="images/kp_icon.png" alt="KP Rate"> ${order.kpRating ?? "-"}</span>
-            </div>
-            ${orderRibbon}
-            <div class="order-footer">
-                <div class="order-date">${formatDate(order.dateAdded)}</div>
-                ${
-                  showActions
-                    ? `<div class="order-actions">
-                    <button class="btn btn-edit btn-icon" onclick="openEditOrderModal(${order.id})">✏️</button>
-                    <button class="btn btn-delete btn-icon" onclick="deleteOrder(${order.id})">🗑️</button>
-                </div>`
-                    : ""
-                }
-            </div>
-        </div>
-    `;
+  if (orderByText && showOrderBy) {
+    const ribbon = document.createElement("div");
+    ribbon.className = `order-badge ${ribbonClass}`;
+    ribbon.textContent = orderByText;
+    info.appendChild(ribbon);
+  }
+
+  const footer = document.createElement("div");
+  footer.className = "order-footer";
+  const dateDiv = document.createElement("div");
+  dateDiv.className = "order-date";
+  dateDiv.textContent = formatDate(order.dateAdded);
+  footer.appendChild(dateDiv);
+
+  if (showActions) {
+    const actions = document.createElement("div");
+    actions.className = "order-actions";
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn btn-edit btn-icon";
+    editBtn.textContent = "✏️";
+    editBtn.onclick = () => openEditOrderModal(order.id);
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn btn-delete btn-icon";
+    delBtn.textContent = "🗑️";
+    delBtn.onclick = () => deleteOrder(order.id);
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    footer.appendChild(actions);
+  }
+
+  info.appendChild(footer);
+  card.appendChild(info);
   wrapper.appendChild(card);
+
   if (showActions) {
     const done = document.createElement("div");
     done.className = "order-complete";
-    done.innerHTML = `<button class="watch-complete-btn" onclick="openRateModal(${order.id})">✓</button>`;
+    const doneBtn = document.createElement("button");
+    doneBtn.className = "watch-complete-btn";
+    doneBtn.textContent = "✓";
+    doneBtn.onclick = () => openRateModal(order.id);
+    done.appendChild(doneBtn);
     wrapper.appendChild(done);
   }
+
   return wrapper;
 }
 
@@ -642,44 +757,84 @@ function createGameCard(game, showActions = isAdmin) {
 
   const card = document.createElement("div");
   card.className = "order-card";
-  const iconPath = ORDER_TYPE_ICONS[game.orderType];
-  const typeHtml = iconPath
-    ? `<img src="${iconPath}" alt="${game.orderType}"> ${game.orderType}`
-    : game.orderType || "";
+
+  const poster = document.createElement("img");
+  poster.src = game.poster;
+  poster.alt = game.title;
+  poster.className = "order-poster";
+  poster.onerror = () => {
+    poster.style.display = "none";
+  };
+  card.appendChild(poster);
+
+  const info = document.createElement("div");
+  info.className = "order-info";
+
+  const title = document.createElement("div");
+  title.className = "order-title";
+  title.textContent = game.title;
+  info.appendChild(title);
+
+  const genres = document.createElement("div");
+  genres.className = "order-genres";
+  genres.textContent = game.genres || "";
+  info.appendChild(genres);
+
+  const meta = document.createElement("div");
+  meta.className = "order-meta";
+  const year = document.createElement("span");
+  year.className = "order-year";
+  year.textContent = game.year || "";
+  meta.appendChild(year);
+  info.appendChild(meta);
+
   const ribbonClass = ORDER_TYPE_CLASSES[game.orderType];
   const orderByText = game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
-  const orderRibbon = orderByText
-    ? `<div class="order-badge ${ribbonClass}">${orderByText}</div>`
-    : "";
-  card.innerHTML = `
-        <img src="${game.poster}" alt="${game.title}" class="order-poster" onerror="this.style.display='none'">
-        <div class="order-info">
-            <div class="order-title">${game.title}</div>
-            <div class="order-genres">${game.genres || ""}</div>
-            <div class="order-meta">
-                <span class="order-year">${game.year || ""}</span>
-            </div>
-            ${orderRibbon}
-            <div class="order-footer">
-                <div class="order-date">${formatDate(game.dateAdded)}</div>
-                ${
-                  showActions
-                    ? `<div class="order-actions">
-                    <button class="btn btn-edit btn-icon" onclick="openEditGameModal(${game.id})">✏️</button>
-                    <button class="btn btn-delete btn-icon" onclick="deleteGameOrder(${game.id})">🗑️</button>
-                </div>`
-                    : ""
-                }
-            </div>
-        </div>
-    `;
+  if (orderByText) {
+    const ribbon = document.createElement("div");
+    ribbon.className = `order-badge ${ribbonClass}`;
+    ribbon.textContent = orderByText;
+    info.appendChild(ribbon);
+  }
+
+  const footer = document.createElement("div");
+  footer.className = "order-footer";
+  const dateDiv = document.createElement("div");
+  dateDiv.className = "order-date";
+  dateDiv.textContent = formatDate(game.dateAdded);
+  footer.appendChild(dateDiv);
+
+  if (showActions) {
+    const actions = document.createElement("div");
+    actions.className = "order-actions";
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn btn-edit btn-icon";
+    editBtn.textContent = "✏️";
+    editBtn.onclick = () => openEditGameModal(game.id);
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn btn-delete btn-icon";
+    delBtn.textContent = "🗑️";
+    delBtn.onclick = () => deleteGameOrder(game.id);
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    footer.appendChild(actions);
+  }
+
+  info.appendChild(footer);
+  card.appendChild(info);
   wrapper.appendChild(card);
+
   if (showActions) {
     const done = document.createElement("div");
     done.className = "order-complete";
-    done.innerHTML = `<button class="watch-complete-btn" onclick="markGameDone(${game.id})">✓</button>`;
+    const doneBtn = document.createElement("button");
+    doneBtn.className = "watch-complete-btn";
+    doneBtn.textContent = "✓";
+    doneBtn.onclick = () => markGameDone(game.id);
+    done.appendChild(doneBtn);
     wrapper.appendChild(done);
   }
+
   return wrapper;
 }
 
