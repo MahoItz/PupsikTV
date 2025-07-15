@@ -673,6 +673,7 @@ select option {
     position: relative;
     overflow: hidden;
     height: 100%;
+    min-height: 160px;
 }
 
 .order-wrapper {
