@@ -79,7 +79,7 @@ let editGamePosterData = null;
 
 // Pagination
 let currentPage = 1;
-const moviesPerPage = 10;
+const moviesPerPage = 12;
 let totalMovies = 0;
 
 // Utility to convert file to base64 string
