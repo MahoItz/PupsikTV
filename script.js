@@ -1,21 +1,21 @@
+import {
+  SUPABASE_KEY,
+  KINOPOISK_API_KEY,
+  RAWG_API_KEY,
+} from "./config.js";
 // Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-// Значение ключа берётся из переменной окружения на стороне Vercel
-const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNod2VrdXJtenl6aXZ0d29yanVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzODQ5NjEsImV4cCI6MjA2MTk2MDk2MX0.wXm1enXaPxXk1r6gjtkE2yizxZayLJh4hXmMV54Up9k";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let isAdmin = false;
 let adminElements = [];
 // Kinopoisk (unofficial API)
-const KINOPOISK_API_KEY = "a63efc29-37be-423f-8c0d-722154bc08f4";
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 let kpResults = [];
 let selectedKPMovie = null;
 
 // RAWG
-const RAWG_API_KEY = "4f3245bf6f2743649e3087a72623971d";
 const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
 let rawgResults = [];
 let selectedRAWGGame = null;
