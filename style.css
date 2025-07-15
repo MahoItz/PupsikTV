@@ -218,6 +218,10 @@ header img {
     border: 2px solid transparent;
 }
 
+.sort-arrow {
+    width: 24px;
+}
+
 .btn::before {
     content: '';
     position: absolute;
@@ -259,8 +263,7 @@ header img {
 }
 
 .btn-small {
-    padding: 10px 18px;
-    font-size: 0.8rem;
+    padding: 10px 12px;
 }
 
 .btn-rate {

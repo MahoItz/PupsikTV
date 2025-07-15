@@ -31,43 +31,43 @@ let gameOrders = [];
 
 async function loadEnv() {
   try {
-    const res = await fetch('/api/env');
+    const res = await fetch("/api/env");
     const env = await res.json();
     SUPABASE_KEY = env.SUPABASE_KEY;
     KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
     RAWG_API_KEY = env.RAWG_API_KEY;
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   } catch (err) {
-    console.error('Failed to load environment variables', err);
+    console.error("Failed to load environment variables", err);
   }
 }
 
 async function verifyAdminPassword(password) {
   try {
-    const res = await fetch('/api/verify-admin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
+    const res = await fetch("/api/verify-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
     });
     if (!res.ok) return false;
     const data = await res.json();
     return !!data.ok;
   } catch (err) {
-    console.error('Failed to verify admin password', err);
+    console.error("Failed to verify admin password", err);
     return false;
   }
 }
 
 const ORDER_TYPE_ICONS = {
-  "Донат": "images/donate_icon.png",
+  Донат: "images/donate_icon.png",
   "Баллы канала": "images/channel_points_icon.png",
-  "Шары": "images/balls_icon.png",
+  Шары: "images/balls_icon.png",
 };
 
 const ORDER_TYPE_CLASSES = {
-  "Донат": "ribbon-donate",
+  Донат: "ribbon-donate",
   "Баллы канала": "ribbon-points",
-  "Шары": "ribbon-balls",
+  Шары: "ribbon-balls",
 };
 
 // Watchlist modal helpers
@@ -277,7 +277,10 @@ async function loadGamesFromSupabase() {
       genres: item.game_genres,
       poster: item.game_poster,
       year: item.game_year || "",
-      orderBy: item.game_order_by && item.game_order_by !== "null" ? item.game_order_by : "",
+      orderBy:
+        item.game_order_by && item.game_order_by !== "null"
+          ? item.game_order_by
+          : "",
       orderType: item.game_order_type,
       dateAdded: item.created_at,
     }));
@@ -303,16 +306,23 @@ document.addEventListener("DOMContentLoaded", async function () {
   setupRatingStars();
   initFileUpload();
 
-  adminElements = Array.from(document.querySelectorAll('.admin-only'));
+  adminElements = Array.from(document.querySelectorAll(".admin-only"));
 
   document
-    .querySelectorAll('#mobileTabs button')
-    .forEach((btn) => btn.addEventListener('click', () => showTab(btn.dataset.tab)));
+    .querySelectorAll("#mobileTabs button")
+    .forEach((btn) =>
+      btn.addEventListener("click", () => showTab(btn.dataset.tab))
+    );
   updateTabVisibility();
 
   const orderBtn = document.getElementById("sortOrderBtn");
   if (orderBtn) {
-    orderBtn.textContent = sortAscending ? "⬆️" : "⬇️";
+    const img = document.createElement("img");
+    img.src = sortAscending ? "images/up-arrow.png" : "images/down-arrow.png";
+    img.alt = "";
+    img.className = "sort-arrow";
+
+    orderBtn.replaceChildren(img);
   }
 
   await loadMoviesFromSupabase();
@@ -361,7 +371,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const watchSearchBtn = document.getElementById("watchAutoSearchBtn");
   const watchResultsSelect = document.getElementById("watchAutoResults");
-  if (watchSearchBtn) watchSearchBtn.addEventListener("click", handleWatchlistSearch);
+  if (watchSearchBtn)
+    watchSearchBtn.addEventListener("click", handleWatchlistSearch);
   if (watchResultsSelect)
     watchResultsSelect.addEventListener("change", function () {
       const idx = parseInt(this.value);
@@ -567,7 +578,8 @@ function createMovieCard(movie, showActions = isAdmin) {
     placeholder.style.display = "flex";
   };
 
-  const orderByText = movie.orderBy && movie.orderBy !== "null" ? movie.orderBy : "";
+  const orderByText =
+    movie.orderBy && movie.orderBy !== "null" ? movie.orderBy : "";
   const ribbonClass = ORDER_TYPE_CLASSES[movie.orderType];
   let ribbon;
   if (orderByText) {
@@ -713,7 +725,8 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   info.appendChild(meta);
 
   const ribbonClass = ORDER_TYPE_CLASSES[order.orderType];
-  const orderByText = order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
+  const orderByText =
+    order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
   if (orderByText && showOrderBy) {
     const ribbon = document.createElement("div");
     ribbon.className = `order-badge ${ribbonClass}`;
@@ -809,7 +822,8 @@ function createGameCard(game, showActions = isAdmin) {
   info.appendChild(meta);
 
   const ribbonClass = ORDER_TYPE_CLASSES[game.orderType];
-  const orderByText = game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
+  const orderByText =
+    game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
   if (orderByText) {
     const ribbon = document.createElement("div");
     ribbon.className = `order-badge ${ribbonClass}`;
@@ -940,7 +954,9 @@ async function handleWatchlistSearch() {
   }
 
   try {
-    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(title)}&page=1`;
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      title
+    )}&page=1`;
     const res = await fetch(url, {
       headers: {
         "X-API-KEY": KINOPOISK_API_KEY,
@@ -1113,9 +1129,14 @@ function sortMovies(criteria) {
 
 function toggleSortOrder() {
   sortAscending = !sortAscending;
-  const btn = document.getElementById("sortOrderBtn");
-  if (btn) {
-    btn.textContent = sortAscending ? "⬆️" : "⬇️";
+  const orderBtn = document.getElementById("sortOrderBtn");
+  if (orderBtn) {
+    const img = document.createElement("img");
+    img.src = sortAscending ? "images/up-arrow.png" : "images/down-arrow.png";
+    img.alt = "";
+    img.className = "sort-arrow";
+
+    orderBtn.replaceChildren(img);
   }
   currentPage = 1;
   renderMovies();
@@ -1134,7 +1155,9 @@ function openAddToWatchlistModal() {
 function openRateModal(id) {
   ratingMovieId = id;
   const item = watchlist.find((w) => w.id === id);
-  document.getElementById("rateMovieTitle").textContent = item ? item.title : "";
+  document.getElementById("rateMovieTitle").textContent = item
+    ? item.title
+    : "";
   document.getElementById("rateMovieModal").style.display = "block";
   setupRatingStars("rateMovieStars");
 }
@@ -1232,7 +1255,8 @@ function openEditOrderModal(id) {
   const order = watchlist.find((o) => o.id === id);
   if (!order) return;
   document.getElementById("editOrderTitle").value = order.title;
-  document.getElementById("editOrderOriginTitle").value = order.originalTitle || "";
+  document.getElementById("editOrderOriginTitle").value =
+    order.originalTitle || "";
   document.getElementById("editOrderYear").value = order.year || "";
   document.getElementById("editOrderGenre").value = order.genres || "";
   document.getElementById("editOrderBy").value = order.orderBy || "";
@@ -1718,7 +1742,8 @@ async function submitRating() {
       year: source.year,
       rating: rating,
       kpRating: source.kpRating,
-      poster: source.poster || "https://via.placeholder.com/300x400?text=Нет+постера",
+      poster:
+        source.poster || "https://via.placeholder.com/300x400?text=Нет+постера",
       dateAdded: new Date().toISOString().split("T")[0],
       genre: source.genres || "",
       description: "",
@@ -1759,7 +1784,10 @@ async function submitRating() {
         orderType: data.order_type,
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
-      await supabaseClient.from("Movie_Orders").delete().eq("id", ratingMovieId);
+      await supabaseClient
+        .from("Movie_Orders")
+        .delete()
+        .eq("id", ratingMovieId);
     } catch (err) {
       console.error("Error adding rated movie to Supabase", err);
     }
@@ -1817,7 +1845,9 @@ document
     const order = watchlist.find((o) => o.id === editingOrderId);
     if (order) {
       order.title = document.getElementById("editOrderTitle").value;
-      order.originalTitle = document.getElementById("editOrderOriginTitle").value;
+      order.originalTitle = document.getElementById(
+        "editOrderOriginTitle"
+      ).value;
       order.year = document.getElementById("editOrderYear").value;
       order.genres = document.getElementById("editOrderGenre").value;
       order.orderBy = document.getElementById("editOrderBy").value;
@@ -1909,7 +1939,6 @@ window.onclick = function (event) {
   });
 };
 
-
 function showAdminControls() {
   adminElements.forEach((el) => el.classList.remove("admin-only"));
   const btn = document.getElementById("adminLoginBtn");
@@ -1934,36 +1963,38 @@ function hideAdminControls() {
 
 function logoutAdmin() {
   isAdmin = false;
-  localStorage.removeItem('isAdmin');
+  localStorage.removeItem("isAdmin");
   hideAdminControls();
-  closeModal('adminModal');
+  closeModal("adminModal");
 }
 
 function showTab(tab) {
   activeTab = tab;
-  document.querySelectorAll('#mobileTabs button').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.tab === tab);
+  document.querySelectorAll("#mobileTabs button").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === tab);
   });
   updateTabVisibility();
 }
 
 function updateTabVisibility() {
   const isMobile = window.innerWidth <= 768;
-  const movies = document.getElementById('moviesSection');
-  const watch = document.getElementById('watchlistSection');
-  const games = document.getElementById('gamesSection');
-  const tabs = document.getElementById('mobileTabs');
+  const movies = document.getElementById("moviesSection");
+  const watch = document.getElementById("watchlistSection");
+  const games = document.getElementById("gamesSection");
+  const tabs = document.getElementById("mobileTabs");
   if (isMobile) {
-    if (tabs) tabs.style.display = 'flex';
-    if (movies) movies.style.display = activeTab === 'movies' ? 'block' : 'none';
-    if (watch) watch.style.display = activeTab === 'watchlist' ? 'block' : 'none';
-    if (games) games.style.display = activeTab === 'games' ? 'block' : 'none';
+    if (tabs) tabs.style.display = "flex";
+    if (movies)
+      movies.style.display = activeTab === "movies" ? "block" : "none";
+    if (watch)
+      watch.style.display = activeTab === "watchlist" ? "block" : "none";
+    if (games) games.style.display = activeTab === "games" ? "block" : "none";
   } else {
-    if (tabs) tabs.style.display = 'none';
-    if (movies) movies.style.display = 'block';
-    if (watch) watch.style.display = 'block';
-    if (games) games.style.display = 'block';
+    if (tabs) tabs.style.display = "none";
+    if (movies) movies.style.display = "block";
+    if (watch) watch.style.display = "block";
+    if (games) games.style.display = "block";
   }
 }
 
-window.addEventListener('resize', updateTabVisibility);
+window.addEventListener("resize", updateTabVisibility);
