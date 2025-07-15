@@ -600,17 +600,17 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
                   <span class="order-kp-rating"><img src="images/kp_icon.png" alt="KP Rate"> ${order.kpRating ?? "-"}</span>
               </div>
               ${orderRibbon}
-          </div>
-          <div class="order-footer">
-              <div class="order-date">${formatDate(order.dateAdded)}</div>
-              ${
-                showActions
-                  ? `<div class="order-actions">
-                      <button class="btn btn-edit btn-icon" onclick="openEditOrderModal(${order.id})">✏️</button>
-                      <button class="btn btn-delete btn-icon" onclick="deleteOrder(${order.id})">🗑️</button>
-                  </div>`
-                  : ""
-              }
+              <div class="order-footer">
+                  <div class="order-date">${formatDate(order.dateAdded)}</div>
+                  ${
+                    showActions
+                      ? `<div class="order-actions">
+                          <button class="btn btn-edit btn-icon" onclick="openEditOrderModal(${order.id})">✏️</button>
+                          <button class="btn btn-delete btn-icon" onclick="deleteOrder(${order.id})">🗑️</button>
+                      </div>`
+                      : ""
+                  }
+              </div>
           </div>
       `;
   wrapper.appendChild(card);
@@ -656,17 +656,17 @@ function createGameCard(game, showActions = isAdmin) {
                   <span class="order-year">${game.year || ""}</span>
               </div>
               ${orderRibbon}
-          </div>
-          <div class="order-footer">
-              <div class="order-date">${formatDate(game.dateAdded)}</div>
-              ${
-                showActions
-                  ? `<div class="order-actions">
-                      <button class="btn btn-edit btn-icon" onclick="openEditGameModal(${game.id})">✏️</button>
-                      <button class="btn btn-delete btn-icon" onclick="deleteGameOrder(${game.id})">🗑️</button>
-                  </div>`
-                  : ""
-              }
+              <div class="order-footer">
+                  <div class="order-date">${formatDate(game.dateAdded)}</div>
+                  ${
+                    showActions
+                      ? `<div class="order-actions">
+                          <button class="btn btn-edit btn-icon" onclick="openEditGameModal(${game.id})">✏️</button>
+                          <button class="btn btn-delete btn-icon" onclick="deleteGameOrder(${game.id})">🗑️</button>
+                      </div>`
+                      : ""
+                  }
+              </div>
           </div>
       `;
   wrapper.appendChild(card);

@@ -666,7 +666,6 @@ select option {
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
     padding: 10px;
-    padding-bottom: 42px;
     border-radius: var(--border-radius-small);
     margin-bottom: 0;
     border: 1px solid rgba(255, 108, 66, 0.2);
@@ -726,7 +725,6 @@ select option {
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding-bottom: 0;
 }
 
 .order-title {
@@ -782,10 +780,7 @@ select option {
     justify-content: space-between;
     align-items: center;
     padding-top: 4px;
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    margin-top: auto;
 }
 
 .order-actions {
