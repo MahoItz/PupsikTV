@@ -1201,7 +1201,6 @@ document
       if (selectedKPMovie) {
         const sel = selectedKPMovie;
         movieData = {
-          id: Date.now(),
           title: sel.nameRu || sel.nameEn || "",
           originalTitle: sel.nameEn || "",
           year: sel.year || new Date().getFullYear(),
@@ -1217,7 +1216,6 @@ document
         };
       } else {
         movieData = {
-          id: Date.now(),
           title: title,
           year: new Date().getFullYear(),
           rating: rating,
@@ -1239,7 +1237,6 @@ document
         }
       }
       movieData = {
-        id: Date.now(),
         title: document.getElementById("manualTitle").value,
         originalTitle: document.getElementById("manuaOriginTitle").value,
         year:
@@ -1256,20 +1253,38 @@ document
       };
     }
 
-    allMovies.unshift(movieData);
-    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
-
     try {
-      await supabaseClient.from("movies").insert({
-        title: movieData.title,
-        original_title: movieData.originalTitle || "",
-        genres: movieData.genre,
-        poster: movieData.poster,
-        year: movieData.year,
-        rating_numeric: movieData.rating,
-        rating_OMDB: movieData.kpRating,
-        date: movieData.dateAdded,
+      const { data, error } = await supabaseClient
+        .from("movies")
+        .insert({
+          title: movieData.title,
+          original_title: movieData.originalTitle || "",
+          genres: movieData.genre,
+          poster: movieData.poster,
+          year: movieData.year,
+          rating_numeric: movieData.rating,
+          rating_OMDB: movieData.kpRating,
+          date: movieData.dateAdded,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      allMovies.unshift({
+        id: data.id,
+        title: data.title,
+        originalTitle: data.original_title,
+        genre: data.genres,
+        poster: data.poster,
+        year: data.year,
+        rating: data.rating_numeric,
+        kpRating: data.rating_OMDB,
+        dateAdded: data.date,
+        orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
+        orderType: data.order_type,
       });
+      localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     } catch (err) {
       console.error("Error adding movie to Supabase", err);
     }
@@ -1495,7 +1510,6 @@ async function submitRating() {
     // Создаём новый объект фильма для основного списка
     const source = watchlist[itemIndex];
     const watchedMovie = {
-      id: Date.now(),
       title: source.title,
       originalTitle: source.originalTitle || "",
       year: source.year,
@@ -1508,30 +1522,48 @@ async function submitRating() {
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
     };
-    allMovies.unshift(watchedMovie);
-    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
-    currentPage = 1;
-    watchlist.splice(itemIndex, 1);
-    renderMovies();
-    renderWatchlist();
-
     try {
-      await supabaseClient.from("movies").insert({
-        title: watchedMovie.title,
-        original_title: watchedMovie.originalTitle,
-        genres: watchedMovie.genre,
-        poster: watchedMovie.poster,
-        year: watchedMovie.year,
-        rating_numeric: watchedMovie.rating,
-        rating_OMDB: watchedMovie.kpRating,
-        date: watchedMovie.dateAdded,
-        order_by: watchedMovie.orderBy,
-        order_type: watchedMovie.orderType,
+      const { data, error } = await supabaseClient
+        .from("movies")
+        .insert({
+          title: watchedMovie.title,
+          original_title: watchedMovie.originalTitle,
+          genres: watchedMovie.genre,
+          poster: watchedMovie.poster,
+          year: watchedMovie.year,
+          rating_numeric: watchedMovie.rating,
+          rating_OMDB: watchedMovie.kpRating,
+          date: watchedMovie.dateAdded,
+          order_by: watchedMovie.orderBy,
+          order_type: watchedMovie.orderType,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      allMovies.unshift({
+        id: data.id,
+        title: data.title,
+        originalTitle: data.original_title,
+        genre: data.genres,
+        poster: data.poster,
+        year: data.year,
+        rating: data.rating_numeric,
+        kpRating: data.rating_OMDB,
+        dateAdded: data.date,
+        orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
+        orderType: data.order_type,
       });
+      localStorage.setItem("moviesCache", JSON.stringify(allMovies));
       await supabaseClient.from("Movie_Orders").delete().eq("id", ratingMovieId);
     } catch (err) {
       console.error("Error adding rated movie to Supabase", err);
     }
+    currentPage = 1;
+    watchlist.splice(itemIndex, 1);
+    renderMovies();
+    renderWatchlist();
   }
   closeModal("rateMovieModal");
 }
