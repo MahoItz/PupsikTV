@@ -450,6 +450,9 @@ select option {
 .movie-info {
     padding: 10px;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .movie-header {
@@ -527,8 +530,9 @@ select option {
     display: flex;
     flex-direction: row;
     gap: 10px;
-    margin-bottom: 15px;
-    padding: 12px 0;
+    margin-top: auto;
+    margin-bottom: 10px;
+    padding: 12px 0 0;
 }
 
 .movie-rating .rating-item {
@@ -697,6 +701,9 @@ select option {
 .order-info {
     flex: 1;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .order-title {
@@ -751,7 +758,7 @@ select option {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 4px;
+    margin-top: auto;
 }
 
 .order-actions {
