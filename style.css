@@ -391,10 +391,14 @@ select option {
     border: 1px solid rgba(0, 212, 255, 0.2);
     transition: var(--transition);
     position: relative;
-    animation: slideInGlow 0.6s ease-out forwards;
     display: flex;
     flex-direction: column;
     height: 100%;
+}
+
+/* initial appearance animation */
+.movie-card.animate {
+    animation: slideInGlow 0.6s ease-out forwards;
 }
 
 .movie-card.rating-low {
@@ -1105,12 +1109,12 @@ select option {
 }
 
 /* Каскадная анимация для карточек */
-.movie-card:nth-child(1) { animation-delay: 0.1s; }
-.movie-card:nth-child(2) { animation-delay: 0.2s; }
-.movie-card:nth-child(3) { animation-delay: 0.3s; }
-.movie-card:nth-child(4) { animation-delay: 0.4s; }
-.movie-card:nth-child(5) { animation-delay: 0.5s; }
-.movie-card:nth-child(6) { animation-delay: 0.6s; }
+.movie-card.animate:nth-child(1) { animation-delay: 0.1s; }
+.movie-card.animate:nth-child(2) { animation-delay: 0.2s; }
+.movie-card.animate:nth-child(3) { animation-delay: 0.3s; }
+.movie-card.animate:nth-child(4) { animation-delay: 0.4s; }
+.movie-card.animate:nth-child(5) { animation-delay: 0.5s; }
+.movie-card.animate:nth-child(6) { animation-delay: 0.6s; }
 
 /* Скроллбар в геймерском стиле */
 ::-webkit-scrollbar {

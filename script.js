@@ -215,6 +215,7 @@ async function loadMoviesFromSupabase() {
       dateAdded: item.date,
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
+      shown: false,
     }));
     totalMovies = allMovies.length;
 
@@ -291,6 +292,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   const cached = localStorage.getItem("moviesCache");
   if (cached) {
     allMovies = JSON.parse(cached);
+    allMovies.forEach(m => m.shown = false);
     totalMovies = allMovies.length;
   }
 
@@ -543,6 +545,10 @@ function createMovieCard(movie, showActions = isAdmin) {
   if (movie.rating === 0) cardClass += " rating-low";
   if (movie.rating === 11) cardClass += " rating-high";
   card.className = cardClass;
+  if (!movie.shown) {
+    card.classList.add("animate");
+    movie.shown = true;
+  }
 
   const poster = document.createElement("img");
   poster.src = movie.poster;
@@ -1454,6 +1460,7 @@ document
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        shown: false,
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     } catch (err) {
@@ -1725,6 +1732,7 @@ async function submitRating() {
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        shown: false,
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
       await supabaseClient.from("Movie_Orders").delete().eq("id", ratingMovieId);
