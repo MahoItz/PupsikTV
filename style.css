@@ -725,6 +725,7 @@ select option {
     display: flex;
     flex-direction: column;
     height: 100%;
+    padding-bottom: 32px;
 }
 
 .order-title {
@@ -780,7 +781,10 @@ select option {
     justify-content: space-between;
     align-items: center;
     padding-top: 4px;
-    margin-top: auto;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .order-actions {
