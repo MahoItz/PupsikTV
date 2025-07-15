@@ -516,6 +516,21 @@ select option {
     z-index: 2;
 }
 
+/* Ribbon over poster in movie cards */
+.movie-card .order-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: calc(100% - 12px);
+    margin: 0;
+}
+
+/* Keep ribbons static inside order/game cards */
+.order-card .order-badge {
+    position: static;
+    margin: 6px 0;
+}
+
 
 .ribbon-donate {
     border-color: rgba(255, 165, 0, 0.4);
