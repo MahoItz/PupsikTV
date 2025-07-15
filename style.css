@@ -895,6 +895,15 @@ select option {
     box-shadow: 0 0 20px rgba(255, 20, 147, 0.3);
 }
 
+/* Изображения в модальных окнах */
+.modal-image {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    margin-bottom: 20px;
+    border-radius: var(--border-radius-small);
+}
+
 /* Переключатель режимов */
 .mode-toggle {
     display: flex;
