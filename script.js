@@ -191,8 +191,19 @@ function clearFile(fileInput, label, fileName, removeBtn, preview) {
   }
 }
 
+function showLoader(id) {
+  const loader = document.getElementById(id);
+  if (loader) loader.style.display = "flex";
+}
+
+function hideLoader(id) {
+  const loader = document.getElementById(id);
+  if (loader) loader.style.display = "none";
+}
+
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
+  showLoader("moviesLoader");
   try {
     const { data, error } = await supabaseClient
       .from("movies")
@@ -222,11 +233,14 @@ async function loadMoviesFromSupabase() {
     renderMovies();
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
+  } finally {
+    hideLoader("moviesLoader");
   }
 }
 
 // Загрузка заказов из Supabase
 async function loadWatchlistFromSupabase() {
+  showLoader("watchlistLoader");
   try {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
@@ -253,11 +267,14 @@ async function loadWatchlistFromSupabase() {
     renderWatchlist();
   } catch (err) {
     console.error("Error loading watchlist from Supabase", err);
+  } finally {
+    hideLoader("watchlistLoader");
   }
 }
 
 // Загрузка заказанных игр из Supabase
 async function loadGamesFromSupabase() {
+  showLoader("gamesLoader");
   try {
     const { data, error } = await supabaseClient
       .from("Game_Orders")
@@ -282,6 +299,8 @@ async function loadGamesFromSupabase() {
     renderGames();
   } catch (err) {
     console.error("Error loading game orders from Supabase", err);
+  } finally {
+    hideLoader("gamesLoader");
   }
 }
 

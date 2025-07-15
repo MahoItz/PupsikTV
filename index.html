@@ -41,6 +41,7 @@
                 <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
 
                 <div class="movies-grid" id="moviesGrid">
+                    <div id="moviesLoader" class="loader" style="display:none;"></div>
                     <!-- Фильмы будут добавлены здесь -->
                 </div>
                 <div id="pagination" class="pagination"></div>
@@ -51,6 +52,7 @@
                     <div class="watchlist-section">
                         <h3>Заказанные фильмы</h3>
                         <div id="watchlistContainer">
+                            <div id="watchlistLoader" class="loader" style="display:none;"></div>
                             <!-- Список заказанных -->
                         </div>
                         <button class="btn btn-secondary admin-only" onclick="openAddToWatchlistModal()"
@@ -63,6 +65,7 @@
                     <div class="watchlist-section">
                         <h3>Заказанные игры</h3>
                         <div id="gamesContainer">
+                            <div id="gamesLoader" class="loader" style="display:none;"></div>
                             <!-- Список заказанных игр -->
                         </div>
                         <button class="btn btn-secondary admin-only" onclick="openAddGameModal()" style="width: 100%; margin-top: 15px;">
