@@ -1,20 +1,19 @@
 // Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-// Значение ключа берётся из переменной окружения Vercel через /api/env.js
-const SUPABASE_KEY = window.SUPABASE_KEY;
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let SUPABASE_KEY;
+let supabaseClient;
 
 let isAdmin = false;
 let adminElements = [];
 // Kinopoisk (unofficial API)
-const KINOPOISK_API_KEY = window.KINOPOISK_API_KEY;
+let KINOPOISK_API_KEY;
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 let kpResults = [];
 let selectedKPMovie = null;
 
 // RAWG
-const RAWG_API_KEY = window.RAWG_API_KEY;
+let RAWG_API_KEY;
 const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
 let rawgResults = [];
 let selectedRAWGGame = null;
@@ -29,6 +28,19 @@ let sortAscending = false;
 // Список заказанных фильмов
 let watchlist = [];
 let gameOrders = [];
+
+async function loadEnv() {
+  try {
+    const res = await fetch('/api/env');
+    const env = await res.json();
+    SUPABASE_KEY = env.SUPABASE_KEY;
+    KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
+    RAWG_API_KEY = env.RAWG_API_KEY;
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  } catch (err) {
+    console.error('Failed to load environment variables', err);
+  }
+}
 
 async function verifyAdminPassword(password) {
   try {
@@ -275,6 +287,7 @@ async function loadGamesFromSupabase() {
 
 // Инициализация
 document.addEventListener("DOMContentLoaded", async function () {
+  await loadEnv();
   const cached = localStorage.getItem("moviesCache");
   if (cached) {
     allMovies = JSON.parse(cached);
