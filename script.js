@@ -589,30 +589,30 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const orderRibbon = orderByText && showOrderBy
     ? `<div class="order-badge ${ribbonClass}">${orderByText}</div>`
     : "";
-  card.innerHTML = `
-        <img src="${order.poster}" alt="${order.title}" class="order-poster" onerror="this.style.display='none'">
-        <div class="order-info">
-            <div class="order-title">${order.title}</div>
-            <div class="order-original-title">${order.originalTitle || ""}</div>
-            <div class="order-genres">${order.genres || ""}</div>
-            <div class="order-meta">
-                <span class="order-year">${order.year || ""}</span>
-                <span class="order-kp-rating"><img src="images/kp_icon.png" alt="KP Rate"> ${order.kpRating ?? "-"}</span>
-            </div>
-            ${orderRibbon}
-            <div class="order-footer">
-                <div class="order-date">${formatDate(order.dateAdded)}</div>
-                ${
-                  showActions
-                    ? `<div class="order-actions">
-                    <button class="btn btn-edit btn-icon" onclick="openEditOrderModal(${order.id})">✏️</button>
-                    <button class="btn btn-delete btn-icon" onclick="deleteOrder(${order.id})">🗑️</button>
-                </div>`
-                    : ""
-                }
-            </div>
-        </div>
-    `;
+    card.innerHTML = `
+          <img src="${order.poster}" alt="${order.title}" class="order-poster" onerror="this.style.display='none'">
+          <div class="order-info">
+              <div class="order-title">${order.title}</div>
+              <div class="order-original-title">${order.originalTitle || ""}</div>
+              <div class="order-genres">${order.genres || ""}</div>
+              <div class="order-meta">
+                  <span class="order-year">${order.year || ""}</span>
+                  <span class="order-kp-rating"><img src="images/kp_icon.png" alt="KP Rate"> ${order.kpRating ?? "-"}</span>
+              </div>
+              ${orderRibbon}
+          </div>
+          <div class="order-footer">
+              <div class="order-date">${formatDate(order.dateAdded)}</div>
+              ${
+                showActions
+                  ? `<div class="order-actions">
+                      <button class="btn btn-edit btn-icon" onclick="openEditOrderModal(${order.id})">✏️</button>
+                      <button class="btn btn-delete btn-icon" onclick="deleteOrder(${order.id})">🗑️</button>
+                  </div>`
+                  : ""
+              }
+          </div>
+      `;
   wrapper.appendChild(card);
   if (showActions) {
     const done = document.createElement("div");
@@ -647,28 +647,28 @@ function createGameCard(game, showActions = isAdmin) {
   const orderRibbon = orderByText
     ? `<div class="order-badge ${ribbonClass}">${orderByText}</div>`
     : "";
-  card.innerHTML = `
-        <img src="${game.poster}" alt="${game.title}" class="order-poster" onerror="this.style.display='none'">
-        <div class="order-info">
-            <div class="order-title">${game.title}</div>
-            <div class="order-genres">${game.genres || ""}</div>
-            <div class="order-meta">
-                <span class="order-year">${game.year || ""}</span>
-            </div>
-            ${orderRibbon}
-            <div class="order-footer">
-                <div class="order-date">${formatDate(game.dateAdded)}</div>
-                ${
-                  showActions
-                    ? `<div class="order-actions">
-                    <button class="btn btn-edit btn-icon" onclick="openEditGameModal(${game.id})">✏️</button>
-                    <button class="btn btn-delete btn-icon" onclick="deleteGameOrder(${game.id})">🗑️</button>
-                </div>`
-                    : ""
-                }
-            </div>
-        </div>
-    `;
+    card.innerHTML = `
+          <img src="${game.poster}" alt="${game.title}" class="order-poster" onerror="this.style.display='none'">
+          <div class="order-info">
+              <div class="order-title">${game.title}</div>
+              <div class="order-genres">${game.genres || ""}</div>
+              <div class="order-meta">
+                  <span class="order-year">${game.year || ""}</span>
+              </div>
+              ${orderRibbon}
+          </div>
+          <div class="order-footer">
+              <div class="order-date">${formatDate(game.dateAdded)}</div>
+              ${
+                showActions
+                  ? `<div class="order-actions">
+                      <button class="btn btn-edit btn-icon" onclick="openEditGameModal(${game.id})">✏️</button>
+                      <button class="btn btn-delete btn-icon" onclick="deleteGameOrder(${game.id})">🗑️</button>
+                  </div>`
+                  : ""
+              }
+          </div>
+      `;
   wrapper.appendChild(card);
   if (showActions) {
     const done = document.createElement("div");
