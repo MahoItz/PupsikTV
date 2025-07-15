@@ -489,10 +489,9 @@ select option {
 
 /* Ribbon showing who ordered */
 .order-badge {
-    position: absolute;
-    top: 10px;
-    left: 0;
-    right: 0;
+    display: block;
+    width: 100%;
+    margin: 6px 0;
     padding: 6px 12px;
     background: rgba(255, 255, 255, 0.08);
     border: 2px solid rgba(255, 255, 255, 0.2);
