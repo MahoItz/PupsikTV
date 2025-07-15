@@ -289,8 +289,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   initFileUpload();
 
   adminElements = Array.from(document.querySelectorAll('.admin-only'));
-  const adminLogoutBtn = document.getElementById("adminLogoutBtn");
-  if (adminLogoutBtn) adminLogoutBtn.addEventListener("click", logoutAdmin);
 
   const orderBtn = document.getElementById("sortOrderBtn");
   if (orderBtn) {
@@ -304,6 +302,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   isAdmin = localStorage.getItem("isAdmin") === "true";
   if (isAdmin) {
     showAdminControls();
+  } else {
+    hideAdminControls();
   }
   const header = document.getElementById("headerLogo");
   if (header)
@@ -314,15 +314,19 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (adminForm)
     adminForm.addEventListener("submit", async function (e) {
       e.preventDefault();
-      const pw = document.getElementById("adminPassword").value;
-      const ok = await verifyAdminPassword(pw);
-      if (ok) {
-        isAdmin = true;
-        localStorage.setItem("isAdmin", "true");
-        showAdminControls();
-        closeModal("adminModal");
+      if (isAdmin) {
+        logoutAdmin();
       } else {
-        alert("Неверный пароль");
+        const pw = document.getElementById("adminPassword").value;
+        const ok = await verifyAdminPassword(pw);
+        if (ok) {
+          isAdmin = true;
+          localStorage.setItem("isAdmin", "true");
+          showAdminControls();
+          closeModal("adminModal");
+        } else {
+          alert("Неверный пароль");
+        }
       }
     });
   const searchBtn = document.getElementById("autoSearchBtn");
@@ -1708,18 +1712,22 @@ window.onclick = function (event) {
 
 
 function showAdminControls() {
-  adminElements.forEach(el => el.classList.remove('admin-only'));
-  const logoutBtn = document.getElementById('adminLogoutBtn');
-  if (logoutBtn) logoutBtn.style.display = 'block';
+  adminElements.forEach((el) => el.classList.remove("admin-only"));
+  const btn = document.getElementById("adminLoginBtn");
+  const group = document.getElementById("adminPasswordGroup");
+  if (btn) btn.textContent = "Выйти";
+  if (group) group.style.display = "none";
   renderMovies();
   renderWatchlist();
   renderGames();
 }
 
 function hideAdminControls() {
-  adminElements.forEach(el => el.classList.add('admin-only'));
-  const logoutBtn = document.getElementById('adminLogoutBtn');
-  if (logoutBtn) logoutBtn.style.display = 'none';
+  adminElements.forEach((el) => el.classList.add("admin-only"));
+  const btn = document.getElementById("adminLoginBtn");
+  const group = document.getElementById("adminPasswordGroup");
+  if (btn) btn.textContent = "Войти";
+  if (group) group.style.display = "";
   renderMovies();
   renderWatchlist();
   renderGames();
