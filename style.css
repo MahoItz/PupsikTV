@@ -392,6 +392,9 @@ select option {
     transition: var(--transition);
     position: relative;
     animation: slideInGlow 0.6s ease-out forwards;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .movie-card.rating-low {
@@ -450,6 +453,9 @@ select option {
 .movie-info {
     padding: 10px;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .movie-header {
@@ -528,6 +534,7 @@ select option {
     flex-direction: row;
     gap: 10px;
     margin-bottom: 15px;
+    margin-top: auto;
     padding: 12px 0;
 }
 
@@ -649,6 +656,7 @@ select option {
     transition: var(--transition);
     position: relative;
     overflow: hidden;
+    height: 100%;
 }
 
 .order-wrapper {
@@ -697,6 +705,9 @@ select option {
 .order-info {
     flex: 1;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .order-title {
@@ -751,7 +762,8 @@ select option {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 4px;
+    margin-top: auto;
+    padding-top: 4px;
 }
 
 .order-actions {
