@@ -673,11 +673,12 @@ select option {
     position: relative;
     overflow: hidden;
     height: 100%;
+    flex: 1;
 }
 
 .order-wrapper {
     display: flex;
-    flex-direction: column;
+    flex-direction: row-reverse;
     align-items: stretch;
     border-radius: var(--border-radius-small);
     overflow: hidden;
@@ -686,12 +687,14 @@ select option {
 
 .order-complete {
     margin-top: 0;
-    width: 100%;
+    width: 40px;
+    height: 100%;
 }
 
 .watch-complete-btn {
     width: 100%;
-    padding: 8px 0;
+    height: 100%;
+    padding: 0;
     background: transparent;
     color: white;
     border: none;
@@ -701,7 +704,7 @@ select option {
     align-items: center;
     justify-content: center;
     transition: background 0.2s ease;
-    border-radius: 0 0 var(--border-radius-small) var(--border-radius-small);
+    border-radius: var(--border-radius-small) 0 0 var(--border-radius-small);
 }
 
 .watch-complete-btn:hover {
