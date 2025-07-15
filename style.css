@@ -491,8 +491,8 @@ select option {
 .order-badge {
     position: absolute;
     top: 10px;
-    left: 15px;
-    right: 15px;
+    left: 0;
+    right: 0;
     padding: 6px 12px;
     background: rgba(255, 255, 255, 0.08);
     border: 2px solid rgba(255, 255, 255, 0.2);
@@ -697,6 +697,7 @@ select option {
 
 .order-info {
     flex: 1;
+    position: relative;
 }
 
 .order-title {
