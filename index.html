@@ -481,6 +481,15 @@
             </form>
         </div>
     </div>
+
+    <!-- Модальное окно ошибки дубликата -->
+    <div id="duplicateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('duplicateModal')">&times;</span>
+            <h2>Ошибка</h2>
+            <p>Такой фильм уже есть в списке.</p>
+        </div>
+    </div>
     <nav class="mobile-tabs" id="mobileTabs">
         <button data-tab="movies" class="active">Фильмы</button>
         <button data-tab="watchlist">Заказанные фильмы</button>

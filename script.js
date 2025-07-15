@@ -1152,6 +1152,10 @@ function openAddToWatchlistModal() {
   document.getElementById("addWatchlistModal").style.display = "block";
 }
 
+function showDuplicateModal() {
+  document.getElementById("duplicateModal").style.display = "block";
+}
+
 function openRateModal(id) {
   ratingMovieId = id;
   const item = watchlist.find((w) => w.id === id);
@@ -1480,6 +1484,14 @@ document
       };
     }
 
+    const duplicate = allMovies.some(
+      (m) => m.title.trim().toLowerCase() === movieData.title.trim().toLowerCase()
+    );
+    if (duplicate) {
+      showDuplicateModal();
+      return;
+    }
+
     try {
       const { data, error } = await supabaseClient
         .from("movies")
@@ -1585,6 +1597,14 @@ document
         orderBy: orderBy,
         orderType: orderType,
       };
+    }
+
+    const duplicateOrder = watchlist.some(
+      (o) => o.title.trim().toLowerCase() === orderData.title.trim().toLowerCase()
+    );
+    if (duplicateOrder) {
+      showDuplicateModal();
+      return;
     }
 
     try {
