@@ -306,6 +306,7 @@ header img {
 
 .search-controls {
     margin-bottom: 15px;
+    width: 100%;
 }
 
 .sort-row {
@@ -332,8 +333,7 @@ header img {
 }
 
 .search-input {
-    flex: 1;
-    min-width: 250px;
+    width: 100%;
     padding: 14px 20px;
     border: 2px solid rgba(0, 212, 255, 0.3);
     border-radius: var(--border-radius-small);
