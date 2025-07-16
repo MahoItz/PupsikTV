@@ -106,6 +106,22 @@ function readFileAsDataURL(file) {
   });
 }
 
+function renderEmptyState(container, message) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "empty-state";
+
+  const img = document.createElement("img");
+  img.src = "images/empty.png";
+  img.alt = message;
+  wrapper.appendChild(img);
+
+  const text = document.createElement("p");
+  text.textContent = message;
+  wrapper.appendChild(text);
+
+  container.appendChild(wrapper);
+}
+
 // ---------- File upload helpers ----------
 function initFileUpload() {
   const fileInputs = document.querySelectorAll(
@@ -778,6 +794,10 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
 function renderWatchlist() {
   const container = document.getElementById("watchlistContainer");
   container.innerHTML = "";
+  if (watchlist.length === 0) {
+    renderEmptyState(container, "Заказанных фильмов пока нет");
+    return;
+  }
 
   watchlist.forEach((item) => {
     container.appendChild(createOrderCard(item));
@@ -876,6 +896,10 @@ function renderGames() {
   const container = document.getElementById("gamesContainer");
   if (!container) return;
   container.innerHTML = "";
+  if (gameOrders.length === 0) {
+    renderEmptyState(container, "Заказанных игр пока нет");
+    return;
+  }
   gameOrders.forEach((g) => container.appendChild(createGameCard(g)));
 }
 

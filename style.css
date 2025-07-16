@@ -802,6 +802,20 @@ select option {
     background: rgba(255, 255, 255, 0.2);
 }
 
+.empty-state {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 20px 0;
+}
+
+.empty-state img {
+    max-width: 200px;
+    width: 100%;
+    opacity: 0.8;
+    margin: 0 auto 10px;
+    display: block;
+}
+
 .order-poster {
     position: relative;
     width: 40%;
