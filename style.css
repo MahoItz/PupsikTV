@@ -159,6 +159,36 @@ header img {
     transition: var(--transition);
 }
 
+/* Social links */
+.social-links {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.social-links a {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
+    transition: var(--transition);
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.social-links a:hover {
+    background: var(--primary-color);
+    box-shadow: 0 0 20px rgba(255, 108, 66, 0.5);
+    transform: translateY(-3px);
+}
+
 /* Основная сетка */
 .main-content {
     display: grid;
