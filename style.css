@@ -301,7 +301,7 @@ header img {
     margin-bottom: 25px;
 }
 .admin-only {
-    display: none;
+    display: none !important;
 }
 
 .search-controls {
