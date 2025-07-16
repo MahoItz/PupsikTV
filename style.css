@@ -966,6 +966,28 @@ select option {
     border-radius: var(--border-radius-small);
 }
 
+/* Специальное оформление модального окна дубликата */
+#duplicateModal .modal-content {
+    text-align: center;
+}
+
+#duplicateModal h2 {
+    text-align: center;
+}
+
+#duplicateModal .modal-image {
+    display: block;
+    margin: 0 auto 20px auto;
+    width: 80%;
+}
+
+#duplicateModal p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-top: 10px;
+}
+
 /* Переключатель режимов */
 .mode-toggle {
     display: flex;
