@@ -54,25 +54,24 @@
             <div class="side-panels">
                 <div class="right-panel" id="watchlistSection">
                     <div class="watchlist-section">
-                        <h3>Заказанные фильмы</h3>
+                        <div class="watchlist-header">
+                            <h3>Заказанные фильмы</h3>
+                            <button class="btn btn-secondary btn-icon admin-only" onclick="openAddToWatchlistModal()">➕</button>
+                        </div>
                         <div id="watchlistContainer">
                             <!-- Список заказанных -->
                         </div>
-                        <button class="btn btn-secondary admin-only" onclick="openAddToWatchlistModal()"
-                            style="width: 100%; margin-top: 15px;">
-                            ➕ Добавить в список
-                        </button>
                     </div>
                 </div>
                 <div class="right-panel" id="gamesSection">
                     <div class="watchlist-section">
-                        <h3>Заказанные игры</h3>
+                        <div class="watchlist-header">
+                            <h3>Заказанные игры</h3>
+                            <button class="btn btn-secondary btn-icon admin-only" onclick="openAddGameModal()">➕</button>
+                        </div>
                         <div id="gamesContainer">
                             <!-- Список заказанных игр -->
                         </div>
-                        <button class="btn btn-secondary admin-only" onclick="openAddGameModal()" style="width: 100%; margin-top: 15px;">
-                            ➕ Добавить игру
-                        </button>
                     </div>
                 </div>
             </div>

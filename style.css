@@ -737,6 +737,22 @@ select option {
     background-clip: text;
 }
 
+/* Header row with add buttons */
+.watchlist-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.watchlist-header h3 {
+    margin-bottom: 0;
+}
+
+.watchlist-header .btn-icon {
+    margin-left: auto;
+}
+
 .order-card {
     display: flex;
     flex-direction: row;
