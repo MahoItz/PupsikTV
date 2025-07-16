@@ -317,8 +317,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   renderMovies();
-  renderWatchlist();
-  renderGames();
   setupRatingStars();
   initFileUpload();
 
