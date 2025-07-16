@@ -304,11 +304,26 @@ header img {
     display: none;
 }
 
-.search-sort {
+.search-controls {
+    margin-bottom: 15px;
+}
+
+.sort-row {
     display: flex;
+    align-items: center;
     gap: 15px;
     margin-bottom: 30px;
     flex-wrap: wrap;
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.sort-row .movies-count {
+    margin-left: auto;
 }
 
 .movies-count {
@@ -1103,8 +1118,13 @@ select option {
         gap: 18px;
     }
     
-    .search-sort {
+    .sort-row {
         flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .sort-row .movies-count {
+        margin-left: 0;
     }
     
     .modal-content {

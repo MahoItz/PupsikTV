@@ -26,19 +26,23 @@
                     </button>
                 </div>
 
-                <div class="search-sort">
+                <div class="search-controls">
                     <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..."
                         onkeyup="searchMovies(this.value)">
-                    <select onchange="sortMovies(this.value)">
-                        <option value="date">Сортировка: По дате</option>
-                        <option value="title">По названию</option>
-                        <option value="year">По году</option>
-                        <option value="rating">По оценке</option>
-                    </select>
-                    <button id="sortOrderBtn" class="btn btn-secondary btn-small"
-                        onclick="toggleSortOrder()">⬇️</button>
                 </div>
-                <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
+                <div class="sort-row">
+                    <div class="sort-controls">
+                        <select onchange="sortMovies(this.value)">
+                            <option value="date">Сортировка: По дате</option>
+                            <option value="title">По названию</option>
+                            <option value="year">По году</option>
+                            <option value="rating">По оценке</option>
+                        </select>
+                        <button id="sortOrderBtn" class="btn btn-secondary btn-small"
+                            onclick="toggleSortOrder()">⬇️</button>
+                    </div>
+                    <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
+                </div>
 
                 <div class="movies-grid" id="moviesGrid">
                     <!-- Фильмы будут добавлены здесь -->
