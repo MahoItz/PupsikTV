@@ -870,6 +870,11 @@ select option {
     background-clip: text;
 }
 
+.modal-content p {
+    text-align: center;
+    margin: 0 auto;
+}
+
 .close {
     position: absolute;
     right: 20px;
