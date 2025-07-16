@@ -323,15 +323,29 @@ header img {
     gap: 15px;
 }
 
+.sort-controls select {
+    padding: 12px 20px;
+    height: 48px;
+    border: 2px solid rgba(0, 212, 255, 0.4);
+    background: var(--glass-bg);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
 .sort-row .movies-count {
     margin-left: auto;
 }
 
 .movies-count {
     margin-bottom: 15px;
-    padding: 6px 12px;
+    padding: 12px 20px;
+    height: 48px;
+    display: flex;
+    align-items: center;
     background: rgba(255, 255, 255, 0.08);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(0, 212, 255, 0.4);
     border-radius: var(--border-radius-small);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
@@ -695,6 +709,9 @@ select option {
     box-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
+    width: 48px;
+    height: 48px;
+    padding: 0;
 }
 
 #sortOrderBtn:hover,
