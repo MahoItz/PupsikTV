@@ -329,7 +329,14 @@ header img {
 
 .movies-count {
     margin-bottom: 15px;
-    font-weight: bold;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-small);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .search-input {
