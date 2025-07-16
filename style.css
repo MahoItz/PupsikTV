@@ -336,6 +336,7 @@ header img {
 
 .sort-row .movies-count {
     margin-left: auto;
+    margin-bottom: 0;
 }
 
 .movies-count {
