@@ -349,9 +349,11 @@ document.addEventListener("DOMContentLoaded", async function () {
   } else {
     hideAdminControls();
   }
-  const header = document.getElementById("headerLogo");
-  if (header)
-    header.addEventListener("click", () => {
+  const headerImg = document.querySelector(
+    "#headerLogo img[src='images/Pupsik_TV_Header_2.png']"
+  );
+  if (headerImg)
+    headerImg.addEventListener("click", () => {
       document.getElementById("adminModal").style.display = "block";
     });
   const adminForm = document.getElementById("adminLoginForm");

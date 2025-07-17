@@ -157,6 +157,7 @@ header img {
     filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5));
     animation: headerImageGlow 3s ease-in-out infinite;
     transition: var(--transition);
+    cursor: pointer;
 }
 
 /* Social links */
