@@ -29,13 +29,15 @@ let sortAscending = false;
 let watchlist = [];
 let gameOrders = [];
 
-async function loadEnv() {
+async function loadEnv(password) {
   try {
-    const res = await fetch("/api/env");
+    const headers = {};
+    if (password) headers["x-admin-password"] = password;
+    const res = await fetch("/api/env", { headers });
     const env = await res.json();
     SUPABASE_KEY = env.SUPABASE_KEY;
-    KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
-    RAWG_API_KEY = env.RAWG_API_KEY;
+    if (env.KINOPOISK_API_KEY) KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
+    if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   } catch (err) {
     console.error("Failed to load environment variables", err);
@@ -369,6 +371,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           isAdmin = true;
           localStorage.setItem("isAdmin", "true");
           showAdminControls();
+          await loadEnv(pw);
           closeModal("adminModal");
         } else {
           alert("Неверный пароль");
