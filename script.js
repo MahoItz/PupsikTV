@@ -39,8 +39,10 @@ async function loadEnv(password) {
     if (env.KINOPOISK_API_KEY) KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
     if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    return env;
   } catch (err) {
     console.error("Failed to load environment variables", err);
+    return {};
   }
 }
 
@@ -312,6 +314,10 @@ async function loadGamesFromSupabase() {
 // Инициализация
 document.addEventListener("DOMContentLoaded", async function () {
   await loadEnv();
+  const kpStored = localStorage.getItem("KINOPOISK_API_KEY");
+  if (kpStored) KINOPOISK_API_KEY = kpStored;
+  const rawgStored = localStorage.getItem("RAWG_API_KEY");
+  if (rawgStored) RAWG_API_KEY = rawgStored;
   const cached = localStorage.getItem("moviesCache");
   if (cached) {
     allMovies = JSON.parse(cached);
@@ -371,7 +377,11 @@ document.addEventListener("DOMContentLoaded", async function () {
           isAdmin = true;
           localStorage.setItem("isAdmin", "true");
           showAdminControls();
-          await loadEnv(pw);
+          const env = await loadEnv(pw);
+          if (env.KINOPOISK_API_KEY)
+            localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
+          if (env.RAWG_API_KEY)
+            localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
           closeModal("adminModal");
         } else {
           alert("Неверный пароль");
@@ -2011,6 +2021,8 @@ function hideAdminControls() {
 function logoutAdmin() {
   isAdmin = false;
   localStorage.removeItem("isAdmin");
+  localStorage.removeItem("KINOPOISK_API_KEY");
+  localStorage.removeItem("RAWG_API_KEY");
   hideAdminControls();
   closeModal("adminModal");
 }
