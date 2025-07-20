@@ -254,7 +254,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year"
+        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, imdb_id"
       )
       .order("id", { ascending: true });
 
@@ -268,6 +268,7 @@ async function loadWatchlistFromSupabase() {
       poster: item.order_poster,
       year: item.order_year || "",
       kpRating: item.kinopoisk_rate,
+      imdbId: item.imdb_id,
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
       dateAdded: item.created_at,
@@ -805,10 +806,12 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     tooltip.style.display = "block";
     tooltip.textContent = "Загрузка...";
     try {
+      if (!order.imdbId) {
+        tooltip.textContent = "Нет данных";
+        return;
+      }
       const res = await fetch(
-        `https://api4.rhhhhhhh.live/imdb_parental_guide?title=${encodeURIComponent(
-          order.title
-        )}`
+        `https://api4.rhhhhhhh.live/imdb_parental_guide/${order.imdbId}`
       );
       if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
@@ -1111,6 +1114,7 @@ function showWatchlistKPPreview() {
     originalTitle: selectedKPOrderMovie.nameEn || "",
     year: selectedKPOrderMovie.year || "",
     kpRating: selectedKPOrderMovie.rating || "-",
+    imdbId: selectedKPOrderMovie.imdbId || "",
     poster:
       selectedKPOrderMovie.posterUrlPreview ||
       selectedKPOrderMovie.posterUrl ||
@@ -1634,6 +1638,7 @@ document
           originalTitle: sel.nameEn || "",
           year: sel.year || "",
           kpRating: sel.rating || "-",
+          imdbId: sel.imdbId || "",
           poster:
             sel.posterUrlPreview ||
             sel.posterUrl ||
@@ -1669,6 +1674,7 @@ document
         originalTitle: document.getElementById("watchManualOriginTitle").value,
         year: document.getElementById("watchManualYear").value || "",
         kpRating: "-",
+        imdbId: "",
         poster: poster,
         genres: document.getElementById("watchManualGenre").value || "",
         orderBy: orderBy,
@@ -1696,6 +1702,7 @@ document
           order_by: orderData.orderBy,
           order_type: orderData.orderType,
           kinopoisk_rate: orderData.kpRating,
+          imdb_id: orderData.imdbId,
         })
         .select()
         .single();
@@ -1710,6 +1717,7 @@ document
         poster: data.order_poster,
         year: data.order_year || "",
         kpRating: data.kinopoisk_rate,
+        imdbId: data.imdb_id,
         orderBy: data.order_by,
         orderType: data.order_type,
         dateAdded: data.created_at,
@@ -1962,6 +1970,7 @@ document
             order_poster: order.poster,
             order_by: order.orderBy,
             order_type: order.orderType,
+            imdb_id: order.imdbId,
           })
           .eq("id", editingOrderId);
       } catch (err) {
