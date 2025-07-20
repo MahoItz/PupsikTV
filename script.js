@@ -110,6 +110,47 @@ function readFileAsDataURL(file) {
   });
 }
 
+function debounce(fn, delay) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+async function handleKPSuggestions() {
+  const query = document.getElementById("autoTitle").value.trim();
+  const list = document.getElementById("autoTitleSuggestions");
+  if (!list) return;
+  if (!query) {
+    list.innerHTML = "";
+    return;
+  }
+  try {
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    kpResults = data.films || [];
+    list.innerHTML = "";
+    kpResults.forEach((m) => {
+      const opt = document.createElement("option");
+      const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
+      opt.value = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(opt);
+    });
+  } catch (err) {
+    console.error("Kinopoisk suggest error", err);
+  }
+}
+
+const suggestMovies = debounce(handleKPSuggestions, 400);
+
 function renderEmptyState(container, message) {
   const wrapper = document.createElement("div");
   wrapper.className = "empty-state";
@@ -390,6 +431,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   const searchBtn = document.getElementById("autoSearchBtn");
   const resultsSelect = document.getElementById("autoResults");
+  const autoTitleInput = document.getElementById("autoTitle");
   if (searchBtn) searchBtn.addEventListener("click", handleKPSearch);
   if (resultsSelect)
     resultsSelect.addEventListener("change", function () {
@@ -397,6 +439,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       selectedKPMovie = kpResults[idx] || null;
       showKPPreview();
     });
+  if (autoTitleInput) autoTitleInput.addEventListener("input", suggestMovies);
 
   const watchSearchBtn = document.getElementById("watchAutoSearchBtn");
   const watchResultsSelect = document.getElementById("watchAutoResults");
@@ -922,6 +965,37 @@ function searchMovies(query) {
   currentPage = 1;
   renderMovies();
 }
+
+const suggestMovies = debounce(async function () {
+  const query = document.getElementById("autoTitle").value.trim();
+  const list = document.getElementById("autoTitleSuggestions");
+  if (!list) return;
+  if (!query) {
+    list.innerHTML = "";
+    return;
+  }
+  try {
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    kpResults = data.films || [];
+    list.innerHTML = "";
+    kpResults.forEach((m) => {
+      const opt = document.createElement("option");
+      const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
+      opt.value = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(opt);
+    });
+  } catch (err) {
+    console.error("Kinopoisk suggest error", err);
+  }
+}, 400);
 
 async function handleKPSearch() {
   const btn = document.getElementById("autoSearchBtn");
