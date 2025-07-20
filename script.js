@@ -1394,8 +1394,23 @@ function setupRatingStars(containerId = "ratingStars") {
 
   const updateFromInput = () => {
     if (!input) return;
-    let val = parseFloat(input.value);
-    if (isNaN(val)) val = 0;
+    const raw = input.value.replace(',', '.');
+    const parsed = parseFloat(raw);
+    if (isNaN(parsed)) return;
+    let val = parsed;
+    if (val < parseFloat(slider.min)) val = parseFloat(slider.min);
+    if (val > parseFloat(slider.max)) val = parseFloat(slider.max);
+    slider.value = val;
+    slider.dataset.currentRating = val;
+    if (containerId === "ratingStars") {
+      showKPPreview();
+    }
+  };
+
+  const formatInput = () => {
+    if (!input) return;
+    let val = parseFloat(input.value.replace(',', '.'));
+    if (isNaN(val)) val = parseFloat(slider.min);
     if (val < parseFloat(slider.min)) val = parseFloat(slider.min);
     if (val > parseFloat(slider.max)) val = parseFloat(slider.max);
     input.value = val.toFixed(1);
@@ -1407,7 +1422,11 @@ function setupRatingStars(containerId = "ratingStars") {
   };
 
   slider.addEventListener("input", updateFromSlider);
-  if (input) input.addEventListener("input", updateFromInput);
+  if (input) {
+    input.addEventListener("input", updateFromInput);
+    input.addEventListener("change", formatInput);
+    input.addEventListener("blur", formatInput);
+  }
   updateFromSlider();
 }
 
