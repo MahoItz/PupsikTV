@@ -907,6 +907,10 @@ select option {
     color: var(--text-accent);
 }
 
+.order-length {
+    color: var(--text-secondary);
+}
+
 .order-kp-rating {
     display: flex;
     align-items: center;

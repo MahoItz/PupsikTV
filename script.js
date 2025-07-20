@@ -9,6 +9,8 @@ let adminElements = [];
 let KINOPOISK_API_KEY;
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
+const KINOPOISK_FILM_URL =
+  "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 let kpResults = [];
 let selectedKPMovie = null;
 
@@ -116,6 +118,23 @@ function debounce(fn, delay) {
     clearTimeout(timeout);
     timeout = setTimeout(() => fn.apply(this, args), delay);
   };
+}
+
+async function fetchKPMovieLength(id) {
+  if (!id) return "";
+  try {
+    const res = await fetch(`${KINOPOISK_FILM_URL}/${id}`, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    return data.filmLength || "";
+  } catch (err) {
+    console.error("Kinopoisk film length error", err);
+    return "";
+  }
 }
 
 async function handleKPSuggestions() {
@@ -295,7 +314,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year"
+        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length"
       )
       .order("id", { ascending: true });
 
@@ -308,6 +327,7 @@ async function loadWatchlistFromSupabase() {
       genres: item.order_genres,
       poster: item.order_poster,
       year: item.order_year || "",
+      length: item.order_length || "",
       kpRating: item.kinopoisk_rate,
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
@@ -790,6 +810,10 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   year.className = "order-year";
   year.textContent = order.year || "";
   meta.appendChild(year);
+  const length = document.createElement("span");
+  length.className = "order-length";
+  length.textContent = order.length ? `${order.length} мин` : "";
+  if (order.length) meta.appendChild(length);
   const kpRating = document.createElement("span");
   kpRating.className = "order-kp-rating";
   const kpImg = document.createElement("img");
@@ -1136,7 +1160,7 @@ function showKPPreview() {
 }
 
 // Preview for watchlist modal
-function showWatchlistKPPreview() {
+async function showWatchlistKPPreview() {
   const preview = document.getElementById("watchAutoPreview");
   if (!preview) return;
   preview.innerHTML = "";
@@ -1144,10 +1168,16 @@ function showWatchlistKPPreview() {
     preview.style.display = "none";
     return;
   }
+  if (selectedKPOrderMovie.filmLength === undefined) {
+    selectedKPOrderMovie.filmLength = await fetchKPMovieLength(
+      selectedKPOrderMovie.filmId || selectedKPOrderMovie.kinopoiskId
+    );
+  }
   const order = {
     title: selectedKPOrderMovie.nameRu || selectedKPOrderMovie.nameEn || "",
     originalTitle: selectedKPOrderMovie.nameEn || "",
     year: selectedKPOrderMovie.year || "",
+    length: selectedKPOrderMovie.filmLength || "",
     kpRating: selectedKPOrderMovie.rating || "-",
     poster:
       selectedKPOrderMovie.posterUrlPreview ||
@@ -1679,10 +1709,16 @@ document
 
       if (selectedKPOrderMovie) {
         const sel = selectedKPOrderMovie;
+        if (sel.filmLength === undefined) {
+          sel.filmLength = await fetchKPMovieLength(
+            sel.filmId || sel.kinopoiskId
+          );
+        }
         orderData = {
           title: sel.nameRu || sel.nameEn || "",
           originalTitle: sel.nameEn || "",
           year: sel.year || "",
+          length: sel.filmLength || "",
           kpRating: sel.rating || "-",
           poster:
             sel.posterUrlPreview ||
@@ -1718,6 +1754,7 @@ document
         title: document.getElementById("watchManualTitle").value,
         originalTitle: document.getElementById("watchManualOriginTitle").value,
         year: document.getElementById("watchManualYear").value || "",
+        length: "",
         kpRating: "-",
         poster: poster,
         genres: document.getElementById("watchManualGenre").value || "",
@@ -1746,6 +1783,7 @@ document
           order_by: orderData.orderBy,
           order_type: orderData.orderType,
           kinopoisk_rate: orderData.kpRating,
+          order_length: orderData.length,
         })
         .select()
         .single();
@@ -1759,6 +1797,7 @@ document
         genres: data.order_genres,
         poster: data.order_poster,
         year: data.order_year || "",
+        length: data.order_length || "",
         kpRating: data.kinopoisk_rate,
         orderBy: data.order_by,
         orderType: data.order_type,
@@ -2012,6 +2051,7 @@ document
             order_poster: order.poster,
             order_by: order.orderBy,
             order_type: order.orderType,
+            order_length: order.length,
           })
           .eq("id", editingOrderId);
       } catch (err) {
