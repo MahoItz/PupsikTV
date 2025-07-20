@@ -1177,6 +1177,11 @@ select option {
     font-weight: 600;
 }
 
+.rating-slider {
+    width: 100%;
+    margin-top: 8px;
+}
+
 .rating-star {
     font-size: 1.8rem;
     color: rgba(255, 235, 59, 0.3);
