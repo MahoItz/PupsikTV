@@ -652,7 +652,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   icon1.src = "images/Pupsik_TV_Icon.png";
   icon1.alt = "Pupsik Rate";
   const span1 = document.createElement("span");
-  span1.textContent = `${movie.rating}/11`;
+  span1.textContent = `${parseFloat(movie.rating).toFixed(1)}/11`;
   ratingItem1.appendChild(icon1);
   ratingItem1.appendChild(span1);
   rating.appendChild(ratingItem1);
@@ -1375,15 +1375,35 @@ function switchGameMode(mode) {
 function setupRatingStars(containerId = "ratingStars") {
   const slider = document.getElementById(containerId);
   if (!slider) return;
-  const update = () => {
-    slider.dataset.currentRating = slider.value;
-    updateRatingDisplay(containerId, slider.value);
+  const inputId = slider.dataset.display;
+  const input = document.getElementById(inputId);
+
+  const updateFromSlider = () => {
+    const val = parseFloat(slider.value);
+    slider.dataset.currentRating = val;
+    if (input) input.value = val.toFixed(1);
     if (containerId === "ratingStars") {
       showKPPreview();
     }
   };
-  slider.addEventListener("input", update);
-  update();
+
+  const updateFromInput = () => {
+    if (!input) return;
+    let val = parseFloat(input.value);
+    if (isNaN(val)) val = 0;
+    if (val < parseFloat(slider.min)) val = parseFloat(slider.min);
+    if (val > parseFloat(slider.max)) val = parseFloat(slider.max);
+    input.value = val.toFixed(1);
+    slider.value = val;
+    slider.dataset.currentRating = val;
+    if (containerId === "ratingStars") {
+      showKPPreview();
+    }
+  };
+
+  slider.addEventListener("input", updateFromSlider);
+  if (input) input.addEventListener("input", updateFromInput);
+  updateFromSlider();
 }
 
 function setRatingStars(containerId, rating) {
@@ -1413,8 +1433,7 @@ function updateRatingDisplay(containerId, rating) {
   if (!displayId) return;
   const el = document.getElementById(displayId);
   if (el) {
-    const val = parseFloat(rating).toFixed(1);
-    el.textContent = `${val}/11`;
+    el.value = parseFloat(rating).toFixed(1);
   }
 }
 

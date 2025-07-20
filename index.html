@@ -150,7 +150,9 @@
                 <div class="form-group">
                     <label>Оценка:</label>
                     <input type="range" id="ratingStars" class="rating-slider" min="0" max="11" step="0.1" value="0" data-display="ratingValue">
-                    <div id="ratingValue" class="rating-number">0/11</div>
+                    <div class="rating-input">
+                        <input type="number" id="ratingValue" class="rating-number" min="0" max="11" step="0.1" value="0">/11
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Добавить фильм</button>
@@ -254,7 +256,9 @@
             <div class="form-group">
                 <label>Ваша оценка:</label>
                 <input type="range" id="rateMovieStars" class="rating-slider" min="0" max="11" step="0.1" value="0" data-display="rateMovieValue">
-                <div id="rateMovieValue" class="rating-number">0/11</div>
+                <div class="rating-input">
+                    <input type="number" id="rateMovieValue" class="rating-number" min="0" max="11" step="0.1" value="0">/11
+                </div>
             </div>
             <button onclick="submitRating()" class="btn btn-primary" style="width: 100%;">Оценить и переместить</button>
         </div>
@@ -285,7 +289,9 @@
                 <div class="form-group">
                     <label>Оценка:</label>
                     <input type="range" id="editRatingStars" class="rating-slider" min="0" max="11" step="0.1" value="0" data-display="editRatingValue">
-                    <div id="editRatingValue" class="rating-number">0/11</div>
+                    <div class="rating-input">
+                        <input type="number" id="editRatingValue" class="rating-number" min="0" max="11" step="0.1" value="0">/11
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить</button>
             </form>

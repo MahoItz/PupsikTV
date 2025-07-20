@@ -1172,9 +1172,31 @@ select option {
     margin-top: 8px;
 }
 
-.rating-number {
+.rating-input {
     margin-top: 6px;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rating-number {
+    width: 60px;
+    padding: 6px 8px;
+    border: 2px solid rgba(0, 212, 255, 0.2);
+    border-radius: var(--border-radius-small);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    font-weight: 600;
+    text-align: center;
+}
+
+.rating-number:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.3);
+    background: rgba(0, 212, 255, 0.05);
 }
 
 .rating-slider {
