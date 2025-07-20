@@ -994,37 +994,6 @@ function searchMovies(query) {
   renderMovies();
 }
 
-const suggestMovies = debounce(async function () {
-  const query = document.getElementById("autoTitle").value.trim();
-  const list = document.getElementById("autoTitleSuggestions");
-  if (!list) return;
-  if (!query) {
-    list.innerHTML = "";
-    return;
-  }
-  try {
-    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`;
-    const res = await fetch(url, {
-      headers: {
-        "X-API-KEY": KINOPOISK_API_KEY,
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await res.json();
-    kpResults = data.films || [];
-    list.innerHTML = "";
-    kpResults.forEach((m) => {
-      const opt = document.createElement("option");
-      const year = m.year || "";
-      const name = m.nameRu || m.nameEn || "";
-      opt.value = `${name}${year ? ` (${year})` : ""}`;
-      list.appendChild(opt);
-    });
-  } catch (err) {
-    console.error("Kinopoisk suggest error", err);
-  }
-}, 400);
-
 async function handleKPSearch() {
   const btn = document.getElementById("autoSearchBtn");
   const loader = document.getElementById("autoSearchLoading");
