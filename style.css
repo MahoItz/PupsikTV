@@ -1052,14 +1052,16 @@ select option {
     font-weight: 500;
     margin-top: 10px;
 }
-#rateMovieModal .modal-image {
-    display: block;
-    margin: 0 auto 20px auto;
-    width: 60%;
-    max-width: 250px;
-}
 #rateMovieModal .rate-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     text-align: center;
+}
+#rateMovieModal .rate-image {
+    width: 3rem;
+    margin: 0;
 }
 #rateMovieModal .rate-poster {
     text-align: center;
