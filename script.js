@@ -810,18 +810,8 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
         tooltip.textContent = "Нет данных";
         return;
       }
-      const res = await fetch(
-        `https://api4.rhhhhhhh.live/imdb_parental_guide/${order.imdbId}`
-      );
-      if (!res.ok) throw new Error("Request failed");
-      const data = await res.json();
-      if (data) {
-        if (typeof data === "string") tooltip.textContent = data;
-        else if (data.description) tooltip.textContent = data.description;
-        else tooltip.textContent = JSON.stringify(data);
-      } else {
-        tooltip.textContent = "Нет данных";
-      }
+      const text = await fetchImdbParentalGuide(order.imdbId);
+      tooltip.textContent = text || "Нет данных";
     } catch (err) {
       console.error("Failed to load parental guide", err);
       tooltip.textContent = "Ошибка загрузки";
@@ -2022,6 +2012,35 @@ function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
   return d.toLocaleDateString("ru-RU");
+}
+
+async function fetchImdbParentalGuide(imdbId) {
+  const url =
+    `https://r.jina.ai/https://www.imdb.com/title/${imdbId}/parentalguide`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Request failed");
+  const html = await res.text();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  let text = "";
+  const ld = doc.querySelector('script[type="application/ld+json"]');
+  if (ld) {
+    try {
+      const data = JSON.parse(ld.textContent);
+      if (data.description) text = data.description.trim();
+    } catch (e) {
+      /* ignore */
+    }
+  }
+  if (!text) {
+    const meta = doc.querySelector('meta[name="description"]');
+    if (meta) text = meta.content.trim();
+  }
+  if (!text) {
+    const summary = doc.querySelector('[data-testid="advisory-summary-text"]');
+    if (summary) text = summary.textContent.trim();
+  }
+  return text || null;
 }
 
 // Сброс форм и рейтингов
