@@ -1181,7 +1181,7 @@ select option {
 }
 
 .rating-input input.rating-number {
-    width: 60px;
+    width: 70px;
     padding: 6px 8px;
     border: 2px solid rgba(0, 212, 255, 0.2);
     border-radius: var(--border-radius-small);
@@ -1197,6 +1197,16 @@ select option {
     border-color: var(--secondary-color);
     box-shadow: 0 0 25px rgba(0, 212, 255, 0.3);
     background: rgba(0, 212, 255, 0.05);
+}
+
+.rating-input input.rating-number::-webkit-outer-spin-button,
+.rating-input input.rating-number::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.rating-input input.rating-number {
+    -moz-appearance: textfield;
 }
 
 .rating-slider {
