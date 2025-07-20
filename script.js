@@ -2000,8 +2000,13 @@ function showAdminControls() {
   adminElements.forEach((el) => el.classList.remove("admin-only"));
   const btn = document.getElementById("adminLoginBtn");
   const group = document.getElementById("adminPasswordGroup");
+  const input = document.getElementById("adminPassword");
   if (btn) btn.textContent = "Выйти";
   if (group) group.style.display = "none";
+  if (input) {
+    input.required = false;
+    input.value = "";
+  }
   renderMovies();
   renderWatchlist();
   renderGames();
@@ -2011,8 +2016,10 @@ function hideAdminControls() {
   adminElements.forEach((el) => el.classList.add("admin-only"));
   const btn = document.getElementById("adminLoginBtn");
   const group = document.getElementById("adminPasswordGroup");
+  const input = document.getElementById("adminPassword");
   if (btn) btn.textContent = "Войти";
   if (group) group.style.display = "";
+  if (input) input.required = true;
   renderMovies();
   renderWatchlist();
   renderGames();
