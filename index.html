@@ -101,7 +101,8 @@
                 <div id="autoMode">
                     <div class="form-group">
                         <label for="autoTitle">Название фильма:</label>
-                        <input type="text" id="autoTitle" placeholder="Введите название для поиска">
+                        <input type="text" id="autoTitle" list="autoTitleSuggestions" placeholder="Введите название для поиска">
+                        <datalist id="autoTitleSuggestions"></datalist>
                     </div>
                     <button id="autoSearchBtn" type="button" class="btn search">Найти</button>
                     <span id="autoSearchLoading" class="loading-spinner" style="display:none;"></span>
