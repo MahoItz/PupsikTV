@@ -1371,85 +1371,50 @@ function switchGameMode(mode) {
   }
 }
 
-// Настройка звездного рейтинга
+// Настройка рейтинга через слайдер
 function setupRatingStars(containerId = "ratingStars") {
-  const stars = document.querySelectorAll(`#${containerId} .rating-star`);
-  stars.forEach((star) => {
-    star.addEventListener("click", function () {
-      const rating = parseInt(this.dataset.rating);
-      setRatingStars(containerId, rating);
-    });
-
-    star.addEventListener("mouseover", function () {
-      const rating = parseInt(this.dataset.rating);
-      highlightStars(containerId, rating);
-    });
-  });
-
-  document
-    .getElementById(containerId)
-    .addEventListener("mouseleave", function () {
-      const currentRating = getCurrentRating(containerId);
-      highlightStars(containerId, currentRating);
-    });
+  const slider = document.getElementById(containerId);
+  if (!slider) return;
+  const update = () => {
+    slider.dataset.currentRating = slider.value;
+    updateRatingDisplay(containerId, slider.value);
+    if (containerId === "ratingStars") {
+      showKPPreview();
+    }
+  };
+  slider.addEventListener("input", update);
+  update();
 }
 
 function setRatingStars(containerId, rating) {
-  const container = document.getElementById(containerId);
-  const stars = container.querySelectorAll(".rating-star");
-  container.dataset.currentRating = rating;
+  const slider = document.getElementById(containerId);
+  if (!slider) return;
+  slider.value = rating;
+  slider.dataset.currentRating = rating;
   updateRatingDisplay(containerId, rating);
-  stars.forEach((star) => star.classList.remove("active"));
-
-  if (rating === 0) {
-    stars[0]?.classList.add("active");
-  } else if (rating >= 1 && rating <= 10) {
-    for (let i = 1; i <= rating; i++) {
-      stars[i]?.classList.add("active");
-    }
-  } else if (rating === 11) {
-    for (let i = 1; i <= 10; i++) {
-      stars[i]?.classList.add("active");
-    }
-    stars[11]?.classList.add("active");
-  }
   if (containerId === "ratingStars") {
     showKPPreview();
   }
 }
 
-function highlightStars(containerId, rating) {
-  const stars = document.querySelectorAll(`#${containerId} .rating-star`);
-  stars.forEach((star) => {
-    star.style.color = "#ddd";
-  });
-
-  if (rating === 0) {
-    stars[0].style.color = "#ffc107";
-  } else if (rating >= 1 && rating <= 10) {
-    for (let i = 1; i <= rating; i++) {
-      stars[i].style.color = "#ffc107";
-    }
-  } else if (rating === 11) {
-    for (let i = 1; i <= 10; i++) {
-      stars[i].style.color = "#ffc107";
-    }
-    stars[11].style.color = "#ffc107";
-  }
+function highlightStars() {
+  // no-op for slider implementation
 }
 
 function getCurrentRating(containerId) {
-  const container = document.getElementById(containerId);
-  return parseInt(container.dataset.currentRating) || 0;
+  const slider = document.getElementById(containerId);
+  return slider ? parseFloat(slider.value) || 0 : 0;
 }
 
 function updateRatingDisplay(containerId, rating) {
-  const container = document.getElementById(containerId);
-  const displayId = container.dataset.display;
+  const slider = document.getElementById(containerId);
+  if (!slider) return;
+  const displayId = slider.dataset.display;
   if (!displayId) return;
   const el = document.getElementById(displayId);
   if (el) {
-    el.textContent = `${rating}/10`;
+    const val = parseFloat(rating).toFixed(1);
+    el.textContent = `${val}/10`;
   }
 }
 

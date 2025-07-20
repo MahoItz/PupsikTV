@@ -149,20 +149,7 @@
 
                 <div class="form-group">
                     <label>Оценка:</label>
-                    <div class="rating-stars" id="ratingStars" data-display="ratingValue">
-                        <span class="rating-star rating-label" data-rating="0">worst</span>
-                        <span class="rating-star" data-rating="1">★</span>
-                        <span class="rating-star" data-rating="2">★</span>
-                        <span class="rating-star" data-rating="3">★</span>
-                        <span class="rating-star" data-rating="4">★</span>
-                        <span class="rating-star" data-rating="5">★</span>
-                        <span class="rating-star" data-rating="6">★</span>
-                        <span class="rating-star" data-rating="7">★</span>
-                        <span class="rating-star" data-rating="8">★</span>
-                        <span class="rating-star" data-rating="9">★</span>
-                        <span class="rating-star" data-rating="10">★</span>
-                        <span class="rating-star rating-label" data-rating="11">best</span>
-                    </div>
+                    <input type="range" id="ratingStars" class="rating-slider" min="0" max="10" step="0.1" value="0" data-display="ratingValue">
                     <div id="ratingValue" class="rating-number">0/10</div>
                 </div>
 
@@ -266,20 +253,7 @@
             </div>
             <div class="form-group">
                 <label>Ваша оценка:</label>
-                <div class="rating-stars" id="rateMovieStars" data-display="rateMovieValue">
-                    <span class="rating-star rating-label" data-rating="0">worst</span>
-                    <span class="rating-star" data-rating="1">★</span>
-                    <span class="rating-star" data-rating="2">★</span>
-                    <span class="rating-star" data-rating="3">★</span>
-                    <span class="rating-star" data-rating="4">★</span>
-                    <span class="rating-star" data-rating="5">★</span>
-                    <span class="rating-star" data-rating="6">★</span>
-                    <span class="rating-star" data-rating="7">★</span>
-                    <span class="rating-star" data-rating="8">★</span>
-                    <span class="rating-star" data-rating="9">★</span>
-                    <span class="rating-star" data-rating="10">★</span>
-                    <span class="rating-star rating-label" data-rating="11">best</span>
-                </div>
+                <input type="range" id="rateMovieStars" class="rating-slider" min="0" max="10" step="0.1" value="0" data-display="rateMovieValue">
                 <div id="rateMovieValue" class="rating-number">0/10</div>
             </div>
             <button onclick="submitRating()" class="btn btn-primary" style="width: 100%;">Оценить и переместить</button>
@@ -310,20 +284,7 @@
                 </div>
                 <div class="form-group">
                     <label>Оценка:</label>
-                    <div class="rating-stars" id="editRatingStars" data-display="editRatingValue">
-                        <span class="rating-star rating-label" data-rating="0">worst</span>
-                        <span class="rating-star" data-rating="1">★</span>
-                        <span class="rating-star" data-rating="2">★</span>
-                        <span class="rating-star" data-rating="3">★</span>
-                        <span class="rating-star" data-rating="4">★</span>
-                        <span class="rating-star" data-rating="5">★</span>
-                        <span class="rating-star" data-rating="6">★</span>
-                        <span class="rating-star" data-rating="7">★</span>
-                        <span class="rating-star" data-rating="8">★</span>
-                        <span class="rating-star" data-rating="9">★</span>
-                        <span class="rating-star" data-rating="10">★</span>
-                        <span class="rating-star rating-label" data-rating="11">best</span>
-                    </div>
+                    <input type="range" id="editRatingStars" class="rating-slider" min="0" max="10" step="0.1" value="0" data-display="editRatingValue">
                     <div id="editRatingValue" class="rating-number">0/10</div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить</button>
