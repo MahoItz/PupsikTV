@@ -1381,7 +1381,7 @@ function setupRatingStars(containerId = "ratingStars") {
   const updateFromSlider = () => {
     let val = parseFloat(slider.value);
     const snap = Math.round(val * 2) / 2;
-    if (Math.abs(val - snap) < 0.05) {
+    if (Math.abs(val - snap) <= 0.12) {
       val = snap;
       slider.value = val.toFixed(1);
     }
