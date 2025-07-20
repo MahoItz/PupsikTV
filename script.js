@@ -1379,7 +1379,12 @@ function setupRatingStars(containerId = "ratingStars") {
   const input = document.getElementById(inputId);
 
   const updateFromSlider = () => {
-    const val = parseFloat(slider.value);
+    let val = parseFloat(slider.value);
+    const snap = Math.round(val * 2) / 2;
+    if (Math.abs(val - snap) < 0.05) {
+      val = snap;
+      slider.value = val.toFixed(1);
+    }
     slider.dataset.currentRating = val;
     if (input) input.value = val.toFixed(1);
     if (containerId === "ratingStars") {
