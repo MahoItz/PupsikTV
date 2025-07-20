@@ -652,7 +652,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   icon1.src = "images/Pupsik_TV_Icon.png";
   icon1.alt = "Pupsik Rate";
   const span1 = document.createElement("span");
-  span1.textContent = `${movie.rating}/10`;
+  span1.textContent = `${movie.rating}/11`;
   ratingItem1.appendChild(icon1);
   ratingItem1.appendChild(span1);
   rating.appendChild(ratingItem1);
@@ -1414,7 +1414,7 @@ function updateRatingDisplay(containerId, rating) {
   const el = document.getElementById(displayId);
   if (el) {
     const val = parseFloat(rating).toFixed(1);
-    el.textContent = `${val}/10`;
+    el.textContent = `${val}/11`;
   }
 }
 
