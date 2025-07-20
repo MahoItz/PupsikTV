@@ -1052,6 +1052,13 @@ select option {
     font-weight: 500;
     margin-top: 10px;
 }
+#rateMovieModal .modal-image {
+    display: block;
+    margin: 0 auto 20px auto;
+    width: 60%;
+    max-width: 250px;
+}
+
 
 /* Переключатель режимов */
 .mode-toggle {
