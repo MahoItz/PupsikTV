@@ -930,6 +930,35 @@ select option {
     gap: 8px;
 }
 
+.info-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.info-tooltip {
+    position: absolute;
+    top: 28px;
+    right: 4px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 6px 8px;
+    border-radius: var(--border-radius-small);
+    font-size: 0.75rem;
+    line-height: 1.2;
+    max-width: 200px;
+    display: none;
+    z-index: 10;
+}
+
 /* Модальные окна */
 .modal {
     display: none;

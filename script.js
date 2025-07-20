@@ -787,6 +787,46 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   }
 
   info.appendChild(footer);
+
+  const infoBtn = document.createElement("button");
+  infoBtn.className = "info-btn";
+  infoBtn.textContent = "i";
+  infoBtn.title = "Дополнительная информация";
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "info-tooltip";
+
+  infoBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    if (tooltip.style.display === "block") {
+      tooltip.style.display = "none";
+      return;
+    }
+    tooltip.style.display = "block";
+    tooltip.textContent = "Загрузка...";
+    try {
+      const res = await fetch(
+        `https://api4.rhhhhhhh.live/imdb_parental_guide?title=${encodeURIComponent(
+          order.title
+        )}`
+      );
+      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
+      if (data) {
+        if (typeof data === "string") tooltip.textContent = data;
+        else if (data.description) tooltip.textContent = data.description;
+        else tooltip.textContent = JSON.stringify(data);
+      } else {
+        tooltip.textContent = "Нет данных";
+      }
+    } catch (err) {
+      console.error("Failed to load parental guide", err);
+      tooltip.textContent = "Ошибка загрузки";
+    }
+  });
+
+  card.appendChild(infoBtn);
+  card.appendChild(tooltip);
   card.appendChild(info);
   wrapper.appendChild(card);
 
