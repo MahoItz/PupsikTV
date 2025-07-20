@@ -256,9 +256,14 @@
     <div id="rateMovieModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('rateMovieModal')">&times;</span>
-            <h2>Оценить фильм</h2>
-            <img src="images/Kiriko_Node.png" alt="Kiriko Rate" class="modal-image rate-image">
-            <p id="rateMovieTitle"></p>
+            <div class="rate-header">
+                <h2>Оценить фильм</h2>
+                <img src="images/Kiriko_Node.png" alt="Kiriko Rate" class="modal-image rate-image">
+            </div>
+            <div class="rate-poster">
+                <img id="rateMoviePoster" class="movie-poster" src="" alt="Постер">
+                <p id="rateMovieTitle"></p>
+            </div>
             <div class="form-group">
                 <label>Ваша оценка:</label>
                 <div class="rating-stars" id="rateMovieStars" data-display="rateMovieValue">

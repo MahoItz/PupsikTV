@@ -1196,9 +1196,13 @@ function showDuplicateModal() {
 function openRateModal(id) {
   ratingMovieId = id;
   const item = watchlist.find((w) => w.id === id);
-  document.getElementById("rateMovieTitle").textContent = item
-    ? item.title
-    : "";
+  if (item) {
+    document.getElementById("rateMovieTitle").textContent = item.title;
+    document.getElementById("rateMoviePoster").src = item.poster;
+  } else {
+    document.getElementById("rateMovieTitle").textContent = "";
+    document.getElementById("rateMoviePoster").src = "";
+  }
   document.getElementById("rateMovieModal").style.display = "block";
   setupRatingStars("rateMovieStars");
 }

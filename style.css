@@ -1058,6 +1058,18 @@ select option {
     width: 60%;
     max-width: 250px;
 }
+#rateMovieModal .rate-header {
+    text-align: center;
+}
+#rateMovieModal .rate-poster {
+    text-align: center;
+}
+#rateMovieModal #rateMoviePoster {
+    display: block;
+    margin: 0 auto 10px auto;
+    width: 60%;
+    max-width: 250px;
+}
 
 
 /* Переключатель режимов */
