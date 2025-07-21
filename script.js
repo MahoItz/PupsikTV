@@ -1514,6 +1514,11 @@ document
         return;
       }
 
+      if (!selectedKPMovie) {
+        alert("Сначала найдите фильм, нажав кнопку поиска");
+        return;
+      }
+
       if (selectedKPMovie) {
         const sel = selectedKPMovie;
         movieData = {
@@ -1633,6 +1638,11 @@ document
       const titleInput = document.getElementById("watchAutoTitle").value;
       if (!titleInput) {
         alert("Введите название фильма");
+        return;
+      }
+
+      if (!selectedKPOrderMovie) {
+        alert("Сначала найдите фильм, нажав кнопку поиска");
         return;
       }
 
