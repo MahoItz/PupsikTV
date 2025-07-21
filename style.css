@@ -297,6 +297,19 @@ header img {
     box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), 0 8px 25px rgba(0, 212, 255, 0.3);
 }
 
+/* Search buttons */
+.btn.search {
+    background: linear-gradient(135deg, var(--secondary-color), #26c6da);
+    color: white;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    border: 2px solid var(--secondary-color);
+}
+
+.btn.search:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), 0 8px 25px rgba(0, 212, 255, 0.3);
+}
+
 .btn-small {
     padding: 10px 12px;
 }

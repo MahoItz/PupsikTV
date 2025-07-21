@@ -1513,7 +1513,10 @@ document
         return;
       }
 
-      if (selectedKPMovie) {
+      if (!selectedKPMovie) {
+        alert("Сначала найдите фильм с помощью кнопки 'Найти'");
+        return;
+      } else {
         const sel = selectedKPMovie;
         movieData = {
           title: sel.nameRu || sel.nameEn || "",
@@ -1528,17 +1531,6 @@ document
           dateAdded: new Date().toISOString().split("T")[0],
           genre: sel.genres?.map((g) => g.genre).join(", ") || "",
           description: sel.description || "",
-        };
-      } else {
-        movieData = {
-          title: title,
-          year: new Date().getFullYear(),
-          rating: rating,
-          kpRating: "-",
-          poster: "https://via.placeholder.com/300x400?text=Постер",
-          dateAdded: new Date().toISOString().split("T")[0],
-          genre: "Неизвестно",
-          description: "",
         };
       }
     } else {
