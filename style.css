@@ -1067,13 +1067,11 @@ select option {
 
 #rateMovieModal .rate-image {
     width: 3rem;
-    height: auto;
 }
 
 #rateMovieModal .rate-poster {
     text-align: center;
 }
-
 #rateMovieModal #rateMoviePoster {
     display: block;
     margin: 0 auto 10px auto;
