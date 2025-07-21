@@ -1268,6 +1268,7 @@ select option {
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-secondary);
+    cursor: pointer;
 }
 
 .rating-star:hover,
@@ -1294,6 +1295,10 @@ select option {
 .rating-label:hover::before,
 .rating-label.active::before {
     content: none;
+}
+
+.rating-label.active {
+    color: var(--accent-color);
 }
 
 /* Адаптивность */
