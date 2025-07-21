@@ -1273,7 +1273,7 @@ select option {
 
 .rating-star:hover,
 .rating-star.active {
-    color: var(--accent-color);
+    color: #ffd700;
     transform: scale(1.2);
     text-shadow: 0 0 15px rgba(255, 235, 59, 0.8);
 }
@@ -1298,7 +1298,7 @@ select option {
 }
 
 .rating-label.active {
-    color: var(--accent-color);
+    color: #ffd700;
 }
 
 /* Адаптивность */
