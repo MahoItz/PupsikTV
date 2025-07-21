@@ -1472,20 +1472,20 @@ function setRatingStars(containerId, rating) {
 function highlightStars(containerId, rating) {
   const stars = document.querySelectorAll(`#${containerId} .rating-star`);
   stars.forEach((star) => {
-    star.style.color = "#ddd";
+    star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
   });
 
   if (rating === 0) {
-    stars[0].style.color = "#ffc107";
+    stars[0].style.backgroundColor = "#ffc107";
   } else if (rating >= 1 && rating <= 10) {
     for (let i = 1; i <= rating; i++) {
-      stars[i].style.color = "#ffc107";
+      stars[i].style.backgroundColor = "#ffc107";
     }
   } else if (rating === 11) {
     for (let i = 1; i <= 10; i++) {
-      stars[i].style.color = "#ffc107";
+      stars[i].style.backgroundColor = "#ffc107";
     }
-    stars[11].style.color = "#ffc107";
+    stars[11].style.backgroundColor = "#ffc107";
   }
 }
 
