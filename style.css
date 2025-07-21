@@ -1176,13 +1176,20 @@ select option {
     margin-top: 8px;
 }
 
-.rating-number {
+
+.rating-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     margin-top: 6px;
+}
+
+.rating-max {
     font-weight: 600;
 }
 
 .rating-input {
-    margin-top: 6px;
+    margin-top: 0;
     width: 80px;
     padding: 4px 6px;
     font-size: 1rem;

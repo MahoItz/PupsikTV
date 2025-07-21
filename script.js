@@ -672,7 +672,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   icon1.src = "images/Pupsik_TV_Icon.png";
   icon1.alt = "Pupsik Rate";
   const span1 = document.createElement("span");
-  span1.textContent = `${movie.rating}/10`;
+  span1.textContent = `${movie.rating}/11`;
   ratingItem1.appendChild(icon1);
   ratingItem1.appendChild(span1);
   rating.appendChild(ratingItem1);
@@ -1445,7 +1445,6 @@ function setRatingStars(containerId, rating) {
   const container = document.getElementById(containerId);
   const stars = container.querySelectorAll(".rating-star");
   container.dataset.currentRating = rating;
-  updateRatingDisplay(containerId, rating);
   const inputId = container.dataset.input;
   if (inputId) {
     const inp = document.getElementById(inputId);
@@ -1495,15 +1494,7 @@ function getCurrentRating(containerId) {
   return parseFloat(container.dataset.currentRating) || 0;
 }
 
-function updateRatingDisplay(containerId, rating) {
-  const container = document.getElementById(containerId);
-  const displayId = container.dataset.display;
-  if (!displayId) return;
-  const el = document.getElementById(displayId);
-  if (el) {
-    el.textContent = `${rating}/10`;
-  }
-}
+
 
 // Обработка форм
 document
