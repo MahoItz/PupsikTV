@@ -1486,6 +1486,7 @@ function setupRatingStars(containerId = "ratingStars") {
     if (val > max) val = max;
     container.dataset.currentRating = val;
     highlightStars(containerId, val);
+    updateRatingDisplay(containerId, val);
     if (containerId === "ratingStars") {
       showKPPreview();
     }
@@ -1500,6 +1501,7 @@ function setupRatingStars(containerId = "ratingStars") {
   const cur = parseFloat(container.dataset.currentRating) ||
     parseFloat(input?.value) || 0;
   highlightStars(containerId, cur);
+  updateRatingDisplay(containerId, cur);
 }
 
 function setRatingStars(containerId, rating) {
@@ -1536,10 +1538,24 @@ function updateRatingDisplay(containerId, rating) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const displayId = container.dataset.display;
-  if (!displayId) return;
-  const el = document.getElementById(displayId);
-  if (el) {
-    el.value = parseFloat(rating).toFixed(1);
+  if (displayId) {
+    const el = document.getElementById(displayId);
+    if (el) {
+      el.value = parseFloat(rating).toFixed(1);
+    }
+  }
+  const labelId = container.dataset.label;
+  if (labelId) {
+    const lbl = document.getElementById(labelId);
+    if (lbl) {
+      if (parseFloat(rating) === 0) {
+        lbl.textContent = "Worst";
+      } else if (parseFloat(rating) === 11) {
+        lbl.textContent = "Best";
+      } else {
+        lbl.textContent = "";
+      }
+    }
   }
 }
 
