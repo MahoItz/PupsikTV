@@ -9,8 +9,6 @@ let adminElements = [];
 let KINOPOISK_API_KEY;
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
-const KINOPOISK_FILM_URL =
-  "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 let kpResults = [];
 let selectedKPMovie = null;
 
@@ -111,64 +109,6 @@ function readFileAsDataURL(file) {
     reader.readAsDataURL(file);
   });
 }
-
-function debounce(fn, delay) {
-  let timeout;
-  return function (...args) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => fn.apply(this, args), delay);
-  };
-}
-
-async function fetchKPMovieLength(id) {
-  if (!id) return "";
-  try {
-    const res = await fetch(`${KINOPOISK_FILM_URL}/${id}`, {
-      headers: {
-        "X-API-KEY": KINOPOISK_API_KEY,
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await res.json();
-    return data.filmLength || "";
-  } catch (err) {
-    console.error("Kinopoisk film length error", err);
-    return "";
-  }
-}
-
-async function handleKPSuggestions() {
-  const query = document.getElementById("autoTitle").value.trim();
-  const list = document.getElementById("autoTitleSuggestions");
-  if (!list) return;
-  if (!query) {
-    list.innerHTML = "";
-    return;
-  }
-  try {
-    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`;
-    const res = await fetch(url, {
-      headers: {
-        "X-API-KEY": KINOPOISK_API_KEY,
-        "Content-Type": "application/json",
-      },
-    });
-    const data = await res.json();
-    kpResults = data.films || [];
-    list.innerHTML = "";
-    kpResults.forEach((m) => {
-      const opt = document.createElement("option");
-      const year = m.year || "";
-      const name = m.nameRu || m.nameEn || "";
-      opt.value = `${name}${year ? ` (${year})` : ""}`;
-      list.appendChild(opt);
-    });
-  } catch (err) {
-    console.error("Kinopoisk suggest error", err);
-  }
-}
-
-const suggestMovies = debounce(handleKPSuggestions, 400);
 
 function renderEmptyState(container, message) {
   const wrapper = document.createElement("div");
@@ -314,7 +254,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length"
+        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year"
       )
       .order("id", { ascending: true });
 
@@ -327,7 +267,6 @@ async function loadWatchlistFromSupabase() {
       genres: item.order_genres,
       poster: item.order_poster,
       year: item.order_year || "",
-      length: item.order_length || "",
       kpRating: item.kinopoisk_rate,
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
@@ -451,7 +390,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   const searchBtn = document.getElementById("autoSearchBtn");
   const resultsSelect = document.getElementById("autoResults");
-  const autoTitleInput = document.getElementById("autoTitle");
   if (searchBtn) searchBtn.addEventListener("click", handleKPSearch);
   if (resultsSelect)
     resultsSelect.addEventListener("change", function () {
@@ -459,7 +397,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       selectedKPMovie = kpResults[idx] || null;
       showKPPreview();
     });
-  if (autoTitleInput) autoTitleInput.addEventListener("input", suggestMovies);
 
   const watchSearchBtn = document.getElementById("watchAutoSearchBtn");
   const watchResultsSelect = document.getElementById("watchAutoResults");
@@ -715,11 +652,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   icon1.src = "images/Pupsik_TV_Icon.png";
   icon1.alt = "Pupsik Rate";
   const span1 = document.createElement("span");
-  const ratingValue = parseFloat(movie.rating);
-  span1.textContent =
-    Number.isFinite(ratingValue) && ratingValue % 1 === 0
-      ? ratingValue.toString()
-      : ratingValue.toFixed(1);
+  span1.textContent = `${movie.rating}/10`;
   ratingItem1.appendChild(icon1);
   ratingItem1.appendChild(span1);
   rating.appendChild(ratingItem1);
@@ -810,10 +743,6 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   year.className = "order-year";
   year.textContent = order.year || "";
   meta.appendChild(year);
-  const length = document.createElement("span");
-  length.className = "order-length";
-  length.textContent = order.length ? `${order.length} мин` : "";
-  if (order.length) meta.appendChild(length);
   const kpRating = document.createElement("span");
   kpRating.className = "order-kp-rating";
   const kpImg = document.createElement("img");
@@ -1129,7 +1058,7 @@ function showKPPreview() {
 }
 
 // Preview for watchlist modal
-async function showWatchlistKPPreview() {
+function showWatchlistKPPreview() {
   const preview = document.getElementById("watchAutoPreview");
   if (!preview) return;
   preview.innerHTML = "";
@@ -1137,16 +1066,10 @@ async function showWatchlistKPPreview() {
     preview.style.display = "none";
     return;
   }
-  if (selectedKPOrderMovie.filmLength === undefined) {
-    selectedKPOrderMovie.filmLength = await fetchKPMovieLength(
-      selectedKPOrderMovie.filmId || selectedKPOrderMovie.kinopoiskId
-    );
-  }
   const order = {
     title: selectedKPOrderMovie.nameRu || selectedKPOrderMovie.nameEn || "",
     originalTitle: selectedKPOrderMovie.nameEn || "",
     year: selectedKPOrderMovie.year || "",
-    length: selectedKPOrderMovie.filmLength || "",
     kpRating: selectedKPOrderMovie.rating || "-",
     poster:
       selectedKPOrderMovie.posterUrlPreview ||
@@ -1448,93 +1371,85 @@ function switchGameMode(mode) {
   }
 }
 
-// Настройка рейтинга через слайдер
+// Настройка звездного рейтинга
 function setupRatingStars(containerId = "ratingStars") {
-  const slider = document.getElementById(containerId);
-  if (!slider) return;
-  const inputId = slider.dataset.display;
-  const input = document.getElementById(inputId);
+  const stars = document.querySelectorAll(`#${containerId} .rating-star`);
+  stars.forEach((star) => {
+    star.addEventListener("click", function () {
+      const rating = parseInt(this.dataset.rating);
+      setRatingStars(containerId, rating);
+    });
 
-  const updateFromSlider = () => {
-    let val = parseFloat(slider.value);
-    const snap = Math.round(val * 2) / 2;
-    if (Math.abs(val - snap) <= 0.12) {
-      val = snap;
-      slider.value = val.toFixed(1);
-    }
-    slider.dataset.currentRating = val;
-    if (input) input.value = val.toFixed(1);
-    if (containerId === "ratingStars") {
-      showKPPreview();
-    }
-  };
+    star.addEventListener("mouseover", function () {
+      const rating = parseInt(this.dataset.rating);
+      highlightStars(containerId, rating);
+    });
+  });
 
-  const updateFromInput = () => {
-    if (!input) return;
-    const raw = input.value.replace(',', '.');
-    const parsed = parseFloat(raw);
-    if (isNaN(parsed)) return;
-    let val = parsed;
-    if (val < parseFloat(slider.min)) val = parseFloat(slider.min);
-    if (val > parseFloat(slider.max)) val = parseFloat(slider.max);
-    slider.value = val;
-    slider.dataset.currentRating = val;
-    if (containerId === "ratingStars") {
-      showKPPreview();
-    }
-  };
-
-  const formatInput = () => {
-    if (!input) return;
-    let val = parseFloat(input.value.replace(',', '.'));
-    if (isNaN(val)) val = parseFloat(slider.min);
-    if (val < parseFloat(slider.min)) val = parseFloat(slider.min);
-    if (val > parseFloat(slider.max)) val = parseFloat(slider.max);
-    input.value = val.toFixed(1);
-    slider.value = val;
-    slider.dataset.currentRating = val;
-    if (containerId === "ratingStars") {
-      showKPPreview();
-    }
-  };
-
-  slider.addEventListener("input", updateFromSlider);
-  if (input) {
-    input.addEventListener("input", updateFromInput);
-    input.addEventListener("change", formatInput);
-    input.addEventListener("blur", formatInput);
-  }
-  updateFromSlider();
+  document
+    .getElementById(containerId)
+    .addEventListener("mouseleave", function () {
+      const currentRating = getCurrentRating(containerId);
+      highlightStars(containerId, currentRating);
+    });
 }
 
 function setRatingStars(containerId, rating) {
-  const slider = document.getElementById(containerId);
-  if (!slider) return;
-  slider.value = rating;
-  slider.dataset.currentRating = rating;
+  const container = document.getElementById(containerId);
+  const stars = container.querySelectorAll(".rating-star");
+  container.dataset.currentRating = rating;
   updateRatingDisplay(containerId, rating);
+  stars.forEach((star) => star.classList.remove("active"));
+
+  if (rating === 0) {
+    stars[0]?.classList.add("active");
+  } else if (rating >= 1 && rating <= 10) {
+    for (let i = 1; i <= rating; i++) {
+      stars[i]?.classList.add("active");
+    }
+  } else if (rating === 11) {
+    for (let i = 1; i <= 10; i++) {
+      stars[i]?.classList.add("active");
+    }
+    stars[11]?.classList.add("active");
+  }
   if (containerId === "ratingStars") {
     showKPPreview();
   }
 }
 
-function highlightStars() {
-  // no-op for slider implementation
+function highlightStars(containerId, rating) {
+  const stars = document.querySelectorAll(`#${containerId} .rating-star`);
+  stars.forEach((star) => {
+    star.style.color = "#ddd";
+  });
+
+  if (rating === 0) {
+    stars[0].style.color = "#ffc107";
+  } else if (rating >= 1 && rating <= 10) {
+    for (let i = 1; i <= rating; i++) {
+      stars[i].style.color = "#ffc107";
+    }
+  } else if (rating === 11) {
+    for (let i = 1; i <= 10; i++) {
+      stars[i].style.color = "#ffc107";
+    }
+    stars[11].style.color = "#ffc107";
+  }
 }
 
 function getCurrentRating(containerId) {
-  const slider = document.getElementById(containerId);
-  return slider ? parseFloat(slider.value) || 0 : 0;
+  const container = document.getElementById(containerId);
+  return parseInt(container.dataset.currentRating) || 0;
 }
 
 function updateRatingDisplay(containerId, rating) {
-  const slider = document.getElementById(containerId);
-  if (!slider) return;
-  const displayId = slider.dataset.display;
+  const container = document.getElementById(containerId);
+  const displayId = container.dataset.display;
   if (!displayId) return;
   const el = document.getElementById(displayId);
   if (el) {
-    el.value = parseFloat(rating).toFixed(1);
+    el.textContent = `${rating}/10`;
   }
 }
 
@@ -1678,16 +1593,10 @@ document
 
       if (selectedKPOrderMovie) {
         const sel = selectedKPOrderMovie;
-        if (sel.filmLength === undefined) {
-          sel.filmLength = await fetchKPMovieLength(
-            sel.filmId || sel.kinopoiskId
-          );
-        }
         orderData = {
           title: sel.nameRu || sel.nameEn || "",
           originalTitle: sel.nameEn || "",
           year: sel.year || "",
-          length: sel.filmLength || "",
           kpRating: sel.rating || "-",
           poster:
             sel.posterUrlPreview ||
@@ -1723,7 +1632,6 @@ document
         title: document.getElementById("watchManualTitle").value,
         originalTitle: document.getElementById("watchManualOriginTitle").value,
         year: document.getElementById("watchManualYear").value || "",
-        length: "",
         kpRating: "-",
         poster: poster,
         genres: document.getElementById("watchManualGenre").value || "",
@@ -1752,7 +1660,6 @@ document
           order_by: orderData.orderBy,
           order_type: orderData.orderType,
           kinopoisk_rate: orderData.kpRating,
-          order_length: orderData.length,
         })
         .select()
         .single();
@@ -1766,7 +1673,6 @@ document
         genres: data.order_genres,
         poster: data.order_poster,
         year: data.order_year || "",
-        length: data.order_length || "",
         kpRating: data.kinopoisk_rate,
         orderBy: data.order_by,
         orderType: data.order_type,
@@ -2020,7 +1926,6 @@ document
             order_poster: order.poster,
             order_by: order.orderBy,
             order_type: order.orderType,
-            order_length: order.length,
           })
           .eq("id", editingOrderId);
       } catch (err) {
