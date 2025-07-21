@@ -1448,89 +1448,94 @@ function switchGameMode(mode) {
   }
 }
 
-// Настройка рейтинга через слайдер
+// Настройка рейтинга через звезды
 function setupRatingStars(containerId = "ratingStars") {
-  const slider = document.getElementById(containerId);
-  if (!slider) return;
-  const inputId = slider.dataset.display;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const inputId = container.dataset.display;
   const input = document.getElementById(inputId);
 
-  const updateFromSlider = () => {
-    let val = parseFloat(slider.value);
-    const snap = Math.round(val * 2) / 2;
-    if (Math.abs(val - snap) <= 0.12) {
-      val = snap;
-      slider.value = val.toFixed(1);
-    }
-    slider.dataset.currentRating = val;
-    if (input) input.value = val.toFixed(1);
-    if (containerId === "ratingStars") {
-      showKPPreview();
-    }
-  };
+  container.innerHTML = "";
+  const max = 11;
+
+  for (let i = 1; i <= max; i++) {
+    const star = document.createElement("span");
+    star.className = "rating-star";
+    star.textContent = "★";
+    star.dataset.value = i;
+    star.addEventListener("click", () => {
+      container.dataset.currentRating = i;
+      updateRatingDisplay(containerId, i);
+      highlightStars(containerId, i);
+      if (containerId === "ratingStars") {
+        showKPPreview();
+      }
+    });
+    star.addEventListener("mouseenter", () => highlightStars(containerId, i));
+    star.addEventListener("mouseleave", () =>
+      highlightStars(containerId, getCurrentRating(containerId))
+    );
+    container.appendChild(star);
+  }
 
   const updateFromInput = () => {
     if (!input) return;
-    const raw = input.value.replace(',', '.');
-    const parsed = parseFloat(raw);
-    if (isNaN(parsed)) return;
-    let val = parsed;
-    if (val < parseFloat(slider.min)) val = parseFloat(slider.min);
-    if (val > parseFloat(slider.max)) val = parseFloat(slider.max);
-    slider.value = val;
-    slider.dataset.currentRating = val;
-    if (containerId === "ratingStars") {
-      showKPPreview();
-    }
-  };
-
-  const formatInput = () => {
-    if (!input) return;
     let val = parseFloat(input.value.replace(',', '.'));
-    if (isNaN(val)) val = parseFloat(slider.min);
-    if (val < parseFloat(slider.min)) val = parseFloat(slider.min);
-    if (val > parseFloat(slider.max)) val = parseFloat(slider.max);
-    input.value = val.toFixed(1);
-    slider.value = val;
-    slider.dataset.currentRating = val;
+    if (isNaN(val)) return;
+    if (val < 0) val = 0;
+    if (val > max) val = max;
+    container.dataset.currentRating = val;
+    highlightStars(containerId, val);
     if (containerId === "ratingStars") {
       showKPPreview();
     }
   };
 
-  slider.addEventListener("input", updateFromSlider);
   if (input) {
     input.addEventListener("input", updateFromInput);
-    input.addEventListener("change", formatInput);
-    input.addEventListener("blur", formatInput);
+    input.addEventListener("change", updateFromInput);
+    input.addEventListener("blur", updateFromInput);
   }
-  updateFromSlider();
+
+  const cur = parseFloat(container.dataset.currentRating) ||
+    parseFloat(input?.value) || 0;
+  highlightStars(containerId, cur);
 }
 
 function setRatingStars(containerId, rating) {
-  const slider = document.getElementById(containerId);
-  if (!slider) return;
-  slider.value = rating;
-  slider.dataset.currentRating = rating;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.dataset.currentRating = rating;
+  highlightStars(containerId, rating);
   updateRatingDisplay(containerId, rating);
   if (containerId === "ratingStars") {
     showKPPreview();
   }
 }
 
-function highlightStars() {
-  // no-op for slider implementation
+function highlightStars(containerId, rating) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const stars = container.querySelectorAll(".rating-star");
+  stars.forEach((star) => {
+    const val = parseInt(star.dataset.value);
+    if (val <= Math.round(rating)) {
+      star.classList.add("active");
+    } else {
+      star.classList.remove("active");
+    }
+  });
 }
 
 function getCurrentRating(containerId) {
-  const slider = document.getElementById(containerId);
-  return slider ? parseFloat(slider.value) || 0 : 0;
+  const container = document.getElementById(containerId);
+  return container ? parseFloat(container.dataset.currentRating) || 0 : 0;
 }
 
 function updateRatingDisplay(containerId, rating) {
-  const slider = document.getElementById(containerId);
-  if (!slider) return;
-  const displayId = slider.dataset.display;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const displayId = container.dataset.display;
   if (!displayId) return;
   const el = document.getElementById(displayId);
   if (el) {
