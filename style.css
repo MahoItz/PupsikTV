@@ -1242,9 +1242,17 @@ select option {
 }
 
 .rating-label {
+    width: auto;
+    padding: 0 4px;
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-secondary);
+    background-color: transparent;
+    -webkit-mask: none;
+            mask: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .rating-star:hover,
