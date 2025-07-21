@@ -751,6 +751,11 @@ select option {
     padding: 0;
 }
 
+/* Убираем нижний отступ, чтобы кнопка была на одной линии с выпадающим меню */
+#sortOrderBtn {
+    margin-bottom: 0;
+}
+
 #sortOrderBtn:hover,
 .btn-sort-toggle:hover {
     background: rgba(0, 212, 255, 0.2);
