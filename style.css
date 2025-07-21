@@ -251,6 +251,7 @@ header img {
     position: relative;
     overflow: hidden;
     border: 2px solid transparent;
+    margin-bottom: 25px;
 }
 
 .sort-arrow {
@@ -1111,7 +1112,7 @@ select option {
 
 /* Формы */
 .form-group {
-    margin-bottom: 25px;
+    margin-bottom: 15px;
 }
 
 .form-group label {
@@ -1218,7 +1219,6 @@ select option {
 
 .rating-star {
     width: 30px;
-    height: 30px;
     background-color: rgba(255, 235, 59, 0.3);
     -webkit-mask: url('images/Rat_rate.png') center/contain no-repeat;
             mask: url('images/Rat_rate.png') center/contain no-repeat;
@@ -1226,59 +1226,82 @@ select option {
     transition: var(--transition);
     user-select: none;
     position: relative;
+    margin-bottom: 5px;
 }
 
+/* Стили для лейблов "worst" и "best" */
 .rating-star.rating-label {
     width: auto;
     height: auto;
     -webkit-mask: none;
             mask: none;
     background-color: transparent;
-    padding: 0 4px;
-}
-
-.rating-star.rating-label:hover,
-.rating-star.rating-label.active {
-    background-color: transparent;
-    color: var(--accent-color);
-    text-shadow: 0 0 8px var(--accent-color);
-    transform: none;
-    box-shadow: none;
-    filter: none;
-}
-
-.rating-label {
-    font-size: 1rem;
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: #888;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
 }
 
-.rating-star:hover,
-.rating-star.active {
-    background-color: var(--accent-color);
-    transform: scale(1.2);
-    box-shadow: 0 0 15px rgba(255, 235, 59, 0.8),
-                0 0 25px rgba(255, 235, 59, 0.8);
-    filter: drop-shadow(0 0 8px var(--accent-color));
+/* Стили для "worst" (красный цвет) */
+.rating-star.rating-label[data-rating="0"] {
+    color: #999;
 }
 
-.rating-star:hover::before,
-.rating-star.active::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 30px;
-    height: 30px;
-    background: radial-gradient(circle, rgba(255, 235, 59, 0.3), transparent);
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    z-index: -1;
+.rating-star.rating-label[data-rating="0"]:hover {
+    background-color: rgba(255, 177, 99, 0.1);
+    color: #c98c41;
+    text-shadow: 0 0 20px rgba(255, 99, 99, 0.5);
+    border-color: rgba(255, 154, 99, 0.3);
+    transform: scale(1.05);
 }
 
-.rating-label:hover::before,
-.rating-label.active::before {
-    content: none;
+.rating-star.rating-label[data-rating="0"].active {
+    background-color: rgba(255, 99, 99, 0.2);
+    color: #ffa163;
+    text-shadow: 0 0 30px rgba(255, 161, 99, 0.8);
+    border-color: #cd8549;
+    transform: scale(1.1);
+}
+
+.rating-star.rating-label[data-rating="0"].hover-highlight {
+    background-color: rgba(255, 99, 99, 0.05);
+    color: #CCC;
+    transform: scale(1.02);
+}
+
+/* Стили для "best" (зеленый цвет) */
+.rating-star.rating-label[data-rating="11"] {
+    color: #999;
+}
+
+.rating-star.rating-label[data-rating="11"]:hover {
+    background-color: rgba(99, 255, 132, 0.1);
+    color: #63FF84;
+    text-shadow: 0 0 20px rgba(99, 255, 132, 0.5);
+    border-color: rgba(99, 255, 132, 0.3);
+    transform: scale(1.05);
+}
+
+.rating-star.rating-label[data-rating="11"].active {
+    background-color: rgba(99, 255, 132, 0.2);
+    color: #63FF84;
+    text-shadow: 0 0 30px rgba(99, 255, 132, 0.8);
+    border-color: #63FF84;
+    transform: scale(1.1);
+}
+
+.rating-star.rating-label[data-rating="11"].hover-highlight {
+    background-color: rgba(99, 255, 132, 0.05);
+    color: #CCC;
+    transform: scale(1.02);
+}
+
+/* Анимация для плавного перехода между состояниями */
+.rating-stars:hover .rating-star {
+    transition: all 0.2s ease;
 }
 
 /* Адаптивность */
@@ -1629,4 +1652,3 @@ body::before {
         padding-bottom: 70px;
     }
 }
-
