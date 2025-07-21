@@ -1409,7 +1409,11 @@ function switchGameMode(mode) {
 
 // Настройка звездного рейтинга
 function setupRatingStars(containerId = "ratingStars") {
-  const stars = document.querySelectorAll(`#${containerId} .rating-star`);
+  const container = document.getElementById(containerId);
+  const stars = container.querySelectorAll(".rating-star");
+  const inputId = container.dataset.input;
+  const ratingInput = inputId ? document.getElementById(inputId) : null;
+
   stars.forEach((star) => {
     star.addEventListener("click", function () {
       const rating = parseInt(this.dataset.rating);
@@ -1422,12 +1426,19 @@ function setupRatingStars(containerId = "ratingStars") {
     });
   });
 
-  document
-    .getElementById(containerId)
-    .addEventListener("mouseleave", function () {
-      const currentRating = getCurrentRating(containerId);
-      highlightStars(containerId, currentRating);
+  container.addEventListener("mouseleave", function () {
+    const currentRating = getCurrentRating(containerId);
+    highlightStars(containerId, currentRating);
+  });
+
+  if (ratingInput) {
+    ratingInput.addEventListener("input", function () {
+      const value = parseFloat(this.value.replace(",", "."));
+      if (!isNaN(value)) {
+        setRatingStars(containerId, value);
+      }
     });
+  }
 }
 
 function setRatingStars(containerId, rating) {
@@ -1435,6 +1446,11 @@ function setRatingStars(containerId, rating) {
   const stars = container.querySelectorAll(".rating-star");
   container.dataset.currentRating = rating;
   updateRatingDisplay(containerId, rating);
+  const inputId = container.dataset.input;
+  if (inputId) {
+    const inp = document.getElementById(inputId);
+    if (inp) inp.value = rating;
+  }
   stars.forEach((star) => star.classList.remove("active"));
 
   if (rating === 0) {
@@ -1476,7 +1492,7 @@ function highlightStars(containerId, rating) {
 
 function getCurrentRating(containerId) {
   const container = document.getElementById(containerId);
-  return parseInt(container.dataset.currentRating) || 0;
+  return parseFloat(container.dataset.currentRating) || 0;
 }
 
 function updateRatingDisplay(containerId, rating) {

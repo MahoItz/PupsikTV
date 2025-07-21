@@ -1181,6 +1181,22 @@ select option {
     font-weight: 600;
 }
 
+.rating-input {
+    margin-top: 6px;
+    width: 80px;
+    padding: 4px 6px;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: var(--text-primary);
+}
+
+.rating-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
 .rating-star {
     font-size: 1.8rem;
     color: rgba(255, 235, 59, 0.3);
