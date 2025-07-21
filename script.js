@@ -1548,12 +1548,33 @@ function updateRatingDisplay(containerId, rating) {
   if (labelId) {
     const lbl = document.getElementById(labelId);
     if (lbl) {
-      if (parseFloat(rating) === 0) {
+      const parent = container.parentNode;
+      if (!parent) return;
+      const rate = parseFloat(rating);
+
+      if (rate === 0) {
         lbl.textContent = "Worst";
-      } else if (parseFloat(rating) === 11) {
+        if (lbl.nextSibling !== container) {
+          parent.insertBefore(lbl, container);
+        }
+      } else if (rate === 11) {
         lbl.textContent = "Best";
+        if (container.nextSibling !== lbl) {
+          if (container.nextSibling) {
+            parent.insertBefore(lbl, container.nextSibling);
+          } else {
+            parent.appendChild(lbl);
+          }
+        }
       } else {
         lbl.textContent = "";
+        if (container.nextSibling !== lbl) {
+          if (container.nextSibling) {
+            parent.insertBefore(lbl, container.nextSibling);
+          } else {
+            parent.appendChild(lbl);
+          }
+        }
       }
     }
   }
