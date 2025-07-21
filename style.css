@@ -1057,6 +1057,24 @@ select option {
     font-weight: 500;
     margin-top: 10px;
 }
+
+/* Специальное оформление модального окна напоминания */
+#searchReminderModal .modal-content {
+    text-align: center;
+}
+
+#searchReminderModal .modal-image {
+    display: block;
+    margin: 0 auto 20px auto;
+    width: 80%;
+}
+
+#searchReminderModal p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-top: 10px;
+}
 #rateMovieModal .rate-header {
     display: flex;
     align-items: center;

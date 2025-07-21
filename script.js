@@ -1229,6 +1229,10 @@ function showDuplicateModal() {
   document.getElementById("duplicateModal").style.display = "block";
 }
 
+function showSearchReminderModal() {
+  document.getElementById("searchReminderModal").style.display = "block";
+}
+
 function openRateModal(id) {
   ratingMovieId = id;
   const item = watchlist.find((w) => w.id === id);
@@ -1515,7 +1519,7 @@ document
       }
 
       if (!selectedKPMovie) {
-        alert("Сначала найдите фильм, нажав кнопку поиска");
+        showSearchReminderModal();
         return;
       }
 
@@ -1642,7 +1646,7 @@ document
       }
 
       if (!selectedKPOrderMovie) {
-        alert("Сначала найдите фильм, нажав кнопку поиска");
+        showSearchReminderModal();
         return;
       }
 
