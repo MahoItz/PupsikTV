@@ -1190,12 +1190,13 @@ select option {
 
 .form-group .rating-input {
     margin-top: 0;
-    width: 80px;
+    width: 60px;
     padding: 4px 6px;
     font-size: 1rem;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 4px;
+    text-align: center;
     color: var(--text-primary);
 }
 
@@ -1203,6 +1204,17 @@ select option {
     outline: none;
     border-color: var(--accent-color);
 }
+
+.rating-input::-webkit-outer-spin-button,
+.rating-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.rating-input {
+    -moz-appearance: textfield;
+}
+
 
 .rating-star {
     font-size: 1.8rem;
