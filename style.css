@@ -1228,6 +1228,23 @@ select option {
     position: relative;
 }
 
+.rating-star.rating-label {
+    width: auto;
+    height: auto;
+    -webkit-mask: none;
+            mask: none;
+    background-color: transparent;
+    padding: 0 4px;
+}
+
+.rating-star.rating-label:hover,
+.rating-star.rating-label.active {
+    background-color: transparent;
+    color: var(--accent-color);
+    text-shadow: 0 0 8px var(--accent-color);
+    transform: none;
+}
+
 .rating-label {
     font-size: 1rem;
     font-weight: 600;
@@ -1238,7 +1255,9 @@ select option {
 .rating-star.active {
     background-color: var(--accent-color);
     transform: scale(1.2);
-    box-shadow: 0 0 15px rgba(255, 235, 59, 0.8);
+    box-shadow: 0 0 15px rgba(255, 235, 59, 0.8),
+                0 0 25px rgba(255, 235, 59, 0.8);
+    filter: drop-shadow(0 0 8px var(--accent-color));
 }
 
 .rating-star:hover::before,
