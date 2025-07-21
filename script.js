@@ -1472,12 +1472,14 @@ function setRatingStars(containerId, rating) {
 function highlightStars(containerId, rating) {
   const stars = document.querySelectorAll(`#${containerId} .rating-star`);
   stars.forEach((star) => {
-    star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
+    if (star.classList.contains("rating-label")) {
+      star.style.backgroundColor = "transparent";
+    } else {
+      star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
+    }
   });
 
-  if (rating === 0) {
-    stars[0].style.backgroundColor = "#ffc107";
-  } else if (rating >= 1 && rating <= 10) {
+  if (rating >= 1 && rating <= 10) {
     for (let i = 1; i <= rating; i++) {
       stars[i].style.backgroundColor = "#ffc107";
     }
@@ -1485,7 +1487,6 @@ function highlightStars(containerId, rating) {
     for (let i = 1; i <= 10; i++) {
       stars[i].style.backgroundColor = "#ffc107";
     }
-    stars[11].style.backgroundColor = "#ffc107";
   }
 }
 
