@@ -81,12 +81,6 @@ async function verifyAdminPassword(password) {
   }
 }
 
-const ORDER_TYPE_ICONS = {
-  Донат: "images/donate_icon.png",
-  "Баллы канала": "images/channel_points_icon.png",
-  Шары: "images/balls_icon.png",
-};
-
 const ORDER_TYPE_CLASSES = {
   Донат: "ribbon-donate",
   "Баллы канала": "ribbon-points",
