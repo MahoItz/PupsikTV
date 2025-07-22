@@ -93,8 +93,8 @@
             <h2>Добавить фильм</h2>
 
             <div class="mode-toggle">
-                <div class="mode-btn active" onclick="switchMode('auto')">Автоматический</div>
-                <div class="mode-btn" onclick="switchMode('manual')">Ручной</div>
+                <div class="mode-btn active" onclick="switchMode('auto', event)">Автоматический</div>
+                <div class="mode-btn" onclick="switchMode('manual', event)">Ручной</div>
             </div>
 
             <form id="addMovieForm">
@@ -183,8 +183,8 @@
             <h2>Добавить в список к просмотру</h2>
 
             <div class="mode-toggle">
-                <div class="mode-btn active" onclick="switchWatchlistMode('auto')">Автоматический</div>
-                <div class="mode-btn" onclick="switchWatchlistMode('manual')">Ручной</div>
+                <div class="mode-btn active" onclick="switchWatchlistMode('auto', event)">Автоматический</div>
+                <div class="mode-btn" onclick="switchWatchlistMode('manual', event)">Ручной</div>
             </div>
 
             <form id="addWatchlistForm">
@@ -393,8 +393,8 @@
             <h2>Добавить игру</h2>
             <form id="addGameForm">
                 <div class="mode-toggle">
-                    <div class="mode-btn active" onclick="switchGameMode('auto')">Автоматический</div>
-                    <div class="mode-btn" onclick="switchGameMode('manual')">Ручной</div>
+                    <div class="mode-btn active" onclick="switchGameMode('auto', event)">Автоматический</div>
+                    <div class="mode-btn" onclick="switchGameMode('manual', event)">Ручной</div>
                 </div>
 
                 <div id="gameAutoMode">
