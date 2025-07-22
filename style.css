@@ -253,16 +253,6 @@ header img {
     border: 2px solid transparent;
 }
 
-.search {
-    margin-bottom: 25px;
-    background: linear-gradient(135deg, var(--primary-color), #ff8a65);
-    color: white;
-}
-
-.search:hover {
-    transform: scale(1.1);
-}
-
 .sort-arrow {
     width: 24px;
 }
@@ -430,7 +420,7 @@ header img {
 
 .input-with-btn .search-btn {
     position: absolute;
-    right: 8px;
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -443,6 +433,10 @@ header img {
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
+}
+
+.input-with-btn .search-btn:hover {
+    color: var(--primary-color)
 }
 
 .input-with-btn input {
@@ -1144,7 +1138,6 @@ select option {
     background: rgba(0, 0, 0, 0.3);
     border-radius: var(--border-radius-small);
     padding: 6px;
-    margin-bottom: 30px;
     border: 1px solid rgba(0, 212, 255, 0.2);
 }
 
@@ -1175,6 +1168,7 @@ select option {
 
 .form-group label {
     display: block;
+    margin-top: 30px;
     margin-bottom: 10px;
     font-weight: 700;
     color: var(--text-primary);
@@ -1239,8 +1233,10 @@ select option {
 .rating-input-wrapper {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
     margin-top: 6px;
+    margin-bottom: 20px;
 }
 
 .rating-max {
@@ -1248,7 +1244,6 @@ select option {
 }
 
 .form-group .rating-input {
-    margin-top: 0;
     width: 60px;
     padding: 4px 6px;
     font-size: 1rem;
