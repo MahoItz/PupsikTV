@@ -15,7 +15,7 @@
 <body>
     <div class="container">
         <header id="headerLogo">
-            <img src="images/Pupsik_TV_Header_2.png" alt="PupsikTV Header">
+            <img src="images/Pupsik_TV_Header_2.png" alt="PupsikTV Header" loading="lazy">
             <h1>PupsikTV</h1>
             <nav class="social-links">
                 <a href="https://www.twitch.tv/pupsik_ow" target="_blank" aria-label="Twitch" class="social-link"><i class="fab fa-twitch"></i></a>
@@ -47,7 +47,7 @@
                             <option value="rating">По оценке</option>
                         </select>
                         <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleSortOrder()">
-                            <img src="images/down-arrow.png" alt="arrow" class="sort-arrow">
+                            <img src="images/down-arrow.png" alt="arrow" class="sort-arrow" loading="lazy">
                         </button>
                     </div>
                     <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
@@ -265,7 +265,7 @@
             <span class="close" onclick="closeModal('rateMovieModal')">&times;</span>
             <div class="rate-header">
                 <h2>Оценить фильм</h2>
-                <img src="images/Kiriko_Node.png" alt="Kiriko Rate" class="modal-image rate-image">
+                <img src="images/Kiriko_Node.png" alt="Kiriko Rate" class="modal-image rate-image" loading="lazy">
             </div>
             <div class="rate-poster">
                 <img id="rateMoviePoster" class="movie-poster" src="" alt="Постер">
@@ -520,7 +520,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('duplicateModal')">&times;</span>
             <h2>Ошибка</h2>
-            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.png" alt="Duplicate">
+            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.png" alt="Duplicate" loading="lazy">
             <p>Такой фильм уже есть в списке.</p>
         </div>
     </div>
@@ -530,7 +530,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('searchReminderModal')">&times;</span>
             <h2>Напоминание</h2>
-            <img class="modal-image" src="images/Kiriko_Remind.png" alt="Reminder">
+            <img class="modal-image" src="images/Kiriko_Remind.png" alt="Reminder" loading="lazy">
             <p>Сначала найдите фильм через поиск.</p>
         </div>
     </div>
