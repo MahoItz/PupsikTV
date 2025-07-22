@@ -417,21 +417,25 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
     });
   const searchBtn = document.getElementById("autoSearchBtn");
-  const resultsSelect = document.getElementById("autoResults");
+  const resultsContainer = document.getElementById("autoResults");
   const titleInput = document.getElementById("autoTitle");
   if (searchBtn) searchBtn.addEventListener("click", handleKPSearch);
   if (titleInput)
     titleInput.addEventListener("input", () => {
       debouncedKPSearch(titleInput.value.trim());
     });
-  if (resultsSelect)
-    resultsSelect.addEventListener("change", function () {
-      const idx = parseInt(this.value);
+  if (resultsContainer)
+    resultsContainer.addEventListener("click", function (e) {
+      const option = e.target.closest(".autocomplete-option");
+      if (!option) return;
+      const idx = parseInt(option.dataset.index, 10);
       selectedKPMovie = kpResults[idx] || null;
       if (selectedKPMovie) {
-        titleInput.value = selectedKPMovie.nameRu || selectedKPMovie.nameEn || "";
+        titleInput.value =
+          selectedKPMovie.nameRu || selectedKPMovie.nameEn || "";
       }
       showKPPreview();
+      document.getElementById("autoResultsContainer").style.display = "none";
     });
 
   const watchSearchBtn = document.getElementById("watchAutoSearchBtn");
@@ -986,16 +990,17 @@ const debouncedKPSearch = debounce(async (query) => {
     const data = await res.json();
     kpResults = data.films || [];
     const container = document.getElementById("autoResultsContainer");
-    const select = document.getElementById("autoResults");
-    if (!select) return;
-    select.innerHTML = "";
+    const list = document.getElementById("autoResults");
+    if (!list) return;
+    list.innerHTML = "";
     kpResults.forEach((m, idx) => {
-      const opt = document.createElement("option");
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
       const year = m.year || "";
       const name = m.nameRu || m.nameEn || "";
-      opt.value = idx;
-      opt.textContent = `${name}${year ? ` (${year})` : ""}`;
-      select.appendChild(opt);
+      div.textContent = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
     });
     if (kpResults.length > 0) {
       container.style.display = "block";
@@ -1033,19 +1038,19 @@ async function handleKPSearch() {
     const data = await res.json();
     kpResults = data.films || [];
     const container = document.getElementById("autoResultsContainer");
-    const select = document.getElementById("autoResults");
-    select.innerHTML = "";
+    const list = document.getElementById("autoResults");
+    list.innerHTML = "";
     kpResults.forEach((m, idx) => {
-      const opt = document.createElement("option");
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
       const year = m.year || "";
       const name = m.nameRu || m.nameEn || "";
-      opt.value = idx;
-      opt.textContent = `${name}${year ? ` (${year})` : ""}`;
-      select.appendChild(opt);
+      div.textContent = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
     });
     if (kpResults.length > 0) {
       container.style.display = "block";
-      select.selectedIndex = 0;
       selectedKPMovie = kpResults[0];
       showKPPreview();
     } else {
