@@ -439,24 +439,47 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 
   const watchSearchBtn = document.getElementById("watchAutoSearchBtn");
-  const watchResultsSelect = document.getElementById("watchAutoResults");
+  const watchResultsContainer = document.getElementById("watchAutoResults");
+  const watchTitleInput = document.getElementById("watchAutoTitle");
   if (watchSearchBtn)
     watchSearchBtn.addEventListener("click", handleWatchlistSearch);
-  if (watchResultsSelect)
-    watchResultsSelect.addEventListener("change", function () {
-      const idx = parseInt(this.value);
+  if (watchTitleInput)
+    watchTitleInput.addEventListener("input", () => {
+      debouncedWatchlistKPSearch(watchTitleInput.value.trim());
+    });
+  if (watchResultsContainer)
+    watchResultsContainer.addEventListener("click", function (e) {
+      const option = e.target.closest(".autocomplete-option");
+      if (!option) return;
+      const idx = parseInt(option.dataset.index, 10);
       selectedKPOrderMovie = kpOrderResults[idx] || null;
+      if (selectedKPOrderMovie) {
+        watchTitleInput.value =
+          selectedKPOrderMovie.nameRu || selectedKPOrderMovie.nameEn || "";
+      }
       showWatchlistKPPreview();
+      document.getElementById("watchAutoResultsContainer").style.display = "none";
     });
 
   const gameSearchBtn = document.getElementById("gameAutoSearchBtn");
-  const gameResultsSelect = document.getElementById("gameAutoResults");
+  const gameResultsContainer = document.getElementById("gameAutoResults");
+  const gameTitleInput = document.getElementById("gameAutoTitle");
   if (gameSearchBtn) gameSearchBtn.addEventListener("click", handleGameSearch);
-  if (gameResultsSelect)
-    gameResultsSelect.addEventListener("change", function () {
-      const idx = parseInt(this.value);
+  if (gameTitleInput)
+    gameTitleInput.addEventListener("input", () => {
+      debouncedRAWGSearch(gameTitleInput.value.trim());
+    });
+  if (gameResultsContainer)
+    gameResultsContainer.addEventListener("click", function (e) {
+      const option = e.target.closest(".autocomplete-option");
+      if (!option) return;
+      const idx = parseInt(option.dataset.index, 10);
       selectedRAWGGame = rawgResults[idx] || null;
+      if (selectedRAWGGame) {
+        gameTitleInput.value = selectedRAWGGame.name || "";
+      }
       showRAWGPreview();
+      document.getElementById("gameAutoResultsContainer").style.display = "none";
     });
 
   const preview = document.getElementById("editPosterPreview");
@@ -1012,6 +1035,86 @@ const debouncedKPSearch = debounce(async (query) => {
   }
 }, 500);
 
+const debouncedWatchlistKPSearch = debounce(async (query) => {
+  if (!query) {
+    const container = document.getElementById("watchAutoResultsContainer");
+    if (container) container.style.display = "none";
+    kpOrderResults = [];
+    selectedKPOrderMovie = null;
+    showWatchlistKPPreview();
+    return;
+  }
+
+  try {
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    kpOrderResults = data.films || [];
+    const container = document.getElementById("watchAutoResultsContainer");
+    const list = document.getElementById("watchAutoResults");
+    if (!list) return;
+    list.innerHTML = "";
+    kpOrderResults.forEach((m, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
+      div.textContent = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (kpOrderResults.length > 0) {
+      container.style.display = "block";
+    } else {
+      container.style.display = "none";
+    }
+  } catch (err) {
+    console.error("Kinopoisk autocomplete error", err);
+  }
+}, 500);
+
+const debouncedRAWGSearch = debounce(async (query) => {
+  if (!query) {
+    const container = document.getElementById("gameAutoResultsContainer");
+    if (container) container.style.display = "none";
+    rawgResults = [];
+    selectedRAWGGame = null;
+    showRAWGPreview();
+    return;
+  }
+
+  try {
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(query)}&page_size=5`;
+    const res = await fetch(url);
+    const data = await res.json();
+    rawgResults = data.results || [];
+    const container = document.getElementById("gameAutoResultsContainer");
+    const list = document.getElementById("gameAutoResults");
+    if (!list) return;
+    list.innerHTML = "";
+    rawgResults.forEach((g, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = g.released ? g.released.split("-")[0] : "";
+      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (rawgResults.length > 0) {
+      container.style.display = "block";
+    } else {
+      container.style.display = "none";
+    }
+  } catch (err) {
+    console.error("RAWG autocomplete error", err);
+  }
+}, 500);
+
 async function handleKPSearch() {
   const btn = document.getElementById("autoSearchBtn");
   const loader = document.getElementById("autoSearchLoading");
@@ -1092,19 +1195,19 @@ async function handleWatchlistSearch() {
     const data = await res.json();
     kpOrderResults = data.films || [];
     const container = document.getElementById("watchAutoResultsContainer");
-    const select = document.getElementById("watchAutoResults");
-    select.innerHTML = "";
+    const list = document.getElementById("watchAutoResults");
+    list.innerHTML = "";
     kpOrderResults.forEach((m, idx) => {
-      const opt = document.createElement("option");
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
       const year = m.year || "";
       const name = m.nameRu || m.nameEn || "";
-      opt.value = idx;
-      opt.textContent = `${name}${year ? ` (${year})` : ""}`;
-      select.appendChild(opt);
+      div.textContent = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
     });
     if (kpOrderResults.length > 0) {
       container.style.display = "block";
-      select.selectedIndex = 0;
       selectedKPOrderMovie = kpOrderResults[0];
       showWatchlistKPPreview();
     } else {
@@ -1204,18 +1307,18 @@ async function handleGameSearch() {
     const data = await res.json();
     rawgResults = data.results || [];
     const container = document.getElementById("gameAutoResultsContainer");
-    const select = document.getElementById("gameAutoResults");
-    select.innerHTML = "";
+    const list = document.getElementById("gameAutoResults");
+    list.innerHTML = "";
     rawgResults.forEach((g, idx) => {
-      const opt = document.createElement("option");
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
       const year = g.released ? g.released.split("-")[0] : "";
-      opt.value = idx;
-      opt.textContent = `${g.name}${year ? ` (${year})` : ""}`;
-      select.appendChild(opt);
+      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
     });
     if (rawgResults.length > 0) {
       container.style.display = "block";
-      select.selectedIndex = 0;
       selectedRAWGGame = rawgResults[0];
       showRAWGPreview();
     } else {
