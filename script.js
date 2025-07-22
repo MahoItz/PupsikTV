@@ -20,6 +20,14 @@ const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
 let rawgResults = [];
 let selectedRAWGGame = null;
 
+function debounce(func, delay) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
 // Массив фильмов будет заполняться данными из базы
 let allMovies = [];
 let movies = [];
@@ -410,11 +418,19 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   const searchBtn = document.getElementById("autoSearchBtn");
   const resultsSelect = document.getElementById("autoResults");
+  const titleInput = document.getElementById("autoTitle");
   if (searchBtn) searchBtn.addEventListener("click", handleKPSearch);
+  if (titleInput)
+    titleInput.addEventListener("input", () => {
+      debouncedKPSearch(titleInput.value.trim());
+    });
   if (resultsSelect)
     resultsSelect.addEventListener("change", function () {
       const idx = parseInt(this.value);
       selectedKPMovie = kpResults[idx] || null;
+      if (selectedKPMovie) {
+        titleInput.value = selectedKPMovie.nameRu || selectedKPMovie.nameEn || "";
+      }
       showKPPreview();
     });
 
@@ -948,6 +964,48 @@ function searchMovies(query) {
   currentPage = 1;
   renderMovies();
 }
+
+const debouncedKPSearch = debounce(async (query) => {
+  if (!query) {
+    const container = document.getElementById("autoResultsContainer");
+    if (container) container.style.display = "none";
+    kpResults = [];
+    selectedKPMovie = null;
+    showKPPreview();
+    return;
+  }
+
+  try {
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    kpResults = data.films || [];
+    const container = document.getElementById("autoResultsContainer");
+    const select = document.getElementById("autoResults");
+    if (!select) return;
+    select.innerHTML = "";
+    kpResults.forEach((m, idx) => {
+      const opt = document.createElement("option");
+      const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
+      opt.value = idx;
+      opt.textContent = `${name}${year ? ` (${year})` : ""}`;
+      select.appendChild(opt);
+    });
+    if (kpResults.length > 0) {
+      container.style.display = "block";
+    } else {
+      container.style.display = "none";
+    }
+  } catch (err) {
+    console.error("Kinopoisk autocomplete error", err);
+  }
+}, 500);
 
 async function handleKPSearch() {
   const btn = document.getElementById("autoSearchBtn");
