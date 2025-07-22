@@ -251,7 +251,16 @@ header img {
     position: relative;
     overflow: hidden;
     border: 2px solid transparent;
+}
+
+.search {
     margin-bottom: 25px;
+    background: linear-gradient(135deg, var(--primary-color), #ff8a65);
+    color: white;
+}
+
+.search:hover {
+    transform: scale(1.1);
 }
 
 .sort-arrow {
