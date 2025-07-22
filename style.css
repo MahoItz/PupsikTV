@@ -1671,6 +1671,26 @@ body::before {
     }
 }
 
+/* Tabs for movies/games list */
+.list-tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.list-tabs button {
+    flex: 1;
+    padding: 12px 0;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.list-tabs button.active {
+    background: var(--primary-color);
+}
+
 /* ---------------- Mobile Tabs ---------------- */
 .mobile-tabs {
     display: none;
