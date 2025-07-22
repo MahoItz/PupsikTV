@@ -1033,7 +1033,7 @@ const debouncedKPSearch = debounce(async (query) => {
   } catch (err) {
     console.error("Kinopoisk autocomplete error", err);
   }
-}, 500);
+}, 200);
 
 const debouncedWatchlistKPSearch = debounce(async (query) => {
   if (!query) {
@@ -1076,7 +1076,7 @@ const debouncedWatchlistKPSearch = debounce(async (query) => {
   } catch (err) {
     console.error("Kinopoisk autocomplete error", err);
   }
-}, 500);
+}, 200);
 
 const debouncedRAWGSearch = debounce(async (query) => {
   if (!query) {
@@ -1113,7 +1113,7 @@ const debouncedRAWGSearch = debounce(async (query) => {
   } catch (err) {
     console.error("RAWG autocomplete error", err);
   }
-}, 500);
+}, 200);
 
 async function handleKPSearch() {
   const btn = document.getElementById("autoSearchBtn");
