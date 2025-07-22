@@ -1738,9 +1738,6 @@ document
         poster: poster,
         dateAdded: new Date().toISOString().split("T")[0],
         genre: document.getElementById("manualGenre").value || "Неизвестно",
-        description:
-          document.getElementById("manualDescription")?.value ||
-          "Описание отсутствует",
       };
     }
 
