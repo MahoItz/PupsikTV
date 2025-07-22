@@ -101,12 +101,14 @@
                 <div id="autoMode">
                     <div class="form-group">
                         <label for="autoTitle">Название фильма:</label>
-                        <input type="text" id="autoTitle" placeholder="Введите название для поиска">
+                        <div class="input-with-btn">
+                            <input type="text" id="autoTitle" placeholder="Введите название для поиска">
+                            <button id="autoSearchBtn" type="button" class="search-btn"><i class="fas fa-search"></i></button>
+                        </div>
                     </div>
                     <div class="form-group" id="autoResultsContainer" style="display:none; margin-top:10px;">
                         <div id="autoResults" class="autocomplete-list"></div>
                     </div>
-                    <button id="autoSearchBtn" type="button" class="btn search">Найти</button>
                     <span id="autoSearchLoading" class="loading-spinner" style="display:none;"></span>
                     <div id="autoPreview" style="display:none; margin-top:15px;"></div>
                 </div>
@@ -189,12 +191,14 @@
                 <div id="watchAutoMode">
                     <div class="form-group">
                         <label for="watchAutoTitle">Название фильма:</label>
-                        <input type="text" id="watchAutoTitle" placeholder="Введите название для поиска">
+                        <div class="input-with-btn">
+                            <input type="text" id="watchAutoTitle" placeholder="Введите название для поиска">
+                            <button id="watchAutoSearchBtn" type="button" class="search-btn"><i class="fas fa-search"></i></button>
+                        </div>
                     </div>
                     <div class="form-group" id="watchAutoResultsContainer" style="display:none; margin-top:10px;">
                         <div id="watchAutoResults" class="autocomplete-list"></div>
                     </div>
-                    <button id="watchAutoSearchBtn" type="button" class="btn search">Найти</button>
                     <span id="watchAutoSearchLoading" class="loading-spinner" style="display:none;"></span>
                     <div id="watchAutoPreview" style="display:none; margin-top:15px;"></div>
                 </div>
@@ -396,12 +400,14 @@
                 <div id="gameAutoMode">
                     <div class="form-group">
                         <label for="gameAutoTitle">Название игры:</label>
-                        <input type="text" id="gameAutoTitle" placeholder="Введите название для поиска">
+                        <div class="input-with-btn">
+                            <input type="text" id="gameAutoTitle" placeholder="Введите название для поиска">
+                            <button id="gameAutoSearchBtn" type="button" class="search-btn"><i class="fas fa-search"></i></button>
+                        </div>
                     </div>
                     <div class="form-group" id="gameAutoResultsContainer" style="display:none; margin-top:10px;">
                         <div id="gameAutoResults" class="autocomplete-list"></div>
                     </div>
-                    <button id="gameAutoSearchBtn" type="button" class="btn search">Найти</button>
                     <span id="gameAutoSearchLoading" class="loading-spinner" style="display:none;"></span>
                     <div id="gameAutoPreview" style="display:none; margin-top:15px;"></div>
                 </div>
