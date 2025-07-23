@@ -6,12 +6,13 @@ This repository contains the source code for the PupsikTV website. The project i
 
 1. Install Node.js (version 16 or newer).
 2. Clone this repository.
-3. Create a `.env` file in the project root and provide the required environment variables:
+3. Provide the required environment variables either via your deployment settings (e.g. Vercel) or by creating a `.env` file for local development:
 
 ```
 SUPABASE_KEY=<your supabase key>
 KINOPOISK_API_KEY=<optional, used for admin search>
 RAWG_API_KEY=<optional, used for admin search>
+STEAMGRIDDB_API_KEY=<optional, used for SteamGridDB search>
 EDIT_PASSWORD=<admin password>
 ```
 
@@ -25,4 +26,4 @@ Serve the project with any static file server. One simple option is to use [`ser
 npx serve
 ```
 
-Open the printed URL in your browser to view the site. The serverless API routes under `api/` will read the environment variables from your `.env` file when deployed to a platform such as Vercel.
+Open the printed URL in your browser to view the site. The serverless API routes under `api/` read environment variables from your deployment platform or the `.env` file when running locally.
