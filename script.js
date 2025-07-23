@@ -160,6 +160,18 @@ async function fetchKPFilmLength(filmId) {
   }
 }
 
+async function fetchSteamPoster(query) {
+  if (!query) return null;
+  try {
+    const res = await fetch(`/api/steamgrid?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    return data.url || null;
+  } catch (err) {
+    console.error("Failed to fetch SteamGridDB poster", err);
+    return null;
+  }
+}
+
 // ---------- File upload helpers ----------
 function initFileUpload() {
   const fileInputs = document.querySelectorAll(
@@ -1674,6 +1686,13 @@ function showRAWGPreview() {
     preview.style.display = "none";
     return;
   }
+  if (!selectedRAWGGame.steamPosterFetched) {
+    selectedRAWGGame.steamPosterFetched = true;
+    fetchSteamPoster(selectedRAWGGame.name).then((url) => {
+      if (url) selectedRAWGGame.steamPoster = url;
+      showRAWGPreview();
+    });
+  }
   const game = {
     title: selectedRAWGGame.name || "",
     genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
@@ -1681,6 +1700,7 @@ function showRAWGPreview() {
       ? selectedRAWGGame.released.split("-")[0]
       : "",
     poster:
+      selectedRAWGGame.steamPoster ||
       selectedRAWGGame.background_image ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     orderBy: document.getElementById("gameOrderBy").value || "",
@@ -1747,6 +1767,13 @@ function showPlayedGamePreview() {
     preview.style.display = "none";
     return;
   }
+  if (!selectedRAWGGame.steamPosterFetched) {
+    selectedRAWGGame.steamPosterFetched = true;
+    fetchSteamPoster(selectedRAWGGame.name).then((url) => {
+      if (url) selectedRAWGGame.steamPoster = url;
+      showPlayedGamePreview();
+    });
+  }
   const game = {
     title: selectedRAWGGame.name || "",
     genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
@@ -1754,6 +1781,7 @@ function showPlayedGamePreview() {
       ? selectedRAWGGame.released.split("-")[0]
       : "",
     poster:
+      selectedRAWGGame.steamPoster ||
       selectedRAWGGame.background_image ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     rating: getCurrentRating("playedGameRatingStars"),
@@ -2417,6 +2445,7 @@ document
           year: g.released ? g.released.split("-")[0] : "",
           genres: g.genres?.map((x) => x.name).join(", ") || "",
           poster:
+            g.steamPoster ||
             g.background_image ||
             "https://via.placeholder.com/300x400?text=Нет+постера",
           orderBy: orderBy,
@@ -2519,7 +2548,10 @@ document
         title: g.name || titleInput,
         year: g.released ? g.released.split("-")[0] : "",
         genres: g.genres?.map((x) => x.name).join(", ") || "",
-        poster: g.background_image || "https://via.placeholder.com/300x400?text=Нет+постера",
+        poster:
+          g.steamPoster ||
+          g.background_image ||
+          "https://via.placeholder.com/300x400?text=Нет+постера",
         rating: rating,
         orderBy: orderBy,
         orderType: orderType,
