@@ -1370,6 +1370,7 @@ select option {
 
 .rating-star {
     width: 30px;
+    height: 30px;
     background-color: rgba(255, 235, 59, 0.3);
     -webkit-mask: url('images/Rat_rate.png') center/contain no-repeat;
             mask: url('images/Rat_rate.png') center/contain no-repeat;
@@ -1379,6 +1380,12 @@ select option {
     position: relative;
     margin-bottom: 5px;
 }
+
+.rating-star.hovered {
+    -webkit-mask: url('images/Rat_rate2.png') center/contain no-repeat;
+            mask: url('images/Rat_rate2.png') center/contain no-repeat;
+}
+
 
 /* Стили для лейблов "worst" и "best" */
 .rating-star.rating-label {

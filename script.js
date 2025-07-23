@@ -2211,24 +2211,30 @@ function setRatingStars(containerId, rating, updateInput = true) {
 
 function highlightStars(containerId, rating) {
   const stars = document.querySelectorAll(`#${containerId} .rating-star`);
-  stars.forEach((star) => {
+  
+  stars.forEach((star, index) => {
+    // Удаляем маску и цвет
+    star.classList.remove("hovered");
+    star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
+    
     if (star.classList.contains("rating-label")) {
       star.style.backgroundColor = "transparent";
-    } else {
-      star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
     }
   });
 
   if (rating >= 1 && rating <= 10) {
     for (let i = 1; i <= rating; i++) {
       stars[i].style.backgroundColor = "#ffc107";
+      stars[i].classList.add("hovered");
     }
   } else if (rating === 11) {
     for (let i = 1; i <= 10; i++) {
       stars[i].style.backgroundColor = "#ffc107";
+      stars[i].classList.add("hovered");
     }
   }
 }
+
 
 function getCurrentRating(containerId) {
   const container = document.getElementById(containerId);
