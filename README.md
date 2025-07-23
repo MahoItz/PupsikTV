@@ -12,10 +12,11 @@ This repository contains the source code for the PupsikTV website. The project i
 SUPABASE_KEY=<your supabase key>
 KINOPOISK_API_KEY=<optional, used for admin search>
 RAWG_API_KEY=<optional, used for admin search>
+STEAMGRIDDB_KEY=<optional, used for game posters>
 EDIT_PASSWORD=<admin password>
 ```
 
-Only `SUPABASE_KEY` and `EDIT_PASSWORD` are required for basic operation. The other keys enable additional admin features.
+Only `SUPABASE_KEY` and `EDIT_PASSWORD` are required for basic operation. The other keys enable additional admin features like external search and poster retrieval.
 
 ## Running locally
 

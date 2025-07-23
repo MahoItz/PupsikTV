@@ -20,6 +20,9 @@ const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
 let rawgResults = [];
 let selectedRAWGGame = null;
 
+// SteamGridDB
+let STEAMGRIDDB_KEY;
+
 function debounce(func, delay) {
   let timeout;
   return function (...args) {
@@ -57,6 +60,7 @@ async function loadEnv(password) {
     SUPABASE_KEY = env.SUPABASE_KEY;
     if (env.KINOPOISK_API_KEY) KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
     if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
+    if (env.STEAMGRIDDB_KEY) STEAMGRIDDB_KEY = env.STEAMGRIDDB_KEY;
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     return env;
   } catch (err) {
@@ -140,6 +144,30 @@ function renderEmptyState(container, message) {
   wrapper.appendChild(text);
 
   container.appendChild(wrapper);
+}
+
+async function fetchSteamGridPoster(name) {
+  if (!name || !STEAMGRIDDB_KEY) return null;
+  try {
+    const searchUrl = `https://www.steamgriddb.com/api/v2/search/autocomplete/${encodeURIComponent(
+      name
+    )}`;
+    const searchRes = await fetch(searchUrl, {
+      headers: { Authorization: `Bearer ${STEAMGRIDDB_KEY}` },
+    });
+    const searchData = await searchRes.json();
+    const id = searchData?.data?.[0]?.id;
+    if (!id) return null;
+    const gridUrl = `https://www.steamgriddb.com/api/v2/grids/game/${id}?dimensions=600x900`;
+    const gridRes = await fetch(gridUrl, {
+      headers: { Authorization: `Bearer ${STEAMGRIDDB_KEY}` },
+    });
+    const gridData = await gridRes.json();
+    return gridData?.data?.[0]?.url || null;
+  } catch (err) {
+    console.error("SteamGridDB error", err);
+    return null;
+  }
 }
 
 async function fetchKPFilmLength(filmId) {
@@ -381,6 +409,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (kpStored) KINOPOISK_API_KEY = kpStored;
   const rawgStored = localStorage.getItem("RAWG_API_KEY");
   if (rawgStored) RAWG_API_KEY = rawgStored;
+  const sgdbStored = localStorage.getItem("STEAMGRIDDB_KEY");
+  if (sgdbStored) STEAMGRIDDB_KEY = sgdbStored;
   const cached = localStorage.getItem("moviesCache");
   if (cached) {
     allMovies = JSON.parse(cached);
@@ -457,6 +487,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
           if (env.RAWG_API_KEY)
             localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
+          if (env.STEAMGRIDDB_KEY)
+            localStorage.setItem("STEAMGRIDDB_KEY", env.STEAMGRIDDB_KEY);
           closeModal("adminModal");
         } else {
           alert("Неверный пароль");
@@ -1665,7 +1697,7 @@ async function handleGameSearch() {
   if (btn) btn.disabled = false;
 }
 
-function showRAWGPreview() {
+async function showRAWGPreview() {
   const preview = document.getElementById("gameAutoPreview");
   if (!preview) return;
   preview.innerHTML = "";
@@ -1673,15 +1705,16 @@ function showRAWGPreview() {
     preview.style.display = "none";
     return;
   }
+  const poster =
+    (await fetchSteamGridPoster(selectedRAWGGame.name)) ||
+    "https://via.placeholder.com/300x400?text=Нет+постера";
   const game = {
     title: selectedRAWGGame.name || "",
     genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
     year: selectedRAWGGame.released
       ? selectedRAWGGame.released.split("-")[0]
       : "",
-    poster:
-      selectedRAWGGame.background_image ||
-      "https://via.placeholder.com/300x400?text=Нет+постера",
+    poster: poster,
     orderBy: document.getElementById("gameOrderBy").value || "",
     orderType: document.getElementById("gameOrderType").value || "",
     dateAdded: new Date().toISOString().split("T")[0],
@@ -1738,7 +1771,7 @@ async function handlePlayedGameSearch() {
   if (btn) btn.disabled = false;
 }
 
-function showPlayedGamePreview() {
+async function showPlayedGamePreview() {
   const preview = document.getElementById("playedGameAutoPreview");
   if (!preview) return;
   preview.innerHTML = "";
@@ -1746,15 +1779,16 @@ function showPlayedGamePreview() {
     preview.style.display = "none";
     return;
   }
+  const poster =
+    (await fetchSteamGridPoster(selectedRAWGGame.name)) ||
+    "https://via.placeholder.com/300x400?text=Нет+постера";
   const game = {
     title: selectedRAWGGame.name || "",
     genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
     year: selectedRAWGGame.released
       ? selectedRAWGGame.released.split("-")[0]
       : "",
-    poster:
-      selectedRAWGGame.background_image ||
-      "https://via.placeholder.com/300x400?text=Нет+постера",
+    poster: poster,
     rating: getCurrentRating("playedGameRatingStars"),
     orderBy: document.getElementById("playedGameOrderBy").value || "",
     orderType: document.getElementById("playedGameOrderType").value || "",
@@ -2398,13 +2432,14 @@ document
 
       if (selectedRAWGGame) {
         const g = selectedRAWGGame;
+        const poster =
+          (await fetchSteamGridPoster(g.name)) ||
+          "https://via.placeholder.com/300x400?text=Нет+постера";
         gameData = {
           title: g.name || titleInput,
           year: g.released ? g.released.split("-")[0] : "",
           genres: g.genres?.map((x) => x.name).join(", ") || "",
-          poster:
-            g.background_image ||
-            "https://via.placeholder.com/300x400?text=Нет+постера",
+          poster: poster,
           orderBy: orderBy,
           orderType: orderType,
         };
@@ -2501,11 +2536,14 @@ document
       }
 
       const g = selectedRAWGGame;
+      const poster =
+        (await fetchSteamGridPoster(g.name)) ||
+        "https://via.placeholder.com/300x400?text=Нет+постера";
       gameData = {
         title: g.name || titleInput,
         year: g.released ? g.released.split("-")[0] : "",
         genres: g.genres?.map((x) => x.name).join(", ") || "",
-        poster: g.background_image || "https://via.placeholder.com/300x400?text=Нет+постера",
+        poster: poster,
         rating: rating,
         orderBy: orderBy,
         orderType: orderType,
@@ -2929,6 +2967,7 @@ function logoutAdmin() {
   localStorage.removeItem("isAdmin");
   localStorage.removeItem("KINOPOISK_API_KEY");
   localStorage.removeItem("RAWG_API_KEY");
+  localStorage.removeItem("STEAMGRIDDB_KEY");
   hideAdminControls();
   closeModal("adminModal");
 }
