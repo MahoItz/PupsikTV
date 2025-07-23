@@ -801,7 +801,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   icon1.src = "images/Pupsik_TV_Icon.png";
   icon1.alt = "Pupsik Rate";
   const span1 = document.createElement("span");
-  span1.textContent = `${movie.rating}/10`;
+  span1.textContent = `${movie.rating}`;
   ratingItem1.appendChild(icon1);
   ratingItem1.appendChild(span1);
   rating.appendChild(ratingItem1);
@@ -1149,7 +1149,7 @@ function createPlayedGameCard(game, showActions = isAdmin) {
   icon1.src = "images/Pupsik_TV_Icon.png";
   icon1.alt = "Pupsik Rate";
   const span1 = document.createElement("span");
-  span1.textContent = `${game.rating}/10`;
+  span1.textContent = `${game.rating}`;
   item1.appendChild(icon1);
   item1.appendChild(span1);
   ratingDiv.appendChild(item1);
