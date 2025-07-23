@@ -34,12 +34,6 @@
                 </div>
 
                 <div id="moviesSection" class="list-content">
-                    <div class="controls admin-only">
-                        <button class="btn btn-primary" onclick="openAddMovieModal()">
-                            ➕ Добавить фильм
-                        </button>
-                    </div>
-
                     <div class="search-controls">
                         <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..."
                             onkeyup="searchMovies(this.value)">
@@ -56,6 +50,9 @@
                                 <img src="images/down-arrow.png" alt="arrow" class="sort-arrow">
                             </button>
                         </div>
+                        <button class="btn btn-primary admin-only" onclick="openAddMovieModal()">
+                            ➕ Добавить фильм
+                        </button>
                         <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
                     </div>
 
@@ -66,11 +63,6 @@
                 </div>
 
                 <div id="gamesListSection" class="list-content" style="display:none;">
-                    <div class="controls admin-only">
-                        <button class="btn btn-primary" onclick="openAddPlayedGameModal()">
-                            ➕ Добавить игру
-                        </button>
-                    </div>
                     <div class="search-controls">
                         <input type="text" class="search-input" placeholder="🔍 Поиск игр..."
                             onkeyup="searchPlayedGames(this.value)">
@@ -87,6 +79,9 @@
                                 <img src="images/down-arrow.png" alt="arrow" class="sort-arrow">
                             </button>
                         </div>
+                        <button class="btn btn-primary admin-only" onclick="openAddPlayedGameModal()">
+                            ➕ Добавить игру
+                        </button>
                         <div class="movies-count">Всего игр: <span id="gamesCount">0</span></div>
                     </div>
                     <div class="movies-grid" id="gamesGridPlayed">
