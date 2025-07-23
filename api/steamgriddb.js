@@ -30,8 +30,10 @@ export default async function handler(req, res) {
       return;
     }
     const gridData = await gridRes.json();
-    const poster = gridData.data && gridData.data[0] ? gridData.data[0].url : null;
-    res.status(200).json({ poster });
+    const posters = Array.isArray(gridData.data)
+      ? gridData.data.map((g) => g.url)
+      : [];
+    res.status(200).json({ posters });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
