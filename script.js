@@ -107,6 +107,7 @@ let editingGameId = null;
 let editGamePosterData = null;
 let editingPlayedGameId = null;
 let editPlayedGamePosterData = null;
+let deletePlayedGameId = null;
 
 // Pagination
 let currentPage = 1;
@@ -1171,7 +1172,7 @@ function createPlayedGameCard(game, showActions = isAdmin) {
     const delBtn = document.createElement("button");
     delBtn.className = "btn btn-delete btn-icon";
     delBtn.textContent = "🗑️";
-    delBtn.onclick = () => deletePlayedGame(game.id);
+    delBtn.onclick = () => openConfirmDeletePlayedGameModal(game.id);
     actions.appendChild(delBtn);
     footer.appendChild(actions);
   }
@@ -1940,6 +1941,19 @@ function openAddPlayedGameModal() {
   document.getElementById("addPlayedGameModal").style.display = "block";
   setRatingStars("playedGameRatingStars", 0);
   setupRatingStars("playedGameRatingStars");
+}
+
+function openConfirmDeletePlayedGameModal(id) {
+  deletePlayedGameId = id;
+  document.getElementById("confirmDeletePlayedGameModal").style.display = "block";
+}
+
+async function confirmDeletePlayedGame() {
+  if (deletePlayedGameId !== null) {
+    await deletePlayedGame(deletePlayedGameId);
+    deletePlayedGameId = null;
+  }
+  closeModal("confirmDeletePlayedGameModal");
 }
 
 function openEditOrderModal(id) {

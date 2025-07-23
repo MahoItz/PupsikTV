@@ -1110,6 +1110,18 @@ select option {
     margin-top: 10px;
 }
 
+/* Подтверждение удаления игры */
+#confirmDeletePlayedGameModal .modal-content {
+    text-align: center;
+}
+
+#confirmDeletePlayedGameModal .modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
 /* Оценка фильма */
 #rateMovieModal .rate-header {
     display: flex;
