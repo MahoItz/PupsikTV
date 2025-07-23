@@ -569,6 +569,67 @@
             </form>
         </div>
     </div>
+
+    <!-- Модальное окно редактирования пройденной игры -->
+    <div id="editPlayedGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editPlayedGameModal')">&times;</span>
+            <h2>Редактировать игру</h2>
+            <form id="editPlayedGameForm">
+                <div class="poster-upload">
+                    <img id="editPlayedGamePosterPreview" class="movie-poster" src="" alt="Постер">
+                    <input type="file" id="editPlayedGamePoster" accept="image/*" style="display:none">
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameTitle">Название:</label>
+                    <input type="text" id="editPlayedGameTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameYear">Год:</label>
+                    <input type="number" id="editPlayedGameYear">
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameGenres">Жанр:</label>
+                    <input type="text" id="editPlayedGameGenres">
+                </div>
+                <div class="form-group">
+                    <label>Оценка:</label>
+                    <div class="rating-stars" id="editPlayedGameRatingStars" data-input="editPlayedGameRatingInput">
+                        <span class="rating-star rating-label" data-rating="0">worst</span>
+                        <span class="rating-star" data-rating="1"></span>
+                        <span class="rating-star" data-rating="2"></span>
+                        <span class="rating-star" data-rating="3"></span>
+                        <span class="rating-star" data-rating="4"></span>
+                        <span class="rating-star" data-rating="5"></span>
+                        <span class="rating-star" data-rating="6"></span>
+                        <span class="rating-star" data-rating="7"></span>
+                        <span class="rating-star" data-rating="8"></span>
+                        <span class="rating-star" data-rating="9"></span>
+                        <span class="rating-star" data-rating="10"></span>
+                        <span class="rating-star rating-label" data-rating="11">best</span>
+                    </div>
+                    <div class="rating-input-wrapper">
+                        <input id="editPlayedGameRatingInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                        <span class="rating-max">/11</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameOrderBy">Заказал:</label>
+                    <input type="text" id="editPlayedGameOrderBy">
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameOrderType">Способ заказа:</label>
+                    <select id="editPlayedGameOrderType">
+                        <option value="">Не указано</option>
+                        <option value="Донат">Донат.</option>
+                        <option value="Баллы канала">Баллы канала</option>
+                        <option value="Шары">Шары</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
+            </form>
+        </div>
+    </div>
     <!-- Модальное окно администратора -->
     <div id="adminModal" class="modal">
         <div class="modal-content">

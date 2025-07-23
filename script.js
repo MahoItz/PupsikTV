@@ -104,6 +104,8 @@ let editingOrderId = null;
 let editOrderPosterData = null;
 let editingGameId = null;
 let editGamePosterData = null;
+let editingPlayedGameId = null;
+let editPlayedGamePosterData = null;
 
 // Pagination
 let currentPage = 1;
@@ -567,6 +569,22 @@ document.addEventListener("DOMContentLoaded", async function () {
         try {
           editGamePosterData = await readFileAsDataURL(this.files[0]);
           gamePreview.src = editGamePosterData;
+        } catch (err) {
+          console.error("Error reading file", err);
+        }
+      }
+    });
+  }
+
+  const playedPreview = document.getElementById("editPlayedGamePosterPreview");
+  const playedInput = document.getElementById("editPlayedGamePoster");
+  if (playedPreview && playedInput) {
+    playedPreview.addEventListener("click", () => playedInput.click());
+    playedInput.addEventListener("change", async function () {
+      if (this.files && this.files[0]) {
+        try {
+          editPlayedGamePosterData = await readFileAsDataURL(this.files[0]);
+          playedPreview.src = editPlayedGamePosterData;
         } catch (err) {
           console.error("Error reading file", err);
         }
@@ -1122,6 +1140,11 @@ function createPlayedGameCard(game, showActions = isAdmin) {
   if (showActions) {
     const actions = document.createElement("div");
     actions.className = "movie-actions";
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn btn-edit btn-icon";
+    editBtn.textContent = "✏️";
+    editBtn.onclick = () => openEditPlayedGameModal(game.id);
+    actions.appendChild(editBtn);
     const delBtn = document.createElement("button");
     delBtn.className = "btn btn-delete btn-icon";
     delBtn.textContent = "🗑️";
@@ -1756,6 +1779,23 @@ function openEditGameModal(id) {
   document.getElementById("editGamePoster").value = "";
   editGamePosterData = null;
   document.getElementById("editGameModal").style.display = "block";
+}
+
+function openEditPlayedGameModal(id) {
+  editingPlayedGameId = id;
+  const game = allPlayedGames.find((g) => g.id === id);
+  if (!game) return;
+  document.getElementById("editPlayedGameTitle").value = game.title;
+  document.getElementById("editPlayedGameYear").value = game.year || "";
+  document.getElementById("editPlayedGameGenres").value = game.genres || "";
+  document.getElementById("editPlayedGameOrderBy").value = game.orderBy || "";
+  document.getElementById("editPlayedGameOrderType").value = game.orderType || "";
+  document.getElementById("editPlayedGamePosterPreview").src = game.poster;
+  document.getElementById("editPlayedGamePoster").value = "";
+  setRatingStars("editPlayedGameRatingStars", game.rating);
+  setupRatingStars("editPlayedGameRatingStars");
+  editPlayedGamePosterData = null;
+  document.getElementById("editPlayedGameModal").style.display = "block";
 }
 
 function openAddGameModal() {
@@ -2520,6 +2560,44 @@ document
     closeModal("editGameModal");
   });
 
+document
+  .getElementById("editPlayedGameForm")
+  ?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const game = allPlayedGames.find((g) => g.id === editingPlayedGameId);
+    if (game) {
+      game.title = document.getElementById("editPlayedGameTitle").value;
+      game.year = document.getElementById("editPlayedGameYear").value;
+      game.genres = document.getElementById("editPlayedGameGenres").value;
+      game.rating = getCurrentRating("editPlayedGameRatingStars");
+      game.orderBy = document.getElementById("editPlayedGameOrderBy").value;
+      game.orderType = document.getElementById("editPlayedGameOrderType").value;
+      game.poster = editPlayedGamePosterData || game.poster;
+
+      try {
+        await supabaseClient
+          .from("games")
+          .update({
+            title: game.title,
+            genres: game.genres,
+            poster: game.poster,
+            year: game.year,
+            rating_numeric: game.rating,
+            order_by: game.orderBy,
+            order_type: game.orderType,
+          })
+          .eq("id", editingPlayedGameId);
+      } catch (err) {
+        console.error("Error updating played game", err);
+      }
+    }
+
+    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+    renderPlayedGames();
+    closeModal("editPlayedGameModal");
+  });
+
 // Форматирование даты
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -2533,8 +2611,10 @@ function resetForm() {
   document.getElementById("addWatchlistForm").reset();
   document.getElementById("addGameForm")?.reset();
   document.getElementById("editGameForm")?.reset();
+  document.getElementById("editPlayedGameForm")?.reset();
   setRatingStars("ratingStars", 0);
   setRatingStars("editRatingStars", 0);
+  setRatingStars("editPlayedGameRatingStars", 0);
   setRatingStars("rateMovieStars", 0);
 }
 
