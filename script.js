@@ -20,6 +20,7 @@ const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
 let rawgResults = [];
 let selectedRAWGGame = null;
 let steamGridPoster = null;
+let steamGridPosters = [];
 
 function debounce(func, delay) {
   let timeout;
@@ -161,17 +162,84 @@ async function fetchKPFilmLength(filmId) {
   }
 }
 
-async function fetchSteamGridPoster(title) {
+async function fetchSteamGridPosters(title) {
   steamGridPoster = null;
+  steamGridPosters = [];
   if (!title) return;
   try {
     const res = await fetch(`/api/steamgriddb?search=${encodeURIComponent(title)}`);
     if (!res.ok) return;
     const data = await res.json();
-    steamGridPoster = data.poster || null;
+    steamGridPosters = Array.isArray(data.posters) ? data.posters : [];
+    steamGridPoster = steamGridPosters[0] || null;
   } catch (err) {
     console.error("SteamGridDB fetch error", err);
   }
+}
+
+function createPosterOverlay(targetImg, posters) {
+  if (!targetImg || !Array.isArray(posters) || posters.length < 2) return;
+  const overlay = document.createElement("div");
+  overlay.className = "poster-overlay";
+
+  const prev = document.createElement("div");
+  prev.className = "overlay-arrow prev";
+  prev.textContent = "‹"; // ‹
+
+  const next = document.createElement("div");
+  next.className = "overlay-arrow next";
+  next.textContent = "›"; // ›
+
+  const container = document.createElement("div");
+  container.className = "thumb-container";
+
+  const maxVisible = 4;
+  let startIdx = 0;
+
+  async function render() {
+    container.innerHTML = "";
+    const endIdx = Math.min(startIdx + maxVisible, posters.length);
+    for (let i = startIdx; i < endIdx; i++) {
+      const url = posters[i];
+      const img = document.createElement("img");
+      img.className = "poster-thumb";
+      container.appendChild(img);
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+        img.src = url;
+      });
+      img.onclick = () => {
+        steamGridPoster = url;
+        targetImg.src = url;
+      };
+    }
+    prev.style.visibility = startIdx > 0 ? "visible" : "hidden";
+    next.style.visibility = endIdx < posters.length ? "visible" : "hidden";
+  }
+
+  prev.onclick = () => {
+    if (startIdx > 0) {
+      startIdx = Math.max(0, startIdx - maxVisible);
+      render();
+    }
+  };
+
+  next.onclick = () => {
+    if (startIdx + maxVisible < posters.length) {
+      startIdx += maxVisible;
+      render();
+    }
+  };
+
+  overlay.appendChild(prev);
+  overlay.appendChild(container);
+  overlay.appendChild(next);
+
+  targetImg.parentElement.style.position = "relative";
+  targetImg.parentElement.appendChild(overlay);
+
+  render();
 }
 
 // ---------- File upload helpers ----------
@@ -539,7 +607,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       selectedRAWGGame = rawgResults[idx] || null;
       if (selectedRAWGGame) {
         gameTitleInput.value = selectedRAWGGame.name || "";
-        await fetchSteamGridPoster(selectedRAWGGame.name);
+        await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showRAWGPreview();
       document.getElementById("gameAutoResultsContainer").style.display = "none";
@@ -562,7 +630,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       selectedRAWGGame = rawgResults[idx] || null;
       if (selectedRAWGGame) {
         playedTitleInput.value = selectedRAWGGame.name || "";
-        await fetchSteamGridPoster(selectedRAWGGame.name);
+        await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showPlayedGamePreview();
       document.getElementById("playedGameAutoResultsContainer").style.display = "none";
@@ -1396,6 +1464,7 @@ const debouncedRAWGSearch = debounce(async (query) => {
     rawgResults = [];
     selectedRAWGGame = null;
     steamGridPoster = null;
+    steamGridPosters = [];
     showRAWGPreview();
     return;
   }
@@ -1670,12 +1739,13 @@ async function handleGameSearch() {
     if (rawgResults.length > 0) {
       container.style.display = "block";
       selectedRAWGGame = rawgResults[0];
-      await fetchSteamGridPoster(selectedRAWGGame.name);
+      await fetchSteamGridPosters(selectedRAWGGame.name);
       showRAWGPreview();
     } else {
       container.style.display = "none";
       selectedRAWGGame = null;
       steamGridPoster = null;
+      steamGridPosters = [];
       showRAWGPreview();
       alert("Ничего не найдено");
     }
@@ -1708,7 +1778,9 @@ function showRAWGPreview() {
     orderType: document.getElementById("gameOrderType").value || "",
     dateAdded: new Date().toISOString().split("T")[0],
   };
-  preview.appendChild(createGameCard(game, false));
+  const card = createGameCard(game, false);
+  preview.appendChild(card);
+  createPosterOverlay(card.querySelector(".order-poster"), steamGridPosters);
   preview.style.display = "block";
 }
 
@@ -1746,7 +1818,7 @@ async function handlePlayedGameSearch() {
     if (rawgResults.length > 0) {
       container.style.display = "block";
       selectedRAWGGame = rawgResults[0];
-      await fetchSteamGridPoster(selectedRAWGGame.name);
+      await fetchSteamGridPosters(selectedRAWGGame.name);
       showPlayedGamePreview();
     } else {
       container.style.display = "none";
@@ -1785,7 +1857,9 @@ function showPlayedGamePreview() {
     orderType: document.getElementById("playedGameOrderType").value || "",
     dateAdded: new Date().toISOString().split("T")[0],
   };
-  preview.appendChild(createPlayedGameCard(game, false));
+  const card = createPlayedGameCard(game, false);
+  preview.appendChild(card);
+  createPosterOverlay(card.querySelector(".movie-poster"), steamGridPosters);
   preview.style.display = "block";
 }
 
@@ -2513,6 +2587,7 @@ document
     this.reset();
     selectedRAWGGame = null;
     steamGridPoster = null;
+    steamGridPosters = [];
     rawgResults = [];
     showRAWGPreview();
   });
@@ -2623,6 +2698,7 @@ document
     this.reset();
     selectedRAWGGame = null;
     steamGridPoster = null;
+    steamGridPosters = [];
     rawgResults = [];
     showPlayedGamePreview();
   });
