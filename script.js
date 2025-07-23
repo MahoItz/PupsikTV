@@ -2642,6 +2642,7 @@ function showAdminControls() {
   renderMovies();
   renderWatchlist();
   renderGames();
+  renderPlayedGames();
 }
 
 function hideAdminControls() {
@@ -2655,6 +2656,7 @@ function hideAdminControls() {
   renderMovies();
   renderWatchlist();
   renderGames();
+  renderPlayedGames();
 }
 
 function logoutAdmin() {
