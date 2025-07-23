@@ -2188,7 +2188,7 @@ function setRatingStars(containerId, rating) {
   const inputId = container.dataset.input;
   if (inputId) {
     const inp = document.getElementById(inputId);
-    if (inp) inp.value = rating;
+    if (inp) inp.value = String(rating).replace(".", ",");
   }
   stars.forEach((star) => star.classList.remove("active"));
 
