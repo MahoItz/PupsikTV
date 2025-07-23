@@ -525,6 +525,25 @@ select option {
 }
 
 .movie-card.rating-high {
+    border: 2px solid var(--rating-high);
+    position: relative;
+    overflow: visible;
+}
+
+.movie-card.rating-high::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    background: linear-gradient(45deg, #63ff84, var(--secondary-color), var(--neon-pink), #63ff84);
+    background-size: 300% 300%;
+    filter: blur(6px);
+    z-index: -1;
+    pointer-events: none;
+    animation: ratingGlow 6s linear infinite;
+}
+
+.movie-card.rating-high:hover {
     border-color: var(--rating-high);
 }
 
@@ -1793,4 +1812,10 @@ body::before {
 
 .autocomplete-option:hover {
     background: rgba(255, 108, 66, 0.2);
+}
+
+@keyframes ratingGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
