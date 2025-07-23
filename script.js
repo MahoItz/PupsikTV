@@ -212,7 +212,6 @@ function createPosterOverlay(targetImg, posters) {
       img.onclick = () => {
         steamGridPoster = url;
         targetImg.src = url;
-        overlay.remove();
       };
     }
     prev.style.visibility = startIdx > 0 ? "visible" : "hidden";
