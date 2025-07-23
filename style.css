@@ -1750,6 +1750,48 @@ body::before {
     transform: scale(1.1);
 }
 
+.poster-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px;
+    z-index: 5;
+}
+
+.poster-overlay .overlay-arrow {
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    user-select: none;
+    padding: 0 6px;
+}
+
+.poster-overlay .thumb-container {
+    display: flex;
+    overflow: hidden;
+    gap: 4px;
+}
+
+.poster-overlay .poster-thumb {
+    width: 60px;
+    height: auto;
+    object-fit: cover;
+    border-radius: var(--border-radius-small);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.poster-overlay .poster-thumb:hover {
+    border-color: var(--secondary-color);
+}
+
 @media (max-width: 768px) {
     .file-upload-label {
         padding: 16px 18px;
