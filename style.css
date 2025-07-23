@@ -827,6 +827,16 @@ select option {
     transform: translateY(-2px);
 }
 
+.btn-move {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.btn-move:hover {
+    background: rgba(0, 212, 255, 0.2);
+    transform: translateY(-2px);
+}
+
 #sortOrderBtn,
 .btn-sort-toggle {
     border: 2px solid rgba(0, 212, 255, 0.4);
