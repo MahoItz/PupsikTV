@@ -94,6 +94,7 @@ let selectedKPOrderMovie = null;
 
 // Game modal helpers
 let currentGameMode = "auto";
+let currentPlayedGameMode = "auto";
 
 let currentMode = "auto";
 let currentRating = 0;
@@ -526,6 +527,28 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
       showRAWGPreview();
       document.getElementById("gameAutoResultsContainer").style.display = "none";
+    });
+
+  const playedSearchBtn = document.getElementById("playedGameAutoSearchBtn");
+  const playedResultsContainer = document.getElementById("playedGameAutoResults");
+  const playedTitleInput = document.getElementById("playedGameAutoTitle");
+  if (playedSearchBtn)
+    playedSearchBtn.addEventListener("click", handlePlayedGameSearch);
+  if (playedTitleInput)
+    playedTitleInput.addEventListener("input", () => {
+      debouncedPlayedRAWGSearch(playedTitleInput.value.trim());
+    });
+  if (playedResultsContainer)
+    playedResultsContainer.addEventListener("click", function (e) {
+      const option = e.target.closest(".autocomplete-option");
+      if (!option) return;
+      const idx = parseInt(option.dataset.index, 10);
+      selectedRAWGGame = rawgResults[idx] || null;
+      if (selectedRAWGGame) {
+        playedTitleInput.value = selectedRAWGGame.name || "";
+      }
+      showPlayedGamePreview();
+      document.getElementById("playedGameAutoResultsContainer").style.display = "none";
     });
 
   const preview = document.getElementById("editPosterPreview");
@@ -1386,6 +1409,43 @@ const debouncedRAWGSearch = debounce(async (query) => {
   }
 }, 200);
 
+const debouncedPlayedRAWGSearch = debounce(async (query) => {
+  if (!query) {
+    const container = document.getElementById("playedGameAutoResultsContainer");
+    if (container) container.style.display = "none";
+    rawgResults = [];
+    selectedRAWGGame = null;
+    showPlayedGamePreview();
+    return;
+  }
+
+  try {
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(query)}&page_size=5`;
+    const res = await fetch(url);
+    const data = await res.json();
+    rawgResults = data.results || [];
+    const container = document.getElementById("playedGameAutoResultsContainer");
+    const list = document.getElementById("playedGameAutoResults");
+    if (!list) return;
+    list.innerHTML = "";
+    rawgResults.forEach((g, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = g.released ? g.released.split("-")[0] : "";
+      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (rawgResults.length > 0) {
+      container.style.display = "block";
+    } else {
+      container.style.display = "none";
+    }
+  } catch (err) {
+    console.error("RAWG autocomplete error", err);
+  }
+}, 200);
+
 async function handleKPSearch() {
   const btn = document.getElementById("autoSearchBtn");
   const loader = document.getElementById("autoSearchLoading");
@@ -1630,6 +1690,80 @@ function showRAWGPreview() {
   preview.style.display = "block";
 }
 
+async function handlePlayedGameSearch() {
+  const btn = document.getElementById("playedGameAutoSearchBtn");
+  const loader = document.getElementById("playedGameAutoSearchLoading");
+  if (loader) loader.style.display = "inline-block";
+  if (btn) btn.disabled = true;
+  const title = document.getElementById("playedGameAutoTitle").value.trim();
+  if (!title) {
+    alert("Введите название игры");
+    if (loader) loader.style.display = "none";
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  try {
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      title
+    )}&page_size=5`;
+    const res = await fetch(url);
+    const data = await res.json();
+    rawgResults = data.results || [];
+    const container = document.getElementById("playedGameAutoResultsContainer");
+    const list = document.getElementById("playedGameAutoResults");
+    list.innerHTML = "";
+    rawgResults.forEach((g, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = g.released ? g.released.split("-")[0] : "";
+      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (rawgResults.length > 0) {
+      container.style.display = "block";
+      selectedRAWGGame = rawgResults[0];
+      showPlayedGamePreview();
+    } else {
+      container.style.display = "none";
+      selectedRAWGGame = null;
+      showPlayedGamePreview();
+      alert("Ничего не найдено");
+    }
+  } catch (err) {
+    console.error("RAWG search error", err);
+  }
+  if (loader) loader.style.display = "none";
+  if (btn) btn.disabled = false;
+}
+
+function showPlayedGamePreview() {
+  const preview = document.getElementById("playedGameAutoPreview");
+  if (!preview) return;
+  preview.innerHTML = "";
+  if (!selectedRAWGGame) {
+    preview.style.display = "none";
+    return;
+  }
+  const game = {
+    title: selectedRAWGGame.name || "",
+    genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
+    year: selectedRAWGGame.released
+      ? selectedRAWGGame.released.split("-")[0]
+      : "",
+    poster:
+      selectedRAWGGame.background_image ||
+      "https://via.placeholder.com/300x400?text=Нет+постера",
+    rating: getCurrentRating("playedGameRatingStars"),
+    orderBy: document.getElementById("playedGameOrderBy").value || "",
+    orderType: document.getElementById("playedGameOrderType").value || "",
+    dateAdded: new Date().toISOString().split("T")[0],
+  };
+  preview.appendChild(createPlayedGameCard(game, false));
+  preview.style.display = "block";
+}
+
 // Сортировка фильмов
 function sortMovies(criteria) {
   currentSort = criteria;
@@ -1802,6 +1936,12 @@ function openAddGameModal() {
   document.getElementById("addGameModal").style.display = "block";
 }
 
+function openAddPlayedGameModal() {
+  document.getElementById("addPlayedGameModal").style.display = "block";
+  setRatingStars("playedGameRatingStars", 0);
+  setupRatingStars("playedGameRatingStars");
+}
+
 function openEditOrderModal(id) {
   editingOrderId = id;
   const order = watchlist.find((o) => o.id === id);
@@ -1875,6 +2015,23 @@ function switchGameMode(mode) {
   } else {
     document.getElementById("gameAutoMode").style.display = "none";
     document.getElementById("gameManualMode").style.display = "block";
+  }
+}
+
+function switchPlayedGameMode(mode) {
+  currentPlayedGameMode = mode;
+
+  document
+    .querySelectorAll("#addPlayedGameModal .mode-btn")
+    .forEach((btn) => btn.classList.remove("active"));
+  event.target.classList.add("active");
+
+  if (mode === "auto") {
+    document.getElementById("playedGameAutoMode").style.display = "block";
+    document.getElementById("playedGameManualMode").style.display = "none";
+  } else {
+    document.getElementById("playedGameAutoMode").style.display = "none";
+    document.getElementById("playedGameManualMode").style.display = "block";
   }
 }
 
@@ -2320,6 +2477,112 @@ document
     showRAWGPreview();
   });
 
+document
+  .getElementById("addPlayedGameForm")
+  ?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const orderBy = document.getElementById("playedGameOrderBy").value;
+    const orderType = document.getElementById("playedGameOrderType").value;
+    const rating = getCurrentRating("playedGameRatingStars");
+
+    let gameData;
+
+    if (currentPlayedGameMode === "auto") {
+      const titleInput = document.getElementById("playedGameAutoTitle").value;
+      if (!titleInput) {
+        alert("Введите название игры");
+        return;
+      }
+
+      if (!selectedRAWGGame) {
+        showSearchReminderModal();
+        return;
+      }
+
+      const g = selectedRAWGGame;
+      gameData = {
+        title: g.name || titleInput,
+        year: g.released ? g.released.split("-")[0] : "",
+        genres: g.genres?.map((x) => x.name).join(", ") || "",
+        poster: g.background_image || "https://via.placeholder.com/300x400?text=Нет+постера",
+        rating: rating,
+        orderBy: orderBy,
+        orderType: orderType,
+      };
+    } else {
+      const fileInput = document.getElementById("playedGamePoster");
+      let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
+      if (fileInput.files && fileInput.files[0]) {
+        try {
+          poster = await readFileAsDataURL(fileInput.files[0]);
+        } catch (err) {
+          console.error("Error reading file", err);
+        }
+      }
+
+      gameData = {
+        title: document.getElementById("playedGameTitle").value,
+        year: document.getElementById("playedGameYear").value || "",
+        genres: document.getElementById("playedGameGenres").value || "",
+        poster: poster,
+        rating: rating,
+        orderBy: orderBy,
+        orderType: orderType,
+      };
+    }
+
+    const duplicate = allPlayedGames.some(
+      (g) => g.title.trim().toLowerCase() === gameData.title.trim().toLowerCase()
+    );
+    if (duplicate) {
+      showDuplicateModal();
+      return;
+    }
+
+    try {
+      const { data, error } = await supabaseClient
+        .from("games")
+        .insert({
+          title: gameData.title,
+          genres: gameData.genres,
+          poster: gameData.poster,
+          year: gameData.year,
+          rating_numeric: gameData.rating,
+          date: new Date().toISOString().split("T")[0],
+          order_by: gameData.orderBy,
+          order_type: gameData.orderType,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      allPlayedGames.unshift({
+        id: data.id,
+        title: data.title,
+        genres: data.genres,
+        poster: data.poster,
+        year: data.year,
+        rating: data.rating_numeric,
+        dateAdded: data.date,
+        orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
+        orderType: data.order_type,
+      });
+      localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+    } catch (err) {
+      console.error("Error adding game", err);
+    }
+
+    gamePage = 1;
+    renderPlayedGames();
+    closeModal("addPlayedGameModal");
+    this.reset();
+    selectedRAWGGame = null;
+    rawgResults = [];
+    showPlayedGamePreview();
+  });
+
 // Оценка фильма из watchlist
 async function submitRating() {
   const rating = getCurrentRating("rateMovieStars");
@@ -2610,11 +2873,13 @@ function resetForm() {
   document.getElementById("addMovieForm").reset();
   document.getElementById("addWatchlistForm").reset();
   document.getElementById("addGameForm")?.reset();
+  document.getElementById("addPlayedGameForm")?.reset();
   document.getElementById("editGameForm")?.reset();
   document.getElementById("editPlayedGameForm")?.reset();
   setRatingStars("ratingStars", 0);
   setRatingStars("editRatingStars", 0);
   setRatingStars("editPlayedGameRatingStars", 0);
+  setRatingStars("playedGameRatingStars", 0);
   setRatingStars("rateMovieStars", 0);
 }
 
