@@ -521,30 +521,71 @@ select option {
 }
 
 .movie-card.rating-low {
-    border-color: var(--rating-low);
+    position: relative;
+    overflow: visible;
+    border: 2px solid #ff4444;
+    background: 
+        radial-gradient(ellipse at top, rgba(255,68,68,0.1), transparent),
+        linear-gradient(135deg, rgba(139,0,0,0.1), rgba(75,0,130,0.1));
+    box-shadow: 
+        0 0 30px rgba(255,68,68,0.3),
+        inset 0 0 20px rgba(255,68,68,0.1);
+}
+
+.movie-card.rating-low::after {
+    content: "💀 Worst 💀";
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(45deg, #ff0000, #ff4444);
+    color: #ffffff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
+    animation: badgeShake 3s ease-in-out infinite;
+}
+
+@keyframes badgeShake {
+    0%, 100% { transform: translateX(-50%) scale(1) rotate(0deg); }
+    25% { transform: translateX(-50%) scale(1.05) rotate(-2deg); }
+    75% { transform: translateX(-50%) scale(1.05) rotate(2deg); }
 }
 
 .movie-card.rating-high {
-    border: 2px solid var(--rating-high);
     position: relative;
     overflow: visible;
+    border: 2px solid #ffc400;
+    background: 
+        radial-gradient(ellipse at top, rgba(212,175,55,0.1), transparent),
+        linear-gradient(135deg, rgba(139,69,19,0.1), rgba(25,25,112,0.1));
+    box-shadow: 
+        0 0 30px rgba(212,175,55,0.3),
+        inset 0 0 20px rgba(212,175,55,0.1);
 }
+
 
 .movie-card.rating-high::after {
-    content: "";
+    content: "★ Best ★";
     position: absolute;
-    inset: -4px;
-    border-radius: inherit;
-    background: linear-gradient(45deg, #63ff84, var(--secondary-color), var(--neon-pink), #63ff84);
-    background-size: 300% 300%;
-    filter: blur(6px);
-    z-index: -1;
-    pointer-events: none;
-    animation: ratingGlow 6s linear infinite;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(45deg, #ffd000, #ffd94e);
+    color: #1a1a1a;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+    animation: badgePulse 3s ease-in-out infinite;
 }
 
-.movie-card.rating-high:hover {
-    border-color: var(--rating-high);
+@keyframes badgePulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.1); }
 }
 
 .movie-card:hover {
