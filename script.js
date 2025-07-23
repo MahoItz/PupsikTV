@@ -19,6 +19,7 @@ let RAWG_API_KEY;
 const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
 let rawgResults = [];
 let selectedRAWGGame = null;
+let steamGridPoster = null;
 
 function debounce(func, delay) {
   let timeout;
@@ -157,6 +158,19 @@ async function fetchKPFilmLength(filmId) {
   } catch (err) {
     console.error("Failed to fetch film details", err);
     return null;
+  }
+}
+
+async function fetchSteamGridPoster(title) {
+  steamGridPoster = null;
+  if (!title) return;
+  try {
+    const res = await fetch(`/api/steamgriddb?search=${encodeURIComponent(title)}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    steamGridPoster = data.poster || null;
+  } catch (err) {
+    console.error("SteamGridDB fetch error", err);
   }
 }
 
@@ -518,13 +532,14 @@ document.addEventListener("DOMContentLoaded", async function () {
       debouncedRAWGSearch(gameTitleInput.value.trim());
     });
   if (gameResultsContainer)
-    gameResultsContainer.addEventListener("click", function (e) {
+    gameResultsContainer.addEventListener("click", async function (e) {
       const option = e.target.closest(".autocomplete-option");
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
       selectedRAWGGame = rawgResults[idx] || null;
       if (selectedRAWGGame) {
         gameTitleInput.value = selectedRAWGGame.name || "";
+        await fetchSteamGridPoster(selectedRAWGGame.name);
       }
       showRAWGPreview();
       document.getElementById("gameAutoResultsContainer").style.display = "none";
@@ -540,13 +555,14 @@ document.addEventListener("DOMContentLoaded", async function () {
       debouncedPlayedRAWGSearch(playedTitleInput.value.trim());
     });
   if (playedResultsContainer)
-    playedResultsContainer.addEventListener("click", function (e) {
+    playedResultsContainer.addEventListener("click", async function (e) {
       const option = e.target.closest(".autocomplete-option");
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
       selectedRAWGGame = rawgResults[idx] || null;
       if (selectedRAWGGame) {
         playedTitleInput.value = selectedRAWGGame.name || "";
+        await fetchSteamGridPoster(selectedRAWGGame.name);
       }
       showPlayedGamePreview();
       document.getElementById("playedGameAutoResultsContainer").style.display = "none";
@@ -1379,6 +1395,7 @@ const debouncedRAWGSearch = debounce(async (query) => {
     if (container) container.style.display = "none";
     rawgResults = [];
     selectedRAWGGame = null;
+    steamGridPoster = null;
     showRAWGPreview();
     return;
   }
@@ -1416,6 +1433,7 @@ const debouncedPlayedRAWGSearch = debounce(async (query) => {
     if (container) container.style.display = "none";
     rawgResults = [];
     selectedRAWGGame = null;
+    steamGridPoster = null;
     showPlayedGamePreview();
     return;
   }
@@ -1652,10 +1670,12 @@ async function handleGameSearch() {
     if (rawgResults.length > 0) {
       container.style.display = "block";
       selectedRAWGGame = rawgResults[0];
+      await fetchSteamGridPoster(selectedRAWGGame.name);
       showRAWGPreview();
     } else {
       container.style.display = "none";
       selectedRAWGGame = null;
+      steamGridPoster = null;
       showRAWGPreview();
       alert("Ничего не найдено");
     }
@@ -1681,6 +1701,7 @@ function showRAWGPreview() {
       ? selectedRAWGGame.released.split("-")[0]
       : "",
     poster:
+      steamGridPoster ||
       selectedRAWGGame.background_image ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     orderBy: document.getElementById("gameOrderBy").value || "",
@@ -1725,10 +1746,12 @@ async function handlePlayedGameSearch() {
     if (rawgResults.length > 0) {
       container.style.display = "block";
       selectedRAWGGame = rawgResults[0];
+      await fetchSteamGridPoster(selectedRAWGGame.name);
       showPlayedGamePreview();
     } else {
       container.style.display = "none";
       selectedRAWGGame = null;
+      steamGridPoster = null;
       showPlayedGamePreview();
       alert("Ничего не найдено");
     }
@@ -1754,6 +1777,7 @@ function showPlayedGamePreview() {
       ? selectedRAWGGame.released.split("-")[0]
       : "",
     poster:
+      steamGridPoster ||
       selectedRAWGGame.background_image ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     rating: getCurrentRating("playedGameRatingStars"),
@@ -2417,6 +2441,7 @@ document
           year: g.released ? g.released.split("-")[0] : "",
           genres: g.genres?.map((x) => x.name).join(", ") || "",
           poster:
+            steamGridPoster ||
             g.background_image ||
             "https://via.placeholder.com/300x400?text=Нет+постера",
           orderBy: orderBy,
@@ -2487,6 +2512,7 @@ document
     closeModal("addGameModal");
     this.reset();
     selectedRAWGGame = null;
+    steamGridPoster = null;
     rawgResults = [];
     showRAWGPreview();
   });
@@ -2519,7 +2545,10 @@ document
         title: g.name || titleInput,
         year: g.released ? g.released.split("-")[0] : "",
         genres: g.genres?.map((x) => x.name).join(", ") || "",
-        poster: g.background_image || "https://via.placeholder.com/300x400?text=Нет+постера",
+        poster:
+          steamGridPoster ||
+          g.background_image ||
+          "https://via.placeholder.com/300x400?text=Нет+постера",
         rating: rating,
         orderBy: orderBy,
         orderType: orderType,
@@ -2593,6 +2622,7 @@ document
     closeModal("addPlayedGameModal");
     this.reset();
     selectedRAWGGame = null;
+    steamGridPoster = null;
     rawgResults = [];
     showPlayedGamePreview();
   });
