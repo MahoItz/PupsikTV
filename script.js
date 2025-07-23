@@ -2173,20 +2173,20 @@ function setupRatingStars(containerId = "ratingStars") {
 
   if (ratingInput) {
     ratingInput.addEventListener("input", function () {
-      const value = parseFloat(this.value.replace(",", "."));
+      const value = parseFloat(this.value.replace(/,/, "."));
       if (!isNaN(value)) {
-        setRatingStars(containerId, value);
+        setRatingStars(containerId, value, false);
       }
     });
   }
 }
 
-function setRatingStars(containerId, rating) {
+function setRatingStars(containerId, rating, updateInput = true) {
   const container = document.getElementById(containerId);
   const stars = container.querySelectorAll(".rating-star");
   container.dataset.currentRating = rating;
   const inputId = container.dataset.input;
-  if (inputId) {
+  if (updateInput && inputId) {
     const inp = document.getElementById(inputId);
     if (inp) inp.value = String(rating).replace(".", ",");
   }
