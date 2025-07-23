@@ -534,6 +534,18 @@
             <p>Сначала найдите фильм через поиск.</p>
         </div>
     </div>
+    <!-- Модальное окно подтверждения удаления игры -->
+    <div id="confirmDeletePlayedGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('confirmDeletePlayedGameModal')">&times;</span>
+            <h2>Удалить игру?</h2>
+            <img class="modal-image" src="images/Sad_Winston.png" alt="Confirm">
+            <div class="modal-buttons">
+                <button class="btn btn-delete" onclick="confirmDeletePlayedGame()">Удалить</button>
+                <button class="btn btn-secondary" onclick="closeModal('confirmDeletePlayedGameModal')">Отмена</button>
+            </div>
+        </div>
+    </div>
     <nav class="mobile-tabs" id="mobileTabs">
         <button data-tab="movies" class="active">Фильмы</button>
         <button data-tab="watchlist">Заказанные фильмы</button>
