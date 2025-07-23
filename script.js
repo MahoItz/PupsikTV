@@ -19,6 +19,7 @@ let RAWG_API_KEY;
 const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
 let rawgResults = [];
 let selectedRAWGGame = null;
+const POSTER_PLACEHOLDER = "https://via.placeholder.com/300x400?text=Нет+постера";
 
 function debounce(func, delay) {
   let timeout;
@@ -158,6 +159,21 @@ async function fetchKPFilmLength(filmId) {
     console.error("Failed to fetch film details", err);
     return null;
   }
+}
+
+async function fetchSteamPoster(title) {
+  const url = `/api/steamgriddb?q=${encodeURIComponent(title)}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to fetch');
+    const data = await res.json();
+    if (Array.isArray(data) && data[0]?.url) return data[0].url;
+    if (data?.data && data.data[0]?.url) return data.data[0].url;
+    if (data?.url) return data.url;
+  } catch (err) {
+    console.error('Failed to fetch Steam poster', err);
+  }
+  return POSTER_PLACEHOLDER;
 }
 
 // ---------- File upload helpers ----------
@@ -1666,7 +1682,7 @@ async function handleGameSearch() {
   if (btn) btn.disabled = false;
 }
 
-function showRAWGPreview() {
+async function showRAWGPreview() {
   const preview = document.getElementById("gameAutoPreview");
   if (!preview) return;
   preview.innerHTML = "";
@@ -1674,15 +1690,17 @@ function showRAWGPreview() {
     preview.style.display = "none";
     return;
   }
+  let poster = await fetchSteamPoster(selectedRAWGGame.name);
+  if (poster === POSTER_PLACEHOLDER && selectedRAWGGame.background_image) {
+    poster = selectedRAWGGame.background_image;
+  }
   const game = {
     title: selectedRAWGGame.name || "",
     genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
     year: selectedRAWGGame.released
       ? selectedRAWGGame.released.split("-")[0]
       : "",
-    poster:
-      selectedRAWGGame.background_image ||
-      "https://via.placeholder.com/300x400?text=Нет+постера",
+    poster: poster || POSTER_PLACEHOLDER,
     orderBy: document.getElementById("gameOrderBy").value || "",
     orderType: document.getElementById("gameOrderType").value || "",
     dateAdded: new Date().toISOString().split("T")[0],
@@ -1739,7 +1757,7 @@ async function handlePlayedGameSearch() {
   if (btn) btn.disabled = false;
 }
 
-function showPlayedGamePreview() {
+async function showPlayedGamePreview() {
   const preview = document.getElementById("playedGameAutoPreview");
   if (!preview) return;
   preview.innerHTML = "";
@@ -1747,15 +1765,17 @@ function showPlayedGamePreview() {
     preview.style.display = "none";
     return;
   }
+  let poster = await fetchSteamPoster(selectedRAWGGame.name);
+  if (poster === POSTER_PLACEHOLDER && selectedRAWGGame.background_image) {
+    poster = selectedRAWGGame.background_image;
+  }
   const game = {
     title: selectedRAWGGame.name || "",
     genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
     year: selectedRAWGGame.released
       ? selectedRAWGGame.released.split("-")[0]
       : "",
-    poster:
-      selectedRAWGGame.background_image ||
-      "https://via.placeholder.com/300x400?text=Нет+постера",
+    poster: poster || POSTER_PLACEHOLDER,
     rating: getCurrentRating("playedGameRatingStars"),
     orderBy: document.getElementById("playedGameOrderBy").value || "",
     orderType: document.getElementById("playedGameOrderType").value || "",
@@ -2412,13 +2432,15 @@ document
 
       if (selectedRAWGGame) {
         const g = selectedRAWGGame;
+        let poster = await fetchSteamPoster(g.name);
+        if (poster === POSTER_PLACEHOLDER && g.background_image) {
+          poster = g.background_image;
+        }
         gameData = {
           title: g.name || titleInput,
           year: g.released ? g.released.split("-")[0] : "",
           genres: g.genres?.map((x) => x.name).join(", ") || "",
-          poster:
-            g.background_image ||
-            "https://via.placeholder.com/300x400?text=Нет+постера",
+          poster: poster || POSTER_PLACEHOLDER,
           orderBy: orderBy,
           orderType: orderType,
         };
@@ -2515,11 +2537,15 @@ document
       }
 
       const g = selectedRAWGGame;
+      let poster = await fetchSteamPoster(g.name);
+      if (poster === POSTER_PLACEHOLDER && g.background_image) {
+        poster = g.background_image;
+      }
       gameData = {
         title: g.name || titleInput,
         year: g.released ? g.released.split("-")[0] : "",
         genres: g.genres?.map((x) => x.name).join(", ") || "",
-        poster: g.background_image || "https://via.placeholder.com/300x400?text=Нет+постера",
+        poster: poster || POSTER_PLACEHOLDER,
         rating: rating,
         orderBy: orderBy,
         orderType: orderType,
