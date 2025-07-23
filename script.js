@@ -1164,6 +1164,16 @@ function createPlayedGameCard(game, showActions = isAdmin) {
   if (showActions) {
     const actions = document.createElement("div");
     actions.className = "movie-actions";
+    const upBtn = document.createElement("button");
+    upBtn.className = "btn btn-icon btn-move";
+    upBtn.textContent = "↑";
+    upBtn.onclick = () => movePlayedGameUp(game.id);
+    actions.appendChild(upBtn);
+    const downBtn = document.createElement("button");
+    downBtn.className = "btn btn-icon btn-move";
+    downBtn.textContent = "↓";
+    downBtn.onclick = () => movePlayedGameDown(game.id);
+    actions.appendChild(downBtn);
     const editBtn = document.createElement("button");
     editBtn.className = "btn btn-edit btn-icon";
     editBtn.textContent = "✏️";
@@ -1275,6 +1285,45 @@ async function deletePlayedGame(id) {
     } catch (err) {
       console.error("Error deleting game", err);
     }
+    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+    renderPlayedGames();
+  }
+}
+
+async function swapGameIds(id1, id2) {
+  try {
+    const temp = -Date.now();
+    await supabaseClient.from("games").update({ id: temp }).eq("id", id1);
+    await supabaseClient.from("games").update({ id: id1 }).eq("id", id2);
+    await supabaseClient.from("games").update({ id: id2 }).eq("id", temp);
+  } catch (err) {
+    console.error("Error swapping game ids", err);
+  }
+}
+
+async function movePlayedGameUp(id) {
+  const idx = allPlayedGames.findIndex((g) => g.id === id);
+  if (idx > 0) {
+    const prev = allPlayedGames[idx - 1];
+    const cur = allPlayedGames[idx];
+    await swapGameIds(cur.id, prev.id);
+    [prev.id, cur.id] = [cur.id, prev.id];
+    allPlayedGames[idx - 1] = cur;
+    allPlayedGames[idx] = prev;
+    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+    renderPlayedGames();
+  }
+}
+
+async function movePlayedGameDown(id) {
+  const idx = allPlayedGames.findIndex((g) => g.id === id);
+  if (idx !== -1 && idx < allPlayedGames.length - 1) {
+    const next = allPlayedGames[idx + 1];
+    const cur = allPlayedGames[idx];
+    await swapGameIds(cur.id, next.id);
+    [next.id, cur.id] = [cur.id, next.id];
+    allPlayedGames[idx] = next;
+    allPlayedGames[idx + 1] = cur;
     localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
     renderPlayedGames();
   }
