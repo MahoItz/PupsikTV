@@ -15,7 +15,7 @@
 <body>
     <div class="container">
         <header id="headerLogo">
-            <img src="images/Pupsik_TV_Header_2.png" alt="PupsikTV Header" loading="lazy">
+            <img src="images/Pupsik_TV_Header_2.png" alt="PupsikTV Header">
             <h1>PupsikTV</h1>
             <nav class="social-links">
                 <a href="https://www.twitch.tv/pupsik_ow" target="_blank" aria-label="Twitch" class="social-link"><i class="fab fa-twitch"></i></a>
@@ -27,36 +27,73 @@
         </header>
 
         <div class="main-content">
-            <div class="left-panel" id="moviesSection">
-                <div class="controls admin-only">
-                    <button class="btn btn-primary" onclick="openAddMovieModal()">
-                        ➕ Добавить фильм
-                    </button>
+            <div class="left-panel">
+                <div class="list-tabs">
+                    <button data-list="movies" class="active">Фильмы</button>
+                    <button data-list="games">Игры</button>
                 </div>
 
-                <div class="search-controls">
-                    <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..."
-                        onkeyup="searchMovies(this.value)">
-                </div>
-                <div class="sort-row">
-                    <div class="sort-controls">
-                        <select onchange="sortMovies(this.value)">
-                            <option value="date">Сортировка: По дате</option>
-                            <option value="title">По названию</option>
-                            <option value="year">По году</option>
-                            <option value="rating">По оценке</option>
-                        </select>
-                        <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleSortOrder()">
-                            <img src="images/down-arrow.png" alt="arrow" class="sort-arrow" loading="lazy">
+                <div id="moviesSection" class="list-content">
+                    <div class="controls admin-only">
+                        <button class="btn btn-primary" onclick="openAddMovieModal()">
+                            ➕ Добавить фильм
                         </button>
                     </div>
-                    <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
+
+                    <div class="search-controls">
+                        <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..."
+                            onkeyup="searchMovies(this.value)">
+                    </div>
+                    <div class="sort-row">
+                        <div class="sort-controls">
+                            <select onchange="sortMovies(this.value)">
+                                <option value="date">Сортировка: По дате</option>
+                                <option value="title">По названию</option>
+                                <option value="year">По году</option>
+                                <option value="rating">По оценке</option>
+                            </select>
+                            <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleSortOrder()">
+                                <img src="images/down-arrow.png" alt="arrow" class="sort-arrow">
+                            </button>
+                        </div>
+                        <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
+                    </div>
+
+                    <div class="movies-grid" id="moviesGrid">
+                        <!-- Список просмотренных фильмов -->
+                    </div>
+                    <div id="pagination" class="pagination"></div>
                 </div>
 
-                <div class="movies-grid" id="moviesGrid">
-                    <!-- Список просмотренных фильмов -->
+                <div id="gamesListSection" class="list-content" style="display:none;">
+                    <div class="controls admin-only">
+                        <button class="btn btn-primary" onclick="openAddPlayedGameModal()">
+                            ➕ Добавить игру
+                        </button>
+                    </div>
+                    <div class="search-controls">
+                        <input type="text" class="search-input" placeholder="🔍 Поиск игр..."
+                            onkeyup="searchPlayedGames(this.value)">
+                    </div>
+                    <div class="sort-row">
+                        <div class="sort-controls">
+                            <select onchange="sortPlayedGames(this.value)">
+                                <option value="date">Сортировка: По дате</option>
+                                <option value="title">По названию</option>
+                                <option value="year">По году</option>
+                                <option value="rating">По оценке</option>
+                            </select>
+                            <button id="gameSortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleGameSortOrder()">
+                                <img src="images/down-arrow.png" alt="arrow" class="sort-arrow">
+                            </button>
+                        </div>
+                        <div class="movies-count">Всего игр: <span id="gamesCount">0</span></div>
+                    </div>
+                    <div class="movies-grid" id="gamesGridPlayed">
+                        <!-- Список пройденных игр -->
+                    </div>
+                    <div id="gamesPagination" class="pagination"></div>
                 </div>
-                <div id="pagination" class="pagination"></div>
             </div>
 
             <div class="side-panels">
@@ -93,8 +130,8 @@
             <h2>Добавить фильм</h2>
 
             <div class="mode-toggle">
-                <div class="mode-btn active" onclick="switchMode('auto', event)">Автоматический</div>
-                <div class="mode-btn" onclick="switchMode('manual', event)">Ручной</div>
+                <div class="mode-btn active" onclick="switchMode('auto')">Автоматический</div>
+                <div class="mode-btn" onclick="switchMode('manual')">Ручной</div>
             </div>
 
             <form id="addMovieForm">
@@ -183,8 +220,8 @@
             <h2>Добавить в список к просмотру</h2>
 
             <div class="mode-toggle">
-                <div class="mode-btn active" onclick="switchWatchlistMode('auto', event)">Автоматический</div>
-                <div class="mode-btn" onclick="switchWatchlistMode('manual', event)">Ручной</div>
+                <div class="mode-btn active" onclick="switchWatchlistMode('auto')">Автоматический</div>
+                <div class="mode-btn" onclick="switchWatchlistMode('manual')">Ручной</div>
             </div>
 
             <form id="addWatchlistForm">
@@ -265,7 +302,7 @@
             <span class="close" onclick="closeModal('rateMovieModal')">&times;</span>
             <div class="rate-header">
                 <h2>Оценить фильм</h2>
-                <img src="images/Kiriko_Node.png" alt="Kiriko Rate" class="modal-image rate-image" loading="lazy">
+                <img src="images/Kiriko_Node.png" alt="Kiriko Rate" class="modal-image rate-image">
             </div>
             <div class="rate-poster">
                 <img id="rateMoviePoster" class="movie-poster" src="" alt="Постер">
@@ -293,6 +330,43 @@
                 </div>
             </div>
             <button onclick="submitRating()" class="btn btn-primary" style="width: 100%;">Оценить и переместить</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно оценки игры -->
+    <div id="rateGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('rateGameModal')">&times;</span>
+            <div class="rate-header">
+                <h2>Оценить игру</h2>
+                <img src="images/Kiriko_Node.png" alt="Kiriko Rate" class="modal-image rate-image">
+            </div>
+            <div class="rate-poster">
+                <img id="rateGamePoster" class="movie-poster" src="" alt="Постер">
+                <p id="rateGameTitle"></p>
+            </div>
+            <div class="form-group">
+                <label>Ваша оценка:</label>
+                <div class="rating-stars" id="rateGameStars" data-input="rateGameInput">
+                    <span class="rating-star rating-label" data-rating="0">worst</span>
+                    <span class="rating-star" data-rating="1"></span>
+                    <span class="rating-star" data-rating="2"></span>
+                    <span class="rating-star" data-rating="3"></span>
+                    <span class="rating-star" data-rating="4"></span>
+                    <span class="rating-star" data-rating="5"></span>
+                    <span class="rating-star" data-rating="6"></span>
+                    <span class="rating-star" data-rating="7"></span>
+                    <span class="rating-star" data-rating="8"></span>
+                    <span class="rating-star" data-rating="9"></span>
+                    <span class="rating-star" data-rating="10"></span>
+                    <span class="rating-star rating-label" data-rating="11">best</span>
+                </div>
+                <div class="rating-input-wrapper">
+                    <input id="rateGameInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                    <span class="rating-max">/11</span>
+                </div>
+            </div>
+            <button onclick="submitGameRating()" class="btn btn-primary" style="width:100%;">Оценить и переместить</button>
         </div>
     </div>
 
@@ -393,8 +467,8 @@
             <h2>Добавить игру</h2>
             <form id="addGameForm">
                 <div class="mode-toggle">
-                    <div class="mode-btn active" onclick="switchGameMode('auto', event)">Автоматический</div>
-                    <div class="mode-btn" onclick="switchGameMode('manual', event)">Ручной</div>
+                    <div class="mode-btn active" onclick="switchGameMode('auto')">Автоматический</div>
+                    <div class="mode-btn" onclick="switchGameMode('manual')">Ручной</div>
                 </div>
 
                 <div id="gameAutoMode">
@@ -460,6 +534,102 @@
             </form>
         </div>
     </div>
+    <!-- Модальное окно добавления пройденной игры -->
+    <div id="addPlayedGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addPlayedGameModal')">&times;</span>
+            <h2>Добавить игру</h2>
+            <form id="addPlayedGameForm">
+                <div class="mode-toggle">
+                    <div class="mode-btn active" onclick="switchPlayedGameMode('auto')">Автоматический</div>
+                    <div class="mode-btn" onclick="switchPlayedGameMode('manual')">Ручной</div>
+                </div>
+
+                <div id="playedGameAutoMode">
+                    <div class="form-group">
+                        <label for="playedGameAutoTitle">Название игры:</label>
+                        <div class="input-with-btn">
+                            <input type="text" id="playedGameAutoTitle" placeholder="Введите название для поиска">
+                            <button id="playedGameAutoSearchBtn" type="button" class="search-btn"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group" id="playedGameAutoResultsContainer" style="display:none; margin-top:10px;">
+                        <div id="playedGameAutoResults" class="autocomplete-list"></div>
+                    </div>
+                    <span id="playedGameAutoSearchLoading" class="loading-spinner" style="display:none;"></span>
+                    <div id="playedGameAutoPreview" style="display:none; margin-top:15px;"></div>
+                </div>
+
+                <div id="playedGameManualMode" style="display:none;">
+                    <div class="form-group">
+                        <label for="playedGameTitle">Название:</label>
+                        <input type="text" id="playedGameTitle">
+                    </div>
+                    <div class="form-group">
+                        <label for="playedGameYear">Год:</label>
+                        <input type="number" id="playedGameYear" placeholder="2024">
+                    </div>
+                    <div class="form-group">
+                        <label for="playedGamePoster">Постер:</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="playedGamePoster" accept="image/*">
+                            <label for="playedGamePoster" class="file-upload-label">
+                                <div class="file-upload-icon">📁</div>
+                                <div class="file-upload-text">
+                                    <div class="main-text">Выберите файл изображения</div>
+                                    <div class="sub-text">или перетащите его сюда</div>
+                                </div>
+                            </label>
+                            <button type="button" class="file-remove" title="Удалить файл">×</button>
+                        </div>
+                        <div class="file-name" style="display:none;"></div>
+                        <img id="playedGamePosterPreview" class="poster-preview" src="" alt="Предпросмотр" style="display:none;">
+                    </div>
+                    <div class="form-group">
+                        <label for="playedGameGenres">Жанр:</label>
+                        <input type="text" id="playedGameGenres" placeholder="Action, RPG">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Оценка:</label>
+                    <div class="rating-stars" id="playedGameRatingStars" data-input="playedGameRatingInput">
+                        <span class="rating-star rating-label" data-rating="0">worst</span>
+                        <span class="rating-star" data-rating="1"></span>
+                        <span class="rating-star" data-rating="2"></span>
+                        <span class="rating-star" data-rating="3"></span>
+                        <span class="rating-star" data-rating="4"></span>
+                        <span class="rating-star" data-rating="5"></span>
+                        <span class="rating-star" data-rating="6"></span>
+                        <span class="rating-star" data-rating="7"></span>
+                        <span class="rating-star" data-rating="8"></span>
+                        <span class="rating-star" data-rating="9"></span>
+                        <span class="rating-star" data-rating="10"></span>
+                        <span class="rating-star rating-label" data-rating="11">best</span>
+                    </div>
+                    <div class="rating-input-wrapper">
+                        <input id="playedGameRatingInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                        <span class="rating-max">/11</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="playedGameOrderBy">Заказал:</label>
+                    <input type="text" id="playedGameOrderBy">
+                </div>
+                <div class="form-group">
+                    <label for="playedGameOrderType">Способ заказа:</label>
+                    <select id="playedGameOrderType">
+                        <option value="">Не указано</option>
+                        <option value="Донат">Донат</option>
+                        <option value="Баллы канала">Баллы канала</option>
+                        <option value="Шары">Шары</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Добавить игру</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Модальное окно редактирования игры -->
     <div id="editGameModal" class="modal">
@@ -491,7 +661,68 @@
                     <label for="editGameOrderType">Способ заказа:</label>
                     <select id="editGameOrderType">
                         <option value="">Не указано</option>
-                        <option value="Донат">Донат.</option>
+                        <option value="Донат">Донат</option>
+                        <option value="Баллы канала">Баллы канала</option>
+                        <option value="Шары">Шары</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования пройденной игры -->
+    <div id="editPlayedGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editPlayedGameModal')">&times;</span>
+            <h2>Редактировать игру</h2>
+            <form id="editPlayedGameForm">
+                <div class="poster-upload">
+                    <img id="editPlayedGamePosterPreview" class="movie-poster" src="" alt="Постер">
+                    <input type="file" id="editPlayedGamePoster" accept="image/*" style="display:none">
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameTitle">Название:</label>
+                    <input type="text" id="editPlayedGameTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameYear">Год:</label>
+                    <input type="number" id="editPlayedGameYear">
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameGenres">Жанр:</label>
+                    <input type="text" id="editPlayedGameGenres">
+                </div>
+                <div class="form-group">
+                    <label>Оценка:</label>
+                    <div class="rating-stars" id="editPlayedGameRatingStars" data-input="editPlayedGameRatingInput">
+                        <span class="rating-star rating-label" data-rating="0">worst</span>
+                        <span class="rating-star" data-rating="1"></span>
+                        <span class="rating-star" data-rating="2"></span>
+                        <span class="rating-star" data-rating="3"></span>
+                        <span class="rating-star" data-rating="4"></span>
+                        <span class="rating-star" data-rating="5"></span>
+                        <span class="rating-star" data-rating="6"></span>
+                        <span class="rating-star" data-rating="7"></span>
+                        <span class="rating-star" data-rating="8"></span>
+                        <span class="rating-star" data-rating="9"></span>
+                        <span class="rating-star" data-rating="10"></span>
+                        <span class="rating-star rating-label" data-rating="11">best</span>
+                    </div>
+                    <div class="rating-input-wrapper">
+                        <input id="editPlayedGameRatingInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                        <span class="rating-max">/11</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameOrderBy">Заказал:</label>
+                    <input type="text" id="editPlayedGameOrderBy">
+                </div>
+                <div class="form-group">
+                    <label for="editPlayedGameOrderType">Способ заказа:</label>
+                    <select id="editPlayedGameOrderType">
+                        <option value="">Не указано</option>
+                        <option value="Донат">Донат</option>
                         <option value="Баллы канала">Баллы канала</option>
                         <option value="Шары">Шары</option>
                     </select>
@@ -520,7 +751,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('duplicateModal')">&times;</span>
             <h2>Ошибка</h2>
-            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.png" alt="Duplicate" loading="lazy">
+            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.png" alt="Duplicate">
             <p>Такой фильм уже есть в списке.</p>
         </div>
     </div>
@@ -530,7 +761,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('searchReminderModal')">&times;</span>
             <h2>Напоминание</h2>
-            <img class="modal-image" src="images/Kiriko_Remind.png" alt="Reminder" loading="lazy">
+            <img class="modal-image" src="images/Kiriko_Remind.png" alt="Reminder">
             <p>Сначала найдите фильм через поиск.</p>
         </div>
     </div>
@@ -555,4 +786,4 @@
     <script src="script.js" defer></script>
 </body>
 
-</html>
+</html><script async data-explicit-opt-in="true" data-deployment-id="dpl_5pMQWvpxPtNKE3euy2g2JUVWbyvp" src="https://vercel.live/_next-live/feedback/feedback.js"></script>

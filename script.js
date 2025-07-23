@@ -1979,14 +1979,14 @@ function closeModal(modalId) {
 }
 
 // Переключение режимов
-function switchMode(mode, e) {
+function switchMode(mode) {
   currentMode = mode;
 
   // Обновление кнопок
   document
     .querySelectorAll("#addMovieModal .mode-btn")
     .forEach((btn) => btn.classList.remove("active"));
-  if (e) e.target.classList.add("active");
+  event.target.classList.add("active");
 
   // Показ/скрытие форм
   if (mode === "auto") {
@@ -1998,13 +1998,13 @@ function switchMode(mode, e) {
   }
 }
 
-function switchWatchlistMode(mode, e) {
+function switchWatchlistMode(mode) {
   currentWatchlistMode = mode;
 
   document
     .querySelectorAll("#addWatchlistModal .mode-btn")
     .forEach((btn) => btn.classList.remove("active"));
-  if (e) e.target.classList.add("active");
+  event.target.classList.add("active");
 
   if (mode === "auto") {
     document.getElementById("watchAutoMode").style.display = "block";
@@ -2015,13 +2015,13 @@ function switchWatchlistMode(mode, e) {
   }
 }
 
-function switchGameMode(mode, e) {
+function switchGameMode(mode) {
   currentGameMode = mode;
 
   document
     .querySelectorAll("#addGameModal .mode-btn")
     .forEach((btn) => btn.classList.remove("active"));
-  if (e) e.target.classList.add("active");
+  event.target.classList.add("active");
 
   if (mode === "auto") {
     document.getElementById("gameAutoMode").style.display = "block";
