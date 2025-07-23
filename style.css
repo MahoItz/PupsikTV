@@ -1103,6 +1103,8 @@ select option {
     font-weight: 500;
     margin-top: 10px;
 }
+
+/* Оценка фильма */
 #rateMovieModal .rate-header {
     display: flex;
     align-items: center;
@@ -1120,6 +1122,30 @@ select option {
 }
 
 #rateMovieModal #rateMoviePoster {
+    display: block;
+    margin: 0 auto 10px auto;
+    width: 60%;
+    max-width: 250px;
+}
+
+/* Оценка игр */
+#rateGameModal .rate-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+
+#rateGameModal .rate-image {
+    width: 3rem;
+}
+
+#rateGameModal .rate-poster {
+    text-align: center;
+}
+
+#rateGameModal #rateMoviePoster {
     display: block;
     margin: 0 auto 10px auto;
     width: 60%;
@@ -1663,6 +1689,33 @@ body::before {
     .file-upload-text .sub-text {
         font-size: 0.8rem;
     }
+}
+
+/* Tabs for movies/games list */
+.list-tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.list-tabs button {
+    flex: 1;
+    padding: 6px 0;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: transform 0.2s ease;
+}
+
+.list-tabs button:hover {
+    background: #7a7a7a2f;
+    transform: translateY(-3px);
+}
+
+.list-tabs button.active {
+    border-bottom: 2px solid var(--primary-color)
 }
 
 /* ---------------- Mobile Tabs ---------------- */
