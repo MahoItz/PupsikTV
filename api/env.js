@@ -14,6 +14,7 @@ export default function handler(req, res) {
   if (isAdmin) {
     env.KINOPOISK_API_KEY = process.env.KINOPOISK_API_KEY;
     env.RAWG_API_KEY = process.env.RAWG_API_KEY;
+    env.STEAMGRIDDB_KEY = process.env.STEAMGRIDDB_KEY;
   }
 
   res.status(200).json(env);
