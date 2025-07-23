@@ -158,12 +158,13 @@ async function fetchSteamGridPoster(name) {
     const searchData = await searchRes.json();
     const id = searchData?.data?.[0]?.id;
     if (!id) return null;
-    const gridUrl = `https://www.steamgriddb.com/api/v2/grids/game/${id}?dimensions=600x900`;
+
+    const gridUrl = `https://www.steamgriddb.com/api/v2/grids/game/${id}`;
     const gridRes = await fetch(gridUrl, {
       headers: { Authorization: `Bearer ${STEAMGRIDDB_KEY}` },
     });
     const gridData = await gridRes.json();
-    return gridData?.data?.[0]?.url || null;
+    return gridData?.data?.[0]?.thumb || null;
   } catch (err) {
     console.error("SteamGridDB error", err);
     return null;

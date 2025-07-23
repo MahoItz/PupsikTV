@@ -16,7 +16,7 @@ STEAMGRIDDB_KEY=<optional, used for game posters>
 EDIT_PASSWORD=<admin password>
 ```
 
-Only `SUPABASE_KEY` and `EDIT_PASSWORD` are required for basic operation. The other keys enable additional admin features like external search and poster retrieval.
+Only `SUPABASE_KEY` and `EDIT_PASSWORD` are required for basic operation. The other keys enable additional admin features like external search and poster retrieval. When `STEAMGRIDDB_KEY` is provided, game posters are fetched from SteamGridDB by searching for the game ID and then retrieving its grid data, using the `thumb` field as the poster URL.
 
 ## Running locally
 
