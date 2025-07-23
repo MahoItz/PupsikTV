@@ -40,6 +40,9 @@
                     </div>
                     <div class="sort-row">
                         <div class="sort-controls">
+                            <button class="btn btn-primary admin-only" onclick="openAddMovieModal()">
+                                ➕
+                            </button>
                             <select onchange="sortMovies(this.value)">
                                 <option value="date">Сортировка: По дате</option>
                                 <option value="title">По названию</option>
@@ -50,9 +53,6 @@
                                 <img src="images/down-arrow.png" alt="arrow" class="sort-arrow">
                             </button>
                         </div>
-                        <button class="btn btn-primary admin-only" onclick="openAddMovieModal()">
-                            ➕ Добавить фильм
-                        </button>
                         <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
                     </div>
 
@@ -69,6 +69,9 @@
                     </div>
                     <div class="sort-row">
                         <div class="sort-controls">
+                            <button class="btn btn-primary admin-only" onclick="openAddPlayedGameModal()">
+                                ➕
+                            </button>
                             <select onchange="sortPlayedGames(this.value)">
                                 <option value="date">Сортировка: По дате</option>
                                 <option value="title">По названию</option>
@@ -79,9 +82,6 @@
                                 <img src="images/down-arrow.png" alt="arrow" class="sort-arrow">
                             </button>
                         </div>
-                        <button class="btn btn-primary admin-only" onclick="openAddPlayedGameModal()">
-                            ➕ Добавить игру
-                        </button>
                         <div class="movies-count">Всего игр: <span id="gamesCount">0</span></div>
                     </div>
                     <div class="movies-grid" id="gamesGridPlayed">
@@ -620,8 +620,8 @@
                         <option value="Баллы канала">Баллы канала</option>
                         <option value="Шары">Шары</option>
                     </select>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Добавить игру</button>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;">Добавить игру</button>
             </form>
         </div>
     </div>
