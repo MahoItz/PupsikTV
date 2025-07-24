@@ -1033,7 +1033,6 @@ select option {
     display: flex;
     flex-direction: column;
     height: 100%;
-    justify-content: space-between;
 }
 
 .order-title {
@@ -1093,6 +1092,7 @@ select option {
     justify-content: space-between;
     align-items: center;
     padding-top: 4px;
+    margin-top: auto;
 }
 
 .order-actions {
