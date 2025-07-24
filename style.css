@@ -968,6 +968,8 @@ select option {
     position: relative;
     overflow: hidden;
     height: 100%;
+    /* Ensure enough vertical space so the footer can stick to the bottom */
+    min-height: 150px;
 }
 
 .order-wrapper {
