@@ -22,6 +22,20 @@
     --glow-animation: glow 2s ease-in-out infinite alternate;
     --rating-low: #f44336;
     --rating-high: #4caf50;
+    
+    /* Header */
+    --primary-purple: #6b46c1;
+    --secondary-purple: #8b5cf6;
+    --accent-cyan: rgba(20, 25, 40, 0.85);
+    --accent-pink: #be95ff;
+    --dark-bg: #0f0f23;
+    --card-bg: rgba(15, 15, 35, 0.9);
+    --glass-bg: rgba(20, 25, 40, 0.85);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.8);
+    --shadow-glow: 0 0 30px rgba(107, 70, 193, 0.3);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Сброс стилей */
@@ -84,6 +98,33 @@ body {
     }
 }
 
+@keyframes shimmerPulse {
+    0%, 100% {
+        opacity: 0.3;
+        filter: brightness(0.9) blur(0px);
+    }
+    50% {
+        opacity: 0.8;
+        filter: brightness(1.2) blur(2px);
+    }
+}
+
+
+@keyframes floatingGlow {
+    0%, 100% {
+        transform: translateY(0);
+        filter: 
+            drop-shadow(0 0 20px rgba(107, 70, 193, 0.5))
+            drop-shadow(0 0 40px rgba(0, 242, 255, 0.3));
+    }
+    50% {
+        transform: translateY(-8px);
+        filter: 
+            drop-shadow(0 5px 25px rgba(107, 70, 193, 0.6))
+            drop-shadow(0 0 50px rgba(0, 242, 255, 0.4));
+    }
+}
+
 /* Основные контейнеры */
 .container {
     max-width: 1400px;
@@ -103,6 +144,7 @@ header {
     overflow: visible;
     padding: 40px 20px 10px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 30px;
 }
 
 header::before {
@@ -112,17 +154,39 @@ header::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, 
-        rgba(0, 242, 255, 0.5), 
-        rgba(255, 20, 147, 0.5), 
-        rgba(138, 43, 226, 0.5), 
-        rgba(0, 191, 255, 0.5)
-    );
+    background: radial-gradient(circle at top, #5c2b84, #1e1a2b 80%);
     z-index: -1;
     margin: -1px;
     border-radius: inherit;
     opacity: 0.6;
+    border-bottom: 3px solid rgba(255,255,255,0.05);
 }
+
+header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    overflow: hidden;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--accent-cyan) 10%,
+        var(--accent-pink) 50%,
+        var(--accent-cyan) 90%,
+        transparent 100%
+    );
+    background-size: 100% auto;
+    background-position: center;
+    animation: shimmerPulse 6s ease-in-out infinite;
+    z-index: 2;
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+}
+
+
 
 header h1 {
     font-family: 'Carter One', display;
@@ -145,19 +209,25 @@ header h1 {
     z-index: 5;
     margin: 0;
     line-height: 1.1;
+    
 }
 
 header img {
     position: relative;
     z-index: 10;
-    max-width: 240px;
+    max-width: min(280px, 70vw);
     height: auto;
-    margin-bottom: -20px;
-    margin-top: -120px;
-    filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5));
-    animation: headerImageGlow 3s ease-in-out infinite;
+    margin: -100px auto 0;
+    display: block;
+    
+    /* Улучшенные эффекты свечения */
+    filter: 
+        drop-shadow(0 0 20px rgba(107, 70, 193, 0.5))
+        drop-shadow(0 0 40px rgba(0, 242, 255, 0.3));
+    
     transition: var(--transition);
     cursor: pointer;
+    animation: floatingGlow 4s ease-in-out infinite;
 }
 
 /* Social links */
@@ -165,7 +235,7 @@ header img {
     margin-top: 15px;
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 16px;
 }
 
 .social-links a {
