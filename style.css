@@ -143,8 +143,9 @@ header {
     position: relative;
     overflow: visible;
     padding: 40px 20px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.1);
     padding-top: 30px;
+    box-shadow: var(--shadow-glow);
 }
 
 header::before {
@@ -278,8 +279,8 @@ header img {
     backdrop-filter: blur(20px);
     border-radius: var(--border-radius);
     padding: 30px;
-    border: 1px solid rgba(0, 212, 255, 0.2);
-    box-shadow: var(--shadow-neon);
+    border: 1px solid rgba(255, 0, 0, 0.1);
+    box-shadow: var(--shadow-glow);
     position: relative;
 }
 
@@ -289,7 +290,7 @@ header img {
     backdrop-filter: blur(20px);
     border-radius: var(--border-radius);
     padding: 30px;
-    border: 1px solid rgba(255, 108, 66, 0.3);
+    border: 1px solid rgba(255, 0, 0, 0.1);
     box-shadow: var(--shadow-glow);
     grid-column: 2;
 }
