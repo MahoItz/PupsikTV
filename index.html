@@ -7,7 +7,7 @@
     <title>Pupsik TV</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=carter-one:400" rel="stylesheet" />
-    <link rel="icon" href="images/Pupsik_TV_Icon.png">
+    <link rel="icon" href="images/Pupsik_TV_Icon.webp">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -16,7 +16,7 @@
     <div class="container">
         <header id="headerLogo">
             <video autoplay muted playsinline class="rats-video" src="Video/Rats_BG_1.webm"></video>
-            <img src="images/Pupsik_TV_Header_2.png" alt="PupsikTV Header">
+            <img src="images/Pupsik_TV_Header_2.webp" alt="PupsikTV Header">
             <h1>PupsikTV</h1>
             <nav class="social-links">
                 <a href="https://www.twitch.tv/pupsik_ow" target="_blank" aria-label="Twitch" class="social-link"><i class="fab fa-twitch"></i></a>
@@ -51,7 +51,7 @@
                                 <option value="rating">По оценке</option>
                             </select>
                             <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleSortOrder()">
-                                <img src="images/down-arrow.png" alt="arrow" class="sort-arrow">
+                                <img src="images/down-arrow.webp" alt="arrow" class="sort-arrow">
                             </button>
                         </div>
                         <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
@@ -80,7 +80,7 @@
                                 <option value="rating">По оценке</option>
                             </select>
                             <button id="gameSortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleGameSortOrder()">
-                                <img src="images/down-arrow.png" alt="arrow" class="sort-arrow">
+                                <img src="images/down-arrow.webp" alt="arrow" class="sort-arrow">
                             </button>
                         </div>
                         <div class="movies-count">Всего игр: <span id="gamesCount">0</span></div>
@@ -298,7 +298,7 @@
             <span class="close" onclick="closeModal('rateMovieModal')">&times;</span>
             <div class="rate-header">
                 <h2>Оценить фильм</h2>
-                <img src="images/Kiriko_Node.png" alt="Kiriko Rate" class="modal-image rate-image">
+                <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image">
             </div>
             <div class="rate-poster">
                 <img id="rateMoviePoster" class="movie-poster" src="" alt="Постер">
@@ -335,7 +335,7 @@
             <span class="close" onclick="closeModal('rateGameModal')">&times;</span>
             <div class="rate-header">
                 <h2>Оценить игру</h2>
-                <img src="images/Kiriko_Node.png" alt="Kiriko Rate" class="modal-image rate-image">
+                <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image">
             </div>
             <div class="rate-poster">
                 <img id="rateGamePoster" class="movie-poster" src="" alt="Постер">
@@ -747,7 +747,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('duplicateModal')">&times;</span>
             <h2>Ошибка</h2>
-            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.png" alt="Duplicate">
+            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.webp" alt="Duplicate">
             <p>Такой фильм уже есть в списке.</p>
         </div>
     </div>
@@ -757,7 +757,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('searchReminderModal')">&times;</span>
             <h2>Напоминание</h2>
-            <img class="modal-image" src="images/Kiriko_Remind.png" alt="Reminder">
+            <img class="modal-image" src="images/Kiriko_Remind.webp" alt="Reminder">
             <p>Сначала найдите фильм через поиск.</p>
         </div>
     </div>
@@ -766,7 +766,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('confirmDeleteMovieModal')">&times;</span>
             <h2>Удалить фильм?</h2>
-            <img class="modal-image-kiriko" src="images/Kiriko_Delete.png" alt="Confirm">
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm">
             <div class="modal-buttons">
                 <button class="btn btn-delete" onclick="confirmDeleteMovie()">Удалить</button>
                 <button class="btn btn-secondary" onclick="closeModal('confirmDeleteMovieModal')">Отмена</button>
@@ -778,7 +778,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('confirmDeletePlayedGameModal')">&times;</span>
             <h2>Удалить игру?</h2>
-            <img class="modal-image-kiriko" src="images/Kiriko_Delete.png" alt="Confirm">
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm">
             <div class="modal-buttons">
                 <button class="btn btn-delete" onclick="confirmDeletePlayedGame()">Удалить</button>
                 <button class="btn btn-secondary" onclick="closeModal('confirmDeletePlayedGameModal')">Отмена</button>
@@ -790,7 +790,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('confirmDeleteOrderModal')">&times;</span>
             <h2>Удалить заказ?</h2>
-            <img class="modal-image-kiriko" src="images/Kiriko_Delete.png" alt="Confirm">
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm">
             <div class="modal-buttons">
                 <button class="btn btn-delete" onclick="confirmDeleteOrder()">Удалить</button>
                 <button class="btn btn-secondary" onclick="closeModal('confirmDeleteOrderModal')">Отмена</button>
@@ -802,7 +802,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('confirmDeleteGameOrderModal')">&times;</span>
             <h2>Удалить игру?</h2>
-            <img class="modal-image-kiriko" src="images/Kiriko_Delete.png" alt="Confirm">
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm">
             <div class="modal-buttons">
                 <button class="btn btn-delete" onclick="confirmDeleteGameOrder()">Удалить</button>
                 <button class="btn btn-secondary" onclick="closeModal('confirmDeleteGameOrderModal')">Отмена</button>

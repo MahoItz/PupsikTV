@@ -1484,8 +1484,8 @@ select option {
     width: 30px;
     height: 30px;
     background-color: rgba(255, 235, 59, 0.3);
-    -webkit-mask: url('images/Rat_rate.png') center/contain no-repeat;
-            mask: url('images/Rat_rate.png') center/contain no-repeat;
+    -webkit-mask: url('images/Rat_rate.webp') center/contain no-repeat;
+            mask: url('images/Rat_rate.webp') center/contain no-repeat;
     cursor: pointer;
     transition: var(--transition);
     user-select: none;
@@ -1494,8 +1494,8 @@ select option {
 }
 
 .rating-star.hovered {
-    -webkit-mask: url('images/Rat_rate2.png') center/contain no-repeat;
-            mask: url('images/Rat_rate2.png') center/contain no-repeat;
+    -webkit-mask: url('images/Rat_rate2.webp') center/contain no-repeat;
+            mask: url('images/Rat_rate2.webp') center/contain no-repeat;
 }
 
 

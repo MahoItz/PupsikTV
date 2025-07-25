@@ -137,7 +137,7 @@ function renderEmptyState(container, message) {
   wrapper.className = "empty-state";
 
   const img = document.createElement("img");
-  img.src = "images/Sad_Winston.png";
+  img.src = "images/Sad_Winston.webp";
   img.alt = message;
   wrapper.appendChild(img);
 
@@ -500,7 +500,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   const orderBtn = document.getElementById("sortOrderBtn");
   if (orderBtn) {
     const img = document.createElement("img");
-    img.src = sortAscending ? "images/up-arrow.png" : "images/down-arrow.png";
+    img.src = sortAscending ? "images/up-arrow.webp" : "images/down-arrow.webp";
     img.alt = "";
     img.className = "sort-arrow";
 
@@ -521,7 +521,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     hideAdminControls();
   }
   const headerImg = document.querySelector(
-    "#headerLogo img[src='images/Pupsik_TV_Header_2.png']"
+    "#headerLogo img[src='images/Pupsik_TV_Header_2.webp']"
   );
   if (headerImg)
     headerImg.addEventListener("click", () => {
@@ -887,7 +887,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   const ratingItem1 = document.createElement("div");
   ratingItem1.className = "rating-item";
   const icon1 = document.createElement("img");
-  icon1.src = "images/Pupsik_TV_Icon.png";
+  icon1.src = "images/Pupsik_TV_Icon.webp";
   icon1.alt = "Pupsik Rate";
   const span1 = document.createElement("span");
   span1.textContent = `${movie.rating}`;
@@ -898,7 +898,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   const ratingItem2 = document.createElement("div");
   ratingItem2.className = "rating-item";
   const icon2 = document.createElement("img");
-  icon2.src = "images/kp_icon.png";
+  icon2.src = "images/kp_icon.webp";
   icon2.alt = "KP Rate";
   const span2 = document.createElement("span");
   span2.textContent = movie.kpRating ?? "-";
@@ -990,7 +990,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const kpRating = document.createElement("span");
   kpRating.className = "order-kp-rating";
   const kpImg = document.createElement("img");
-  kpImg.src = "images/kp_icon.png";
+  kpImg.src = "images/kp_icon.webp";
   kpImg.alt = "KP Rate";
   kpRating.appendChild(kpImg);
   kpRating.appendChild(document.createTextNode(` ${order.kpRating ?? "-"}`));
@@ -1235,7 +1235,7 @@ function createPlayedGameCard(game, showActions = isAdmin) {
   const item1 = document.createElement("div");
   item1.className = "rating-item";
   const icon1 = document.createElement("img");
-  icon1.src = "images/Pupsik_TV_Icon.png";
+  icon1.src = "images/Pupsik_TV_Icon.webp";
   icon1.alt = "Pupsik Rate";
   const span1 = document.createElement("span");
   span1.textContent = `${game.rating}`;
@@ -1347,7 +1347,7 @@ function toggleGameSortOrder() {
   const btn = document.getElementById("gameSortOrderBtn");
   if (btn) {
     const img = document.createElement("img");
-    img.src = gameSortAscending ? "images/up-arrow.png" : "images/down-arrow.png";
+    img.src = gameSortAscending ? "images/up-arrow.webp" : "images/down-arrow.webp";
     img.alt = "";
     img.className = "sort-arrow";
     btn.replaceChildren(img);
@@ -1880,7 +1880,7 @@ function toggleSortOrder() {
   const orderBtn = document.getElementById("sortOrderBtn");
   if (orderBtn) {
     const img = document.createElement("img");
-    img.src = sortAscending ? "images/up-arrow.png" : "images/down-arrow.png";
+    img.src = sortAscending ? "images/up-arrow.webp" : "images/down-arrow.webp";
     img.alt = "";
     img.className = "sort-arrow";
 
