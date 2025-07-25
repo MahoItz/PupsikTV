@@ -68,7 +68,9 @@ async function loadEnv(password) {
     SUPABASE_KEY = env.SUPABASE_KEY;
     if (env.KINOPOISK_API_KEY) KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
     if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    if (!supabaseClient) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
     return env;
   } catch (err) {
     console.error("Failed to load environment variables", err);
