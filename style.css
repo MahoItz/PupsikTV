@@ -231,6 +231,17 @@ header img {
     animation: floatingGlow 4s ease-in-out infinite;
 }
 
+.rats-video {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: auto;
+  width: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.2;
+}
+
 /* Social links */
 .social-links {
     margin-top: 15px;
