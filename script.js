@@ -507,10 +507,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     orderBtn.replaceChildren(img);
   }
 
-  await loadMoviesFromSupabase();
-  await loadWatchlistFromSupabase();
-  await loadGamesFromSupabase();
-  await loadPlayedGamesFromSupabase();
+  await Promise.all([
+    loadMoviesFromSupabase(),
+    loadWatchlistFromSupabase(),
+    loadGamesFromSupabase(),
+    loadPlayedGamesFromSupabase(),
+  ]);
 
   isAdmin = localStorage.getItem("isAdmin") === "true";
   if (isAdmin) {
