@@ -1645,6 +1645,9 @@ select option {
     header h1 {
         font-size: 1.8rem;
     }
+    header img {
+        margin-top: -50px;
+    }
     
     .movies-grid {
         grid-template-columns: 1fr;
