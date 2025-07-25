@@ -1820,13 +1820,16 @@ select option {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 6px;
+    gap: 12px;
+    padding: 8px;
     z-index: 5;
+    border-radius: 0 0 var(--border-radius-small) var(--border-radius-small);
 }
 
 .poster-overlay.below {
@@ -1837,24 +1840,25 @@ select option {
     margin-top: 8px;
     width: 100%;
     border-radius: var(--border-radius-small);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .poster-overlay .overlay-arrow {
     color: #fff;
-    font-size: 24px;
+    font-size: 32px;
     cursor: pointer;
     user-select: none;
-    padding: 0 6px;
+    padding: 0 8px;
 }
 
 .poster-overlay .thumb-container {
     display: flex;
     overflow: hidden;
-    gap: 4px;
+    gap: 6px;
 }
 
 .poster-overlay .poster-thumb {
-    width: 60px;
+    width: 75px;
     height: auto;
     object-fit: cover;
     border-radius: var(--border-radius-small);
