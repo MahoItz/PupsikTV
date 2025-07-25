@@ -345,7 +345,7 @@ async function loadMoviesFromSupabase() {
 
     if (error) throw error;
 
-    allMovies = data.map((item) => ({
+    const newMovies = data.map((item) => ({
       id: item.id,
       title: item.title,
       originalTitle: item.original_title,
@@ -358,10 +358,16 @@ async function loadMoviesFromSupabase() {
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
     }));
-    totalMovies = allMovies.length;
 
-    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
-    renderMovies();
+    const current = JSON.stringify(allMovies);
+    const fresh = JSON.stringify(newMovies);
+
+    if (current !== fresh) {
+      allMovies = newMovies;
+      totalMovies = allMovies.length;
+      localStorage.setItem("moviesCache", fresh);
+      renderMovies();
+    }
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
   }
