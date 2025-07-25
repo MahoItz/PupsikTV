@@ -110,6 +110,7 @@ let editGamePosterData = null;
 let editingPlayedGameId = null;
 let editPlayedGamePosterData = null;
 let deletePlayedGameId = null;
+let deleteMovieId = null;
 
 // Pagination
 let currentPage = 1;
@@ -919,7 +920,7 @@ function createMovieCard(movie, showActions = isAdmin) {
     const delBtn = document.createElement("button");
     delBtn.className = "btn btn-delete btn-icon";
     delBtn.textContent = "🗑️";
-    delBtn.onclick = () => deleteMovie(movie.id);
+    delBtn.onclick = () => openConfirmDeleteMovieModal(movie.id);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
     footer.appendChild(actions);
@@ -1949,9 +1950,7 @@ function openEditModal(id) {
   document.getElementById("editMovieModal").style.display = "block";
 }
 
-async function deleteMovie(id) {
-  if (!confirm("Удалить фильм?")) return;
-
+async function performDeleteMovie(id) {
   const index = allMovies.findIndex((m) => m.id === id);
   if (index !== -1) {
     allMovies.splice(index, 1);
@@ -2039,6 +2038,19 @@ function openAddPlayedGameModal() {
   document.getElementById("addPlayedGameModal").style.display = "block";
   setRatingStars("playedGameRatingStars", 0);
   setupRatingStars("playedGameRatingStars");
+}
+
+function openConfirmDeleteMovieModal(id) {
+  deleteMovieId = id;
+  document.getElementById("confirmDeleteMovieModal").style.display = "block";
+}
+
+async function confirmDeleteMovie() {
+  if (deleteMovieId !== null) {
+    await performDeleteMovie(deleteMovieId);
+    deleteMovieId = null;
+  }
+  closeModal("confirmDeleteMovieModal");
 }
 
 function openConfirmDeletePlayedGameModal(id) {

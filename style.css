@@ -1268,6 +1268,18 @@ select option {
     margin-top: 20px;
 }
 
+/* Подтверждение удаления фильма */
+#confirmDeleteMovieModal .modal-content {
+    text-align: center;
+}
+
+#confirmDeleteMovieModal .modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
 /* Оценка фильма */
 #rateMovieModal .rate-header {
     display: flex;
