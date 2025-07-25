@@ -3197,10 +3197,23 @@ function updateListVisibility() {
 
 window.addEventListener("resize", updateTabVisibility);
 
-// Lazy-start header video after main content loads
+// Play header video on load and then at random intervals
 window.addEventListener("load", () => {
   const headerVideo = document.querySelector(".rats-video");
-  if (headerVideo) {
-    headerVideo.play().catch(() => {});
+  if (!headerVideo) return;
+
+  function getRandomDelay() {
+    const min = 20;
+    const max = 240;
+    return (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
   }
+
+  function scheduleNextPlay() {
+    setTimeout(() => {
+      headerVideo.play().catch(() => {});
+    }, getRandomDelay());
+  }
+
+  headerVideo.addEventListener("ended", scheduleNextPlay);
+  headerVideo.play().catch(() => {});
 });
