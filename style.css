@@ -409,6 +409,12 @@ header img {
     animation: spin 1s linear infinite;
 }
 
+.autocomplete-loading {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+}
+
 @keyframes spin {
     to { transform: rotate(360deg); }
 }

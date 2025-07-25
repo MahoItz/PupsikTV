@@ -30,6 +30,15 @@ function debounce(func, delay) {
   };
 }
 
+function showSearchLoading(containerId, listId) {
+  const container = document.getElementById(containerId);
+  const list = document.getElementById(listId);
+  if (!container || !list) return;
+  container.style.display = "block";
+  list.innerHTML =
+    '<div class="autocomplete-loading"><span class="loading-spinner"></span></div>';
+}
+
 // Массив фильмов будет заполняться данными из базы
 let allMovies = [];
 let movies = [];
@@ -561,7 +570,13 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (searchBtn) searchBtn.addEventListener("click", handleKPSearch);
   if (titleInput)
     titleInput.addEventListener("input", () => {
-      debouncedKPSearch(titleInput.value.trim());
+      const q = titleInput.value.trim();
+      if (q) {
+        showSearchLoading("autoResultsContainer", "autoResults");
+      } else {
+        document.getElementById("autoResultsContainer").style.display = "none";
+      }
+      debouncedKPSearch(q);
     });
   if (resultsContainer)
     resultsContainer.addEventListener("click", function (e) {
@@ -584,7 +599,17 @@ document.addEventListener("DOMContentLoaded", async function () {
     watchSearchBtn.addEventListener("click", handleWatchlistSearch);
   if (watchTitleInput)
     watchTitleInput.addEventListener("input", () => {
-      debouncedWatchlistKPSearch(watchTitleInput.value.trim());
+      const q = watchTitleInput.value.trim();
+      if (q) {
+        showSearchLoading(
+          "watchAutoResultsContainer",
+          "watchAutoResults"
+        );
+      } else {
+        document.getElementById("watchAutoResultsContainer").style.display =
+          "none";
+      }
+      debouncedWatchlistKPSearch(q);
     });
   if (watchResultsContainer)
     watchResultsContainer.addEventListener("click", function (e) {
@@ -606,7 +631,14 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (gameSearchBtn) gameSearchBtn.addEventListener("click", handleGameSearch);
   if (gameTitleInput)
     gameTitleInput.addEventListener("input", () => {
-      debouncedRAWGSearch(gameTitleInput.value.trim());
+      const q = gameTitleInput.value.trim();
+      if (q) {
+        showSearchLoading("gameAutoResultsContainer", "gameAutoResults");
+      } else {
+        document.getElementById("gameAutoResultsContainer").style.display =
+          "none";
+      }
+      debouncedRAWGSearch(q);
     });
   if (gameResultsContainer)
     gameResultsContainer.addEventListener("click", async function (e) {
@@ -629,7 +661,17 @@ document.addEventListener("DOMContentLoaded", async function () {
     playedSearchBtn.addEventListener("click", handlePlayedGameSearch);
   if (playedTitleInput)
     playedTitleInput.addEventListener("input", () => {
-      debouncedPlayedRAWGSearch(playedTitleInput.value.trim());
+      const q = playedTitleInput.value.trim();
+      if (q) {
+        showSearchLoading(
+          "playedGameAutoResultsContainer",
+          "playedGameAutoResults"
+        );
+      } else {
+        document.getElementById("playedGameAutoResultsContainer").style.display =
+          "none";
+      }
+      debouncedPlayedRAWGSearch(q);
     });
   if (playedResultsContainer)
     playedResultsContainer.addEventListener("click", async function (e) {
@@ -1421,7 +1463,7 @@ const debouncedKPSearch = debounce(async (query) => {
   } catch (err) {
     console.error("Kinopoisk autocomplete error", err);
   }
-}, 200);
+}, 100);
 
 const debouncedWatchlistKPSearch = debounce(async (query) => {
   if (!query) {
@@ -1464,7 +1506,7 @@ const debouncedWatchlistKPSearch = debounce(async (query) => {
   } catch (err) {
     console.error("Kinopoisk autocomplete error", err);
   }
-}, 200);
+}, 100);
 
 const debouncedRAWGSearch = debounce(async (query) => {
   if (!query) {
@@ -1503,7 +1545,7 @@ const debouncedRAWGSearch = debounce(async (query) => {
   } catch (err) {
     console.error("RAWG autocomplete error", err);
   }
-}, 200);
+}, 100);
 
 const debouncedPlayedRAWGSearch = debounce(async (query) => {
   if (!query) {
@@ -1541,7 +1583,7 @@ const debouncedPlayedRAWGSearch = debounce(async (query) => {
   } catch (err) {
     console.error("RAWG autocomplete error", err);
   }
-}, 200);
+}, 100);
 
 async function handleKPSearch() {
   const btn = document.getElementById("autoSearchBtn");
