@@ -3,7 +3,7 @@ const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 let SUPABASE_KEY;
 let supabaseClient;
 
-let isAdmin = false;
+let isAdmin = localStorage.getItem("isAdmin") === "true";
 let adminElements = [];
 // Kinopoisk (unofficial API)
 let KINOPOISK_API_KEY;
@@ -478,12 +478,17 @@ document.addEventListener("DOMContentLoaded", async function () {
     totalGamesPlayed = allPlayedGames.length;
   }
 
+  adminElements = Array.from(document.querySelectorAll(".admin-only"));
+  if (isAdmin) {
+    showAdminControls(true);
+  } else {
+    hideAdminControls(true);
+  }
+
   renderMovies();
   renderPlayedGames();
   setupRatingStars();
   initFileUpload();
-
-  adminElements = Array.from(document.querySelectorAll(".admin-only"));
 
   document
     .querySelectorAll("#mobileTabs button")
@@ -513,13 +518,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadGamesFromSupabase(),
     loadPlayedGamesFromSupabase(),
   ]);
-
-  isAdmin = localStorage.getItem("isAdmin") === "true";
-  if (isAdmin) {
-    showAdminControls();
-  } else {
-    hideAdminControls();
-  }
   const headerImg = document.querySelector(
     "#headerLogo img[src='images/Pupsik_TV_Header_2.webp']"
   );
@@ -3059,7 +3057,7 @@ window.onclick = function (event) {
   });
 };
 
-function showAdminControls() {
+function showAdminControls(skipRender = false) {
   adminElements.forEach((el) => el.classList.remove("admin-only"));
   const btn = document.getElementById("adminLoginBtn");
   const group = document.getElementById("adminPasswordGroup");
@@ -3070,13 +3068,15 @@ function showAdminControls() {
     input.required = false;
     input.value = "";
   }
-  renderMovies();
-  renderWatchlist();
-  renderGames();
-  renderPlayedGames();
+  if (!skipRender) {
+    renderMovies();
+    renderWatchlist();
+    renderGames();
+    renderPlayedGames();
+  }
 }
 
-function hideAdminControls() {
+function hideAdminControls(skipRender = false) {
   adminElements.forEach((el) => el.classList.add("admin-only"));
   const btn = document.getElementById("adminLoginBtn");
   const group = document.getElementById("adminPasswordGroup");
@@ -3084,10 +3084,12 @@ function hideAdminControls() {
   if (btn) btn.textContent = "Войти";
   if (group) group.style.display = "";
   if (input) input.required = true;
-  renderMovies();
-  renderWatchlist();
-  renderGames();
-  renderPlayedGames();
+  if (!skipRender) {
+    renderMovies();
+    renderWatchlist();
+    renderGames();
+    renderPlayedGames();
+  }
 }
 
 function logoutAdmin() {
