@@ -1280,6 +1280,20 @@ select option {
     margin-top: 20px;
 }
 
+/* Подтверждение удаления заказа */
+#confirmDeleteOrderModal .modal-content,
+#confirmDeleteGameOrderModal .modal-content {
+    text-align: center;
+}
+
+#confirmDeleteOrderModal .modal-buttons,
+#confirmDeleteGameOrderModal .modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
 /* Оценка фильма */
 #rateMovieModal .rate-header {
     display: flex;

@@ -111,6 +111,8 @@ let editingPlayedGameId = null;
 let editPlayedGamePosterData = null;
 let deletePlayedGameId = null;
 let deleteMovieId = null;
+let deleteOrderId = null;
+let deleteGameOrderId = null;
 
 // Pagination
 let currentPage = 1;
@@ -1020,7 +1022,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     const delBtn = document.createElement("button");
     delBtn.className = "btn btn-delete btn-icon";
     delBtn.textContent = "🗑️";
-    delBtn.onclick = () => deleteOrder(order.id);
+    delBtn.onclick = () => openConfirmDeleteOrderModal(order.id);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
     footer.appendChild(actions);
@@ -1121,7 +1123,7 @@ function createGameCard(game, showActions = isAdmin) {
     const delBtn = document.createElement("button");
     delBtn.className = "btn btn-delete btn-icon";
     delBtn.textContent = "🗑️";
-    delBtn.onclick = () => deleteGameOrder(game.id);
+    delBtn.onclick = () => openConfirmDeleteGameOrderModal(game.id);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
     footer.appendChild(actions);
@@ -1964,8 +1966,7 @@ async function performDeleteMovie(id) {
   }
 }
 
-async function deleteOrder(id) {
-  if (!confirm("Удалить заказ?")) return;
+async function performDeleteOrder(id) {
 
   const index = watchlist.findIndex((o) => o.id === id);
   if (index !== -1) {
@@ -1979,8 +1980,7 @@ async function deleteOrder(id) {
   }
 }
 
-async function deleteGameOrder(id) {
-  if (!confirm("Удалить игру?")) return;
+async function performDeleteGameOrder(id) {
 
   const index = gameOrders.findIndex((g) => g.id === id);
   if (index !== -1) {
@@ -2064,6 +2064,32 @@ async function confirmDeletePlayedGame() {
     deletePlayedGameId = null;
   }
   closeModal("confirmDeletePlayedGameModal");
+}
+
+function openConfirmDeleteOrderModal(id) {
+  deleteOrderId = id;
+  document.getElementById("confirmDeleteOrderModal").style.display = "block";
+}
+
+async function confirmDeleteOrder() {
+  if (deleteOrderId !== null) {
+    await performDeleteOrder(deleteOrderId);
+    deleteOrderId = null;
+  }
+  closeModal("confirmDeleteOrderModal");
+}
+
+function openConfirmDeleteGameOrderModal(id) {
+  deleteGameOrderId = id;
+  document.getElementById("confirmDeleteGameOrderModal").style.display = "block";
+}
+
+async function confirmDeleteGameOrder() {
+  if (deleteGameOrderId !== null) {
+    await performDeleteGameOrder(deleteGameOrderId);
+    deleteGameOrderId = null;
+  }
+  closeModal("confirmDeleteGameOrderModal");
 }
 
 function openEditOrderModal(id) {

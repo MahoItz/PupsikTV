@@ -785,6 +785,30 @@
             </div>
         </div>
     </div>
+    <!-- Модальное окно подтверждения удаления заказа -->
+    <div id="confirmDeleteOrderModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('confirmDeleteOrderModal')">&times;</span>
+            <h2>Удалить заказ?</h2>
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.png" alt="Confirm">
+            <div class="modal-buttons">
+                <button class="btn btn-delete" onclick="confirmDeleteOrder()">Удалить</button>
+                <button class="btn btn-secondary" onclick="closeModal('confirmDeleteOrderModal')">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <!-- Модальное окно подтверждения удаления заказанной игры -->
+    <div id="confirmDeleteGameOrderModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('confirmDeleteGameOrderModal')">&times;</span>
+            <h2>Удалить игру?</h2>
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.png" alt="Confirm">
+            <div class="modal-buttons">
+                <button class="btn btn-delete" onclick="confirmDeleteGameOrder()">Удалить</button>
+                <button class="btn btn-secondary" onclick="closeModal('confirmDeleteGameOrderModal')">Отмена</button>
+            </div>
+        </div>
+    </div>
     <nav class="mobile-tabs" id="mobileTabs">
         <button data-tab="movies" class="active">Фильмы</button>
         <button data-tab="watchlist">Заказанные фильмы</button>
