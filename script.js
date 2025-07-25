@@ -21,6 +21,8 @@ let rawgResults = [];
 let selectedRAWGGame = null;
 let steamGridPoster = null;
 let steamGridPosters = [];
+const POSTER_MAX_W = 300;
+const POSTER_MAX_H = 450;
 
 function debounce(func, delay) {
   let timeout;
@@ -136,6 +138,28 @@ function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function resizeImage(file, maxW = POSTER_MAX_W, maxH = POSTER_MAX_H) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/webp', 0.8));
+      };
+      img.onerror = () => reject(new Error('Image load error'));
+      img.src = reader.result;
+    };
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
@@ -318,7 +342,7 @@ async function showSelectedFile(file, label, fileName, removeBtn, preview) {
 
   if (preview) {
     try {
-      const dataUrl = await readFileAsDataURL(file);
+      const dataUrl = await resizeImage(file);
       preview.src = dataUrl;
       preview.style.display = "block";
     } catch (err) {
@@ -694,7 +718,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     input.addEventListener("change", async function () {
       if (this.files && this.files[0]) {
         try {
-          editPosterData = await readFileAsDataURL(this.files[0]);
+          editPosterData = await resizeImage(this.files[0]);
           preview.src = editPosterData;
         } catch (err) {
           console.error("Error reading file", err);
@@ -710,7 +734,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     orderInput.addEventListener("change", async function () {
       if (this.files && this.files[0]) {
         try {
-          editOrderPosterData = await readFileAsDataURL(this.files[0]);
+          editOrderPosterData = await resizeImage(this.files[0]);
           orderPreview.src = editOrderPosterData;
         } catch (err) {
           console.error("Error reading file", err);
@@ -726,7 +750,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     gameInput.addEventListener("change", async function () {
       if (this.files && this.files[0]) {
         try {
-          editGamePosterData = await readFileAsDataURL(this.files[0]);
+          editGamePosterData = await resizeImage(this.files[0]);
           gamePreview.src = editGamePosterData;
         } catch (err) {
           console.error("Error reading file", err);
@@ -742,7 +766,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     playedInput.addEventListener("change", async function () {
       if (this.files && this.files[0]) {
         try {
-          editPlayedGamePosterData = await readFileAsDataURL(this.files[0]);
+          editPlayedGamePosterData = await resizeImage(this.files[0]);
           playedPreview.src = editPlayedGamePosterData;
         } catch (err) {
           console.error("Error reading file", err);
@@ -2384,7 +2408,7 @@ document
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
       if (fileInput.files && fileInput.files[0]) {
         try {
-          poster = await readFileAsDataURL(fileInput.files[0]);
+          poster = await resizeImage(fileInput.files[0]);
         } catch (err) {
           console.error("Error reading file", err);
         }
@@ -2513,7 +2537,7 @@ document
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
       if (fileInput.files && fileInput.files[0]) {
         try {
-          poster = await readFileAsDataURL(fileInput.files[0]);
+          poster = await resizeImage(fileInput.files[0]);
         } catch (err) {
           console.error("Error reading file", err);
         }
@@ -2628,7 +2652,7 @@ document
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
       if (fileInput.files && fileInput.files[0]) {
         try {
-          poster = await readFileAsDataURL(fileInput.files[0]);
+          poster = await resizeImage(fileInput.files[0]);
         } catch (err) {
           console.error("Error reading file", err);
         }
@@ -2725,7 +2749,7 @@ document
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
       if (fileInput.files && fileInput.files[0]) {
         try {
-          poster = await readFileAsDataURL(fileInput.files[0]);
+          poster = await resizeImage(fileInput.files[0]);
         } catch (err) {
           console.error("Error reading file", err);
         }

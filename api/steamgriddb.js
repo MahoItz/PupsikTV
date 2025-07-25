@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       res.status(404).json({ error: 'Not found' });
       return;
     }
-    const gridUrl = `https://www.steamgriddb.com/api/v2/grids/game/${id}?dimensions=600x900`;
+    const gridUrl = `https://www.steamgriddb.com/api/v2/grids/game/${id}?dimensions=300x450`;
     const gridRes = await fetch(gridUrl, { headers });
     if (!gridRes.ok) {
       res.status(gridRes.status).json({ error: 'Grid request failed' });
