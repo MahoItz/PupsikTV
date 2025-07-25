@@ -1,0 +1,18 @@
+{
+  "name": "pupsiktv",
+  "version": "1.0.0",
+  "description": "This repository contains the source code for the PupsikTV website. The project is a static site that relies on a few serverless API routes contained in the `api` directory.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "terser script.js -o script.min.js -c -m && cssnano style.css style.min.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "terser": "^5.14.2",
+    "cssnano-cli": "^5.0.0"
+  }
+}
