@@ -3146,3 +3146,11 @@ function updateListVisibility() {
 }
 
 window.addEventListener("resize", updateTabVisibility);
+
+// Lazy-start header video after main content loads
+window.addEventListener("load", () => {
+  const headerVideo = document.querySelector(".rats-video");
+  if (headerVideo) {
+    headerVideo.play().catch(() => {});
+  }
+});
