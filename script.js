@@ -189,10 +189,10 @@ async function fetchSteamGridPosters(title) {
   }
 }
 
-function createPosterOverlay(targetImg, posters) {
+function createPosterOverlay(targetImg, posters, placeBelow = false) {
   if (!targetImg || !Array.isArray(posters) || posters.length < 2) return;
   const overlay = document.createElement("div");
-  overlay.className = "poster-overlay";
+  overlay.className = "poster-overlay" + (placeBelow ? " below" : "");
 
   const prev = document.createElement("div");
   prev.className = "overlay-arrow prev";
@@ -248,8 +248,13 @@ function createPosterOverlay(targetImg, posters) {
   overlay.appendChild(container);
   overlay.appendChild(next);
 
-  targetImg.parentElement.style.position = "relative";
-  targetImg.parentElement.appendChild(overlay);
+  if (placeBelow) {
+    const parent = targetImg.parentElement;
+    parent.insertAdjacentElement("afterend", overlay);
+  } else {
+    targetImg.parentElement.style.position = "relative";
+    targetImg.parentElement.appendChild(overlay);
+  }
 
   render();
 }
@@ -1831,7 +1836,7 @@ function showRAWGPreview() {
   };
   const card = createGameCard(game, false);
   preview.appendChild(card);
-  createPosterOverlay(card.querySelector(".order-poster"), steamGridPosters);
+  createPosterOverlay(card.querySelector(".order-poster"), steamGridPosters, true);
   preview.style.display = "block";
 }
 
@@ -1910,7 +1915,7 @@ function showPlayedGamePreview() {
   };
   const card = createPlayedGameCard(game, false);
   preview.appendChild(card);
-  createPosterOverlay(card.querySelector(".movie-poster"), steamGridPosters);
+  createPosterOverlay(card.querySelector(".movie-poster"), steamGridPosters, true);
   preview.style.display = "block";
 }
 

@@ -1829,6 +1829,16 @@ select option {
     z-index: 5;
 }
 
+.poster-overlay.below {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    margin-top: 8px;
+    width: 100%;
+    border-radius: var(--border-radius-small);
+}
+
 .poster-overlay .overlay-arrow {
     color: #fff;
     font-size: 24px;
