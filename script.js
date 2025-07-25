@@ -342,7 +342,7 @@ function clearFile(fileInput, label, fileName, removeBtn, preview) {
   removeBtn.style.display = "none";
 
   if (preview) {
-    preview.src = "";
+    preview.src = "https://via.placeholder.com/300x400?text=Нет+постера";
     preview.style.display = "none";
   }
 }
@@ -1967,7 +1967,7 @@ function openRateModal(id) {
     document.getElementById("rateMoviePoster").src = item.poster;
   } else {
     document.getElementById("rateMovieTitle").textContent = "";
-    document.getElementById("rateMoviePoster").src = "";
+    document.getElementById("rateMoviePoster").src = "https://via.placeholder.com/300x400?text=Нет+постера";
   }
   document.getElementById("rateMovieModal").style.display = "block";
   setupRatingStars("rateMovieStars");
@@ -1981,7 +1981,7 @@ function openRateGameModal(id) {
     document.getElementById("rateGamePoster").src = item.poster;
   } else {
     document.getElementById("rateGameTitle").textContent = "";
-    document.getElementById("rateGamePoster").src = "";
+    document.getElementById("rateGamePoster").src = "https://via.placeholder.com/300x400?text=Нет+постера";
   }
   document.getElementById("rateGameModal").style.display = "block";
   setupRatingStars("rateGameStars");
