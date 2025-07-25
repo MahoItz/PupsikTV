@@ -3203,8 +3203,8 @@ window.addEventListener("load", () => {
   if (!headerVideo) return;
 
   function getRandomDelay() {
-    const min = 20;
-    const max = 240;
+    const min = 10;
+    const max = 80;
     return (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
   }
 
