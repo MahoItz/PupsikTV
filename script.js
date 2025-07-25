@@ -3165,11 +3165,14 @@ function showTab(tab) {
 function updateTabVisibility() {
   const isMobile = window.innerWidth <= 768;
   const movies = document.getElementById("moviesSection");
+  const leftPanel = document.querySelector(".left-panel");
   const watch = document.getElementById("watchlistSection");
   const games = document.getElementById("gamesSection");
   const tabs = document.getElementById("mobileTabs");
   if (isMobile) {
     if (tabs) tabs.style.display = "flex";
+    if (leftPanel)
+      leftPanel.style.display = activeTab === "movies" ? "block" : "none";
     if (movies)
       movies.style.display = activeTab === "movies" ? "block" : "none";
     if (watch)
@@ -3177,6 +3180,7 @@ function updateTabVisibility() {
     if (games) games.style.display = activeTab === "games" ? "block" : "none";
   } else {
     if (tabs) tabs.style.display = "none";
+    if (leftPanel) leftPanel.style.display = "block";
     if (movies) movies.style.display = "block";
     if (watch) watch.style.display = "block";
     if (games) games.style.display = "block";
