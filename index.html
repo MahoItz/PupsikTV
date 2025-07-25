@@ -174,7 +174,7 @@
                         </div>
                         <div class="file-name" style="display: none;"></div>
                         <img id="manualPosterPreview" class="poster-preview" src="" alt="Предпросмотр"
-                            style="display:none;">
+                            style="display:none;" loading="lazy">
                     </div>
                     <div class="form-group">
                         <label for="manualGenre">Жанр:</label>
@@ -264,7 +264,7 @@
                         </div>
                         <div class="file-name" style="display: none;"></div>
                         <img id="watchManualPosterPreview" class="poster-preview" src="" alt="Предпросмотр"
-                            style="display:none;">
+                            style="display:none;" loading="lazy">
                     </div>
                     <div class="form-group">
                         <label for="watchManualGenre">Жанр:</label>
@@ -298,10 +298,10 @@
             <span class="close" onclick="closeModal('rateMovieModal')">&times;</span>
             <div class="rate-header">
                 <h2>Оценить фильм</h2>
-                <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image">
+                <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image" loading="lazy">
             </div>
             <div class="rate-poster">
-                <img id="rateMoviePoster" class="movie-poster" src="" alt="Постер">
+                <img id="rateMoviePoster" class="movie-poster" src="" alt="Постер" loading="lazy">
                 <p id="rateMovieTitle"></p>
             </div>
             <div class="form-group">
@@ -335,10 +335,10 @@
             <span class="close" onclick="closeModal('rateGameModal')">&times;</span>
             <div class="rate-header">
                 <h2>Оценить игру</h2>
-                <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image">
+                <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image" loading="lazy">
             </div>
             <div class="rate-poster">
-                <img id="rateGamePoster" class="movie-poster" src="" alt="Постер">
+                <img id="rateGamePoster" class="movie-poster" src="" alt="Постер" loading="lazy">
                 <p id="rateGameTitle"></p>
             </div>
             <div class="form-group">
@@ -373,7 +373,7 @@
             <h2>Редактировать фильм</h2>
             <form id="editMovieForm">
                 <div class="poster-upload">
-                    <img id="editPosterPreview" class="movie-poster" src="" alt="Постер">
+                    <img id="editPosterPreview" class="movie-poster" src="" alt="Постер" loading="lazy">
                     <input type="file" id="editPoster" accept="image/*" style="display:none">
                 </div>
                 <div class="form-group">
@@ -420,7 +420,7 @@
             <h2>Редактировать заказ</h2>
             <form id="editOrderForm">
                 <div class="poster-upload">
-                    <img id="editOrderPosterPreview" class="movie-poster" src="" alt="Постер">
+                    <img id="editOrderPosterPreview" class="movie-poster" src="" alt="Постер" loading="lazy">
                     <input type="file" id="editOrderPoster" accept="image/*" style="display:none">
                 </div>
                 <div class="form-group">
@@ -505,7 +505,7 @@
                             <button type="button" class="file-remove" title="Удалить файл">×</button>
                         </div>
                         <div class="file-name" style="display:none;"></div>
-                        <img id="gamePosterPreview" class="poster-preview" src="" alt="Предпросмотр" style="display:none;">
+                        <img id="gamePosterPreview" class="poster-preview" src="" alt="Предпросмотр" style="display:none;" loading="lazy">
                     </div>
                     <div class="form-group">
                         <label for="gameGenres">Жанр:</label>
@@ -579,7 +579,7 @@
                             <button type="button" class="file-remove" title="Удалить файл">×</button>
                         </div>
                         <div class="file-name" style="display:none;"></div>
-                        <img id="playedGamePosterPreview" class="poster-preview" src="" alt="Предпросмотр" style="display:none;">
+                        <img id="playedGamePosterPreview" class="poster-preview" src="" alt="Предпросмотр" style="display:none;" loading="lazy">
                     </div>
                     <div class="form-group">
                         <label for="playedGameGenres">Жанр:</label>
@@ -634,7 +634,7 @@
             <h2>Редактировать игру</h2>
             <form id="editGameForm">
                 <div class="poster-upload">
-                    <img id="editGamePosterPreview" class="movie-poster" src="" alt="Постер">
+                    <img id="editGamePosterPreview" class="movie-poster" src="" alt="Постер" loading="lazy">
                     <input type="file" id="editGamePoster" accept="image/*" style="display:none">
                 </div>
                 <div class="form-group">
@@ -674,7 +674,7 @@
             <h2>Редактировать игру</h2>
             <form id="editPlayedGameForm">
                 <div class="poster-upload">
-                    <img id="editPlayedGamePosterPreview" class="movie-poster" src="" alt="Постер">
+                    <img id="editPlayedGamePosterPreview" class="movie-poster" src="" alt="Постер" loading="lazy">
                     <input type="file" id="editPlayedGamePoster" accept="image/*" style="display:none">
                 </div>
                 <div class="form-group">
@@ -747,7 +747,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('duplicateModal')">&times;</span>
             <h2>Ошибка</h2>
-            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.webp" alt="Duplicate">
+            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.webp" alt="Duplicate" loading="lazy">
             <p>Такой фильм уже есть в списке.</p>
         </div>
     </div>
@@ -757,7 +757,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('searchReminderModal')">&times;</span>
             <h2>Напоминание</h2>
-            <img class="modal-image" src="images/Kiriko_Remind.webp" alt="Reminder">
+            <img class="modal-image" src="images/Kiriko_Remind.webp" alt="Reminder" loading="lazy">
             <p>Сначала найдите фильм через поиск.</p>
         </div>
     </div>
@@ -766,7 +766,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('confirmDeleteMovieModal')">&times;</span>
             <h2>Удалить фильм?</h2>
-            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm">
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm" loading="lazy">
             <div class="modal-buttons">
                 <button class="btn btn-delete" onclick="confirmDeleteMovie()">Удалить</button>
                 <button class="btn btn-secondary" onclick="closeModal('confirmDeleteMovieModal')">Отмена</button>
@@ -778,7 +778,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('confirmDeletePlayedGameModal')">&times;</span>
             <h2>Удалить игру?</h2>
-            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm">
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm" loading="lazy">
             <div class="modal-buttons">
                 <button class="btn btn-delete" onclick="confirmDeletePlayedGame()">Удалить</button>
                 <button class="btn btn-secondary" onclick="closeModal('confirmDeletePlayedGameModal')">Отмена</button>
@@ -790,7 +790,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('confirmDeleteOrderModal')">&times;</span>
             <h2>Удалить заказ?</h2>
-            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm">
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm" loading="lazy">
             <div class="modal-buttons">
                 <button class="btn btn-delete" onclick="confirmDeleteOrder()">Удалить</button>
                 <button class="btn btn-secondary" onclick="closeModal('confirmDeleteOrderModal')">Отмена</button>
@@ -802,7 +802,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('confirmDeleteGameOrderModal')">&times;</span>
             <h2>Удалить игру?</h2>
-            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm">
+            <img class="modal-image-kiriko" src="images/Kiriko_Delete.webp" alt="Confirm" loading="lazy">
             <div class="modal-buttons">
                 <button class="btn btn-delete" onclick="confirmDeleteGameOrder()">Удалить</button>
                 <button class="btn btn-secondary" onclick="closeModal('confirmDeleteGameOrderModal')">Отмена</button>
