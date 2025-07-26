@@ -1513,6 +1513,14 @@ select option {
     -moz-appearance: textfield;
 }
 
+/* tooltip for invalid rating values */
+.rating-tooltip {
+    display: none;
+    color: var(--rating-low);
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
 
 .rating-star {
     width: 30px;

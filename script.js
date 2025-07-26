@@ -350,6 +350,32 @@ function clearFile(fileInput, label, fileName, removeBtn, preview) {
   }
 }
 
+function updateRatingTooltip(input) {
+  if (!input) return;
+  const tooltip = input.parentElement.querySelector(".rating-tooltip");
+  if (!tooltip) return;
+  const value = parseFloat(input.value.replace(/,/, "."));
+  const invalid =
+    input.value !== "" && (isNaN(value) || value < 0 || value > 11);
+  tooltip.style.display = invalid ? "block" : "none";
+}
+
+function initRatingValidation() {
+  document.querySelectorAll(".rating-input").forEach((input) => {
+    const wrapper = input.parentElement;
+    let tooltip = wrapper.querySelector(".rating-tooltip");
+    if (!tooltip) {
+      tooltip = document.createElement("div");
+      tooltip.className = "rating-tooltip";
+      tooltip.textContent = "Введите значение от 0 до 11";
+      wrapper.appendChild(tooltip);
+    }
+    input.addEventListener("input", () => updateRatingTooltip(input));
+    input.addEventListener("blur", () => updateRatingTooltip(input));
+    updateRatingTooltip(input);
+  });
+}
+
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
   try {
@@ -546,6 +572,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   renderPlayedGames();
   setupRatingStars();
   initFileUpload();
+  initRatingValidation();
 
   document
     .querySelectorAll("#mobileTabs button")
@@ -2355,7 +2382,10 @@ function setRatingStars(containerId, rating, updateInput = true) {
   const inputId = container.dataset.input;
   if (updateInput && inputId) {
     const inp = document.getElementById(inputId);
-    if (inp) inp.value = String(rating).replace(".", ",");
+    if (inp) {
+      inp.value = String(rating).replace(".", ",");
+      updateRatingTooltip(inp);
+    }
   }
   stars.forEach((star) => star.classList.remove("active"));
 
