@@ -2412,6 +2412,10 @@ function getCurrentRating(containerId) {
   return parseFloat(container.dataset.currentRating) || 0;
 }
 
+function isRatingValid(r) {
+  return typeof r === "number" && !isNaN(r) && r >= 0 && r <= 11;
+}
+
 
 
 // Обработка форм
@@ -2420,7 +2424,11 @@ document
   .addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const rating = getCurrentRating("ratingStars");
+  const rating = getCurrentRating("ratingStars");
+  if (!isRatingValid(rating)) {
+    alert("Неверная оценка");
+    return;
+  }
 
     let movieData;
 
@@ -2775,9 +2783,13 @@ document
   ?.addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const orderBy = document.getElementById("playedGameOrderBy").value;
-    const orderType = document.getElementById("playedGameOrderType").value;
-    const rating = getCurrentRating("playedGameRatingStars");
+  const orderBy = document.getElementById("playedGameOrderBy").value;
+  const orderType = document.getElementById("playedGameOrderType").value;
+  const rating = getCurrentRating("playedGameRatingStars");
+  if (!isRatingValid(rating)) {
+    alert("Неверная оценка");
+    return;
+  }
 
     let gameData;
 
@@ -2884,6 +2896,10 @@ document
 // Оценка фильма из watchlist
 async function submitRating() {
   const rating = getCurrentRating("rateMovieStars");
+  if (!isRatingValid(rating)) {
+    alert("Неверная оценка");
+    return;
+  }
 
   // Находим фильм в watchlist по id
   const itemIndex = watchlist.findIndex((item) => item.id === ratingMovieId);
@@ -2956,6 +2972,10 @@ async function submitRating() {
 
 async function submitGameRating() {
   const rating = getCurrentRating("rateGameStars");
+  if (!isRatingValid(rating)) {
+    alert("Неверная оценка");
+    return;
+  }
   const idx = gameOrders.findIndex((g) => g.id === ratingGameId);
   if (idx !== -1) {
     const source = gameOrders[idx];
@@ -3012,6 +3032,10 @@ async function submitGameRating() {
 
 async function submitUserMovieRating() {
   const rating = getCurrentRating("userRateStars");
+  if (!isRatingValid(rating)) {
+    alert("Неверная оценка");
+    return;
+  }
   if (!userRatingMovieId) return;
   if (ratedMovies[userRatingMovieId]) {
     alert("Вы уже оценили этот фильм");
@@ -3045,7 +3069,12 @@ document
       movie.year =
         parseInt(document.getElementById("editYear").value) || movie.year;
       movie.genre = document.getElementById("editGenre").value || movie.genre;
-      movie.rating = getCurrentRating("editRatingStars");
+      const rating = getCurrentRating("editRatingStars");
+      if (!isRatingValid(rating)) {
+        alert("Неверная оценка");
+        return;
+      }
+      movie.rating = rating;
       movie.poster = editPosterData || movie.poster;
       movie.dateAdded =
         movie.dateAdded || new Date().toISOString().split("T")[0];
@@ -3155,7 +3184,12 @@ document
       game.title = document.getElementById("editPlayedGameTitle").value;
       game.year = document.getElementById("editPlayedGameYear").value;
       game.genres = document.getElementById("editPlayedGameGenres").value;
-      game.rating = getCurrentRating("editPlayedGameRatingStars");
+      const rating = getCurrentRating("editPlayedGameRatingStars");
+      if (!isRatingValid(rating)) {
+        alert("Неверная оценка");
+        return;
+      }
+      game.rating = rating;
       game.orderBy = document.getElementById("editPlayedGameOrderBy").value;
       game.orderType = document.getElementById("editPlayedGameOrderType").value;
       game.poster = editPlayedGamePosterData || game.poster;
