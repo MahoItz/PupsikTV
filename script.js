@@ -1012,6 +1012,9 @@ function createMovieCard(movie, showActions = isAdmin) {
   dateDiv.textContent = `Добавлен: ${formatDate(movie.dateAdded)}`;
   footer.appendChild(dateDiv);
 
+  const actions = document.createElement("div");
+  actions.className = "movie-actions";
+
   const rateBtn = document.createElement("button");
   rateBtn.className = "btn btn-rate btn-icon";
   rateBtn.textContent = "★";
@@ -1021,11 +1024,9 @@ function createMovieCard(movie, showActions = isAdmin) {
   } else {
     rateBtn.onclick = () => openUserRateModal(movie.id);
   }
-  footer.appendChild(rateBtn);
+  actions.appendChild(rateBtn);
 
   if (showActions) {
-    const actions = document.createElement("div");
-    actions.className = "movie-actions";
     const editBtn = document.createElement("button");
     editBtn.className = "btn btn-edit btn-icon";
     editBtn.textContent = "✏️";
@@ -1036,8 +1037,9 @@ function createMovieCard(movie, showActions = isAdmin) {
     delBtn.onclick = () => openConfirmDeleteMovieModal(movie.id);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
-    footer.appendChild(actions);
   }
+
+  footer.appendChild(actions);
 
   info.appendChild(footer);
 
