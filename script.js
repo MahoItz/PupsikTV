@@ -2030,6 +2030,7 @@ function openRateModal(id) {
     document.getElementById("rateMoviePoster").src = "https://via.placeholder.com/300x400?text=Нет+постера";
   }
   document.getElementById("rateMovieModal").style.display = "block";
+  setRatingStars("rateMovieStars", 0);
   setupRatingStars("rateMovieStars");
 }
 
@@ -2044,6 +2045,7 @@ function openRateGameModal(id) {
     document.getElementById("rateGamePoster").src = "https://via.placeholder.com/300x400?text=Нет+постера";
   }
   document.getElementById("rateGameModal").style.display = "block";
+  setRatingStars("rateGameStars", 0);
   setupRatingStars("rateGameStars");
 }
 
