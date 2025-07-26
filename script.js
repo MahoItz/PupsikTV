@@ -995,7 +995,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   rating.appendChild(ratingItem2);
 
   const ratingItem3 = document.createElement("div");
-  ratingItem3.className = "rating-item";
+  ratingItem3.className = "rating-item rating-user";
   const icon3 = document.createElement("i");
   icon3.className = "fa-solid fa-star";
   const span3 = document.createElement("span");

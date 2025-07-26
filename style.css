@@ -811,7 +811,7 @@ select option {
 
 .movie-rating {
     display: flex;
-    flex-direction: row;
+    flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 15px;
     margin-top: auto;
@@ -819,7 +819,7 @@ select option {
 }
 
 .movie-rating .rating-item {
-    flex: 1;
+    flex: 1 1 calc(50% - 5px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -831,6 +831,10 @@ select option {
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
     box-sizing: border-box;
+}
+
+.movie-rating .rating-item.rating-user {
+    flex-basis: 100%;
 }
 
 .movie-rating .rating-item:hover {
