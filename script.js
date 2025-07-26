@@ -3208,21 +3208,39 @@ window.addEventListener("resize", updateTabVisibility);
 
 // Play header video on load and then at random intervals
 window.addEventListener("load", () => {
-  const headerVideo = document.querySelector(".rats-video");
-  if (!headerVideo) return;
+  const headerVideos = document.querySelectorAll(".rats-video");
+  if (headerVideos.length === 0) return;
 
+  // Function to get random delay within a range (in milliseconds)
   function getRandomDelay() {
-    const min = 10;
-    const max = 80;
+    const min = 5;
+    const max = 40;
     return (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
   }
 
-  function scheduleNextPlay() {
+  // Function to get a random video element from the list
+  function getRandomVideo() {
+    const randomIndex = Math.floor(Math.random() * headerVideos.length);
+    return headerVideos[randomIndex];
+  }
+
+  // Function to schedule next play for a random video
+  function scheduleNextPlay(videoElement) {
     setTimeout(() => {
-      headerVideo.play().catch(() => {});
+      videoElement.play().catch(() => {});
     }, getRandomDelay());
   }
 
-  headerVideo.addEventListener("ended", scheduleNextPlay);
-  headerVideo.play().catch(() => {});
+  // Start playing a random video on page load
+  const firstVideo = getRandomVideo();
+  firstVideo.play().catch(() => {});
+
+  // Add event listener to all videos to schedule the next random video
+  headerVideos.forEach((video) => {
+    video.addEventListener("ended", () => {
+      const nextVideo = getRandomVideo();
+      scheduleNextPlay(nextVideo);
+    });
+  });
 });
+
