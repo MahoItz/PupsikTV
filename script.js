@@ -111,6 +111,8 @@ let currentMode = "auto";
 let currentRating = 0;
 let editingMovieId = null;
 let ratingMovieId = null;
+let userRatingMovieId = null;
+let movieUserRatings = {};
 let editPosterData = null;
 let editingOrderId = null;
 let editOrderPosterData = null;
@@ -380,8 +382,9 @@ async function loadMoviesFromSupabase() {
       allMovies = newMovies;
       totalMovies = allMovies.length;
       localStorage.setItem("moviesCache", fresh);
-      renderMovies();
     }
+    await loadUserRatingsFromSupabase();
+    renderMovies();
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
   }
@@ -480,6 +483,33 @@ async function loadPlayedGamesFromSupabase() {
   }
 }
 
+// Загрузка пользовательских оценок из Supabase
+async function loadUserRatingsFromSupabase() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from("movie_ratings")
+      .select("movie_id, rating");
+    if (error) throw error;
+
+    movieUserRatings = {};
+    data.forEach((r) => {
+      if (!movieUserRatings[r.movie_id]) {
+        movieUserRatings[r.movie_id] = { sum: 0, count: 0 };
+      }
+      movieUserRatings[r.movie_id].sum += r.rating;
+      movieUserRatings[r.movie_id].count += 1;
+    });
+
+    allMovies.forEach((m) => {
+      const r = movieUserRatings[m.id];
+      m.userRating = r ? Math.round((r.sum / r.count) * 10) / 10 : null;
+    });
+  } catch (err) {
+    console.error("Error loading user ratings", err);
+  }
+}
+
 // Инициализация
 document.addEventListener("DOMContentLoaded", async function () {
   await loadEnv();
@@ -504,6 +534,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   } else {
     hideAdminControls(true);
   }
+
+  await loadUserRatingsFromSupabase();
 
   renderMovies();
   renderPlayedGames();
@@ -956,6 +988,16 @@ function createMovieCard(movie, showActions = isAdmin) {
   ratingItem2.appendChild(icon2);
   ratingItem2.appendChild(span2);
   rating.appendChild(ratingItem2);
+
+  const ratingItem3 = document.createElement("div");
+  ratingItem3.className = "rating-item";
+  const icon3 = document.createElement("i");
+  icon3.className = "fa-solid fa-star";
+  const span3 = document.createElement("span");
+  span3.textContent = movie.userRating ?? "-";
+  ratingItem3.appendChild(icon3);
+  ratingItem3.appendChild(span3);
+  rating.appendChild(ratingItem3);
   info.appendChild(rating);
 
   const footer = document.createElement("div");
@@ -964,6 +1006,12 @@ function createMovieCard(movie, showActions = isAdmin) {
   dateDiv.className = "movie-date";
   dateDiv.textContent = `Добавлен: ${formatDate(movie.dateAdded)}`;
   footer.appendChild(dateDiv);
+
+  const rateBtn = document.createElement("button");
+  rateBtn.className = "btn btn-rate btn-icon";
+  rateBtn.textContent = "★";
+  rateBtn.onclick = () => openUserRateModal(movie.id);
+  footer.appendChild(rateBtn);
 
   if (showActions) {
     const actions = document.createElement("div");
@@ -1987,6 +2035,18 @@ function openRateGameModal(id) {
   setupRatingStars("rateGameStars");
 }
 
+function openUserRateModal(id) {
+  userRatingMovieId = id;
+  const movie = allMovies.find((m) => m.id === id);
+  if (movie) {
+    document.getElementById("userRateMovieTitle").textContent = movie.title;
+    document.getElementById("userRateMoviePoster").src = movie.poster;
+    setRatingStars("userRateStars", 0);
+  }
+  document.getElementById("userRateModal").style.display = "block";
+  setupRatingStars("userRateStars");
+}
+
 function openEditModal(id) {
   editingMovieId = id;
   const movie = allMovies.find((m) => m.id === id);
@@ -2446,6 +2506,7 @@ document
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        userRating: null,
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     } catch (err) {
@@ -2855,6 +2916,7 @@ async function submitRating() {
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        userRating: null,
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
       await supabaseClient
@@ -2926,6 +2988,22 @@ async function submitGameRating() {
     renderGames();
   }
   closeModal("rateGameModal");
+}
+
+async function submitUserMovieRating() {
+  const rating = getCurrentRating("userRateStars");
+  if (!userRatingMovieId) return;
+  try {
+    await supabaseClient.from("movie_ratings").insert({
+      movie_id: userRatingMovieId,
+      rating: rating,
+    });
+    await loadUserRatingsFromSupabase();
+    renderMovies();
+  } catch (err) {
+    console.error("Error submitting user rating", err);
+  }
+  closeModal("userRateModal");
 }
 
 // Редактирование фильма

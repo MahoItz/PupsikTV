@@ -852,6 +852,12 @@ select option {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+.movie-rating .rating-item i {
+    font-size: 1.1rem;
+    color: var(--accent-color);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
 .stars {
     color: var(--accent-color);
     font-size: 1.2rem;
@@ -1336,6 +1342,30 @@ select option {
 }
 
 #rateGameModal #rateMoviePoster {
+    display: block;
+    margin: 0 auto 10px auto;
+    width: 60%;
+    max-width: 250px;
+}
+
+/* Пользовательская оценка фильма */
+#userRateModal .rate-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+
+#userRateModal .rate-image {
+    width: 3rem;
+}
+
+#userRateModal .rate-poster {
+    text-align: center;
+}
+
+#userRateModal #userRateMoviePoster {
     display: block;
     margin: 0 auto 10px auto;
     width: 60%;
