@@ -113,6 +113,7 @@ let editingMovieId = null;
 let ratingMovieId = null;
 let userRatingMovieId = null;
 let movieUserRatings = {};
+let ratedMovies = JSON.parse(localStorage.getItem("ratedMovies") || "{}");
 let editPosterData = null;
 let editingOrderId = null;
 let editOrderPosterData = null;
@@ -521,6 +522,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (cached) {
     allMovies = JSON.parse(cached);
     totalMovies = allMovies.length;
+  }
+  const ratedStored = localStorage.getItem("ratedMovies");
+  if (ratedStored) {
+    ratedMovies = JSON.parse(ratedStored);
   }
   const gamesCached = localStorage.getItem("gamesCache");
   if (gamesCached) {
@@ -1010,7 +1015,12 @@ function createMovieCard(movie, showActions = isAdmin) {
   const rateBtn = document.createElement("button");
   rateBtn.className = "btn btn-rate btn-icon";
   rateBtn.textContent = "★";
-  rateBtn.onclick = () => openUserRateModal(movie.id);
+  if (ratedMovies[movie.id]) {
+    rateBtn.disabled = true;
+    rateBtn.title = "Вы уже оценили";
+  } else {
+    rateBtn.onclick = () => openUserRateModal(movie.id);
+  }
   footer.appendChild(rateBtn);
 
   if (showActions) {
@@ -2036,6 +2046,10 @@ function openRateGameModal(id) {
 }
 
 function openUserRateModal(id) {
+  if (ratedMovies[id]) {
+    alert("Вы уже оценили этот фильм");
+    return;
+  }
   userRatingMovieId = id;
   const movie = allMovies.find((m) => m.id === id);
   if (movie) {
@@ -2993,12 +3007,19 @@ async function submitGameRating() {
 async function submitUserMovieRating() {
   const rating = getCurrentRating("userRateStars");
   if (!userRatingMovieId) return;
+  if (ratedMovies[userRatingMovieId]) {
+    alert("Вы уже оценили этот фильм");
+    closeModal("userRateModal");
+    return;
+  }
   try {
     await supabaseClient.from("movie_ratings").insert({
       movie_id: userRatingMovieId,
       rating: rating,
     });
     await loadUserRatingsFromSupabase();
+    ratedMovies[userRatingMovieId] = rating;
+    localStorage.setItem("ratedMovies", JSON.stringify(ratedMovies));
     renderMovies();
   } catch (err) {
     console.error("Error submitting user rating", err);
