@@ -2341,8 +2341,12 @@ function setupRatingStars(containerId = "ratingStars") {
   if (ratingInput) {
     ratingInput.addEventListener("input", function () {
       const value = parseFloat(this.value.replace(/,/, "."));
-      if (!isNaN(value)) {
+      if (!isNaN(value) && value >= 0 && value <= 11) {
+        this.setCustomValidity("");
         setRatingStars(containerId, value, false);
+      } else {
+        this.setCustomValidity("Введите число от 0 до 11");
+        this.reportValidity();
       }
     });
   }
