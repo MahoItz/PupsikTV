@@ -1032,8 +1032,8 @@ select option {
 
 .order-poster {
     flex-shrink: 0;
-    width: 180px;
-    height: 390px;
+    width: 40%;
+    height: 100%;
     border-radius: 8px;
     object-fit: cover;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
