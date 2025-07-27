@@ -1056,6 +1056,11 @@ select option {
     height: 100%;
 }
 
+/* Container for the main text section */
+.order-main {
+    flex: 1;
+}
+
 .order-title {
     font-weight: 700;
     color: var(--text-primary);
@@ -1119,6 +1124,13 @@ select option {
 .order-actions {
     display: flex;
     gap: 8px;
+}
+
+/* Footer left column with order info */
+.order-footer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 /* Модальные окна */

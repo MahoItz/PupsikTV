@@ -1071,20 +1071,23 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const info = document.createElement("div");
   info.className = "order-info";
 
+  const main = document.createElement("div");
+  main.className = "order-main";
+
   const title = document.createElement("div");
   title.className = "order-title";
   title.textContent = order.title;
-  info.appendChild(title);
+  main.appendChild(title);
 
   const orig = document.createElement("div");
   orig.className = "order-original-title";
   orig.textContent = order.originalTitle || "";
-  info.appendChild(orig);
+  main.appendChild(orig);
 
   const genres = document.createElement("div");
   genres.className = "order-genres";
   genres.textContent = order.genres || "";
-  info.appendChild(genres);
+  main.appendChild(genres);
 
   const meta = document.createElement("div");
   meta.className = "order-meta";
@@ -1106,7 +1109,15 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   kpRating.appendChild(kpImg);
   kpRating.appendChild(document.createTextNode(` ${order.kpRating ?? "-"}`));
   meta.appendChild(kpRating);
-  info.appendChild(meta);
+  main.appendChild(meta);
+
+  info.appendChild(main);
+
+  const footer = document.createElement("div");
+  footer.className = "order-footer";
+
+  const footerInfo = document.createElement("div");
+  footerInfo.className = "order-footer-info";
 
   const ribbonClass = ORDER_TYPE_CLASSES[order.orderType];
   const orderByText =
@@ -1115,15 +1126,15 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     const ribbon = document.createElement("div");
     ribbon.className = `order-badge ${ribbonClass}`;
     ribbon.textContent = orderByText;
-    info.appendChild(ribbon);
+    footerInfo.appendChild(ribbon);
   }
 
-  const footer = document.createElement("div");
-  footer.className = "order-footer";
   const dateDiv = document.createElement("div");
   dateDiv.className = "order-date";
   dateDiv.textContent = formatDate(order.dateAdded);
-  footer.appendChild(dateDiv);
+  footerInfo.appendChild(dateDiv);
+
+  footer.appendChild(footerInfo);
 
   if (showActions) {
     const actions = document.createElement("div");
