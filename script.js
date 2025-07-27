@@ -1108,6 +1108,9 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   meta.appendChild(kpRating);
   info.appendChild(meta);
 
+  const footer = document.createElement("div");
+  footer.className = "order-footer";
+
   const ribbonClass = ORDER_TYPE_CLASSES[order.orderType];
   const orderByText =
     order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
@@ -1115,15 +1118,16 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     const ribbon = document.createElement("div");
     ribbon.className = `order-badge ${ribbonClass}`;
     ribbon.textContent = orderByText;
-    info.appendChild(ribbon);
+    footer.appendChild(ribbon);
   }
 
-  const footer = document.createElement("div");
-  footer.className = "order-footer";
+  const row = document.createElement("div");
+  row.className = "order-footer-row";
+
   const dateDiv = document.createElement("div");
   dateDiv.className = "order-date";
   dateDiv.textContent = formatDate(order.dateAdded);
-  footer.appendChild(dateDiv);
+  row.appendChild(dateDiv);
 
   if (showActions) {
     const actions = document.createElement("div");
@@ -1138,9 +1142,10 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     delBtn.onclick = () => openConfirmDeleteOrderModal(order.id);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
-    footer.appendChild(actions);
+    row.appendChild(actions);
   }
 
+  footer.appendChild(row);
   info.appendChild(footer);
   card.appendChild(info);
   wrapper.appendChild(card);
@@ -1209,6 +1214,9 @@ function createGameCard(game, showActions = isAdmin) {
   meta.appendChild(year);
   info.appendChild(meta);
 
+  const footer = document.createElement("div");
+  footer.className = "order-footer";
+
   const ribbonClass = ORDER_TYPE_CLASSES[game.orderType];
   const orderByText =
     game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
@@ -1216,15 +1224,16 @@ function createGameCard(game, showActions = isAdmin) {
     const ribbon = document.createElement("div");
     ribbon.className = `order-badge ${ribbonClass}`;
     ribbon.textContent = orderByText;
-    info.appendChild(ribbon);
+    footer.appendChild(ribbon);
   }
 
-  const footer = document.createElement("div");
-  footer.className = "order-footer";
+  const row = document.createElement("div");
+  row.className = "order-footer-row";
+
   const dateDiv = document.createElement("div");
   dateDiv.className = "order-date";
   dateDiv.textContent = formatDate(game.dateAdded);
-  footer.appendChild(dateDiv);
+  row.appendChild(dateDiv);
 
   if (showActions) {
     const actions = document.createElement("div");
@@ -1239,9 +1248,10 @@ function createGameCard(game, showActions = isAdmin) {
     delBtn.onclick = () => openConfirmDeleteGameOrderModal(game.id);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
-    footer.appendChild(actions);
+    row.appendChild(actions);
   }
 
+  footer.appendChild(row);
   info.appendChild(footer);
   card.appendChild(info);
   wrapper.appendChild(card);
