@@ -1059,90 +1059,78 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const card = document.createElement("div");
   card.className = "order-card";
 
-  const poster = document.createElement("img");
-  poster.src = order.poster;
-  poster.alt = order.title;
-  poster.className = "order-poster";
-  poster.onerror = () => {
-    poster.style.display = "none";
+  const posterWrap = document.createElement("div");
+  posterWrap.className = "poster";
+  const posterImg = document.createElement("img");
+  posterImg.src = order.poster;
+  posterImg.alt = order.title;
+  posterImg.onerror = () => {
+    posterImg.style.display = "none";
   };
-  card.appendChild(poster);
+  posterWrap.appendChild(posterImg);
+  card.appendChild(posterWrap);
+
+  const content = document.createElement("div");
+  content.className = "content";
 
   const info = document.createElement("div");
-  info.className = "order-info";
+  info.className = "movie-info";
 
-  const title = document.createElement("div");
-  title.className = "order-title";
+  const title = document.createElement("h1");
+  title.className = "title";
   title.textContent = order.title;
   info.appendChild(title);
 
-  const orig = document.createElement("div");
-  orig.className = "order-original-title";
-  orig.textContent = order.originalTitle || "";
-  info.appendChild(orig);
-
-  const genres = document.createElement("div");
-  genres.className = "order-genres";
+  const genres = document.createElement("p");
+  genres.className = "genre";
   genres.textContent = order.genres || "";
   info.appendChild(genres);
 
-  const meta = document.createElement("div");
-  meta.className = "order-meta";
-  const year = document.createElement("span");
-  year.className = "order-year";
+  const year = document.createElement("p");
+  year.className = "year";
   year.textContent = order.year || "";
-  meta.appendChild(year);
-  if (order.length) {
-    const lengthSpan = document.createElement("span");
-    lengthSpan.className = "order-length";
-    lengthSpan.textContent = `${order.length} мин`;
-    meta.appendChild(lengthSpan);
-  }
-  const kpRating = document.createElement("span");
-  kpRating.className = "order-kp-rating";
-  const kpImg = document.createElement("img");
-  kpImg.src = "images/kp_icon.webp";
-  kpImg.alt = "KP Rate";
-  kpRating.appendChild(kpImg);
-  kpRating.appendChild(document.createTextNode(` ${order.kpRating ?? "-"}`));
-  meta.appendChild(kpRating);
-  info.appendChild(meta);
+  info.appendChild(year);
 
-  const ribbonClass = ORDER_TYPE_CLASSES[order.orderType];
   const orderByText =
     order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
   if (orderByText && showOrderBy) {
-    const ribbon = document.createElement("div");
-    ribbon.className = `order-badge ${ribbonClass}`;
-    ribbon.textContent = orderByText;
-    info.appendChild(ribbon);
+    const username = document.createElement("span");
+    username.className = "username";
+    username.textContent = orderByText;
+    info.appendChild(username);
   }
 
-  const footer = document.createElement("div");
-  footer.className = "order-footer";
-  const dateDiv = document.createElement("div");
-  dateDiv.className = "order-date";
-  dateDiv.textContent = formatDate(order.dateAdded);
-  footer.appendChild(dateDiv);
+  content.appendChild(info);
+
+  const bottom = document.createElement("div");
+  bottom.className = "bottom-section";
+
+  const dateSpan = document.createElement("span");
+  dateSpan.className = "date";
+  dateSpan.textContent = formatDate(order.dateAdded);
+  bottom.appendChild(dateSpan);
 
   if (showActions) {
     const actions = document.createElement("div");
-    actions.className = "order-actions";
+    actions.className = "actions";
+
     const editBtn = document.createElement("button");
-    editBtn.className = "btn btn-edit btn-icon";
-    editBtn.textContent = "✏️";
+    editBtn.className = "action-btn edit-btn";
+    editBtn.title = "Редактировать";
     editBtn.onclick = () => openEditOrderModal(order.id);
+
     const delBtn = document.createElement("button");
-    delBtn.className = "btn btn-delete btn-icon";
-    delBtn.textContent = "🗑️";
+    delBtn.className = "action-btn delete-btn";
+    delBtn.title = "Удалить";
     delBtn.onclick = () => openConfirmDeleteOrderModal(order.id);
+
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
-    footer.appendChild(actions);
+    bottom.appendChild(actions);
   }
 
-  info.appendChild(footer);
-  card.appendChild(info);
+  content.appendChild(bottom);
+  card.appendChild(content);
   wrapper.appendChild(card);
 
   if (showActions) {
@@ -1179,71 +1167,78 @@ function createGameCard(game, showActions = isAdmin) {
   const card = document.createElement("div");
   card.className = "order-card";
 
-  const poster = document.createElement("img");
-  poster.src = game.poster;
-  poster.alt = game.title;
-  poster.className = "order-poster";
-  poster.onerror = () => {
-    poster.style.display = "none";
+  const posterWrap = document.createElement("div");
+  posterWrap.className = "poster";
+  const posterImg = document.createElement("img");
+  posterImg.src = game.poster;
+  posterImg.alt = game.title;
+  posterImg.onerror = () => {
+    posterImg.style.display = "none";
   };
-  card.appendChild(poster);
+  posterWrap.appendChild(posterImg);
+  card.appendChild(posterWrap);
+
+  const content = document.createElement("div");
+  content.className = "content";
 
   const info = document.createElement("div");
-  info.className = "order-info";
+  info.className = "movie-info";
 
-  const title = document.createElement("div");
-  title.className = "order-title";
+  const title = document.createElement("h1");
+  title.className = "title";
   title.textContent = game.title;
   info.appendChild(title);
 
-  const genres = document.createElement("div");
-  genres.className = "order-genres";
+  const genres = document.createElement("p");
+  genres.className = "genre";
   genres.textContent = game.genres || "";
   info.appendChild(genres);
 
-  const meta = document.createElement("div");
-  meta.className = "order-meta";
-  const year = document.createElement("span");
-  year.className = "order-year";
+  const year = document.createElement("p");
+  year.className = "year";
   year.textContent = game.year || "";
-  meta.appendChild(year);
-  info.appendChild(meta);
+  info.appendChild(year);
 
-  const ribbonClass = ORDER_TYPE_CLASSES[game.orderType];
   const orderByText =
     game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
   if (orderByText) {
-    const ribbon = document.createElement("div");
-    ribbon.className = `order-badge ${ribbonClass}`;
-    ribbon.textContent = orderByText;
-    info.appendChild(ribbon);
+    const username = document.createElement("span");
+    username.className = "username";
+    username.textContent = orderByText;
+    info.appendChild(username);
   }
 
-  const footer = document.createElement("div");
-  footer.className = "order-footer";
-  const dateDiv = document.createElement("div");
-  dateDiv.className = "order-date";
-  dateDiv.textContent = formatDate(game.dateAdded);
-  footer.appendChild(dateDiv);
+  content.appendChild(info);
+
+  const bottom = document.createElement("div");
+  bottom.className = "bottom-section";
+
+  const dateSpan = document.createElement("span");
+  dateSpan.className = "date";
+  dateSpan.textContent = formatDate(game.dateAdded);
+  bottom.appendChild(dateSpan);
 
   if (showActions) {
     const actions = document.createElement("div");
-    actions.className = "order-actions";
+    actions.className = "actions";
+
     const editBtn = document.createElement("button");
-    editBtn.className = "btn btn-edit btn-icon";
-    editBtn.textContent = "✏️";
+    editBtn.className = "action-btn edit-btn";
+    editBtn.title = "Редактировать";
     editBtn.onclick = () => openEditGameModal(game.id);
+
     const delBtn = document.createElement("button");
-    delBtn.className = "btn btn-delete btn-icon";
-    delBtn.textContent = "🗑️";
+    delBtn.className = "action-btn delete-btn";
+    delBtn.title = "Удалить";
     delBtn.onclick = () => openConfirmDeleteGameOrderModal(game.id);
+
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
-    footer.appendChild(actions);
+    bottom.appendChild(actions);
   }
 
-  info.appendChild(footer);
-  card.appendChild(info);
+  content.appendChild(bottom);
+  card.appendChild(content);
   wrapper.appendChild(card);
 
   if (showActions) {
@@ -1896,7 +1891,7 @@ function showRAWGPreview() {
   };
   const card = createGameCard(game, false);
   preview.appendChild(card);
-  createPosterOverlay(card.querySelector(".order-poster"), steamGridPosters, true);
+  createPosterOverlay(card.querySelector(".poster img"), steamGridPosters, true);
   preview.style.display = "block";
 }
 

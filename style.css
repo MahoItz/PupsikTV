@@ -975,21 +975,6 @@ select option {
     margin-left: auto;
 }
 
-.order-card {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    padding: 10px;
-    border-radius: var(--border-radius-small);
-    margin-bottom: 0;
-    border: 1px solid rgba(255, 108, 66, 0.2);
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-    min-height: 150px;
-}
 
 .order-wrapper {
     display: flex;
@@ -1038,88 +1023,6 @@ select option {
     display: block;
 }
 
-.order-poster {
-    position: relative;
-    width: 40%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: var(--border-radius-small);
-    margin-right: 10px;
-    margin-bottom: 0;
-}
-
-.order-info {
-    flex: 1;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.order-title {
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-}
-
-.order-original-title {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-}
-
-.order-genres {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-}
-
-.order-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    font-size: 0.8rem;
-    margin-bottom: 4px;
-}
-
-.order-meta img {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
-}
-
-.order-year {
-    color: var(--text-accent);
-}
-
-.order-length {
-    color: var(--text-secondary);
-}
-
-.order-kp-rating {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.order-date {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-.order-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 4px;
-    margin-top: auto;
-}
-
-.order-actions {
-    display: flex;
-    gap: 8px;
-}
 
 /* Модальные окна */
 .modal {
@@ -2008,4 +1911,124 @@ select option {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
+}
+
+/* Watchlist / Game order card layout */
+.order-card {
+    background: linear-gradient(135deg, #2d3561, #1e2749);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    width: 600px;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.order-card .poster {
+    flex-shrink: 0;
+}
+
+.order-card .poster img {
+    width: 180px;
+    height: 270px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.order-card .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: white;
+}
+
+.order-card .movie-info {
+    margin-bottom: 20px;
+}
+
+.order-card .title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #ffffff;
+}
+
+.order-card .genre {
+    font-size: 16px;
+    color: #a0a0a0;
+    margin-bottom: 12px;
+}
+
+.order-card .year {
+    font-size: 18px;
+    color: #4a90e2;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.order-card .username {
+    display: inline-block;
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.order-card .bottom-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.order-card .date {
+    color: #a0a0a0;
+    font-size: 14px;
+}
+
+.order-card .actions {
+    display: flex;
+    gap: 8px;
+}
+
+.order-card .action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.order-card .edit-btn {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+}
+
+.order-card .delete-btn {
+    background: linear-gradient(135deg, #6b46c1, #9333ea);
+}
+
+.order-card .action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.order-card .edit-btn::after {
+    content: "✏️";
+    font-size: 14px;
+}
+
+.order-card .delete-btn::after {
+    content: "🗑️";
+    font-size: 14px;
 }
