@@ -1083,6 +1083,12 @@ select option {
     margin-bottom: 4px;
 }
 
+/* Push the footer to the bottom of the order card */
+.order-info .order-meta,
+.order-info .order-badge {
+    margin-bottom: auto;
+}
+
 .order-meta img {
     width: 16px;
     height: 16px;
