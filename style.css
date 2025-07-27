@@ -1081,6 +1081,7 @@ select option {
     flex-wrap: wrap;
     font-size: 0.8rem;
     margin-bottom: 4px;
+    margin-top: auto;
 }
 
 .order-meta img {
@@ -1113,7 +1114,6 @@ select option {
     justify-content: space-between;
     align-items: center;
     padding-top: 4px;
-    margin-top: auto;
 }
 
 .order-actions {
