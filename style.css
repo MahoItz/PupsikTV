@@ -794,14 +794,6 @@ select option {
 .order-card .order-badge {
     position: static;
     margin: 6px 0;
-    display: inline-block;
-    background: linear-gradient(135deg, #4a90e2, #357abd);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
-    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 
@@ -883,9 +875,8 @@ select option {
 }
 
 .movie-date {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 500;
+    color: #a0a0a0;
+    font-size: 14px;
 }
 
 .movie-actions {
@@ -894,9 +885,7 @@ select option {
 }
 
 .btn-icon {
-    padding: 6px;
-    width: 32px;
-    height: 32px;
+    padding: 6px 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -908,18 +897,18 @@ select option {
 }
 
 .btn-edit {
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
-    color: #ffffff;
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--text-primary);
 }
 
 .btn-edit:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 108, 66, 0.1);
+    color: var(--text-primary);
 }
 
 .btn-delete {
-    background: linear-gradient(135deg, #6b46c1, #9333ea);
-    color: #ffffff;
+    background: rgba(255, 108, 66, 0.2);
+    transform: translateY(-2px);
 }
 
 .btn-delete:hover {
@@ -984,13 +973,13 @@ select option {
 }
 
 .order-card {
-    background: linear-gradient(135deg, #2d3561, #1e2749);
-    border-radius: 12px;
-    padding: 20px;
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-small);
+    transition: var(--transition);
+    padding: 10px;
     display: flex;
-    gap: 20px;
+    gap: 15px;
     position: relative;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1044,7 +1033,7 @@ select option {
 .order-poster {
     flex-shrink: 0;
     width: 180px;
-    height: 270px;
+    height: 390px;
     border-radius: 8px;
     object-fit: cover;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -1059,10 +1048,9 @@ select option {
 }
 
 .order-title {
-    font-size: 28px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #ffffff;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
 }
 
 .order-original-title {
@@ -1072,7 +1060,7 @@ select option {
 }
 
 .order-genres {
-    font-size: 16px;
+    font-size: 0.8rem;
     color: #a0a0a0;
     margin-bottom: 12px;
 }
@@ -1093,10 +1081,10 @@ select option {
 }
 
 .order-year {
-    font-size: 18px;
-    color: #4a90e2;
+    color: var(--text-accent);
+    font-size: 0.95rem;
+    margin-bottom: 12px;
     font-weight: 600;
-    margin-bottom: 20px;
 }
 
 .order-length {

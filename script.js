@@ -569,6 +569,32 @@ document.addEventListener("DOMContentLoaded", async function () {
     orderBtn.replaceChildren(img);
   }
 
+
+
+
+  
+const testOrder = {
+  id: "test123",
+  title: "Бегущий по лезвию",
+  originalTitle: "Blade Runner",
+  genres: "Фантастика, Нуар",
+  poster: "https://dummyimage.com/300x400/181830/ffffff&text=Blade+Runner",
+  year: "1982",
+  length: 117,
+  kpRating: "8.1",
+  orderBy: "PupsikFan",
+  orderType: "Донат",
+  dateAdded: new Date().toISOString(),
+};
+
+const container = document.getElementById("watchlistContainer");
+const card = createOrderCard(testOrder, true);
+container.appendChild(card)
+
+
+
+
+
   await Promise.all([
     loadMoviesFromSupabase(),
     loadWatchlistFromSupabase(),
