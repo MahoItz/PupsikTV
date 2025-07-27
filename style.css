@@ -1068,8 +1068,8 @@ select option {
 .order-meta {
     display: flex;
     align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
     font-size: 0.8rem;
     margin-bottom: 4px;
 }
@@ -1083,7 +1083,7 @@ select option {
 .order-year {
     color: var(--text-accent);
     font-size: 0.95rem;
-    margin-bottom: 12px;
+    margin-bottom: 0;
     font-weight: 600;
 }
 
