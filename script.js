@@ -185,7 +185,8 @@ async function fetchSteamGridPosters(title) {
     const res = await fetch(`/api/steamgriddb?search=${encodeURIComponent(title)}`);
     if (!res.ok) return;
     const data = await res.json();
-    steamGridPosters = Array.isArray(data.posters) ? data.posters : [];
+    const posters = Array.isArray(data.posters) ? data.posters : [];
+    steamGridPosters = posters.map((g) => (typeof g === "string" ? g : g.url));
     steamGridPoster = steamGridPosters[0] || null;
   } catch (err) {
     console.error("SteamGridDB fetch error", err);
