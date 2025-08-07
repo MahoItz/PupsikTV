@@ -228,6 +228,11 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
       img.onclick = () => {
         steamGridPoster = url;
         targetImg.src = url;
+        if (targetImg.id === "editGamePosterPreview") {
+          editGamePosterData = url;
+        } else if (targetImg.id === "editPlayedGamePosterPreview") {
+          editPlayedGamePosterData = url;
+        }
       };
     }
     prev.style.visibility = startIdx > 0 ? "visible" : "hidden";
@@ -778,6 +783,27 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   }
 
+  const gameEditBtn = document.getElementById("editGamePosterBtn");
+  if (gameEditBtn && gamePreview) {
+    gameEditBtn.addEventListener("click", async () => {
+      const title = document.getElementById("editGameTitle").value.trim();
+      if (!title) {
+        alert("Введите название игры");
+        return;
+      }
+      await fetchSteamGridPosters(title);
+      if (!steamGridPoster) {
+        alert("Постеры не найдены");
+        return;
+      }
+      const overlay = gamePreview.parentElement.nextElementSibling;
+      if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
+      gamePreview.src = steamGridPoster;
+      editGamePosterData = steamGridPoster;
+      createPosterOverlay(gamePreview, steamGridPosters, true);
+    });
+  }
+
   const playedPreview = document.getElementById("editPlayedGamePosterPreview");
   const playedInput = document.getElementById("editPlayedGamePoster");
   if (playedPreview && playedInput) {
@@ -791,6 +817,27 @@ document.addEventListener("DOMContentLoaded", async function () {
           console.error("Error reading file", err);
         }
       }
+    });
+  }
+
+  const playedEditBtn = document.getElementById("editPlayedGamePosterBtn");
+  if (playedEditBtn && playedPreview) {
+    playedEditBtn.addEventListener("click", async () => {
+      const title = document.getElementById("editPlayedGameTitle").value.trim();
+      if (!title) {
+        alert("Введите название игры");
+        return;
+      }
+      await fetchSteamGridPosters(title);
+      if (!steamGridPoster) {
+        alert("Постеры не найдены");
+        return;
+      }
+      const overlay = playedPreview.parentElement.nextElementSibling;
+      if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
+      playedPreview.src = steamGridPoster;
+      editPlayedGamePosterData = steamGridPoster;
+      createPosterOverlay(playedPreview, steamGridPosters, true);
     });
   }
 });
@@ -2144,12 +2191,17 @@ function openEditGameModal(id) {
   editingGameId = id;
   const game = gameOrders.find((g) => g.id === id);
   if (!game) return;
+  const preview = document.getElementById("editGamePosterPreview");
+  const overlay = preview.parentElement.nextElementSibling;
+  if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
+  steamGridPoster = null;
+  steamGridPosters = [];
   document.getElementById("editGameTitle").value = game.title;
   document.getElementById("editGameYear").value = game.year || "";
   document.getElementById("editGameGenres").value = game.genres || "";
   document.getElementById("editGameOrderBy").value = game.orderBy || "";
   document.getElementById("editGameOrderType").value = game.orderType || "";
-  document.getElementById("editGamePosterPreview").src = game.poster;
+  preview.src = game.poster;
   document.getElementById("editGamePoster").value = "";
   editGamePosterData = null;
   document.getElementById("editGameModal").style.display = "block";
@@ -2159,12 +2211,17 @@ function openEditPlayedGameModal(id) {
   editingPlayedGameId = id;
   const game = allPlayedGames.find((g) => g.id === id);
   if (!game) return;
+  const preview = document.getElementById("editPlayedGamePosterPreview");
+  const overlay = preview.parentElement.nextElementSibling;
+  if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
+  steamGridPoster = null;
+  steamGridPosters = [];
   document.getElementById("editPlayedGameTitle").value = game.title;
   document.getElementById("editPlayedGameYear").value = game.year || "";
   document.getElementById("editPlayedGameGenres").value = game.genres || "";
   document.getElementById("editPlayedGameOrderBy").value = game.orderBy || "";
   document.getElementById("editPlayedGameOrderType").value = game.orderType || "";
-  document.getElementById("editPlayedGamePosterPreview").src = game.poster;
+  preview.src = game.poster;
   document.getElementById("editPlayedGamePoster").value = "";
   setRatingStars("editPlayedGameRatingStars", game.rating);
   setupRatingStars("editPlayedGameRatingStars");
