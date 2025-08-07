@@ -118,9 +118,9 @@ let editPosterData = null;
 let editingOrderId = null;
 let editOrderPosterData = null;
 let editingGameId = null;
-let editGamePosterData = null;
+let editGamePosterUrl = null;
 let editingPlayedGameId = null;
-let editPlayedGamePosterData = null;
+let editPlayedGamePosterUrl = null;
 let deletePlayedGameId = null;
 let deleteMovieId = null;
 let deleteOrderId = null;
@@ -142,6 +142,19 @@ function readFileAsDataURL(file) {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
+}
+
+async function uploadFileToSupabase(file) {
+  if (!supabaseClient) throw new Error("Supabase client not initialized");
+  const fileName = `${Date.now()}_${file.name}`;
+  const { error } = await supabaseClient.storage
+    .from("posters")
+    .upload(fileName, file, { upsert: true });
+  if (error) throw error;
+  const {
+    data: { publicUrl },
+  } = supabaseClient.storage.from("posters").getPublicUrl(fileName);
+  return publicUrl;
 }
 
 function renderEmptyState(container, message) {
@@ -768,11 +781,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     gamePreview.addEventListener("click", () => gameInput.click());
     gameInput.addEventListener("change", async function () {
       if (this.files && this.files[0]) {
+        const file = this.files[0];
+        gamePreview.src = URL.createObjectURL(file);
         try {
-          editGamePosterData = await readFileAsDataURL(this.files[0]);
-          gamePreview.src = editGamePosterData;
+          editGamePosterUrl = await uploadFileToSupabase(file);
         } catch (err) {
-          console.error("Error reading file", err);
+          console.error("Error uploading file", err);
         }
       }
     });
@@ -784,11 +798,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     playedPreview.addEventListener("click", () => playedInput.click());
     playedInput.addEventListener("change", async function () {
       if (this.files && this.files[0]) {
+        const file = this.files[0];
+        playedPreview.src = URL.createObjectURL(file);
         try {
-          editPlayedGamePosterData = await readFileAsDataURL(this.files[0]);
-          playedPreview.src = editPlayedGamePosterData;
+          editPlayedGamePosterUrl = await uploadFileToSupabase(file);
         } catch (err) {
-          console.error("Error reading file", err);
+          console.error("Error uploading file", err);
         }
       }
     });
@@ -2151,7 +2166,7 @@ function openEditGameModal(id) {
   document.getElementById("editGameOrderType").value = game.orderType || "";
   document.getElementById("editGamePosterPreview").src = game.poster;
   document.getElementById("editGamePoster").value = "";
-  editGamePosterData = null;
+  editGamePosterUrl = null;
   document.getElementById("editGameModal").style.display = "block";
 }
 
@@ -2168,7 +2183,7 @@ function openEditPlayedGameModal(id) {
   document.getElementById("editPlayedGamePoster").value = "";
   setRatingStars("editPlayedGameRatingStars", game.rating);
   setupRatingStars("editPlayedGameRatingStars");
-  editPlayedGamePosterData = null;
+  editPlayedGamePosterUrl = null;
   document.getElementById("editPlayedGameModal").style.display = "block";
 }
 
@@ -3175,7 +3190,7 @@ document
       game.genres = document.getElementById("editGameGenres").value;
       game.orderBy = document.getElementById("editGameOrderBy").value;
       game.orderType = document.getElementById("editGameOrderType").value;
-      game.poster = editGamePosterData || game.poster;
+      game.poster = editGamePosterUrl || game.poster;
 
       try {
         await supabaseClient
@@ -3217,7 +3232,7 @@ document
       game.rating = rating;
       game.orderBy = document.getElementById("editPlayedGameOrderBy").value;
       game.orderType = document.getElementById("editPlayedGameOrderType").value;
-      game.poster = editPlayedGamePosterData || game.poster;
+      game.poster = editPlayedGamePosterUrl || game.poster;
 
       try {
         await supabaseClient
