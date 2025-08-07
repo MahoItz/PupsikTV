@@ -764,7 +764,7 @@ select option {
     width: 100%;
     margin: 6px 0;
     padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.409);
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
     backdrop-filter: blur(6px);
@@ -773,7 +773,7 @@ select option {
     font-size: 0.95rem;
     text-align: center;
     color: #ffffff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 1);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1547,6 +1547,7 @@ select option {
     color: #888;
     transition: all 0.3s ease;
     border: 2px solid transparent;
+    z-index: 999;
 }
 
 /* Стили для "worst" (красный цвет) */
