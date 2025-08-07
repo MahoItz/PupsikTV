@@ -1845,10 +1845,11 @@ select option {
 
 .poster-overlay {
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 50%;
     bottom: 0;
-    background: 
+    transform: translateX(-50%);
+    width: max-content;
+    background:
         repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 6px),
         linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(40, 40, 60, 0.85));
     backdrop-filter: blur(6px);
@@ -1867,8 +1868,9 @@ select option {
     left: auto;
     right: auto;
     bottom: auto;
-    margin-top: 8px;
-    width: 100%;
+    transform: none;
+    margin: 8px auto 0;
+    width: max-content;
     border-radius: var(--border-radius-small);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
