@@ -212,26 +212,29 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
   const maxVisible = 4;
   let startIdx = 0;
 
-  async function render() {
+  function render() {
     container.innerHTML = "";
-    const loading = document.createElement("div");
-    loading.className = "overlay-loading";
-    const spinner = document.createElement("div");
-    spinner.className = "loading-spinner";
-    loading.appendChild(spinner);
-    container.appendChild(loading);
-
     const endIdx = Math.min(startIdx + maxVisible, posters.length);
-    const loaded = [];
     for (let i = startIdx; i < endIdx; i++) {
       const url = posters[i];
+      const wrapper = document.createElement("div");
+      wrapper.className = "thumb-wrapper";
+
+      const spinner = document.createElement("div");
+      spinner.className = "loading-spinner";
+      wrapper.appendChild(spinner);
+
       const img = document.createElement("img");
       img.className = "poster-thumb";
-      await new Promise((resolve) => {
-        img.onload = resolve;
-        img.onerror = resolve;
-        img.src = url;
-      });
+      img.style.display = "none";
+      img.onload = () => {
+        spinner.remove();
+        img.style.display = "";
+      };
+      img.onerror = () => {
+        spinner.remove();
+      };
+      img.src = url;
       img.onclick = () => {
         steamGridPoster = url;
         targetImg.src = url;
@@ -241,11 +244,9 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
           editPlayedGamePosterData = url;
         }
       };
-      loaded.push(img);
+      wrapper.appendChild(img);
+      container.appendChild(wrapper);
     }
-
-    container.innerHTML = "";
-    loaded.forEach((img) => container.appendChild(img));
 
     prev.style.visibility = startIdx > 0 ? "visible" : "hidden";
     next.style.visibility = endIdx < posters.length ? "visible" : "hidden";
