@@ -1897,9 +1897,8 @@ select option {
 
 .poster-overlay .thumb-wrapper .loading-spinner {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    margin: auto;
     width: 32px;
     height: 32px;
     border-width: 4px;
