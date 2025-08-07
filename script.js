@@ -214,12 +214,19 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
 
   async function render() {
     container.innerHTML = "";
+    const loading = document.createElement("div");
+    loading.className = "overlay-loading";
+    const spinner = document.createElement("div");
+    spinner.className = "loading-spinner";
+    loading.appendChild(spinner);
+    container.appendChild(loading);
+
     const endIdx = Math.min(startIdx + maxVisible, posters.length);
+    const loaded = [];
     for (let i = startIdx; i < endIdx; i++) {
       const url = posters[i];
       const img = document.createElement("img");
       img.className = "poster-thumb";
-      container.appendChild(img);
       await new Promise((resolve) => {
         img.onload = resolve;
         img.onerror = resolve;
@@ -234,7 +241,12 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
           editPlayedGamePosterData = url;
         }
       };
+      loaded.push(img);
     }
+
+    container.innerHTML = "";
+    loaded.forEach((img) => container.appendChild(img));
+
     prev.style.visibility = startIdx > 0 ? "visible" : "hidden";
     next.style.visibility = endIdx < posters.length ? "visible" : "hidden";
   }

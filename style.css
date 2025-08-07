@@ -1885,6 +1885,20 @@ select option {
     gap: 6px;
 }
 
+.poster-overlay .overlay-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100px;
+}
+
+.poster-overlay .overlay-loading .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 4px;
+}
+
 .poster-overlay .poster-thumb {
     width: 75px;
     height: auto;
