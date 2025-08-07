@@ -1379,6 +1379,16 @@ function createPlayedGameCard(game, showActions = isAdmin) {
     placeholder.style.display = "flex";
   };
 
+  const orderByText =
+    game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
+  const ribbonClass = ORDER_TYPE_CLASSES[game.orderType];
+  let ribbon;
+  if (orderByText) {
+    ribbon = document.createElement("div");
+    ribbon.className = `order-badge ${ribbonClass}`;
+    ribbon.textContent = orderByText;
+  }
+
   const info = document.createElement("div");
   info.className = "movie-info";
   const header = document.createElement("div");
@@ -1437,6 +1447,7 @@ function createPlayedGameCard(game, showActions = isAdmin) {
   info.appendChild(footer);
 
   card.appendChild(poster);
+  if (ribbon) card.appendChild(ribbon);
   card.appendChild(placeholder);
   card.appendChild(info);
   return card;
