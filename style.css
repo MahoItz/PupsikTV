@@ -870,15 +870,19 @@ select option {
 
 .rating-tooltip {
     position: absolute;
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 4px 8px;
-    border-radius: 4px;
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: var(--border-radius-small);
     font-size: 0.85rem;
     pointer-events: none;
     white-space: nowrap;
     z-index: 1000;
     display: none;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .movie-footer {
