@@ -113,6 +113,7 @@ let editingMovieId = null;
 let ratingMovieId = null;
 let userRatingMovieId = null;
 let movieUserRatings = {};
+let ratingTooltip;
 let ratedMovies = JSON.parse(localStorage.getItem("ratedMovies") || "{}");
 let editPosterData = null;
 let editingOrderId = null;
@@ -551,6 +552,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     allPlayedGames = JSON.parse(gamesCached);
     totalGamesPlayed = allPlayedGames.length;
   }
+
+  ratingTooltip = document.createElement("div");
+  ratingTooltip.className = "rating-tooltip";
+  document.body.appendChild(ratingTooltip);
 
   adminElements = Array.from(document.querySelectorAll(".admin-only"));
   if (isAdmin) {
@@ -1063,6 +1068,23 @@ function createMovieCard(movie, showActions = isAdmin) {
   span3.textContent = movie.userRating ?? "-";
   ratingItem3.appendChild(icon3);
   ratingItem3.appendChild(span3);
+  const votes = movieUserRatings[movie.id]?.count ?? 0;
+  ratingItem3.addEventListener("mouseenter", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = `Голосов: ${votes}`;
+    ratingTooltip.style.display = "block";
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  ratingItem3.addEventListener("mousemove", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  ratingItem3.addEventListener("mouseleave", () => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.display = "none";
+  });
   rating.appendChild(ratingItem3);
   info.appendChild(rating);
 

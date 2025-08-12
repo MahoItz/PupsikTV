@@ -868,6 +868,19 @@ select option {
     text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
 }
 
+.rating-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 1000;
+    display: none;
+}
+
 .movie-footer {
     display: flex;
     justify-content: space-between;
