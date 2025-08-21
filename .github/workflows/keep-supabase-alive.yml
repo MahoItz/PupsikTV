@@ -1,0 +1,22 @@
+name: keep-supabase-alive
+
+on:
+  schedule:
+    # Triggers twice daily (06:00 and 18:00 UTC) to keep the Supabase project awake.
+    - cron: '0 6,18 * * *'
+  workflow_dispatch:
+
+jobs:
+  rpc-ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase RPC heartbeat
+        run: |
+          set -e
+          # Perform a POST request to the heartbeat RPC function in Supabase
+          curl -sS -X POST "https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/rest/v1/rpc/heartbeat_db" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+          | head -c 200
