@@ -2619,7 +2619,10 @@ document
     }
 
     const duplicate = allMovies.some(
-      (m) => m.title.trim().toLowerCase() === movieData.title.trim().toLowerCase()
+      (m) =>
+        m.title.trim().toLowerCase() ===
+          movieData.title.trim().toLowerCase() &&
+        Number(m.year) === Number(movieData.year)
     );
     if (duplicate) {
       showDuplicateModal();
@@ -2748,7 +2751,10 @@ document
     }
 
     const duplicateOrder = watchlist.some(
-      (o) => o.title.trim().toLowerCase() === orderData.title.trim().toLowerCase()
+      (o) =>
+        o.title.trim().toLowerCase() ===
+          orderData.title.trim().toLowerCase() &&
+        Number(o.year) === Number(orderData.year)
     );
     if (duplicateOrder) {
       showDuplicateModal();
