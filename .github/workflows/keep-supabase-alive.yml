@@ -3,7 +3,7 @@ name: keep-supabase-alive
 on:
   schedule:
     # Triggers twice daily (06:00 and 18:00 UTC) to keep the Supabase project awake.
-    - cron: '0 6,18 * * *'
+    - cron: '0 6 * * 1,4'
   workflow_dispatch:
 
 jobs:
