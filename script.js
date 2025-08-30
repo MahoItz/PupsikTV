@@ -980,7 +980,8 @@ function renderPagination() {
 function createMovieCard(movie, showActions = isAdmin) {
   const card = document.createElement("div");
   let cardClass = "movie-card";
-  if (movie.rating === 0) cardClass += " rating-low";
+  // Avoid highlighting preview cards as "worst" before a movie is saved
+  if (movie.rating === 0 && movie.id !== 0) cardClass += " rating-low";
   if (movie.rating === 11) cardClass += " rating-high";
   card.className = cardClass;
 
