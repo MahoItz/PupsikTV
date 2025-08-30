@@ -982,7 +982,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   let cardClass = "movie-card";
   // Avoid highlighting preview cards as "worst" before a movie is saved
   if (movie.rating === 0 && movie.id !== 0) cardClass += " rating-low";
-  if (movie.rating === 11) cardClass += " rating-high";
+  if (movie.rating === 11 && movie.id !== 0) cardClass += " rating-high";
   card.className = cardClass;
 
   const poster = document.createElement("img");
@@ -1396,8 +1396,8 @@ function getFilteredSortedPlayedGames() {
 function createPlayedGameCard(game, showActions = isAdmin) {
   const card = document.createElement("div");
   let cardClass = "movie-card";
-  if (game.rating === 0) cardClass += " rating-low";
-  if (game.rating === 11) cardClass += " rating-high";
+  if (game.rating === 0 && game.id !== 0) cardClass += " rating-low";
+  if (game.rating === 11 && game.id !== 0) cardClass += " rating-high";
   card.className = cardClass;
 
   const poster = document.createElement("img");
