@@ -111,6 +111,7 @@ let currentMode = "auto";
 let currentRating = 0;
 let editingMovieId = null;
 let ratingMovieId = null;
+let isSubmittingRating = false;
 let userRatingMovieId = null;
 let movieUserRatings = {};
 let ratingTooltip;
@@ -2137,6 +2138,8 @@ function openRateModal(id) {
   document.getElementById("rateMovieModal").style.display = "block";
   setRatingStars("rateMovieStars", 0);
   setupRatingStars("rateMovieStars");
+  const confirmBtn = document.querySelector("#rateMovieModal .btn-primary");
+  if (confirmBtn) confirmBtn.disabled = isSubmittingRating;
 }
 
 function openRateGameModal(id) {
@@ -3025,6 +3028,7 @@ document
 
 // Оценка фильма из watchlist
 async function submitRating() {
+  if (isSubmittingRating) return;
   const rating = getRatingValue("rateMovieInput");
   if (!isRatingValid(rating)) {
     alert("Неверная оценка");
@@ -3051,6 +3055,9 @@ async function submitRating() {
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
     };
+    const confirmBtn = document.querySelector("#rateMovieModal .btn-primary");
+    isSubmittingRating = true;
+    if (confirmBtn) confirmBtn.disabled = true;
     try {
       const { data, error } = await supabaseClient
         .from("movies")
@@ -3092,6 +3099,9 @@ async function submitRating() {
         .eq("id", ratingMovieId);
     } catch (err) {
       console.error("Error adding rated movie to Supabase", err);
+    } finally {
+      isSubmittingRating = false;
+      if (confirmBtn) confirmBtn.disabled = false;
     }
     currentPage = 1;
     watchlist.splice(itemIndex, 1);
