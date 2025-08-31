@@ -1,35 +1,35 @@
 /* переменные и цвета */
 :root {
-    --primary-color: #ff6c42;
-    --primary-hover: #ff5722;
-    --secondary-color: #00d4ff;
-    --accent-color: #933bff;
-    --neon-blue: #00548b;
-    --neon-pink: #bd22d9;
-    --neon-purple: #9c27b0;
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.8);
-    --text-accent: #00d4ff;
-    --background: #0a0a0f;
-    --card-bg: rgba(15, 15, 35, 0.9);
-    --modal-bg: rgba(20, 20, 35, 0.98);
-    --glass-bg: rgba(20, 25, 40, 0.85);
-    --shadow-neon: 0 0 20px rgba(0, 212, 255, 0.3);
-    --shadow-glow: 0 0 30px rgba(107, 70, 193, 0.3);
+    --primary-color: #219ebc;
+    --primary-hover: #1b7a99;
+    --secondary-color: #ffb703;
+    --accent-color: #fb8500;
+    --neon-blue: #8ecae6;
+    --neon-pink: #ff5d8f;
+    --neon-purple: #8338ec;
+    --text-primary: #222222;
+    --text-secondary: rgba(0, 0, 0, 0.7);
+    --text-accent: #023047;
+    --background: #fafaf5;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --modal-bg: rgba(255, 255, 255, 0.95);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --shadow-neon: 0 0 10px rgba(0, 0, 0, 0.1);
+    --shadow-glow: 0 0 15px rgba(0, 0, 0, 0.1);
     --border-radius: 12px;
     --border-radius-small: 8px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --glow-animation: glow 2s ease-in-out infinite alternate;
-    --rating-low: #f44336;
-    --rating-high: #4caf50;
+    --glow-animation: none;
+    --rating-low: #ff5a5f;
+    --rating-high: #2a9d8f;
 
     /* Header */
-    --primary-purple: #6b46c1;
-    --secondary-purple: #8b5cf6;
-    --accent-cyan: rgba(20, 25, 40, 0.85);
-    --accent-pink: #be95ff;
-    --dark-bg: #0f0f23;
-    --border-color: rgba(255, 255, 255, 0.1);
+    --primary-purple: #ffafcc;
+    --secondary-purple: #ffc8dd;
+    --accent-cyan: #bde0fe;
+    --accent-pink: #ffafcc;
+    --dark-bg: #f1faee;
+    --border-color: rgba(0, 0, 0, 0.1);
 }
 
 /* Сброс стилей */
@@ -40,12 +40,9 @@
 }
 
 body {
-    font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Georgia', serif;
     background: var(--background);
-    background-image: 
-        radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 108, 66, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(255, 20, 147, 0.1) 0%, transparent 50%);
+    background-image: linear-gradient(135deg, #fff1e6 0%, #fefae0 100%);
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
@@ -131,13 +128,13 @@ body {
 header {
     text-align: center;
     margin-bottom: 40px;
-    background: rgba(20, 25, 40, 0.85);
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(20px);
     border-radius: 24px;
     position: relative;
     overflow: visible;
     padding: 40px 20px 10px;
-    border: 1px solid rgba(255, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
     padding-top: 30px;
     box-shadow: var(--shadow-glow);
 }
@@ -149,12 +146,12 @@ header::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at top, #5c2b84, #1e1a2b 80%);
+    background: linear-gradient(to bottom, #ffddd2, #bde0fe 80%);
     z-index: -1;
     margin: -1px;
     border-radius: inherit;
-    opacity: 0.6;
-    border-bottom: 3px solid rgba(255,255,255,0.05);
+    opacity: 0.9;
+    border-bottom: 3px solid rgba(0,0,0,0.05);
 }
 
 header::after {
@@ -186,25 +183,23 @@ header::after {
 header h1 {
     font-family: 'Carter One', display;
     font-size: clamp(2.2rem, 5vw, 3.5rem);
-    background: linear-gradient(135deg, 
-        #00f2ff 0%,
-        #ff1493 25%,
-        #8a2be2 50%,
-        #00bfff 75%,
-        #00f2ff 100%
+    background: linear-gradient(135deg,
+        #219ebc 0%,
+        #ffb703 50%,
+        #fb8500 100%
     );
     background-size: 400% 400%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+    text-shadow: none;
     letter-spacing: 0.05em;
-    animation: textGlow 3s ease-in-out infinite alternate;
+    animation: none;
     position: relative;
     z-index: 5;
     margin: 0;
     line-height: 1.1;
-    
+
 }
 
 header img {
@@ -214,15 +209,13 @@ header img {
     height: auto;
     margin: -100px auto 0;
     display: block;
-    
-    /* Улучшенные эффекты свечения */
-    filter: 
-        drop-shadow(0 0 20px rgba(107, 70, 193, 0.5))
-        drop-shadow(0 0 40px rgba(0, 242, 255, 0.3));
-    
+
+    /* Нежное свечение */
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.15));
+
     transition: var(--transition);
     cursor: pointer;
-    animation: floatingGlow 4s ease-in-out infinite;
+    animation: none;
 }
 
 .rats-video {
@@ -251,10 +244,10 @@ header img {
     align-items: center;
     justify-content: center;
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 50%;
-    box-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
     transition: var(--transition);
     text-decoration: none;
     font-size: 1.1rem;
@@ -266,7 +259,8 @@ header img {
 
 .social-links a:hover {
     background: var(--primary-color);
-    box-shadow: 0 0 20px rgba(255, 108, 66, 0.5);
+    color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     transform: translateY(-3px);
 }
 
