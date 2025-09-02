@@ -602,6 +602,10 @@ select option {
     height: 100%;
 }
 
+.no-animation .movie-card {
+    animation: none;
+}
+
 .movie-card.rating-low {
     position: relative;
     overflow: visible;

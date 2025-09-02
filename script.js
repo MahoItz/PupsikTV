@@ -45,6 +45,7 @@ let movies = [];
 // Maps for diffing movie cards
 let movieCardElements = new Map();
 let movieDataMap = new Map();
+let hasRenderedMovies = false;
 let currentSearchQuery = "";
 let currentSort = "date";
 let sortAscending = false;
@@ -406,18 +407,17 @@ async function loadMoviesFromSupabase() {
     const current = JSON.stringify(allMovies);
     const fresh = JSON.stringify(newMovies);
 
-    if (current !== fresh) {
-      allMovies = newMovies;
-      totalMovies = allMovies.length;
-      localStorage.setItem("moviesCache", fresh);
+      if (current !== fresh) {
+        allMovies = newMovies;
+        totalMovies = allMovies.length;
+        localStorage.setItem("moviesCache", fresh);
 
-      await loadUserRatingsFromSupabase();
-      renderMovies();
+        await loadUserRatingsFromSupabase();
+      }
+    } catch (err) {
+      console.error("Error loading movies from Supabase", err);
     }
-  } catch (err) {
-    console.error("Error loading movies from Supabase", err);
   }
-}
 
 // Загрузка заказов из Supabase
 async function loadWatchlistFromSupabase() {
@@ -573,8 +573,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   await loadUserRatingsFromSupabase();
-
-  renderMovies();
   renderPlayedGames();
   setupRatingStars();
   initFileUpload();
@@ -607,6 +605,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadGamesFromSupabase(),
     loadPlayedGamesFromSupabase(),
   ]);
+
+  renderMovies();
+  renderPlayedGames();
   const headerImg = document.querySelector(
     "#headerLogo img[src='images/Pupsik_TV_Header_2.webp']"
   );
@@ -921,9 +922,9 @@ function renderMovies() {
   const start = (currentPage - 1) * moviesPerPage;
   movies = filtered.slice(start, start + moviesPerPage);
 
-  const fragment = document.createDocumentFragment();
   const newElements = new Map();
   const newData = new Map();
+  const orderedCards = [];
 
   movies.forEach((movie) => {
     const dataKey = JSON.stringify(movie);
@@ -932,12 +933,22 @@ function renderMovies() {
     if (!card || prevData !== dataKey) {
       card = createMovieCard(movie);
     }
-    fragment.appendChild(card);
     newElements.set(movie.id, card);
     newData.set(movie.id, dataKey);
+    orderedCards.push(card);
   });
 
-  grid.replaceChildren(fragment);
+  if (!hasRenderedMovies) {
+    grid.replaceChildren(...orderedCards);
+    grid.classList.add("no-animation");
+    hasRenderedMovies = true;
+  } else {
+    orderedCards.forEach((card) => grid.appendChild(card));
+    movieCardElements.forEach((card, id) => {
+      if (!newElements.has(id)) card.remove();
+    });
+  }
+
   movieCardElements = newElements;
   movieDataMap = newData;
 
