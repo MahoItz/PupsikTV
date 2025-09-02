@@ -410,9 +410,10 @@ async function loadMoviesFromSupabase() {
       allMovies = newMovies;
       totalMovies = allMovies.length;
       localStorage.setItem("moviesCache", fresh);
+
+      await loadUserRatingsFromSupabase();
+      renderMovies();
     }
-    await loadUserRatingsFromSupabase();
-    renderMovies();
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
   }
