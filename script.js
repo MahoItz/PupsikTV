@@ -42,6 +42,9 @@ function showSearchLoading(containerId, listId) {
 // Массив фильмов будет заполняться данными из базы
 let allMovies = [];
 let movies = [];
+// Maps for diffing movie cards
+let movieCardElements = new Map();
+let movieDataMap = new Map();
 let currentSearchQuery = "";
 let currentSort = "date";
 let sortAscending = false;
@@ -51,6 +54,9 @@ let watchlist = [];
 let gameOrders = [];
 let allPlayedGames = [];
 let playedGames = [];
+// Maps for diffing played game cards
+let playedGameCardElements = new Map();
+let playedGameDataMap = new Map();
 let currentGameSearch = "";
 let currentGameSort = "date";
 let gameSortAscending = false;
@@ -903,7 +909,7 @@ function getFilteredSortedMovies() {
 
 function renderMovies() {
   const grid = document.getElementById("moviesGrid");
-  grid.innerHTML = "";
+  if (!grid) return;
 
   const filtered = getFilteredSortedMovies();
   totalMovies = filtered.length;
@@ -914,10 +920,26 @@ function renderMovies() {
   const start = (currentPage - 1) * moviesPerPage;
   movies = filtered.slice(start, start + moviesPerPage);
 
+  const fragment = document.createDocumentFragment();
+  const newElements = new Map();
+  const newData = new Map();
+
   movies.forEach((movie) => {
-    const movieCard = createMovieCard(movie);
-    grid.appendChild(movieCard);
+    const dataKey = JSON.stringify(movie);
+    let card = movieCardElements.get(movie.id);
+    const prevData = movieDataMap.get(movie.id);
+    if (!card || prevData !== dataKey) {
+      card = createMovieCard(movie);
+    }
+    fragment.appendChild(card);
+    newElements.set(movie.id, card);
+    newData.set(movie.id, dataKey);
   });
+
+  grid.replaceChildren(fragment);
+  movieCardElements = newElements;
+  movieDataMap = newData;
+
   renderPagination();
 }
 
@@ -980,6 +1002,7 @@ function renderPagination() {
 // Создание карточки фильма
 function createMovieCard(movie, showActions = isAdmin) {
   const card = document.createElement("div");
+  card.dataset.id = movie.id;
   let cardClass = "movie-card";
   // Avoid highlighting preview cards as "worst" before a movie is saved
   if (movie.rating === 0 && movie.id !== 0) cardClass += " rating-low";
@@ -1396,6 +1419,7 @@ function getFilteredSortedPlayedGames() {
 
 function createPlayedGameCard(game, showActions = isAdmin) {
   const card = document.createElement("div");
+  card.dataset.id = game.id;
   let cardClass = "movie-card";
   if (game.rating === 0 && game.id !== 0) cardClass += " rating-low";
   if (game.rating === 11 && game.id !== 0) cardClass += " rating-high";
@@ -1493,14 +1517,34 @@ function createPlayedGameCard(game, showActions = isAdmin) {
 function renderPlayedGames() {
   const grid = document.getElementById("gamesGridPlayed");
   if (!grid) return;
-  grid.innerHTML = "";
+
   const filtered = getFilteredSortedPlayedGames();
   totalGamesPlayed = filtered.length;
   const countEl = document.getElementById("gamesCount");
   if (countEl) countEl.textContent = totalGamesPlayed;
   const start = (gamePage - 1) * gamesPerPage;
   playedGames = filtered.slice(start, start + gamesPerPage);
-  playedGames.forEach((g) => grid.appendChild(createPlayedGameCard(g)));
+
+  const fragment = document.createDocumentFragment();
+  const newElements = new Map();
+  const newData = new Map();
+
+  playedGames.forEach((game) => {
+    const dataKey = JSON.stringify(game);
+    let card = playedGameCardElements.get(game.id);
+    const prevData = playedGameDataMap.get(game.id);
+    if (!card || prevData !== dataKey) {
+      card = createPlayedGameCard(game);
+    }
+    fragment.appendChild(card);
+    newElements.set(game.id, card);
+    newData.set(game.id, dataKey);
+  });
+
+  grid.replaceChildren(fragment);
+  playedGameCardElements = newElements;
+  playedGameDataMap = newData;
+
   renderGamesPagination();
 }
 
