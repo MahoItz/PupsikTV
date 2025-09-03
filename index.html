@@ -39,7 +39,7 @@
 
                 <div id="moviesSection" class="list-content">
                     <div class="search-controls">
-                        <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..." onkeyup="searchMovies(this.value)">
+                        <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..." onkeyup="debouncedSearchMovies(this.value)">
                     </div>
                     <div class="sort-row">
                         <div class="sort-controls">
@@ -67,7 +67,7 @@
 
                 <div id="gamesListSection" class="list-content" style="display:none;">
                     <div class="search-controls">
-                        <input type="text" class="search-input" placeholder="🔍 Поиск игр..." onkeyup="searchPlayedGames(this.value)">
+                        <input type="text" class="search-input" placeholder="🔍 Поиск игр..." onkeyup="debouncedSearchPlayedGames(this.value)">
                     </div>
                     <div class="sort-row">
                         <div class="sort-controls">

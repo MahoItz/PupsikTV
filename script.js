@@ -1614,6 +1614,8 @@ function searchPlayedGames(q) {
   renderPlayedGames();
 }
 
+const debouncedSearchPlayedGames = debounce(searchPlayedGames, 300);
+
 function sortPlayedGames(sort) {
   currentGameSort = sort;
   renderPlayedGames();
@@ -1652,6 +1654,8 @@ function searchMovies(query) {
   currentPage = 1;
   renderMovies();
 }
+
+const debouncedSearchMovies = debounce(searchMovies, 300);
 
 const debouncedKPSearch = debounce(async (query) => {
   if (!query) {
