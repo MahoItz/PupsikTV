@@ -1,11 +1,16 @@
 export default function handler(req, res) {
-  const password =
-    req.headers["x-admin-password"] ||
-    req.query.password ||
-    req.body?.password ||
-    (typeof req.body === "string"
-      ? JSON.parse(req.body || "{}").password
-      : undefined);
+  let password;
+  try {
+    password =
+      req.headers["x-admin-password"] ||
+      req.query.password ||
+      req.body?.password ||
+      (typeof req.body === "string"
+        ? JSON.parse(req.body || "{}").password
+        : undefined);
+  } catch {
+    return res.status(400).json({ error: "Invalid JSON" });
+  }
 
   const isAdmin = password === process.env.EDIT_PASSWORD;
 
