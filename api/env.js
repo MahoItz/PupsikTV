@@ -14,12 +14,15 @@ export default function handler(req, res) {
 
   const isAdmin = password === process.env.EDIT_PASSWORD;
 
-  const env = { SUPABASE_KEY: process.env.SUPABASE_KEY };
-
-  if (isAdmin) {
-    env.KINOPOISK_API_KEY = process.env.KINOPOISK_API_KEY;
-    env.RAWG_API_KEY = process.env.RAWG_API_KEY;
+  if (!isAdmin) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
+
+  const env = {
+    SUPABASE_KEY: process.env.SUPABASE_KEY,
+    KINOPOISK_API_KEY: process.env.KINOPOISK_API_KEY,
+    RAWG_API_KEY: process.env.RAWG_API_KEY,
+  };
 
   res.status(200).json(env);
 }

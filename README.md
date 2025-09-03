@@ -17,6 +17,10 @@ EDIT_PASSWORD=<admin password>
 
 Only `SUPABASE_KEY` and `EDIT_PASSWORD` are required for basic operation. The other keys enable additional admin features.
 
+The `/api/env` route only returns these environment keys when the correct admin password is supplied via the
+`x-admin-password` header, `password` query parameter, or JSON body. Unauthorized requests receive a `401` response
+and no keys are sent to the client.
+
 ## Running locally
 
 Serve the project with any static file server. One simple option is to use [`serve`](https://www.npmjs.com/package/serve):
