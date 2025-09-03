@@ -1,0 +1,8 @@
+{
+  "name": "pupsiktv",
+  "version": "1.0.0",
+  "description": "Static PupsikTV site",
+  "scripts": {
+    "build": "node build.js"
+  }
+}

@@ -14,7 +14,6 @@ yarn-error.log*
 
 # local .next or build outputs
 .next/
-dist/
 
 # OS-specific
 .DS_Store
