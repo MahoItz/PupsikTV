@@ -1025,6 +1025,7 @@ function createMovieCard(movie, showActions = isAdmin) {
   poster.src = movie.poster;
   poster.alt = movie.title;
   poster.className = "movie-poster";
+  poster.loading = "lazy";
   const placeholder = document.createElement("div");
   placeholder.className = "movie-poster-placeholder";
   placeholder.style.display = "none";
@@ -1183,6 +1184,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   poster.src = order.poster;
   poster.alt = order.title;
   poster.className = "order-poster";
+  poster.loading = "lazy";
   poster.onerror = () => {
     poster.style.display = "none";
   };
@@ -1308,6 +1310,7 @@ function createGameCard(game, showActions = isAdmin) {
   poster.src = game.poster;
   poster.alt = game.title;
   poster.className = "order-poster";
+  poster.loading = "lazy";
   poster.onerror = () => {
     poster.style.display = "none";
   };
@@ -1441,6 +1444,7 @@ function createPlayedGameCard(game, showActions = isAdmin) {
   poster.src = game.poster;
   poster.alt = game.title;
   poster.className = "movie-poster";
+  poster.loading = "lazy";
   const placeholder = document.createElement("div");
   placeholder.className = "movie-poster-placeholder";
   placeholder.style.display = "none";
