@@ -384,7 +384,7 @@ async function loadMoviesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, date, order_by, order_type"
+        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, date, order_by, order_type, kinopoisk_id"
       )
       .order("id", { ascending: false });
 
@@ -402,6 +402,7 @@ async function loadMoviesFromSupabase() {
       dateAdded: item.date,
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
+      filmId: item.kinopoisk_id,
     }));
 
     const current = JSON.stringify(allMovies);
@@ -425,7 +426,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length"
+        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, kinopoisk_id"
       )
       .order("id", { ascending: true });
 
@@ -443,6 +444,7 @@ async function loadWatchlistFromSupabase() {
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
       dateAdded: item.created_at,
+      filmId: item.kinopoisk_id,
     }));
 
     renderWatchlist();
@@ -2667,6 +2669,7 @@ document
           dateAdded: new Date().toISOString().split("T")[0],
           genre: sel.genres?.map((g) => g.genre).join(", ") || "",
           description: sel.description || "",
+          filmId: sel.filmId,
         };
       } else {
         movieData = {
@@ -2727,6 +2730,7 @@ document
           rating_numeric: movieData.rating,
           rating_OMDB: movieData.kpRating,
           date: movieData.dateAdded,
+          kinopoisk_id: movieData.filmId,
         })
         .select()
         .single();
@@ -2746,6 +2750,7 @@ document
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
         userRating: null,
+        filmId: data.kinopoisk_id,
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     } catch (err) {
@@ -2799,6 +2804,7 @@ document
           orderBy: orderBy,
           orderType: orderType,
           length: filmLength,
+          filmId: sel.filmId,
         };
       } else {
         orderData = {
@@ -2860,6 +2866,7 @@ document
           order_type: orderData.orderType,
           kinopoisk_rate: orderData.kpRating,
           order_length: orderData.length,
+          kinopoisk_id: orderData.filmId,
         })
         .select()
         .single();
@@ -2878,6 +2885,7 @@ document
         orderBy: data.order_by,
         orderType: data.order_type,
         dateAdded: data.created_at,
+        filmId: data.kinopoisk_id,
       });
       renderWatchlist();
     } catch (err) {
