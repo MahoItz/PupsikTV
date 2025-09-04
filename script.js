@@ -1089,6 +1089,15 @@ function createMovieCard(movie, showActions = isAdmin) {
 
   const ratingItem2 = document.createElement("div");
   ratingItem2.className = "rating-item";
+  ratingItem2.style.cursor = "pointer";
+  const kpUrl = movie.filmId
+    ? `https://www.kinopoisk.ru/film/${movie.filmId}/`
+    : `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(
+        movie.title
+      )}`;
+  ratingItem2.addEventListener("click", () =>
+    window.open(kpUrl, "_blank", "noopener,noreferrer")
+  );
   const icon2 = document.createElement("img");
   icon2.src = "images/kp_icon.webp";
   icon2.alt = "KP Rate";
@@ -1222,6 +1231,15 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   }
   const kpRating = document.createElement("span");
   kpRating.className = "order-kp-rating";
+  kpRating.style.cursor = "pointer";
+  const kpOrderUrl = order.filmId
+    ? `https://www.kinopoisk.ru/film/${order.filmId}/`
+    : `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(
+        order.title
+      )}`;
+  kpRating.addEventListener("click", () =>
+    window.open(kpOrderUrl, "_blank", "noopener,noreferrer")
+  );
   const kpImg = document.createElement("img");
   kpImg.src = "images/kp_icon.webp";
   kpImg.alt = "KP Rate";
