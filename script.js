@@ -1012,7 +1012,7 @@ function renderPagination() {
 }
 
 // Создание карточки фильма
-function createMovieCard(movie, showActions = isAdmin) {
+function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   const card = document.createElement("div");
   card.dataset.id = movie.id;
   let cardClass = "movie-card";
@@ -1136,16 +1136,18 @@ function createMovieCard(movie, showActions = isAdmin) {
   const actions = document.createElement("div");
   actions.className = "movie-actions";
 
-  const rateBtn = document.createElement("button");
-  rateBtn.className = "btn btn-rate btn-icon";
-  rateBtn.textContent = "★";
-  if (ratedMovies[movie.id]) {
-    rateBtn.disabled = true;
-    rateBtn.title = "Вы уже оценили";
-  } else {
-    rateBtn.onclick = () => openUserRateModal(movie.id);
+  if (showRateButton) {
+    const rateBtn = document.createElement("button");
+    rateBtn.className = "btn btn-rate btn-icon";
+    rateBtn.textContent = "★";
+    if (ratedMovies[movie.id]) {
+      rateBtn.disabled = true;
+      rateBtn.title = "Вы уже оценили";
+    } else {
+      rateBtn.onclick = () => openUserRateModal(movie.id);
+    }
+    actions.appendChild(rateBtn);
   }
-  actions.appendChild(rateBtn);
 
   if (showActions) {
     const editBtn = document.createElement("button");
@@ -1950,7 +1952,7 @@ function showKPPreview() {
     dateAdded: new Date().toISOString().split("T")[0],
     genre: selectedKPMovie.genres?.map((g) => g.genre).join(", ") || "",
   };
-  preview.appendChild(createMovieCard(movie, false));
+  preview.appendChild(createMovieCard(movie, false, false));
   preview.style.display = "block";
 }
 
