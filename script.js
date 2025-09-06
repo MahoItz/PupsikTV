@@ -2176,7 +2176,6 @@ function toggleSortOrder() {
 // Модальные окна
 function openAddMovieModal() {
   document.getElementById("addMovieModal").style.display = "block";
-  resetForm();
 }
 
 function openAddToWatchlistModal() {
@@ -2425,9 +2424,11 @@ function openEditOrderModal(id) {
   document.getElementById("editOrderModal").style.display = "block";
 }
 
-function closeModal(modalId) {
+function closeModal(modalId, shouldReset = false) {
   document.getElementById(modalId).style.display = "none";
-  resetForm();
+  if (shouldReset) {
+    resetForm();
+  }
 }
 
 // Переключение режимов
@@ -2746,7 +2747,7 @@ document
 
     currentPage = 1;
     renderMovies();
-    closeModal("addMovieModal");
+    closeModal("addMovieModal", true);
   });
 
 document
@@ -2883,7 +2884,7 @@ document
       console.error("Error adding order", err);
     }
 
-    closeModal("addWatchlistModal");
+    closeModal("addWatchlistModal", true);
     this.reset();
     selectedKPOrderMovie = null;
     kpOrderResults = [];
@@ -2982,7 +2983,7 @@ document
       console.error("Error adding game", err);
     }
 
-    closeModal("addGameModal");
+    closeModal("addGameModal", true);
     this.reset();
     selectedRAWGGame = null;
     steamGridPoster = null;
@@ -3098,7 +3099,7 @@ document
 
     gamePage = 1;
     renderPlayedGames();
-    closeModal("addPlayedGameModal");
+    closeModal("addPlayedGameModal", true);
     this.reset();
     selectedRAWGGame = null;
     steamGridPoster = null;
@@ -3189,7 +3190,7 @@ async function submitRating() {
     renderMovies();
     renderWatchlist();
   }
-  closeModal("rateMovieModal");
+  closeModal("rateMovieModal", true);
 }
 
 async function submitGameRating() {
@@ -3250,7 +3251,7 @@ async function submitGameRating() {
     renderPlayedGames();
     renderGames();
   }
-  closeModal("rateGameModal");
+  closeModal("rateGameModal", true);
 }
 
 async function submitUserMovieRating() {
@@ -3263,7 +3264,7 @@ async function submitUserMovieRating() {
   if (!userRatingMovieId) return;
   if (ratedMovies[userRatingMovieId]) {
     alert("Вы уже оценили этот фильм");
-    closeModal("userRateModal");
+    closeModal("userRateModal", true);
     return;
   }
   try {
@@ -3278,7 +3279,7 @@ async function submitUserMovieRating() {
   } catch (err) {
     console.error("Error submitting user rating", err);
   }
-  closeModal("userRateModal");
+  closeModal("userRateModal", true);
 }
 
 // Редактирование фильма
@@ -3325,7 +3326,7 @@ document
     }
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     renderMovies();
-    closeModal("editMovieModal");
+    closeModal("editMovieModal", true);
   });
 
 document
@@ -3364,7 +3365,7 @@ document
     }
 
     renderWatchlist();
-    closeModal("editOrderModal");
+    closeModal("editOrderModal", true);
   });
 
 document
@@ -3399,7 +3400,7 @@ document
     }
 
     renderGames();
-    closeModal("editGameModal");
+    closeModal("editGameModal", true);
   });
 
 document
@@ -3443,7 +3444,7 @@ document
 
     localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
     renderPlayedGames();
-    closeModal("editPlayedGameModal");
+    closeModal("editPlayedGameModal", true);
   });
 
 // Форматирование даты
@@ -3472,8 +3473,7 @@ function resetForm() {
 window.onclick = function (event) {
   document.querySelectorAll(".modal").forEach((modal) => {
     if (event.target === modal) {
-      modal.style.display = "none";
-      resetForm();
+      closeModal(modal.id);
     }
   });
 };
