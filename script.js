@@ -927,11 +927,13 @@ function renderMovies() {
   const orderedCards = [];
 
   movies.forEach((movie) => {
-    const dataKey = JSON.stringify(movie);
+    const dataKey = `${JSON.stringify(movie)}|${isAdmin ? 1 : 0}`;
     let card = movieCardElements.get(movie.id);
     const prevData = movieDataMap.get(movie.id);
     if (!card || prevData !== dataKey) {
-      card = createMovieCard(movie);
+      const newCard = createMovieCard(movie);
+      if (card) card.replaceWith(newCard);
+      card = newCard;
     }
     newElements.set(movie.id, card);
     newData.set(movie.id, dataKey);
@@ -1548,7 +1550,7 @@ function renderPlayedGames() {
   const newData = new Map();
 
   playedGames.forEach((game) => {
-    const dataKey = JSON.stringify(game);
+    const dataKey = `${JSON.stringify(game)}|${isAdmin ? 1 : 0}`;
     let card = playedGameCardElements.get(game.id);
     const prevData = playedGameDataMap.get(game.id);
     if (!card || prevData !== dataKey) {
