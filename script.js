@@ -2821,12 +2821,32 @@ document
       };
     }
 
-    const duplicateOrder = watchlist.some(
+    let duplicateOrder = watchlist.some(
       (o) =>
         o.title.trim().toLowerCase() ===
           orderData.title.trim().toLowerCase() &&
         Number(o.year) === Number(orderData.year)
     );
+
+    if (!duplicateOrder) {
+      try {
+        const { data: existing, error: dupErr } = await supabaseClient
+          .from("Movie_Orders")
+          .select("id")
+          .ilike("order_title", orderData.title.trim())
+          .eq("order_year", orderData.year)
+          .limit(1);
+
+        if (dupErr) {
+          console.error("Error checking duplicate order", dupErr);
+        } else if (existing && existing.length > 0) {
+          duplicateOrder = true;
+        }
+      } catch (err) {
+        console.error("Error checking duplicate order", err);
+      }
+    }
+
     if (duplicateOrder) {
       showDuplicateModal();
       return;
