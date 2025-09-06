@@ -2689,12 +2689,19 @@ document
       };
     }
 
-    const duplicate = allMovies.some(
-      (m) =>
-        m.title.trim().toLowerCase() ===
-          movieData.title.trim().toLowerCase() &&
-        Number(m.year) === Number(movieData.year)
-    );
+    const duplicate =
+      allMovies.some(
+        (m) =>
+          m.title.trim().toLowerCase() ===
+            movieData.title.trim().toLowerCase() &&
+          Number(m.year) === Number(movieData.year)
+      ) ||
+      watchlist.some(
+        (o) =>
+          o.title.trim().toLowerCase() ===
+            movieData.title.trim().toLowerCase() &&
+          Number(o.year) === Number(movieData.year)
+      );
     if (duplicate) {
       showDuplicateModal();
       return;
@@ -2821,12 +2828,19 @@ document
       };
     }
 
-    const duplicateOrder = watchlist.some(
-      (o) =>
-        o.title.trim().toLowerCase() ===
-          orderData.title.trim().toLowerCase() &&
-        Number(o.year) === Number(orderData.year)
-    );
+    const duplicateOrder =
+      watchlist.some(
+        (o) =>
+          o.title.trim().toLowerCase() ===
+            orderData.title.trim().toLowerCase() &&
+          Number(o.year) === Number(orderData.year)
+      ) ||
+      allMovies.some(
+        (m) =>
+          m.title.trim().toLowerCase() ===
+            orderData.title.trim().toLowerCase() &&
+          Number(m.year) === Number(orderData.year)
+      );
     if (duplicateOrder) {
       showDuplicateModal();
       return;
