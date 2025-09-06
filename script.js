@@ -2264,6 +2264,7 @@ function openEditModal(id) {
   document.getElementById("editTitle").value = movie.title;
   document.getElementById("editYear").value = movie.year;
   document.getElementById("editGenre").value = movie.genre || "";
+  document.getElementById("editMovieOrderBy").value = movie.orderBy || "";
   document.getElementById("editPosterPreview").src = movie.poster;
   document.getElementById("editPoster").value = "";
   editPosterData = null;
@@ -3302,6 +3303,8 @@ document
       movie.year =
         parseInt(document.getElementById("editYear").value) || movie.year;
       movie.genre = document.getElementById("editGenre").value || movie.genre;
+      movie.orderBy =
+        document.getElementById("editMovieOrderBy").value || movie.orderBy;
       const rating = getRatingValue("editRatingInput");
       if (!isRatingValid(rating)) {
         alert("Неверная оценка");
@@ -3323,6 +3326,7 @@ document
             year: movie.year,
             rating_numeric: movie.rating,
             rating_OMDB: movie.kpRating,
+            order_by: movie.orderBy,
           })
           .eq("id", editingMovieId);
       } catch (err) {
