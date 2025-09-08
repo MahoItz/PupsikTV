@@ -1990,12 +1990,12 @@ select option {
     color: var(--text-primary);
     font-weight: 700;
     font-size: 0.9rem;
-    transition: transform 0.2s ease;
+    transition: box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .list-tabs button:hover {
     background: #7a7a7a2f;
-    transform: translateY(-3px);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
 }
 
 .list-tabs button.active {
