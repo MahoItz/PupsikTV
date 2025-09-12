@@ -49,6 +49,7 @@ let hasRenderedMovies = false;
 let currentSearchQuery = "";
 let currentSort = "date";
 let sortAscending = false;
+let currentGenre = "";
 
 // Список заказанных фильмов
 let watchlist = [];
@@ -882,6 +883,13 @@ function getFilteredSortedMovies() {
     );
   }
 
+  if (currentGenre) {
+    const g = currentGenre.toLowerCase();
+    result = result.filter(
+      (movie) => movie.genre && movie.genre.toLowerCase().includes(g)
+    );
+  }
+
   switch (currentSort) {
     case "title":
       result.sort((a, b) =>
@@ -900,6 +908,13 @@ function getFilteredSortedMovies() {
         sortAscending ? a.rating - b.rating : b.rating - a.rating
       );
       break;
+    case "genre":
+      result.sort((a, b) =>
+        sortAscending
+          ? a.title.localeCompare(b.title)
+          : b.title.localeCompare(a.title)
+      );
+      break;
     case "date":
     default:
       result.sort((a, b) => (sortAscending ? a.id - b.id : b.id - a.id));
@@ -910,6 +925,7 @@ function getFilteredSortedMovies() {
 }
 
 function renderMovies() {
+  updateGenreSelect();
   const grid = document.getElementById("moviesGrid");
   if (!grid) return;
 
@@ -2157,7 +2173,51 @@ function showPlayedGamePreview() {
 function sortMovies(criteria) {
   currentSort = criteria;
   currentPage = 1;
+  const genreSelect = document.getElementById("genreSelect");
+  if (genreSelect) {
+    if (criteria === "genre") {
+      genreSelect.style.display = "inline-block";
+      updateGenreSelect();
+    } else {
+      genreSelect.style.display = "none";
+      currentGenre = "";
+    }
+  }
   renderMovies();
+}
+
+function sortMoviesByGenre(genre) {
+  currentGenre = genre;
+  currentPage = 1;
+  renderMovies();
+}
+
+function updateGenreSelect() {
+  const select = document.getElementById("genreSelect");
+  if (!select) return;
+  const prev = currentGenre;
+  const genres = new Set();
+  allMovies.forEach((movie) => {
+    if (movie.genre) {
+      movie.genre.split(",").forEach((g) => genres.add(g.trim()));
+    }
+  });
+  select.innerHTML = '<option value="">Все жанры</option>';
+  Array.from(genres)
+    .sort()
+    .forEach((g) => {
+      const option = document.createElement("option");
+      option.value = g;
+      option.textContent = g;
+      select.appendChild(option);
+    });
+  if (prev && genres.has(prev)) {
+    select.value = prev;
+    currentGenre = prev;
+  } else {
+    select.value = "";
+    currentGenre = "";
+  }
 }
 
 function toggleSortOrder() {

@@ -51,6 +51,10 @@
                                 <option value="title">По названию</option>
                                 <option value="year">По году</option>
                                 <option value="rating">По оценке</option>
+                                <option value="genre">По жанру</option>
+                            </select>
+                            <select id="genreSelect" style="display:none;" onchange="sortMoviesByGenre(this.value)">
+                                <option value="">Все жанры</option>
                             </select>
                             <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleSortOrder()">
                                 <img src="images/down-arrow.webp" alt="arrow" class="sort-arrow">
