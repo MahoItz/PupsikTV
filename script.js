@@ -1089,7 +1089,7 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   rating.appendChild(ratingItem1);
 
   const ratingItem2 = document.createElement("div");
-  ratingItem2.className = "rating-item";
+  ratingItem2.className = "rating-item kp-rating-item";
   const icon2 = document.createElement("img");
   icon2.src = "images/kp_icon.webp";
   icon2.alt = "KP Rate";
@@ -1097,6 +1097,9 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   span2.textContent = movie.kpRating ?? "-";
   ratingItem2.appendChild(icon2);
   ratingItem2.appendChild(span2);
+  ratingItem2.addEventListener("click", () =>
+    openKinopoiskPage(movie.title, movie.year, movie.originalTitle)
+  );
   rating.appendChild(ratingItem2);
 
   const ratingItem3 = document.createElement("div");
@@ -1230,6 +1233,9 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   kpImg.alt = "KP Rate";
   kpRating.appendChild(kpImg);
   kpRating.appendChild(document.createTextNode(` ${order.kpRating ?? "-"}`));
+  kpRating.addEventListener("click", () =>
+    openKinopoiskPage(order.title, order.year, order.originalTitle)
+  );
   meta.appendChild(kpRating);
   info.appendChild(meta);
 
@@ -1993,6 +1999,42 @@ function showWatchlistKPPreview() {
   };
   preview.appendChild(createOrderCard(order, false, false));
   preview.style.display = "block";
+}
+
+async function openKinopoiskPage(title, year, originalTitle = "") {
+  const query = originalTitle || title;
+  if (!KINOPOISK_API_KEY) {
+    window.open(
+      `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(query)}`,
+      "_blank"
+    );
+    return;
+  }
+  try {
+    const res = await fetch(
+      `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`,
+      {
+        headers: {
+          "X-API-KEY": KINOPOISK_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const data = await res.json();
+    const films = data.films || [];
+    let film = films.find((f) => Number(f.year) === Number(year));
+    if (!film && films.length) film = films[0];
+    if (film && film.filmId) {
+      window.open(`https://www.kinopoisk.ru/film/${film.filmId}/`, "_blank");
+      return;
+    }
+  } catch (err) {
+    console.error("Kinopoisk search error", err);
+  }
+  window.open(
+    `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(query)}`,
+    "_blank"
+  );
 }
 
 async function handleGameSearch() {

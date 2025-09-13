@@ -837,6 +837,10 @@ select option {
     box-sizing: border-box;
 }
 
+.movie-rating .kp-rating-item {
+    cursor: pointer;
+}
+
 .movie-rating .rating-item.rating-user {
     flex-basis: 100%;
 }
@@ -1115,6 +1119,7 @@ select option {
     display: flex;
     align-items: center;
     gap: 4px;
+    cursor: pointer;
 }
 
 .order-date {
