@@ -861,7 +861,16 @@
             <li><button data-src="Music/The_Field_of_Wonders.mp3">Барабан</button></li>
             <li><button data-src="Music/Supergame.mp3">Суперигра</button></li>
         </ul>
-        <audio id="audioPlayer" class="audio-player" controls></audio>
+        <audio id="audioPlayer" class="audio-player" loop></audio>
+        <div class="audio-controls">
+            <button id="playPauseBtn" class="audio-btn" aria-label="Воспроизвести/Пауза">
+                <i class="fa-solid fa-play"></i>
+            </button>
+            <button id="loopBtn" class="audio-btn active" aria-label="Зациклить">
+                <i class="fa-solid fa-repeat"></i>
+            </button>
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="1" aria-label="Громкость">
+        </div>
     </div>
     <nav class="mobile-tabs" id="mobileTabs">
         <button data-tab="movies" class="active">Фильмы</button>

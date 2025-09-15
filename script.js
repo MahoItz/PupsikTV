@@ -3661,6 +3661,46 @@ const musicMenuButton = document.getElementById("musicMenuButton");
 const closeMusicMenu = document.getElementById("closeMusicMenu");
 const musicList = document.getElementById("musicList");
 const audioPlayer = document.getElementById("audioPlayer");
+const playPauseBtn = document.getElementById("playPauseBtn");
+const loopBtn = document.getElementById("loopBtn");
+const volumeSlider = document.getElementById("volumeSlider");
+
+if (audioPlayer) {
+  audioPlayer.loop = true;
+}
+
+if (playPauseBtn && audioPlayer) {
+  playPauseBtn.addEventListener("click", () => {
+    if (audioPlayer.paused) {
+      audioPlayer.play().catch(() => {});
+    } else {
+      audioPlayer.pause();
+    }
+  });
+
+  audioPlayer.addEventListener("play", () => {
+    playPauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+  });
+
+  audioPlayer.addEventListener("pause", () => {
+    playPauseBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+  });
+}
+
+if (loopBtn && audioPlayer) {
+  loopBtn.classList.add("active");
+  loopBtn.addEventListener("click", () => {
+    audioPlayer.loop = !audioPlayer.loop;
+    loopBtn.classList.toggle("active", audioPlayer.loop);
+  });
+}
+
+if (volumeSlider && audioPlayer) {
+  volumeSlider.addEventListener("input", () => {
+    audioPlayer.volume = volumeSlider.value;
+  });
+  volumeSlider.value = audioPlayer.volume;
+}
 
 if (musicMenu && musicMenuButton && closeMusicMenu) {
   musicMenuButton.addEventListener("click", () => {

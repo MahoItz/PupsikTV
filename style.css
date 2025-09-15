@@ -2140,7 +2140,12 @@ select option {
     background: rgba(255, 255, 255, 0.1);
 }
 
+
 .audio-player {
+    display: none;
+}
+
+.audio-controls {
     width: 100%;
     margin-top: 20px;
     background: var(--glass-bg);
@@ -2148,31 +2153,59 @@ select option {
     border-radius: var(--border-radius-small);
     padding: 6px 8px;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.audio-player::-webkit-media-controls-panel {
-    background: transparent;
-}
-
-.audio-player::-webkit-media-controls-current-time-display,
-.audio-player::-webkit-media-controls-time-remaining-display {
+.audio-controls .audio-btn {
+    background: none;
+    border: none;
     color: var(--text-primary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--border-radius-small);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: var(--transition);
 }
 
-.audio-player::-webkit-media-controls-play-button,
-.audio-player::-webkit-media-controls-mute-button {
-    color: var(--text-primary);
+.audio-controls .audio-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.audio-player::-webkit-media-controls-play-button:hover,
-.audio-player::-webkit-media-controls-mute-button:hover {
+.audio-controls .audio-btn.active {
+    background: rgba(255, 108, 66, 0.2);
     color: var(--primary-color);
 }
 
-.audio-player::-webkit-media-controls-timeline,
-.audio-player::-webkit-media-controls-volume-slider {
+.volume-slider {
+    flex: 1;
+    height: 6px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: var(--border-radius-small);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
 }
 
 .music-menu li button.active {
