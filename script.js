@@ -3656,3 +3656,32 @@ window.addEventListener("load", () => {
   });
 });
 
+const musicMenu = document.getElementById("musicMenu");
+const musicMenuButton = document.getElementById("musicMenuButton");
+const closeMusicMenu = document.getElementById("closeMusicMenu");
+const musicList = document.getElementById("musicList");
+const audioPlayer = document.getElementById("audioPlayer");
+
+if (musicMenu && musicMenuButton && closeMusicMenu) {
+  musicMenuButton.addEventListener("click", () => {
+    musicMenu.classList.add("open");
+  });
+
+  closeMusicMenu.addEventListener("click", () => {
+    musicMenu.classList.remove("open");
+    if (audioPlayer) {
+      audioPlayer.pause();
+    }
+  });
+
+  musicList.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-src]");
+    if (!btn || !audioPlayer) return;
+    const src = btn.getAttribute("data-src");
+    if (src) {
+      audioPlayer.src = src;
+      audioPlayer.play().catch(() => {});
+    }
+  });
+}
+
