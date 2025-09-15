@@ -3672,6 +3672,9 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     if (audioPlayer) {
       audioPlayer.pause();
     }
+    if (musicList) {
+      musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+    }
   });
 
   musicList.addEventListener("click", (e) => {
@@ -3681,6 +3684,8 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     if (src) {
       audioPlayer.src = src;
       audioPlayer.play().catch(() => {});
+      musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
     }
   });
 }

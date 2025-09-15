@@ -2143,4 +2143,39 @@ select option {
 .audio-player {
     width: 100%;
     margin-top: 20px;
+    background: var(--glass-bg);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-small);
+    padding: 6px 8px;
+    color: var(--text-primary);
+}
+
+.audio-player::-webkit-media-controls-panel {
+    background: transparent;
+}
+
+.audio-player::-webkit-media-controls-current-time-display,
+.audio-player::-webkit-media-controls-time-remaining-display {
+    color: var(--text-primary);
+}
+
+.audio-player::-webkit-media-controls-play-button,
+.audio-player::-webkit-media-controls-mute-button {
+    color: var(--text-primary);
+}
+
+.audio-player::-webkit-media-controls-play-button:hover,
+.audio-player::-webkit-media-controls-mute-button:hover {
+    color: var(--primary-color);
+}
+
+.audio-player::-webkit-media-controls-timeline,
+.audio-player::-webkit-media-controls-volume-slider {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-small);
+}
+
+.music-menu li button.active {
+    background: rgba(255, 108, 66, 0.2);
+    color: var(--primary-color);
 }
