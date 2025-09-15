@@ -3664,6 +3664,7 @@ const audioPlayer = document.getElementById("audioPlayer");
 const playPauseBtn = document.getElementById("playPauseBtn");
 const loopBtn = document.getElementById("loopBtn");
 const volumeSlider = document.getElementById("volumeSlider");
+const volumeValue = document.getElementById("volumeValue");
 
 if (audioPlayer) {
   audioPlayer.loop = true;
@@ -3696,11 +3697,28 @@ if (loopBtn && audioPlayer) {
 }
 
 if (volumeSlider && audioPlayer) {
-  volumeSlider.addEventListener("input", () => {
-    audioPlayer.volume = volumeSlider.value;
+  const updateVolumeText = () => {
+    if (volumeValue) {
+      volumeValue.textContent = Math.round(audioPlayer.volume * 100) + "%";
+    }
+  };
+
+  const updateFromSlider = () => {
+    audioPlayer.volume = parseFloat(volumeSlider.value);
+    updateVolumeText();
+  };
+
+  volumeSlider.addEventListener("input", updateFromSlider);
+
+  audioPlayer.addEventListener("volumechange", () => {
+    volumeSlider.value = String(audioPlayer.volume);
+    updateVolumeText();
   });
-  volumeSlider.value = audioPlayer.volume;
+
+  volumeSlider.value = String(audioPlayer.volume);
+  updateVolumeText();
 }
+
 
 if (musicMenu && musicMenuButton && closeMusicMenu) {
   musicMenuButton.addEventListener("click", () => {
@@ -3709,24 +3727,25 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
 
   closeMusicMenu.addEventListener("click", () => {
     musicMenu.classList.remove("open");
-    if (audioPlayer) {
-      audioPlayer.pause();
-    }
+    if (audioPlayer) audioPlayer.pause();
     if (musicList) {
       musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
     }
   });
 
-  musicList.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-src]");
-    if (!btn || !audioPlayer) return;
-    const src = btn.getAttribute("data-src");
-    if (src) {
+  if (musicList) {
+    musicList.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-src]");
+      if (!btn || !audioPlayer) return;
+
+      const src = btn.getAttribute("data-src");
+      if (!src) return;
+
       audioPlayer.src = src;
       audioPlayer.play().catch(() => {});
       musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
-    }
-  });
+    });
+  }
 }
 

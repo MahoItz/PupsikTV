@@ -2182,7 +2182,7 @@ select option {
 }
 
 .volume-slider {
-    flex: 1;
+    width: 70%;
     height: 6px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: var(--border-radius-small);
@@ -2206,6 +2206,14 @@ select option {
     border: none;
     border-radius: 50%;
     cursor: pointer;
+}
+
+#volumeValue {
+  margin-left: 8px;
+  color: #fff;
+  font-size: 14px;
+  min-width: 40px;
+  display: inline-block;
 }
 
 .music-menu li button.active {
