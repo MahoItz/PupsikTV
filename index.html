@@ -14,10 +14,10 @@
 
 <body>
     <div class="container">
+        <button id="musicMenuButton" class="music-menu-button" aria-label="Музыка">
+            <i class="fa-solid fa-music"></i>
+        </button>
         <header id="headerLogo">
-            <button id="musicMenuButton" class="music-menu-button" aria-label="Музыка">
-                <i class="fa-solid fa-music"></i>
-            </button>
             <video muted playsinline preload="none" class="rats-video" src="Video/Rat_1.webm"></video>
             <video muted playsinline preload="none" class="rats-video" src="Video/Rat_2.webm"></video>
             <video muted playsinline preload="none" class="rats-video" src="Video/Rat_1_Mirrored.webm"></video>
@@ -858,8 +858,8 @@
         <button id="closeMusicMenu" class="close-music-menu" aria-label="Закрыть">&times;</button>
         <h2>Музыка</h2>
         <ul id="musicList">
-            <!-- Добавьте свои песни здесь -->
-            <!-- Пример: <li><button data-src="audio/song1.mp3">Песня 1</button></li> -->
+            <li><button data-src="Music/The_Field_of_Wonders.mp3">Барабан</button></li>
+            <li><button data-src="Music/Supergame.mp3">Суперигра</button></li>
         </ul>
         <audio id="audioPlayer" class="audio-player" controls></audio>
     </div>
