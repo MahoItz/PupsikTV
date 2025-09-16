@@ -544,6 +544,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadEnv();
   const kpStored = localStorage.getItem("KINOPOISK_API_KEY");
   if (kpStored) KINOPOISK_API_KEY = kpStored;
+  if (fortuneWheelApi && typeof fortuneWheelApi.refreshPosters === "function") {
+    fortuneWheelApi.refreshPosters();
+  }
   const rawgStored = localStorage.getItem("RAWG_API_KEY");
   if (rawgStored) RAWG_API_KEY = rawgStored;
   const cached = localStorage.getItem("moviesCache");
@@ -3820,6 +3823,97 @@ function initFortuneWheel() {
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
 
+  const fortunePosterData = new Map();
+  const fortunePosterPlaceholder = "images/kp_icon.webp";
+
+  function normalizePosterKey(label) {
+    return label ? label.trim().toLowerCase() : "";
+  }
+
+  function getPosterData(label) {
+    const key = normalizePosterKey(label);
+    if (!key) {
+      return undefined;
+    }
+    return fortunePosterData.get(key);
+  }
+
+  async function fetchPosterForLabel(label) {
+    const key = normalizePosterKey(label);
+    if (!key || !KINOPOISK_API_KEY) {
+      return;
+    }
+
+    const existing = fortunePosterData.get(key);
+    if (existing?.status === "loading") {
+      return;
+    }
+
+    fortunePosterData.set(key, { status: "loading", posterUrl: null });
+    renderLegend();
+
+    try {
+      const query = label.trim().replace(/\s+/g, " ");
+      if (!query) {
+        fortunePosterData.set(key, { status: "error", posterUrl: null });
+        renderLegend();
+        return;
+      }
+
+      const res = await fetch(
+        `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`,
+        {
+          headers: {
+            "X-API-KEY": KINOPOISK_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!res.ok) {
+        throw new Error(`Kinopoisk poster request failed with ${res.status}`);
+      }
+      const data = await res.json();
+      const films = data.films || [];
+      const film =
+        films.find((f) => f.posterUrlPreview || f.posterUrl) || films[0];
+      const posterUrl = film?.posterUrlPreview || film?.posterUrl || null;
+      fortunePosterData.set(key, { status: "loaded", posterUrl });
+    } catch (err) {
+      console.error("Kinopoisk poster fetch error", err);
+      fortunePosterData.set(key, { status: "error", posterUrl: null });
+    }
+    renderLegend();
+  }
+
+  function requestPosterForItems({ force = false } = {}) {
+    const seen = new Set();
+    items.forEach((label) => {
+      const key = normalizePosterKey(label);
+      if (!key || seen.has(key)) {
+        return;
+      }
+      seen.add(key);
+      const data = fortunePosterData.get(key);
+      if (data) {
+        if (data.status === "loading") {
+          return;
+        }
+        if (!force && (data.status === "loaded" || data.status === "error")) {
+          return;
+        }
+        if (force && data.status === "loaded") {
+          return;
+        }
+      }
+      if (!KINOPOISK_API_KEY) {
+        return;
+      }
+      fetchPosterForLabel(label);
+    });
+  }
+
+  const schedulePosterFetch = debounce(() => requestPosterForItems(), 600);
+
   function setResultOverlayVisible(visible) {
     if (!resultOverlay) {
       return;
@@ -4005,7 +4099,6 @@ function initFortuneWheel() {
 
   function renderLegend() {
     legendEl.innerHTML = "";
-    const activeItems = items.filter((item) => !eliminatedItems.has(item));
 
     items.forEach((label) => {
       const div = document.createElement("div");
@@ -4014,22 +4107,33 @@ function initFortuneWheel() {
         div.classList.add("eliminated");
       }
 
-      const sw = document.createElement("span");
-      sw.className = "fortune-legend-swatch";
+      const posterWrapper = document.createElement("div");
+      posterWrapper.className = "fortune-legend-poster";
 
-      if (!eliminatedItems.has(label)) {
-        const activeIndex = activeItems.indexOf(label);
-        if (activeIndex >= 0) {
-          sw.style.background = colorForIndex(activeIndex, activeItems.length);
-        }
+      const posterInfo = getPosterData(label);
+      if (posterInfo?.status === "loading") {
+        const spinner = document.createElement("span");
+        spinner.className = "loading-spinner";
+        posterWrapper.appendChild(spinner);
+      } else if (posterInfo?.status === "loaded") {
+        const posterSrc = posterInfo.posterUrl || fortunePosterPlaceholder;
+        const img = document.createElement("img");
+        img.src = posterSrc;
+        img.alt = label;
+        img.loading = "lazy";
+        posterWrapper.appendChild(img);
       } else {
-        sw.style.background = "#4a4a4a";
+        const placeholder = document.createElement("span");
+        placeholder.className = "fortune-legend-placeholder";
+        placeholder.textContent = "🎬";
+        posterWrapper.appendChild(placeholder);
       }
 
       const txt = document.createElement("span");
+      txt.className = "fortune-legend-label";
       txt.textContent = label;
 
-      div.appendChild(sw);
+      div.appendChild(posterWrapper);
       div.appendChild(txt);
       legendEl.appendChild(div);
     });
@@ -4169,6 +4273,7 @@ function initFortuneWheel() {
 
     items = newItems;
     eliminatedItems = updatedEliminated;
+    schedulePosterFetch();
     drawWheel();
     hideResultOverlay();
 
@@ -4271,6 +4376,9 @@ function initFortuneWheel() {
     handleMenuOpen() {
       drawWheel();
       setTimeout(drawWheel, 320);
+    },
+    refreshPosters() {
+      requestPosterForItems({ force: true });
     },
   };
 }
