@@ -3819,13 +3819,33 @@ function initFortuneWheel() {
   let spinDurationMs = 12000;
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
+  let pendingEliminationItem = null;
+
+  function applyPendingElimination() {
+    if (pendingEliminationItem !== null) {
+      eliminatedItems.add(pendingEliminationItem);
+      pendingEliminationItem = null;
+    }
+    drawWheel();
+  }
+
+  function clearPendingElimination() {
+    pendingEliminationItem = null;
+  }
 
   function setResultOverlayVisible(visible) {
     if (!resultOverlay) {
+      if (!visible) {
+        applyPendingElimination();
+      }
       return;
     }
+    const wasVisible = resultOverlay.classList.contains("visible");
     resultOverlay.classList.toggle("visible", visible);
     resultOverlay.setAttribute("aria-hidden", String(!visible));
+    if (wasVisible && !visible) {
+      applyPendingElimination();
+    }
   }
 
   function hideResultOverlay() {
@@ -4052,8 +4072,7 @@ function initFortuneWheel() {
       return;
     }
 
-    eliminatedItems.add(text);
-    const remainingItems = items.filter((item) => !eliminatedItems.has(item));
+    const remainingItems = activeItems.filter((item) => item !== text);
 
     if (remainingItems.length === 0) {
       statusEl.innerHTML = `Результат: <b>${escapeHtml(text)}</b><br><span class="fortune-status-success">🎉 Игра завершена! Все элементы были выбраны.</span>`;
@@ -4061,7 +4080,13 @@ function initFortuneWheel() {
       statusEl.innerHTML = `Результат: <b>${escapeHtml(text)}</b><br><span class="fortune-status-remaining">Осталось элементов: ${remainingItems.length}</span>`;
     }
 
-    drawWheel();
+    if (resultOverlay && resultNameEl) {
+      pendingEliminationItem = text;
+    } else {
+      eliminatedItems.add(text);
+      pendingEliminationItem = null;
+      drawWheel();
+    }
     showResultOverlay(text);
 
     const pointer = document.querySelector(".fortune-pointer");
@@ -4206,6 +4231,7 @@ function initFortuneWheel() {
   function clearInput() {
     input.value = "";
     eliminatedItems.clear();
+    clearPendingElimination();
     hideResultOverlay();
     updateFromInput();
   }
@@ -4224,6 +4250,7 @@ function initFortuneWheel() {
   function resetEliminated() {
     eliminatedItems.clear();
     drawWheel();
+    clearPendingElimination();
     hideResultOverlay();
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
     if (activeItems.length > 1) {
