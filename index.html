@@ -864,20 +864,35 @@
     <h2>Поле чудес</h2>
 
     <div class="fortune-body">
-      <section class="fortune-section fortune-wheel-section">
-        <h3 class="fortune-title">Колесо фортуны</h3>
-        <div class="fortune-wheel-card">
-          <div class="fortune-wheel-wrap">
-            <div class="fortune-pointer" aria-hidden="true"></div>
-            <canvas id="wheelCanvas" width="800" height="800"
-                    aria-label="Колесо фортуны" role="img"></canvas>
+        <section class="fortune-section fortune-wheel-section">
+          <h3 class="fortune-title">Колесо фортуны</h3>
+          <div class="fortune-wheel-card">
+            <div class="fortune-spin-settings">
+              <label class="fortune-spin-label" for="spinDurationSlider">
+                Время вращения: <span id="spinDurationValue">12&nbsp;с</span>
+              </label>
+              <input
+                type="range"
+                id="spinDurationSlider"
+                class="fortune-spin-slider"
+                min="5"
+                max="20"
+                step="1"
+                value="12"
+                aria-label="Настройка времени вращения колеса"
+              >
+            </div>
+            <div class="fortune-wheel-wrap">
+              <div class="fortune-pointer" aria-hidden="true"></div>
+              <canvas id="wheelCanvas" width="800" height="800"
+                      aria-label="Колесо фортуны" role="img"></canvas>
+            </div>
+            <div class="fortune-status" id="status">
+              Нажмите на колесо, чтобы запустить вращение.
+            </div>
+            <div class="fortune-legend" id="legend"></div>
           </div>
-          <div class="fortune-status" id="status">
-            Нажмите на колесо, чтобы запустить вращение.
-          </div>
-          <div class="fortune-legend" id="legend"></div>
-        </div>
-      </section>
+        </section>
 
       <div class="fortune-side">
         <section class="music-section">

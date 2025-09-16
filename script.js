@@ -3794,6 +3794,8 @@ function initFortuneWheel() {
   const resetBtn = document.getElementById("resetBtn");
   const shuffleBtn = document.getElementById("shuffleBtn");
   const spinBtn = document.getElementById("spinBtn");
+  const durationSlider = document.getElementById("spinDurationSlider");
+  const durationValue = document.getElementById("spinDurationValue");
 
   if (!canvas || !legendEl || !statusEl || !input) {
     return null;
@@ -3808,12 +3810,41 @@ function initFortuneWheel() {
   let eliminatedItems = new Set();
 
   let rotation = 0;
-  let angularVelocity = 0;
   let spinning = false;
-  let lastTime = 0;
+  let startRotation = 0;
+  let targetRotation = 0;
+  let spinStartTime = 0;
+  let spinDurationMs = 12000;
 
-  const FRICTION = 0.986;
-  const STOP_THRESHOLD = 0.03;
+  const updateDurationLabel = (value) => {
+    if (durationValue) {
+      durationValue.textContent = `${value}\u00A0с`;
+    }
+  };
+
+  if (durationSlider) {
+    const initialSeconds = Number(durationSlider.value) || Math.round(spinDurationMs / 1000);
+    spinDurationMs = Math.max(1, initialSeconds) * 1000;
+    updateDurationLabel(initialSeconds);
+    durationSlider.addEventListener("input", (event) => {
+      const seconds = Number(event.target.value) || 0;
+      const clamped = Math.max(1, seconds);
+      spinDurationMs = clamped * 1000;
+      updateDurationLabel(clamped);
+    });
+  } else if (durationValue) {
+    updateDurationLabel(Math.round(spinDurationMs / 1000));
+  }
+
+  function normalizeAngle(angle) {
+    const tau = Math.PI * 2;
+    return ((angle % tau) + tau) % tau;
+  }
+
+  function easeOutCubic(t) {
+    const clamped = Math.min(1, Math.max(0, t));
+    return 1 - Math.pow(1 - clamped, 3);
+  }
 
   function dprScaleCanvas(cnv) {
     const rect = cnv.getBoundingClientRect();
@@ -4018,23 +4049,28 @@ function initFortuneWheel() {
       return;
     }
 
-    const current = now || performance.now();
-    const dt = Math.min(0.05, (current - lastTime) / 1000 || 0);
-    lastTime = current;
+    const current = typeof now === "number" ? now : performance.now();
+    const elapsed = current - spinStartTime;
+    const duration = Math.max(1, spinDurationMs);
+    const progress = Math.min(1, elapsed / duration);
+    const eased = easeOutCubic(progress);
 
-    rotation = (rotation + angularVelocity * dt) % (Math.PI * 2);
-    angularVelocity *= FRICTION;
+    rotation = startRotation + (targetRotation - startRotation) * eased;
 
-    drawWheel();
-
-    if (Math.abs(angularVelocity) < STOP_THRESHOLD) {
-      angularVelocity = 0;
+    if (progress >= 1) {
+      rotation = normalizeAngle(rotation);
       spinning = false;
+      if (durationSlider) {
+        durationSlider.disabled = false;
+      }
+      drawWheel();
       const winner = pickCurrentIndex();
       announceWinner(winner);
-    } else {
-      requestAnimationFrame(animate);
+      return;
     }
+
+    drawWheel();
+    requestAnimationFrame(animate);
   }
 
   function spin() {
@@ -4043,11 +4079,31 @@ function initFortuneWheel() {
       return;
     }
 
-    angularVelocity = 8.5 + Math.random() * 4.5;
-    lastTime = performance.now();
+    const segmentAngle = (Math.PI * 2) / activeItems.length;
+    const winnerIndex = Math.floor(Math.random() * activeItems.length);
+    const randomOffset = 0.15 + Math.random() * 0.7;
+    const finalRotation = normalizeAngle(
+      Math.PI * 1.5 - (winnerIndex + randomOffset) * segmentAngle,
+    );
+
+    const currentRotation = normalizeAngle(rotation);
+    let delta = finalRotation - currentRotation;
+    if (delta <= 0) {
+      delta += Math.PI * 2;
+    }
+
+    const extraTurns = Math.max(3, Math.round(spinDurationMs / 1000) + 2) + Math.floor(Math.random() * 2);
+    delta += extraTurns * Math.PI * 2;
+
+    startRotation = currentRotation;
+    targetRotation = startRotation + delta;
+    spinStartTime = performance.now();
     spinning = true;
+    rotation = startRotation;
     statusEl.textContent = "Вращение… Удачи!";
-    drawWheel();
+    if (durationSlider) {
+      durationSlider.disabled = true;
+    }
     requestAnimationFrame(animate);
   }
 
