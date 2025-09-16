@@ -3665,6 +3665,7 @@ const playPauseBtn = document.getElementById("playPauseBtn");
 const loopBtn = document.getElementById("loopBtn");
 const volumeSlider = document.getElementById("volumeSlider");
 const volumeValue = document.getElementById("volumeValue");
+let fortuneWheelApi = null;
 
 if (audioPlayer) {
   audioPlayer.loop = true;
@@ -3723,6 +3724,9 @@ if (volumeSlider && audioPlayer) {
 if (musicMenu && musicMenuButton && closeMusicMenu) {
   musicMenuButton.addEventListener("click", () => {
     musicMenu.classList.add("open");
+    if (fortuneWheelApi && typeof fortuneWheelApi.handleMenuOpen === "function") {
+      fortuneWheelApi.handleMenuOpen();
+    }
   });
 
   closeMusicMenu.addEventListener("click", () => {
@@ -3747,5 +3751,395 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
       btn.classList.add("active");
     });
   }
+}
+
+fortuneWheelApi = initFortuneWheel();
+
+function initFortuneWheel() {
+  const canvas = document.getElementById("wheelCanvas");
+  const legendEl = document.getElementById("legend");
+  const statusEl = document.getElementById("status");
+  const input = document.getElementById("itemsInput");
+  const sampleBtn = document.getElementById("sampleBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const shuffleBtn = document.getElementById("shuffleBtn");
+  const spinBtn = document.getElementById("spinBtn");
+
+  if (!canvas || !legendEl || !statusEl || !input) {
+    return null;
+  }
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return null;
+  }
+
+  let items = ["Пицца", "Суши", "Бургер", "Рамен", "Стейк", "Салат", "Паста", "Тако"];
+  let eliminatedItems = new Set();
+
+  let rotation = 0;
+  let angularVelocity = 0;
+  let spinning = false;
+  let lastTime = 0;
+
+  const FRICTION = 0.986;
+  const STOP_THRESHOLD = 0.03;
+
+  function dprScaleCanvas(cnv) {
+    const rect = cnv.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const width = Math.max(1, Math.round(rect.width || cnv.width || 1));
+    const height = Math.max(1, Math.round(rect.height || cnv.height || 1));
+    cnv.width = width * dpr;
+    cnv.height = height * dpr;
+    const context = cnv.getContext("2d");
+    if (context) {
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    return { width, height };
+  }
+
+  function parseInput(text) {
+    return text
+      .split(/\n|,/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  function shuffleArray(array) {
+    const cloned = [...array];
+    for (let i = cloned.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cloned[i], cloned[j]] = [cloned[j], cloned[i]];
+    }
+    return cloned;
+  }
+
+  function colorForIndex(i, n) {
+    const hue = Math.round((360 * i) / Math.max(1, n));
+    return `hsl(${hue}deg 75% 55%)`;
+  }
+
+  function drawWheel() {
+    const { width: w, height: h } = dprScaleCanvas(canvas);
+    const size = Math.min(w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = Math.max(40, size / 2 - 12);
+
+    ctx.clearRect(0, 0, w, h);
+
+    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+    const n = Math.max(1, activeItems.length);
+    const segAngle = (Math.PI * 2) / n;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rotation);
+
+    for (let i = 0; i < n; i += 1) {
+      const start = i * segAngle;
+      const end = start + segAngle;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, start, end);
+      ctx.closePath();
+      ctx.fillStyle = colorForIndex(i, n);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      const mid = start + segAngle / 2;
+      ctx.save();
+      ctx.rotate(mid);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+
+      const fontSize = Math.max(10, Math.min(18, Math.floor(radius * 0.095 * (8 / Math.sqrt(n)))));
+      ctx.font = `600 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
+      ctx.fillStyle = "#fff";
+      ctx.shadowColor = "rgba(0,0,0,0.55)";
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetY = 2;
+
+      const label = String(activeItems[i] ?? "");
+      const maxTextWidth = radius * 0.8;
+      let display = label;
+      while (ctx.measureText(display).width > maxTextWidth && display.length > 3) {
+        display = display.slice(0, -2);
+      }
+      if (display !== label) {
+        display = `${display.slice(0, -1)}…`;
+      }
+
+      ctx.fillText(display, radius * 0.25, 0);
+      ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.arc(0, 0, Math.max(18, radius * 0.09), 0, Math.PI * 2);
+    ctx.fillStyle = "#10132c";
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.stroke();
+
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.beginPath();
+    ctx.arc(0, 0, radius + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    ctx.restore();
+
+    renderLegend();
+  }
+
+  function renderLegend() {
+    legendEl.innerHTML = "";
+    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+
+    items.forEach((label) => {
+      const div = document.createElement("div");
+      div.className = "fortune-legend-item";
+      if (eliminatedItems.has(label)) {
+        div.classList.add("eliminated");
+      }
+
+      const sw = document.createElement("span");
+      sw.className = "fortune-legend-swatch";
+
+      if (!eliminatedItems.has(label)) {
+        const activeIndex = activeItems.indexOf(label);
+        if (activeIndex >= 0) {
+          sw.style.background = colorForIndex(activeIndex, activeItems.length);
+        }
+      } else {
+        sw.style.background = "#4a4a4a";
+      }
+
+      const txt = document.createElement("span");
+      txt.textContent = label;
+
+      div.appendChild(sw);
+      div.appendChild(txt);
+      legendEl.appendChild(div);
+    });
+  }
+
+  function pickCurrentIndex() {
+    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+    const n = Math.max(1, activeItems.length);
+    const seg = (Math.PI * 2) / n;
+    const normalized = (Math.PI * 1.5 - rotation) % (Math.PI * 2);
+    let idx = Math.floor(normalized / seg);
+    if (idx < 0) idx += n;
+    return idx % n;
+  }
+
+  function announceWinner(index) {
+    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+    const text = activeItems[index];
+    if (!text) {
+      return;
+    }
+
+    eliminatedItems.add(text);
+    const remainingItems = items.filter((item) => !eliminatedItems.has(item));
+
+    if (remainingItems.length === 0) {
+      statusEl.innerHTML = `Результат: <b>${escapeHtml(text)}</b><br><span class="fortune-status-success">🎉 Игра завершена! Все элементы были выбраны.</span>`;
+    } else {
+      statusEl.innerHTML = `Результат: <b>${escapeHtml(text)}</b><br><span class="fortune-status-remaining">Осталось элементов: ${remainingItems.length}</span>`;
+    }
+
+    drawWheel();
+
+    const pointer = document.querySelector(".fortune-pointer");
+    if (pointer && pointer.animate) {
+      pointer.animate(
+        [
+          { filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" },
+          { filter: "drop-shadow(0 0 14px rgba(40,199,111,0.9))" },
+          { filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" },
+        ],
+        { duration: 900, easing: "ease" }
+      );
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function animate(now) {
+    if (!spinning) {
+      return;
+    }
+
+    const current = now || performance.now();
+    const dt = Math.min(0.05, (current - lastTime) / 1000 || 0);
+    lastTime = current;
+
+    rotation = (rotation + angularVelocity * dt) % (Math.PI * 2);
+    angularVelocity *= FRICTION;
+
+    drawWheel();
+
+    if (Math.abs(angularVelocity) < STOP_THRESHOLD) {
+      angularVelocity = 0;
+      spinning = false;
+      const winner = pickCurrentIndex();
+      announceWinner(winner);
+    } else {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  function spin() {
+    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+    if (spinning || activeItems.length === 0) {
+      return;
+    }
+
+    angularVelocity = 8.5 + Math.random() * 4.5;
+    lastTime = performance.now();
+    spinning = true;
+    statusEl.textContent = "Вращение… Удачи!";
+    drawWheel();
+    requestAnimationFrame(animate);
+  }
+
+  function updateFromInput() {
+    if (spinning) {
+      return;
+    }
+
+    const newItems = parseInput(input.value).slice(0, 128);
+    if (JSON.stringify(items) === JSON.stringify(newItems)) {
+      return;
+    }
+
+    const updatedEliminated = new Set();
+    eliminatedItems.forEach((item) => {
+      if (newItems.includes(item)) {
+        updatedEliminated.add(item);
+      }
+    });
+
+    items = newItems;
+    eliminatedItems = updatedEliminated;
+    drawWheel();
+
+    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+    if (items.length === 0) {
+      statusEl.textContent = "Добавьте элементы в список для создания колеса.";
+    } else if (activeItems.length === 0) {
+      statusEl.innerHTML = '<span class="fortune-status-success">🎉 Все элементы были исключены! Добавьте новые или очистите список.</span>';
+    } else if (activeItems.length === 1) {
+      statusEl.textContent = "Добавьте больше активных элементов или нажмите на колесо для вращения.";
+    } else {
+      statusEl.textContent = "Нажмите на колесо, чтобы запустить вращение.";
+    }
+  }
+
+  function fillSample() {
+    const sample = [
+      "Пицца",
+      "Суши",
+      "Бургер",
+      "Рамен",
+      "Стейки",
+      "Паста",
+      "Тако",
+      "Кебаб",
+      "Фо",
+      "Шаурма",
+      "Пельмени",
+      "Салат",
+    ];
+    input.value = sample.join("\n");
+    updateFromInput();
+  }
+
+  function clearInput() {
+    input.value = "";
+    eliminatedItems.clear();
+    updateFromInput();
+  }
+
+  function reshuffle() {
+    if (!items.length) {
+      return;
+    }
+    items = shuffleArray(items);
+    input.value = items.join("\n");
+    drawWheel();
+    statusEl.textContent = "Порядок пунктов перемешан.";
+  }
+
+  function resetEliminated() {
+    eliminatedItems.clear();
+    drawWheel();
+    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+    if (activeItems.length > 1) {
+      statusEl.textContent = "Все элементы восстановлены. Нажмите на колесо для вращения.";
+    } else if (activeItems.length === 1) {
+      statusEl.textContent = "Добавьте больше активных элементов или нажмите на колесо для вращения.";
+    }
+  }
+
+  input.addEventListener("input", updateFromInput);
+  input.addEventListener("paste", () => {
+    setTimeout(updateFromInput, 10);
+  });
+
+  if (typeof ResizeObserver === "function") {
+    const resizeObserver = new ResizeObserver(() => {
+      drawWheel();
+    });
+    resizeObserver.observe(canvas);
+  } else {
+    window.addEventListener("resize", drawWheel);
+  }
+
+  canvas.addEventListener("click", spin);
+  if (spinBtn) {
+    spinBtn.addEventListener("click", spin);
+  }
+  if (sampleBtn) {
+    sampleBtn.addEventListener("click", fillSample);
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener("click", clearInput);
+  }
+  if (resetBtn) {
+    resetBtn.addEventListener("click", resetEliminated);
+  }
+  if (shuffleBtn) {
+    shuffleBtn.addEventListener("click", reshuffle);
+  }
+
+  input.value = items.join("\n");
+  drawWheel();
+
+  return {
+    handleMenuOpen() {
+      drawWheel();
+      setTimeout(drawWheel, 320);
+    },
+  };
 }
 
