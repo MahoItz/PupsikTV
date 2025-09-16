@@ -861,11 +861,9 @@
   </button>
 
   <div class="music-menu-content">
-    <h2>Поле чудес</h2>
 
     <div class="fortune-body">
         <section class="fortune-section fortune-wheel-section">
-          <h3 class="fortune-title">Колесо фортуны</h3>
           <div class="fortune-wheel-card">
             <div class="fortune-spin-settings">
               <label class="fortune-spin-label" for="spinDurationSlider">
@@ -875,10 +873,10 @@
                 type="range"
                 id="spinDurationSlider"
                 class="fortune-spin-slider"
-                min="5"
-                max="20"
+                min="3"
+                max="15"
                 step="1"
-                value="12"
+                value="7"
                 aria-label="Настройка времени вращения колеса"
               >
             </div>
@@ -918,9 +916,6 @@
         <section class="fortune-section fortune-list-section">
           <h3 class="fortune-title">Список для рулетки</h3>
           <div class="fortune-controls">
-            <p class="fortune-description">
-              Каждая строка — отдельный сектор колеса. Колесо обновляется автоматически при вводе текста.
-            </p>
             <textarea id="itemsInput" class="fortune-textarea"
                       placeholder="Примеры:\nПицца\nСуши\nБургер\nРамен\nСтейк\nСалат"></textarea>
 
