@@ -2089,7 +2089,7 @@ select option {
     position: fixed;
     top: 0;
     left: 0;
-    width: clamp(300px, 80vw, 1400px);
+    width: 80%;
     height: 100%;
     background: var(--card-bg);
     transform: translateX(-100%);
@@ -2286,7 +2286,6 @@ select option {
     align-items: center;
     gap: 32px;
     width: 100%;
-    max-width: 960px;
     margin: 32px auto 24px;
     transition: opacity 0.3s ease;
 }
@@ -2336,19 +2335,15 @@ select option {
     gap: 20px;
     align-self: center;
     width: 100%;
-    max-width: 960px;
     margin: 0 auto;
 }
 
 .fortune-body {
-    display: grid;
-    grid-template-columns: minmax(320px, 2fr) minmax(260px, 1fr);
-    gap: 24px;
-    align-items: start;
-    justify-content: center;
-    width: 100%;
-    max-width: 820px;
-    margin: 0 auto;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 24px 32px;
+  justify-content: center;
+  width: 100%;
 }
 
 .fortune-wheel-card {
@@ -2358,7 +2353,7 @@ select option {
     padding: 16px;
     display: grid;
     gap: 12px;
-    width: min(100%, 520px);
+    width: clamp(320px, 45vw, 520px);
     justify-self: center;
 }
 

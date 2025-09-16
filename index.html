@@ -854,66 +854,89 @@
             </div>
         </div>
     </div>
-    <div id="musicMenu" class="music-menu">
-        <button id="closeMusicMenu" class="close-music-menu" aria-label="Закрыть">&times;</button>
-        <button id="collapseMusicMenu" class="collapse-music-menu" aria-label="Свернуть панель">
-            <i class="fa-solid fa-angle-left" aria-hidden="true"></i>
+<div id="musicMenu" class="music-menu">
+  <button id="closeMusicMenu" class="close-music-menu" aria-label="Закрыть">&times;</button>
+  <button id="collapseMusicMenu" class="collapse-music-menu" aria-label="Свернуть панель">
+    <i class="fa-solid fa-angle-left" aria-hidden="true"></i>
+  </button>
+
+  <div class="music-menu-content">
+    <h2>Поле чудес</h2>
+
+    <!-- Музыка -->
+    <section class="music-section">
+      <h3 class="music-section-title">Музыкальное сопровождение</h3>
+      <ul id="musicList" class="music-track-list">
+        <li><button data-src="Music/The_Field_of_Wonders.mp3">Барабан</button></li>
+        <li><button data-src="Music/Supergame.mp3">Суперигра</button></li>
+        <li><button data-src="Music/60_seconds.mp3">60 секунд</button></li>
+      </ul>
+      <audio id="audioPlayer" class="audio-player" loop></audio>
+      <div class="audio-controls">
+        <button id="playPauseBtn" class="audio-btn" aria-label="Воспроизвести/Пауза">
+          <i class="fa-solid fa-play"></i>
         </button>
-        <div class="music-menu-content">
-            <h2>Поле чудес</h2>
+        <button id="loopBtn" class="audio-btn active" aria-label="Зациклить">
+          <i class="fa-solid fa-repeat"></i>
+        </button>
+        <input type="range" id="volumeSlider" class="volume-slider"
+               min="0" max="1" step="0.01" value="1" aria-label="Громкость">
+        <span id="volumeValue">100%</span>
+      </div>
+    </section>
 
-            <section class="music-section">
-                <h3 class="music-section-title">Музыкальное сопровождение</h3>
-                <ul id="musicList" class="music-track-list">
-                    <li><button data-src="Music/The_Field_of_Wonders.mp3">Барабан</button></li>
-                    <li><button data-src="Music/Supergame.mp3">Суперигра</button></li>
-                    <li><button data-src="Music/60_seconds.mp3">60 секунд</button></li>
-                </ul>
-                <audio id="audioPlayer" class="audio-player" loop></audio>
-                <div class="audio-controls">
-                    <button id="playPauseBtn" class="audio-btn" aria-label="Воспроизвести/Пауза">
-                        <i class="fa-solid fa-play"></i>
-                    </button>
-                    <button id="loopBtn" class="audio-btn active" aria-label="Зациклить">
-                        <i class="fa-solid fa-repeat"></i>
-                    </button>
-                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="1" aria-label="Громкость">
-                    <span id="volumeValue">100%</span>
-                </div>
-            </section>
-
-            <section class="fortune-section" aria-labelledby="fortuneWheelTitle">
-                <h3 id="fortuneWheelTitle" class="fortune-title">Колесо фортуны</h3>
-                <div class="fortune-body">
-                    <div class="fortune-wheel-card">
-                        <div class="fortune-wheel-wrap">
-                            <div class="fortune-pointer" aria-hidden="true"></div>
-                            <canvas id="wheelCanvas" width="800" height="800" aria-label="Колесо фортуны" role="img"></canvas>
-                        </div>
-                        <div class="fortune-status" id="status">Нажмите на колесо, чтобы запустить вращение.</div>
-                        <div class="fortune-legend" id="legend"></div>
-                    </div>
-                    <div class="fortune-controls">
-                        <label class="fortune-label" for="itemsInput">Список для рулетки</label>
-                        <p class="fortune-description">Каждая строка — отдельный сектор колеса. Колесо обновляется автоматически при вводе текста.</p>
-                        <textarea id="itemsInput" class="fortune-textarea" placeholder="Примеры:\nПицца\nСуши\nБургер\nРамен\nСтейк\nСалат"></textarea>
-                        <div class="fortune-row">
-                            <div class="fortune-buttons">
-                                <button id="sampleBtn" class="fortune-button">Пример</button>
-                                <button id="clearBtn" class="fortune-button fortune-button-ghost">Очистить</button>
-                            </div>
-                            <div class="fortune-buttons fortune-buttons-right">
-                                <button id="resetBtn" class="fortune-button fortune-button-ghost" title="Восстановить все зачёркнутые элементы">Сбросить</button>
-                                <button id="shuffleBtn" class="fortune-button fortune-button-ghost" title="Перемешать порядок">Перемешать</button>
-                                <button id="spinBtn" class="fortune-button fortune-button-primary" title="Крутить (альтернатива клику)">Крутить</button>
-                            </div>
-                        </div>
-                        <p class="fortune-note">Совет: добавьте 2–20 пунктов для оптимальной читаемости. Выпавшие элементы зачёркиваются и исключаются из следующих вращений.</p>
-                    </div>
-                </div>
-            </section>
+    <!-- Обёртка для колеса и списка -->
+    <div class="fortune-body">
+      <!-- Блок с колесом -->
+      <section class="fortune-section">
+        <h3 class="fortune-title">Колесо фортуны</h3>
+        <div class="fortune-wheel-card">
+          <div class="fortune-wheel-wrap">
+            <div class="fortune-pointer" aria-hidden="true"></div>
+            <canvas id="wheelCanvas" width="800" height="800"
+                    aria-label="Колесо фортуны" role="img"></canvas>
+          </div>
+          <div class="fortune-status" id="status">
+            Нажмите на колесо, чтобы запустить вращение.
+          </div>
+          <div class="fortune-legend" id="legend"></div>
         </div>
+      </section>
+
+      <!-- Блок со списком -->
+      <section class="fortune-section">
+        <h3 class="fortune-title">Список для рулетки</h3>
+        <div class="fortune-controls">
+          <p class="fortune-description">
+            Каждая строка — отдельный сектор колеса. Колесо обновляется автоматически при вводе текста.
+          </p>
+          <textarea id="itemsInput" class="fortune-textarea"
+                    placeholder="Примеры:\nПицца\nСуши\nБургер\nРамен\nСтейк\nСалат"></textarea>
+
+          <div class="fortune-row">
+            <div class="fortune-buttons">
+              <button id="sampleBtn" class="fortune-button">Пример</button>
+              <button id="clearBtn" class="fortune-button fortune-button-ghost">Очистить</button>
+            </div>
+            <div class="fortune-buttons fortune-buttons-right">
+              <button id="resetBtn" class="fortune-button fortune-button-ghost"
+                      title="Восстановить все зачёркнутые элементы">Сбросить</button>
+              <button id="shuffleBtn" class="fortune-button fortune-button-ghost"
+                      title="Перемешать порядок">Перемешать</button>
+              <button id="spinBtn" class="fortune-button fortune-button-primary"
+                      title="Крутить (альтернатива клику)">Крутить</button>
+            </div>
+          </div>
+
+          <p class="fortune-note">
+            Совет: добавьте 2–20 пунктов для оптимальной читаемости. Выпавшие элементы зачёркиваются и исключаются из следующих вращений.
+          </p>
+        </div>
+      </section>
     </div>
+  </div>
+</div>
+
     <nav class="mobile-tabs" id="mobileTabs">
         <button data-tab="movies" class="active">Фильмы</button>
         <button data-tab="watchlist">Заказанные фильмы</button>
