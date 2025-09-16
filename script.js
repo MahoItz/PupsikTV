@@ -3659,6 +3659,7 @@ window.addEventListener("load", () => {
 const musicMenu = document.getElementById("musicMenu");
 const musicMenuButton = document.getElementById("musicMenuButton");
 const closeMusicMenu = document.getElementById("closeMusicMenu");
+const collapseMusicMenuButton = document.getElementById("collapseMusicMenu");
 const musicList = document.getElementById("musicList");
 const audioPlayer = document.getElementById("audioPlayer");
 const playPauseBtn = document.getElementById("playPauseBtn");
@@ -3722,20 +3723,48 @@ if (volumeSlider && audioPlayer) {
 
 
 if (musicMenu && musicMenuButton && closeMusicMenu) {
+  const setMenuCollapsed = (shouldCollapse) => {
+    musicMenu.classList.toggle("collapsed", shouldCollapse);
+    if (collapseMusicMenuButton) {
+      collapseMusicMenuButton.setAttribute(
+        "aria-label",
+        shouldCollapse ? "Развернуть панель" : "Свернуть панель",
+      );
+    }
+  };
+
+  const closeMenu = () => {
+    musicMenu.classList.remove("open");
+    setMenuCollapsed(false);
+    if (audioPlayer) audioPlayer.pause();
+    if (musicList) {
+      musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+    }
+  };
+
+  setMenuCollapsed(false);
+
   musicMenuButton.addEventListener("click", () => {
     musicMenu.classList.add("open");
+    setMenuCollapsed(false);
     if (fortuneWheelApi && typeof fortuneWheelApi.handleMenuOpen === "function") {
       fortuneWheelApi.handleMenuOpen();
     }
   });
 
   closeMusicMenu.addEventListener("click", () => {
-    musicMenu.classList.remove("open");
-    if (audioPlayer) audioPlayer.pause();
-    if (musicList) {
-      musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
-    }
+    closeMenu();
   });
+
+  if (collapseMusicMenuButton) {
+    collapseMusicMenuButton.addEventListener("click", () => {
+      const shouldCollapse = !musicMenu.classList.contains("collapsed");
+      setMenuCollapsed(shouldCollapse);
+      if (!shouldCollapse && fortuneWheelApi && typeof fortuneWheelApi.handleMenuOpen === "function") {
+        fortuneWheelApi.handleMenuOpen();
+      }
+    });
+  }
 
   if (musicList) {
     musicList.addEventListener("click", (e) => {
