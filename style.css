@@ -2476,16 +2476,60 @@ select option {
 
 .fortune-pointer {
     position: absolute;
-    top: 6px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 50%;
+    right: -12px;
+    transform: translateY(-50%);
     width: 0;
     height: 0;
-    border-left: 16px solid transparent;
-    border-right: 16px solid transparent;
-    border-bottom: 24px solid #28c76f;
+    border-top: 18px solid transparent;
+    border-bottom: 18px solid transparent;
+    border-left: 28px solid #28c76f;
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
     z-index: 2;
+}
+
+.fortune-result-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(8, 11, 30, 0.65);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.97);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 3;
+}
+
+.fortune-result-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+    cursor: pointer;
+}
+
+.fortune-result-message {
+    background: rgba(13, 18, 44, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    padding: 20px 28px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 1.2rem;
+    line-height: 1.4;
+    text-align: center;
+    font-weight: 600;
+    max-width: min(340px, 82%);
+}
+
+.fortune-result-message strong {
+    color: #28c76f;
+}
+
+.fortune-result-suffix {
+    color: #f3f4ff;
 }
 
 .fortune-status {

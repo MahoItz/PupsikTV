@@ -3796,6 +3796,8 @@ function initFortuneWheel() {
   const spinBtn = document.getElementById("spinBtn");
   const durationSlider = document.getElementById("spinDurationSlider");
   const durationValue = document.getElementById("spinDurationValue");
+  const resultOverlay = document.getElementById("fortuneResultOverlay");
+  const resultNameEl = document.getElementById("fortuneResultName");
 
   if (!canvas || !legendEl || !statusEl || !input) {
     return null;
@@ -3815,6 +3817,45 @@ function initFortuneWheel() {
   let targetRotation = 0;
   let spinStartTime = 0;
   let spinDurationMs = 12000;
+  const pointerAngle = 0;
+  let resultOverlayTimeoutId = null;
+
+  function setResultOverlayVisible(visible) {
+    if (!resultOverlay) {
+      return;
+    }
+    resultOverlay.classList.toggle("visible", visible);
+    resultOverlay.setAttribute("aria-hidden", String(!visible));
+  }
+
+  function hideResultOverlay() {
+    if (resultOverlayTimeoutId) {
+      window.clearTimeout(resultOverlayTimeoutId);
+      resultOverlayTimeoutId = null;
+    }
+    setResultOverlayVisible(false);
+  }
+
+  function showResultOverlay(text) {
+    if (!resultOverlay || !resultNameEl) {
+      return;
+    }
+
+    resultNameEl.textContent = text;
+    setResultOverlayVisible(true);
+
+    if (resultOverlayTimeoutId) {
+      window.clearTimeout(resultOverlayTimeoutId);
+    }
+    resultOverlayTimeoutId = window.setTimeout(() => {
+      setResultOverlayVisible(false);
+      resultOverlayTimeoutId = null;
+    }, 4000);
+  }
+
+  if (resultOverlay) {
+    resultOverlay.addEventListener("click", hideResultOverlay);
+  }
 
   const updateDurationLabel = (value) => {
     if (durationValue) {
@@ -3998,7 +4039,7 @@ function initFortuneWheel() {
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
     const n = Math.max(1, activeItems.length);
     const seg = (Math.PI * 2) / n;
-    const normalized = (Math.PI * 1.5 - rotation) % (Math.PI * 2);
+    const normalized = normalizeAngle(pointerAngle - rotation);
     let idx = Math.floor(normalized / seg);
     if (idx < 0) idx += n;
     return idx % n;
@@ -4021,6 +4062,7 @@ function initFortuneWheel() {
     }
 
     drawWheel();
+    showResultOverlay(text);
 
     const pointer = document.querySelector(".fortune-pointer");
     if (pointer && pointer.animate) {
@@ -4079,11 +4121,12 @@ function initFortuneWheel() {
       return;
     }
 
+    hideResultOverlay();
     const segmentAngle = (Math.PI * 2) / activeItems.length;
     const winnerIndex = Math.floor(Math.random() * activeItems.length);
     const randomOffset = 0.15 + Math.random() * 0.7;
     const finalRotation = normalizeAngle(
-      Math.PI * 1.5 - (winnerIndex + randomOffset) * segmentAngle,
+      pointerAngle - (winnerIndex + randomOffset) * segmentAngle,
     );
 
     const currentRotation = normalizeAngle(rotation);
@@ -4127,6 +4170,7 @@ function initFortuneWheel() {
     items = newItems;
     eliminatedItems = updatedEliminated;
     drawWheel();
+    hideResultOverlay();
 
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
     if (items.length === 0) {
@@ -4162,6 +4206,7 @@ function initFortuneWheel() {
   function clearInput() {
     input.value = "";
     eliminatedItems.clear();
+    hideResultOverlay();
     updateFromInput();
   }
 
@@ -4172,12 +4217,14 @@ function initFortuneWheel() {
     items = shuffleArray(items);
     input.value = items.join("\n");
     drawWheel();
+    hideResultOverlay();
     statusEl.textContent = "Порядок пунктов перемешан.";
   }
 
   function resetEliminated() {
     eliminatedItems.clear();
     drawWheel();
+    hideResultOverlay();
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
     if (activeItems.length > 1) {
       statusEl.textContent = "Все элементы восстановлены. Нажмите на колесо для вращения.";
