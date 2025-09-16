@@ -1656,6 +1656,17 @@ select option {
     }
 }
 
+@media (max-width: 1100px) {
+    .fortune-section {
+        grid-template-columns: 1fr;
+    }
+
+    .fortune-section .fortune-wheel-card,
+    .fortune-section .fortune-controls {
+        grid-column: 1;
+    }
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 15px;
@@ -2089,11 +2100,11 @@ select option {
     position: fixed;
     top: 0;
     left: 0;
-    width: min(100%, 440px);
+    width: min(100%, 80vw);
     height: 100%;
     background: var(--card-bg);
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, width 0.3s ease, padding 0.3s ease;
     z-index: 1500;
     padding: 24px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
@@ -2102,6 +2113,44 @@ select option {
 
 .music-menu.open {
     transform: translateX(0);
+}
+
+.music-menu.collapsed {
+    width: max(80px, 10vw);
+    padding: 24px 16px;
+    overflow: hidden;
+}
+
+.music-menu.collapsed .music-menu-content {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.collapse-music-menu {
+    position: absolute;
+    top: 12px;
+    right: 52px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    z-index: 1;
+}
+
+.collapse-music-menu:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.music-menu.collapsed .collapse-music-menu {
+    right: 20px;
 }
 
 .close-music-menu {
@@ -2226,6 +2275,7 @@ select option {
     flex-direction: column;
     gap: 24px;
     margin-top: 16px;
+    transition: opacity 0.3s ease;
 }
 
 .music-menu h2 {
@@ -2263,9 +2313,24 @@ select option {
 }
 
 .fortune-section {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    column-gap: 32px;
+    row-gap: 18px;
+    align-items: start;
+}
+
+.fortune-section .fortune-title {
+    grid-column: 1 / -1;
+}
+
+.fortune-section .fortune-wheel-card {
+    grid-column: 1;
+}
+
+.fortune-section .fortune-controls {
+    grid-column: 2;
+    align-self: stretch;
 }
 
 .fortune-wheel-card {
@@ -2280,7 +2345,9 @@ select option {
 .fortune-wheel-wrap {
     position: relative;
     width: 100%;
+    max-width: 640px;
     aspect-ratio: 1 / 1;
+    margin: 0 auto;
 }
 
 .fortune-wheel-wrap canvas {

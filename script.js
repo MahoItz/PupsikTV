@@ -3659,6 +3659,7 @@ window.addEventListener("load", () => {
 const musicMenu = document.getElementById("musicMenu");
 const musicMenuButton = document.getElementById("musicMenuButton");
 const closeMusicMenu = document.getElementById("closeMusicMenu");
+const collapseMusicMenuButton = document.getElementById("collapseMusicMenu");
 const musicList = document.getElementById("musicList");
 const audioPlayer = document.getElementById("audioPlayer");
 const playPauseBtn = document.getElementById("playPauseBtn");
@@ -3722,8 +3723,26 @@ if (volumeSlider && audioPlayer) {
 
 
 if (musicMenu && musicMenuButton && closeMusicMenu) {
+  const updateMusicMenuCollapseState = (collapsed) => {
+    if (!musicMenu) return;
+    musicMenu.classList.toggle("collapsed", collapsed);
+    if (collapseMusicMenuButton) {
+      const icon = collapseMusicMenuButton.querySelector("i");
+      if (icon) {
+        icon.classList.toggle("fa-arrow-left", !collapsed);
+        icon.classList.toggle("fa-arrow-right", collapsed);
+      }
+      collapseMusicMenuButton.setAttribute("aria-expanded", String(!collapsed));
+      collapseMusicMenuButton.setAttribute(
+        "aria-label",
+        collapsed ? "Развернуть меню" : "Свернуть меню"
+      );
+    }
+  };
+
   musicMenuButton.addEventListener("click", () => {
     musicMenu.classList.add("open");
+    updateMusicMenuCollapseState(false);
     if (fortuneWheelApi && typeof fortuneWheelApi.handleMenuOpen === "function") {
       fortuneWheelApi.handleMenuOpen();
     }
@@ -3731,11 +3750,20 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
 
   closeMusicMenu.addEventListener("click", () => {
     musicMenu.classList.remove("open");
+    updateMusicMenuCollapseState(false);
     if (audioPlayer) audioPlayer.pause();
     if (musicList) {
       musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
     }
   });
+
+  if (collapseMusicMenuButton) {
+    collapseMusicMenuButton.addEventListener("click", () => {
+      const shouldCollapse = !musicMenu.classList.contains("collapsed");
+      musicMenu.classList.add("open");
+      updateMusicMenuCollapseState(shouldCollapse);
+    });
+  }
 
   if (musicList) {
     musicList.addEventListener("click", (e) => {
