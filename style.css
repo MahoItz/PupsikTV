@@ -2449,7 +2449,7 @@ select option {
     display: grid;
     gap: 12px;
     align-content: start;
-    width: min(100%, 360px);
+    width: clamp(260px, 34vw, 380px);
     justify-self: center;
 }
 
