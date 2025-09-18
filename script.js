@@ -3866,6 +3866,22 @@ function initFortuneWheel() {
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
   let pendingEliminationItem = null;
+  const placeholderColors = [
+    "hsl(0deg 84% 55%)",
+    "hsl(24deg 86% 57%)",
+    "hsl(44deg 88% 58%)",
+    "hsl(126deg 45% 50%)",
+    "hsl(173deg 55% 46%)",
+    "hsl(196deg 68% 52%)",
+    "hsl(230deg 60% 55%)",
+    "hsl(286deg 55% 58%)",
+  ];
+  const placeholderSegmentsCount = placeholderColors.length;
+  const idleAngularVelocity = (Math.PI * 2) / 24000;
+  let idleRotation = 0;
+  let idleAnimationId = null;
+  let idleLastTimestamp = null;
+  let idleActive = false;
 
   function applyPendingElimination() {
     if (pendingEliminationItem !== null) {
@@ -3948,6 +3964,49 @@ function initFortuneWheel() {
     return ((angle % tau) + tau) % tau;
   }
 
+  function stepIdleAnimation(timestamp) {
+    if (!idleActive) {
+      idleAnimationId = null;
+      idleLastTimestamp = null;
+      return;
+    }
+
+    if (typeof timestamp === "number") {
+      if (idleLastTimestamp !== null) {
+        const delta = timestamp - idleLastTimestamp;
+        idleRotation = normalizeAngle(idleRotation + delta * idleAngularVelocity);
+      }
+      idleLastTimestamp = timestamp;
+    }
+
+    drawWheel();
+
+    if (idleActive) {
+      idleAnimationId = requestAnimationFrame(stepIdleAnimation);
+    }
+  }
+
+  function startIdleAnimation() {
+    if (idleActive) {
+      return;
+    }
+    idleActive = true;
+    idleLastTimestamp = null;
+    idleAnimationId = requestAnimationFrame(stepIdleAnimation);
+  }
+
+  function stopIdleAnimation() {
+    if (!idleActive) {
+      return;
+    }
+    idleActive = false;
+    if (idleAnimationId !== null) {
+      cancelAnimationFrame(idleAnimationId);
+      idleAnimationId = null;
+    }
+    idleLastTimestamp = null;
+  }
+
   function easeOutCubic(t) {
     const clamped = Math.min(1, Math.max(0, t));
     return 1 - Math.pow(1 - clamped, 3);
@@ -3998,14 +4057,15 @@ function initFortuneWheel() {
     ctx.clearRect(0, 0, w, h);
 
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
-    const n = Math.max(1, activeItems.length);
-    const segAngle = (Math.PI * 2) / n;
+    const usePlaceholder = items.length === 0;
+    const segmentCount = usePlaceholder ? placeholderSegmentsCount : Math.max(1, activeItems.length);
+    const segAngle = (Math.PI * 2) / segmentCount;
 
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(rotation);
+    ctx.rotate(usePlaceholder ? idleRotation : rotation);
 
-    for (let i = 0; i < n; i += 1) {
+    for (let i = 0; i < segmentCount; i += 1) {
       const start = i * segAngle;
       const end = start + segAngle;
 
@@ -4013,38 +4073,47 @@ function initFortuneWheel() {
       ctx.moveTo(0, 0);
       ctx.arc(0, 0, radius, start, end);
       ctx.closePath();
-      ctx.fillStyle = colorForIndex(i, n);
+      ctx.fillStyle = usePlaceholder
+        ? placeholderColors[i % placeholderColors.length]
+        : colorForIndex(i, segmentCount);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      const mid = start + segAngle / 2;
-      ctx.save();
-      ctx.rotate(mid);
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-
-      const fontSize = Math.max(10, Math.min(18, Math.floor(radius * 0.095 * (8 / Math.sqrt(n)))));
-      ctx.font = `600 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
-      ctx.fillStyle = "#fff";
-      ctx.shadowColor = "rgba(0,0,0,0.55)";
-      ctx.shadowBlur = 6;
-      ctx.shadowOffsetY = 2;
-
-      const label = String(activeItems[i] ?? "");
-      const maxTextWidth = radius * 0.8;
-      let display = label;
-      while (ctx.measureText(display).width > maxTextWidth && display.length > 3) {
-        display = display.slice(0, -2);
-      }
-      if (display !== label) {
-        display = `${display.slice(0, -1)}…`;
+      if (segmentCount > 1) {
+        ctx.strokeStyle = usePlaceholder ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.35)";
+        ctx.lineWidth = usePlaceholder ? 2 : 1.5;
+        ctx.stroke();
       }
 
-      ctx.fillText(display, radius * 0.25, 0);
-      ctx.restore();
+      if (!usePlaceholder) {
+        const mid = start + segAngle / 2;
+        ctx.save();
+        ctx.rotate(mid);
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+
+        const fontSize = Math.max(
+          10,
+          Math.min(18, Math.floor(radius * 0.095 * (8 / Math.sqrt(segmentCount)))),
+        );
+        ctx.font = `600 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = "rgba(0,0,0,0.55)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 2;
+
+        const label = String(activeItems[i] ?? "");
+        const maxTextWidth = radius * 0.8;
+        let display = label;
+        while (ctx.measureText(display).width > maxTextWidth && display.length > 3) {
+          display = display.slice(0, -2);
+        }
+        if (display !== label) {
+          display = `${display.slice(0, -1)}…`;
+        }
+
+        ctx.fillText(display, radius * 0.25, 0);
+        ctx.restore();
+      }
     }
 
     ctx.beginPath();
@@ -4066,7 +4135,13 @@ function initFortuneWheel() {
     ctx.stroke();
     ctx.restore();
 
-    renderLegend();
+    if (usePlaceholder) {
+      if (legendEl && legendEl.firstChild) {
+        legendEl.innerHTML = "";
+      }
+    } else {
+      renderLegend();
+    }
   }
 
   function renderLegend() {
@@ -4192,6 +4267,8 @@ function initFortuneWheel() {
       return;
     }
 
+    stopIdleAnimation();
+
     hideResultOverlay();
     const segmentAngle = (Math.PI * 2) / activeItems.length;
     const winnerIndex = Math.floor(Math.random() * activeItems.length);
@@ -4240,6 +4317,11 @@ function initFortuneWheel() {
 
     items = newItems;
     eliminatedItems = updatedEliminated;
+    if (items.length === 0) {
+      startIdleAnimation();
+    } else {
+      stopIdleAnimation();
+    }
     drawWheel();
     hideResultOverlay();
 
@@ -4314,6 +4396,9 @@ function initFortuneWheel() {
 
   input.value = items.join("\n");
   drawWheel();
+  if (items.length === 0) {
+    startIdleAnimation();
+  }
 
   return {
     handleMenuOpen() {
