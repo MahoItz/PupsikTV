@@ -2175,6 +2175,18 @@ select option {
     opacity: 0.9;
     background: rgba(7, 11, 25, 0.75);
     border-color: rgba(255, 255, 255, 0.08);
+    min-height: clamp(320px, 68vh, 560px);
+    height: 100%;
+}
+
+.music-menu.collapsed .fortune-list-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.music-menu.collapsed .fortune-controls {
+    flex: 1;
 }
 
 .close-music-menu {
