@@ -3857,6 +3857,31 @@ function initFortuneWheel() {
   let items = [];
   let eliminatedItems = new Set();
 
+  const STRIKE_COMBINING_CHAR = "\u0336";
+
+  const sanitizeFortuneText = (text) => text.replace(/\u0336/g, "");
+
+  function formatFortuneItemForInput(value, isEliminated) {
+    if (!isEliminated) {
+      return value;
+    }
+    return [...value].map((char) => `${char}${STRIKE_COMBINING_CHAR}`).join("");
+  }
+
+  function renderTextarea(force = false) {
+    if (!input) {
+      return;
+    }
+    if (!force && document.activeElement === input) {
+      return;
+    }
+
+    const formatted = items
+      .map((item) => formatFortuneItemForInput(item, eliminatedItems.has(item)))
+      .join("\n");
+    input.value = formatted;
+  }
+
   let rotation = 0;
   let spinning = false;
   let startRotation = 0;
@@ -3889,6 +3914,7 @@ function initFortuneWheel() {
       pendingEliminationItem = null;
     }
     drawWheel();
+    renderTextarea();
   }
 
   function clearPendingElimination() {
@@ -4029,7 +4055,7 @@ function initFortuneWheel() {
   function parseInput(text) {
     return text
       .split(/\n|,/)
-      .map((s) => s.trim())
+      .map((s) => sanitizeFortuneText(s).trim())
       .filter(Boolean);
   }
 
@@ -4207,6 +4233,7 @@ function initFortuneWheel() {
       eliminatedItems.add(text);
       pendingEliminationItem = null;
       drawWheel();
+      renderTextarea();
     }
     showResultOverlay(text);
 
@@ -4324,6 +4351,7 @@ function initFortuneWheel() {
     }
     drawWheel();
     hideResultOverlay();
+    renderTextarea();
 
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
     if (items.length === 0) {
@@ -4343,6 +4371,7 @@ function initFortuneWheel() {
     clearPendingElimination();
     hideResultOverlay();
     updateFromInput();
+    renderTextarea(true);
   }
 
   function reshuffle() {
@@ -4350,10 +4379,10 @@ function initFortuneWheel() {
       return;
     }
     items = shuffleArray(items);
-    input.value = items.join("\n");
     drawWheel();
     hideResultOverlay();
     statusEl.textContent = "Порядок пунктов перемешан.";
+    renderTextarea();
   }
 
   function resetEliminated() {
@@ -4361,6 +4390,7 @@ function initFortuneWheel() {
     drawWheel();
     clearPendingElimination();
     hideResultOverlay();
+    renderTextarea();
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
     if (activeItems.length > 1) {
       statusEl.textContent = "Все элементы восстановлены. Нажмите на колесо для вращения.";
@@ -4370,6 +4400,7 @@ function initFortuneWheel() {
   }
 
   input.addEventListener("input", updateFromInput);
+  input.addEventListener("blur", () => renderTextarea());
   input.addEventListener("paste", () => {
     setTimeout(updateFromInput, 10);
   });
@@ -4394,7 +4425,7 @@ function initFortuneWheel() {
     shuffleBtn.addEventListener("click", reshuffle);
   }
 
-  input.value = items.join("\n");
+  renderTextarea(true);
   drawWheel();
   if (items.length === 0) {
     startIdleAnimation();
