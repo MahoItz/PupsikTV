@@ -2159,13 +2159,25 @@ select option {
     position: absolute;
     top: 14px;
     right: 16px;
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    font-size: 1.5rem;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 50%;
+    background: rgba(10, 15, 35, 0.9);
+    color: var(--primary-color);
     cursor: pointer;
-    transition: opacity 0.3s ease;
-    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.45rem;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    transition: background 0.2s ease, color 0.2s ease;
+    z-index: 3;
+}
+
+.close-music-menu:hover {
+    background: rgba(255, 108, 66, 0.2);
+    color: #fff;
 }
 
 .collapse-music-menu {
