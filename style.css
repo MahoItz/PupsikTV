@@ -2492,11 +2492,45 @@ select option {
     aspect-ratio: 1 / 1;
 }
 
+.fortune-wheel-wrap::before,
+.fortune-wheel-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 11%;
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.86);
+    pointer-events: none;
+    transition: opacity 0.9s ease, transform 1.4s ease;
+    z-index: 1;
+}
+
+.fortune-wheel-wrap::before {
+    background: conic-gradient(
+        from 90deg,
+        rgba(92, 124, 255, 0.12) 0deg,
+        rgba(142, 186, 255, 0.48) 120deg,
+        rgba(193, 236, 255, 0.65) 200deg,
+        rgba(92, 124, 255, 0.12) 360deg
+    );
+    filter: blur(0);
+}
+
+.fortune-wheel-wrap::after {
+    inset: 6%;
+    background: radial-gradient(circle at 50% 50%, rgba(209, 231, 255, 0.38), rgba(61, 83, 135, 0.08) 65%, rgba(30, 40, 70, 0));
+    transform: scale(0.92);
+    z-index: 2;
+}
+
 .fortune-wheel-wrap canvas {
     width: 100%;
     height: 100%;
     display: block;
     border-radius: 16px;
+    position: relative;
+    z-index: 0;
+    transition: opacity 0.6s ease, filter 1.2s ease;
 }
 
 .fortune-wheel-center {
@@ -2515,7 +2549,8 @@ select option {
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.55);
     overflow: hidden;
     pointer-events: none;
-    z-index: 1;
+    z-index: 3;
+    transition: box-shadow 0.6s ease, border-color 0.6s ease, transform 0.6s ease;
 }
 
 .fortune-wheel-center img {
@@ -2537,7 +2572,8 @@ select option {
     border-bottom: 18px solid transparent;
     border-right:28px solid #28c76f;
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
-    z-index: 2;
+    z-index: 4;
+    transition: filter 0.6s ease, opacity 0.6s ease;
 }
 
 .fortune-result-overlay {
@@ -2552,7 +2588,62 @@ select option {
     pointer-events: none;
     transform: scale(0.97);
     transition: opacity 0.25s ease, transform 0.25s ease;
-    z-index: 3;
+    z-index: 5;
+}
+
+.fortune-wheel-wrap--empty::before,
+.fortune-wheel-wrap--empty::after {
+    opacity: 1;
+}
+
+.fortune-wheel-wrap--empty::before {
+    transform: scale(1);
+    animation: fortuneWheelCalmSpin 18s linear infinite;
+}
+
+.fortune-wheel-wrap--empty::after {
+    transform: scale(1.04);
+    animation: fortuneWheelCalmPulse 7.5s ease-in-out infinite;
+}
+
+.fortune-wheel-wrap--empty canvas {
+    opacity: 0.28;
+    filter: saturate(0.7) blur(0.45px);
+}
+
+.fortune-wheel-wrap--empty .fortune-wheel-center {
+    border-color: rgba(214, 234, 255, 0.62);
+    box-shadow: 0 16px 38px rgba(76, 110, 188, 0.35);
+    transform: translate(-50%, -50%) scale(1.025);
+}
+
+.fortune-wheel-wrap--empty .fortune-pointer {
+    opacity: 0.65;
+    filter: drop-shadow(0 0 16px rgba(118, 162, 255, 0.45));
+}
+
+@keyframes fortuneWheelCalmSpin {
+    from {
+        transform: scale(1) rotate(0deg);
+    }
+    to {
+        transform: scale(1) rotate(360deg);
+    }
+}
+
+@keyframes fortuneWheelCalmPulse {
+    0% {
+        transform: scale(1.04);
+        opacity: 0.55;
+    }
+    50% {
+        transform: scale(1.07);
+        opacity: 0.85;
+    }
+    100% {
+        transform: scale(1.04);
+        opacity: 0.55;
+    }
 }
 
 .fortune-result-overlay.visible {

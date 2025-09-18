@@ -3844,6 +3844,7 @@ function initFortuneWheel() {
   const durationValue = document.getElementById("spinDurationValue");
   const resultOverlay = document.getElementById("fortuneResultOverlay");
   const resultNameEl = document.getElementById("fortuneResultName");
+  const wheelWrap = canvas ? canvas.closest(".fortune-wheel-wrap") : null;
 
   if (!canvas || !legendEl || !statusEl || !input) {
     return null;
@@ -3866,6 +3867,41 @@ function initFortuneWheel() {
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
   let pendingEliminationItem = null;
+
+  function setWheelEmptyState(list) {
+    if (!wheelWrap) {
+      return;
+    }
+    const source = Array.isArray(list) ? list : items;
+    wheelWrap.classList.toggle("fortune-wheel-wrap--empty", source.length === 0);
+  }
+
+  function updateWheelStatusMessage(allItems, eliminatedSet) {
+    if (!statusEl) {
+      return;
+    }
+
+    const resolvedEliminated =
+      eliminatedSet instanceof Set
+        ? eliminatedSet
+        : new Set(Array.isArray(eliminatedSet) ? eliminatedSet : []);
+
+    const remaining = Array.isArray(allItems)
+      ? allItems.filter((item) => !resolvedEliminated.has(item))
+      : [];
+
+    if (!allItems.length) {
+      statusEl.textContent = "Добавьте элементы в список для создания колеса.";
+    } else if (remaining.length === 0) {
+      statusEl.innerHTML =
+        '<span class="fortune-status-success">🎉 Все элементы были исключены! Добавьте новые или очистите список.</span>';
+    } else if (remaining.length === 1) {
+      statusEl.textContent =
+        "Добавьте больше активных элементов или нажмите на колесо для вращения.";
+    } else {
+      statusEl.textContent = "Нажмите на колесо, чтобы запустить вращение.";
+    }
+  }
 
   function applyPendingElimination() {
     if (pendingEliminationItem !== null) {
@@ -4227,32 +4263,29 @@ function initFortuneWheel() {
     }
 
     const newItems = parseInput(input.value).slice(0, 128);
-    if (JSON.stringify(items) === JSON.stringify(newItems)) {
-      return;
-    }
+    const unchanged = JSON.stringify(items) === JSON.stringify(newItems);
 
-    const updatedEliminated = new Set();
-    eliminatedItems.forEach((item) => {
-      if (newItems.includes(item)) {
-        updatedEliminated.add(item);
-      }
-    });
+    let currentEliminated = eliminatedItems;
 
-    items = newItems;
-    eliminatedItems = updatedEliminated;
-    drawWheel();
-    hideResultOverlay();
+    if (!unchanged) {
+      const updatedEliminated = new Set();
+      eliminatedItems.forEach((item) => {
+        if (newItems.includes(item)) {
+          updatedEliminated.add(item);
+        }
+      });
 
-    const activeItems = items.filter((item) => !eliminatedItems.has(item));
-    if (items.length === 0) {
-      statusEl.textContent = "Добавьте элементы в список для создания колеса.";
-    } else if (activeItems.length === 0) {
-      statusEl.innerHTML = '<span class="fortune-status-success">🎉 Все элементы были исключены! Добавьте новые или очистите список.</span>';
-    } else if (activeItems.length === 1) {
-      statusEl.textContent = "Добавьте больше активных элементов или нажмите на колесо для вращения.";
+      items = newItems;
+      eliminatedItems = updatedEliminated;
+      currentEliminated = updatedEliminated;
+      drawWheel();
+      hideResultOverlay();
     } else {
-      statusEl.textContent = "Нажмите на колесо, чтобы запустить вращение.";
+      drawWheel();
     }
+
+    setWheelEmptyState(newItems);
+    updateWheelStatusMessage(newItems, currentEliminated);
   }
 
   function clearInput() {
@@ -4271,12 +4304,14 @@ function initFortuneWheel() {
     input.value = items.join("\n");
     drawWheel();
     hideResultOverlay();
+    setWheelEmptyState(items);
     statusEl.textContent = "Порядок пунктов перемешан.";
   }
 
   function resetEliminated() {
     eliminatedItems.clear();
     drawWheel();
+    setWheelEmptyState(items);
     clearPendingElimination();
     hideResultOverlay();
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
@@ -4314,6 +4349,8 @@ function initFortuneWheel() {
 
   input.value = items.join("\n");
   drawWheel();
+  setWheelEmptyState(items);
+  updateWheelStatusMessage(items, eliminatedItems);
 
   return {
     handleMenuOpen() {
