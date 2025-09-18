@@ -3837,11 +3837,9 @@ function initFortuneWheel() {
   const legendEl = document.getElementById("legend");
   const statusEl = document.getElementById("status");
   const input = document.getElementById("itemsInput");
-  const sampleBtn = document.getElementById("sampleBtn");
   const clearBtn = document.getElementById("clearBtn");
   const resetBtn = document.getElementById("resetBtn");
   const shuffleBtn = document.getElementById("shuffleBtn");
-  const spinBtn = document.getElementById("spinBtn");
   const durationSlider = document.getElementById("spinDurationSlider");
   const durationValue = document.getElementById("spinDurationValue");
   const resultOverlay = document.getElementById("fortuneResultOverlay");
@@ -4257,25 +4255,6 @@ function initFortuneWheel() {
     }
   }
 
-  function fillSample() {
-    const sample = [
-      "Пицца",
-      "Суши",
-      "Бургер",
-      "Рамен",
-      "Стейки",
-      "Паста",
-      "Тако",
-      "Кебаб",
-      "Фо",
-      "Шаурма",
-      "Пельмени",
-      "Салат",
-    ];
-    input.value = sample.join("\n");
-    updateFromInput();
-  }
-
   function clearInput() {
     input.value = "";
     eliminatedItems.clear();
@@ -4323,12 +4302,6 @@ function initFortuneWheel() {
   }
 
   canvas.addEventListener("click", spin);
-  if (spinBtn) {
-    spinBtn.addEventListener("click", spin);
-  }
-  if (sampleBtn) {
-    sampleBtn.addEventListener("click", fillSample);
-  }
   if (clearBtn) {
     clearBtn.addEventListener("click", clearInput);
   }
