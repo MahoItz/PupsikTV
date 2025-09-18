@@ -2121,7 +2121,7 @@ select option {
     transform: translateX(-100%);
     transition: transform 0.3s ease, width 0.3s ease;
     z-index: 1500;
-    padding: 28px 32px;
+    padding: 36px 32px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
     overflow-x: hidden;
@@ -2158,7 +2158,7 @@ select option {
 .close-music-menu {
     position: absolute;
     top: 14px;
-    right: 16px;
+    right: 34px;
     width: 38px;
     height: 38px;
     border: 1px solid rgba(255, 255, 255, 0.16);
@@ -2183,7 +2183,7 @@ select option {
 .collapse-music-menu {
     position: absolute;
     top: 14px;
-    right: 56px;
+    right: 80px;
     width: 38px;
     height: 38px;
     border: 1px solid rgba(255, 255, 255, 0.16);
