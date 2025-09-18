@@ -2500,6 +2500,32 @@ select option {
     background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.1), transparent 70%);
 }
 
+.fortune-wheel-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(26%, 140px);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(8, 12, 30, 0.85);
+    border: 3px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.55);
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.fortune-wheel-center img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    pointer-events: none;
+}
+
 .fortune-pointer {
     position: absolute;
     top: 50%;
