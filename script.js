@@ -3857,6 +3857,7 @@ function initFortuneWheel() {
   const shuffleBtn = document.getElementById("shuffleBtn");
   const durationSlider = document.getElementById("spinDurationSlider");
   const durationValue = document.getElementById("spinDurationValue");
+  const itemsPreviewEl = document.getElementById("fortuneItemsPreview");
   const resultOverlay = document.getElementById("fortuneResultOverlay");
   const resultNameEl = document.getElementById("fortuneResultName");
 
@@ -4157,6 +4158,8 @@ function initFortuneWheel() {
     } else {
       renderLegend();
     }
+
+    renderItemsPreview();
   }
 
   function renderLegend() {
@@ -4189,6 +4192,34 @@ function initFortuneWheel() {
       div.appendChild(txt);
       legendEl.appendChild(div);
     });
+  }
+
+  function renderItemsPreview() {
+    if (!itemsPreviewEl) {
+      return;
+    }
+
+    itemsPreviewEl.innerHTML = "";
+
+    if (!items.length) {
+      itemsPreviewEl.classList.add("is-empty");
+      return;
+    }
+
+    itemsPreviewEl.classList.remove("is-empty");
+
+    const fragment = document.createDocumentFragment();
+    items.forEach((label) => {
+      const item = document.createElement("li");
+      item.className = "fortune-items-preview-item";
+      if (eliminatedItems.has(label)) {
+        item.classList.add("eliminated");
+      }
+      item.textContent = label;
+      fragment.appendChild(item);
+    });
+
+    itemsPreviewEl.appendChild(fragment);
   }
 
   function pickCurrentIndex() {

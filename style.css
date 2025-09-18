@@ -2756,6 +2756,51 @@ select option {
     opacity: 0.5;
 }
 
+.fortune-items-preview {
+    list-style: none;
+    margin-top: 12px;
+    padding: 8px;
+    border-radius: var(--border-radius-small);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    max-height: 160px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: var(--transition);
+}
+
+.fortune-items-preview.is-empty {
+    align-items: center;
+    justify-content: center;
+    padding: 16px 12px;
+}
+
+.fortune-items-preview.is-empty::before {
+    content: "Список пуст. Добавьте элементы выше.";
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: center;
+}
+
+.fortune-items-preview-item {
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    word-break: break-word;
+    transition: background 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.fortune-items-preview-item.eliminated {
+    color: rgba(255, 255, 255, 0.45);
+    text-decoration: line-through;
+    opacity: 0.7;
+    background: rgba(255, 255, 255, 0.015);
+}
+
 .fortune-controls {
     display: flex;
     flex-direction: column;
