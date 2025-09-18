@@ -3834,6 +3834,7 @@ fortuneWheelApi = initFortuneWheel();
 
 function initFortuneWheel() {
   const canvas = document.getElementById("wheelCanvas");
+  const wheelWrap = canvas ? canvas.closest(".fortune-wheel-wrap") : null;
   const legendEl = document.getElementById("legend");
   const statusEl = document.getElementById("status");
   const input = document.getElementById("itemsInput");
@@ -3988,6 +3989,50 @@ function initFortuneWheel() {
     return `hsl(${hue}deg 75% 55%)`;
   }
 
+  function drawEmptyWheelBackground(radius) {
+    const baseGradient = ctx.createRadialGradient(0, 0, radius * 0.18, 0, 0, radius);
+    baseGradient.addColorStop(0, "rgba(255, 202, 156, 0.55)");
+    baseGradient.addColorStop(0.5, "rgba(255, 132, 86, 0.38)");
+    baseGradient.addColorStop(1, "rgba(14, 19, 45, 0.94)");
+
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fillStyle = baseGradient;
+    ctx.fill();
+
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    const coolArc = ctx.createLinearGradient(-radius, 0, radius, 0);
+    coolArc.addColorStop(0, "rgba(40, 199, 111, 0)");
+    coolArc.addColorStop(0.45, "rgba(40, 199, 111, 0.55)");
+    coolArc.addColorStop(1, "rgba(40, 199, 111, 0)");
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.88, -Math.PI * 0.2, Math.PI * 0.35);
+    ctx.lineWidth = Math.max(4, radius * 0.08);
+    ctx.lineCap = "round";
+    ctx.strokeStyle = coolArc;
+    ctx.stroke();
+
+    const warmArc = ctx.createLinearGradient(0, -radius, 0, radius);
+    warmArc.addColorStop(0, "rgba(255, 108, 66, 0)");
+    warmArc.addColorStop(0.6, "rgba(255, 108, 66, 0.55)");
+    warmArc.addColorStop(1, "rgba(255, 108, 66, 0)");
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.72, Math.PI * 0.55, Math.PI * 1.1);
+    ctx.lineWidth = Math.max(3, radius * 0.06);
+    ctx.lineCap = "round";
+    ctx.strokeStyle = warmArc;
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 0.94, 0, Math.PI * 2);
+    ctx.lineWidth = Math.max(2, radius * 0.035);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawWheel() {
     const { width: w, height: h } = dprScaleCanvas(canvas);
     const size = Math.min(w, h);
@@ -3998,53 +4043,70 @@ function initFortuneWheel() {
     ctx.clearRect(0, 0, w, h);
 
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
-    const n = Math.max(1, activeItems.length);
-    const segAngle = (Math.PI * 2) / n;
+    const isEmpty = activeItems.length === 0;
+
+    if (wheelWrap) {
+      wheelWrap.classList.toggle("is-empty", isEmpty);
+    }
 
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(rotation);
+    if (!isEmpty) {
+      ctx.rotate(rotation);
+    }
 
-    for (let i = 0; i < n; i += 1) {
-      const start = i * segAngle;
-      const end = start + segAngle;
+    if (isEmpty) {
+      drawEmptyWheelBackground(radius);
+    } else {
+      const segmentCount = activeItems.length;
+      const segAngle = (Math.PI * 2) / segmentCount;
 
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.arc(0, 0, radius, start, end);
-      ctx.closePath();
-      ctx.fillStyle = colorForIndex(i, n);
-      ctx.fill();
+      for (let i = 0; i < segmentCount; i += 1) {
+        const start = i * segAngle;
+        const end = start + segAngle;
 
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, start, end);
+        ctx.closePath();
+        ctx.fillStyle = colorForIndex(i, segmentCount);
+        ctx.fill();
 
-      const mid = start + segAngle / 2;
-      ctx.save();
-      ctx.rotate(mid);
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
+        if (segmentCount > 1) {
+          ctx.strokeStyle = "rgba(0,0,0,0.35)";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
 
-      const fontSize = Math.max(10, Math.min(18, Math.floor(radius * 0.095 * (8 / Math.sqrt(n)))));
-      ctx.font = `600 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
-      ctx.fillStyle = "#fff";
-      ctx.shadowColor = "rgba(0,0,0,0.55)";
-      ctx.shadowBlur = 6;
-      ctx.shadowOffsetY = 2;
+        const mid = start + segAngle / 2;
+        ctx.save();
+        ctx.rotate(mid);
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
 
-      const label = String(activeItems[i] ?? "");
-      const maxTextWidth = radius * 0.8;
-      let display = label;
-      while (ctx.measureText(display).width > maxTextWidth && display.length > 3) {
-        display = display.slice(0, -2);
+        const fontSize = Math.max(
+          10,
+          Math.min(18, Math.floor(radius * 0.095 * (8 / Math.sqrt(segmentCount))))
+        );
+        ctx.font = `600 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
+        ctx.fillStyle = "#fff";
+        ctx.shadowColor = "rgba(0,0,0,0.55)";
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 2;
+
+        const label = String(activeItems[i] ?? "");
+        const maxTextWidth = radius * 0.8;
+        let display = label;
+        while (ctx.measureText(display).width > maxTextWidth && display.length > 3) {
+          display = display.slice(0, -2);
+        }
+        if (display !== label) {
+          display = `${display.slice(0, -1)}…`;
+        }
+
+        ctx.fillText(display, radius * 0.25, 0);
+        ctx.restore();
       }
-      if (display !== label) {
-        display = `${display.slice(0, -1)}…`;
-      }
-
-      ctx.fillText(display, radius * 0.25, 0);
-      ctx.restore();
     }
 
     ctx.beginPath();
