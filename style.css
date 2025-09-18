@@ -2497,7 +2497,6 @@ select option {
     height: 100%;
     display: block;
     border-radius: 16px;
-    background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.1), transparent 70%);
 }
 
 .fortune-wheel-center {
@@ -2505,7 +2504,7 @@ select option {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: min(26%, 140px);
+    width: min(26%, 80px);
     aspect-ratio: 1 / 1;
     border-radius: 50%;
     display: flex;
@@ -2520,10 +2519,11 @@ select option {
 }
 
 .fortune-wheel-center img {
-    width: 80%;
-    height: 80%;
+    width: 90%;
+    height: 100%;
     object-fit: contain;
     pointer-events: none;
+    transform: translateX(4%);
 }
 
 .fortune-pointer {
