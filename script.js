@@ -3854,7 +3854,7 @@ function initFortuneWheel() {
     return null;
   }
 
-  let items = ["Пицца", "Суши", "Бургер", "Рамен", "Стейк", "Салат", "Паста", "Тако"];
+  let items = [];
   let eliminatedItems = new Set();
 
   let rotation = 0;

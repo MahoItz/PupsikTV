@@ -2083,6 +2083,32 @@ select option {
     font-size: 1.5rem;
     cursor: pointer;
     z-index: 1100;
+
+    width: 40px;   /* фиксируем размер кнопки */
+    height: 40px;
+    border-radius: 50%; /* делаем круглой */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.music-menu-button:hover {
+    transform: scale(1.15);
+    background: rgba(255, 255, 255, 0.12); /* круглая подсветка */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.music-menu-button:hover {
+    transform: scale(1.15); /* увеличение */
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); /* мягкая тень */
+    background: rgba(255, 255, 255, 0.08); /* лёгкая подсветка фона */
+    border-radius: 8px; /* округлим фон под картинку */
+}
+
+.music-menu-button img{
+    width: 3em;
 }
 
 .music-menu {
@@ -2655,8 +2681,8 @@ select option {
 
 .fortune-button {
     appearance: none;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 0, 0, 0.14);
+    background: rgba(0, 248, 41, 0.08);
     color: var(--text-primary);
     padding: 9px 14px;
     border-radius: 12px;
@@ -2678,7 +2704,7 @@ select option {
 }
 
 .fortune-button-ghost:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 1, 1, 0.08);
     box-shadow: none;
 }
 
