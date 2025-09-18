@@ -2119,7 +2119,7 @@ select option {
     height: 100%;
     background: var(--card-bg);
     transform: translateX(-100%);
-    transition: transform 0.3s ease, width 0.3s ease;
+    transition: transform 0.3s ease, width 0.3s ease, padding 0.3s ease;
     z-index: 1500;
     padding: 36px 32px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
@@ -2135,15 +2135,14 @@ select option {
 }
 
 .music-menu.collapsed {
-    width: clamp(96px, 10vw, 220px);
-    padding: 28px 20px;
-    overflow: hidden;
+    width: clamp(240px, 32vw, 360px);
+    padding: 28px 24px;
 }
 
 .music-menu.collapsed .music-menu-content {
-    opacity: 0;
-    visibility: hidden;
     pointer-events: none;
+    filter: saturate(0.75);
+    opacity: 0.95;
 }
 
 .music-menu.collapsed .close-music-menu {
@@ -2151,8 +2150,31 @@ select option {
     pointer-events: none;
 }
 
-.music-menu.collapsed .collapse-music-menu {
-    right: 16px;
+.music-menu.collapsed .fortune-wheel-section,
+.music-menu.collapsed .music-section,
+.music-menu.collapsed .fortune-row,
+.music-menu.collapsed .fortune-buttons,
+.music-menu.collapsed .fortune-buttons-right,
+.music-menu.collapsed .fortune-note-wrapper,
+.music-menu.collapsed .fortune-status,
+.music-menu.collapsed .fortune-legend,
+.music-menu.collapsed .fortune-tip-audio-button,
+.music-menu.collapsed .fortune-wheel-card,
+.music-menu.collapsed .fortune-result-overlay {
+    display: none;
+}
+
+.music-menu.collapsed .fortune-title {
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.music-menu.collapsed #itemsInput {
+    pointer-events: none;
+    cursor: default;
+    opacity: 0.9;
+    background: rgba(7, 11, 25, 0.75);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .close-music-menu {
@@ -2195,8 +2217,9 @@ select option {
     align-items: center;
     justify-content: center;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-    transition: background 0.2s ease, color 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.3s ease;
     z-index: 3;
+    overflow: hidden;
 }
 
 .collapse-music-menu:hover {
@@ -2205,11 +2228,76 @@ select option {
 }
 
 .collapse-music-menu i {
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.collapse-music-menu-label {
+    display: none;
+}
+
+.music-menu.collapsed .collapse-music-menu {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border-radius: inherit;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    flex-direction: column;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    z-index: 10;
+    touch-action: pan-y;
+}
+
+.music-menu.collapsed .collapse-music-menu::before {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    border-radius: calc(var(--border-radius) - 6px);
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.18), rgba(147, 59, 255, 0.18));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.music-menu.collapsed .collapse-music-menu:hover::before,
+.music-menu.collapsed .collapse-music-menu:focus-visible::before {
+    opacity: 1;
+}
+
+.music-menu.collapsed .collapse-music-menu:hover {
+    color: var(--text-primary);
+}
+
+.music-menu.collapsed .collapse-music-menu:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
 }
 
 .music-menu.collapsed .collapse-music-menu i {
-    transform: scaleX(-1);
+    transform: rotate(180deg);
+    font-size: 1.8rem;
+    opacity: 0.9;
+}
+
+.music-menu.collapsed .collapse-music-menu-label {
+    display: block;
+    position: relative;
+    z-index: 1;
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+}
+
+.music-menu.collapsed .collapse-music-menu i,
+.music-menu.collapsed .collapse-music-menu-label {
+    pointer-events: none;
 }
 
 .music-menu ul {
@@ -2817,13 +2905,19 @@ select option {
     }
 
     .music-menu.collapsed {
-        width: clamp(80px, 14vw, 160px);
+        width: min(92vw, 300px);
+        padding: 24px 18px;
     }
 
     .collapse-music-menu {
         right: 48px;
         width: 32px;
         height: 32px;
+    }
+
+    .music-menu.collapsed .collapse-music-menu {
+        padding: 0 12px;
+        gap: 12px;
     }
 
     .fortune-body {

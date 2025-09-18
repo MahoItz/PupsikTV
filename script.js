@@ -3660,6 +3660,7 @@ const musicMenu = document.getElementById("musicMenu");
 const musicMenuButton = document.getElementById("musicMenuButton");
 const closeMusicMenu = document.getElementById("closeMusicMenu");
 const collapseMusicMenuButton = document.getElementById("collapseMusicMenu");
+const musicMenuContent = musicMenu ? musicMenu.querySelector(".music-menu-content") : null;
 const musicList = document.getElementById("musicList");
 const audioPlayer = document.getElementById("audioPlayer");
 const playPauseBtn = document.getElementById("playPauseBtn");
@@ -3727,11 +3728,25 @@ if (volumeSlider && audioPlayer) {
 if (musicMenu && musicMenuButton && closeMusicMenu) {
   const setMenuCollapsed = (shouldCollapse) => {
     musicMenu.classList.toggle("collapsed", shouldCollapse);
+    musicMenu.setAttribute("aria-expanded", shouldCollapse ? "false" : "true");
+    if (musicMenuContent) {
+      if (shouldCollapse) {
+        musicMenuContent.setAttribute("inert", "");
+        musicMenuContent.setAttribute("aria-hidden", "true");
+      } else {
+        musicMenuContent.removeAttribute("inert");
+        musicMenuContent.removeAttribute("aria-hidden");
+      }
+    }
     if (collapseMusicMenuButton) {
       collapseMusicMenuButton.setAttribute(
         "aria-label",
         shouldCollapse ? "Развернуть панель" : "Свернуть панель",
       );
+      const collapseLabel = collapseMusicMenuButton.querySelector(".collapse-music-menu-label");
+      if (collapseLabel) {
+        collapseLabel.textContent = shouldCollapse ? "Развернуть" : "Свернуть";
+      }
     }
   };
 
