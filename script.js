@@ -3666,6 +3666,8 @@ const playPauseBtn = document.getElementById("playPauseBtn");
 const loopBtn = document.getElementById("loopBtn");
 const volumeSlider = document.getElementById("volumeSlider");
 const volumeValue = document.getElementById("volumeValue");
+const fortuneTipButton = document.getElementById("fortuneTipButton");
+const fortuneTipAudio = document.getElementById("fortuneTipAudio");
 let fortuneWheelApi = null;
 
 if (audioPlayer) {
@@ -3780,6 +3782,51 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
       btn.classList.add("active");
     });
   }
+}
+
+if (fortuneTipButton && fortuneTipAudio) {
+  fortuneTipAudio.loop = false;
+
+  const ensureTipAudioSource = () => {
+    const configuredSrc = fortuneTipButton.getAttribute("data-audio-src");
+    if (configuredSrc && !fortuneTipAudio.getAttribute("src")) {
+      fortuneTipAudio.src = configuredSrc;
+    }
+    return fortuneTipAudio.getAttribute("src");
+  };
+
+  const resetTipButtonState = () => {
+    fortuneTipButton.disabled = false;
+    fortuneTipButton.classList.remove("is-playing");
+  };
+
+  fortuneTipButton.addEventListener("click", () => {
+    const src = ensureTipAudioSource();
+    if (!src) {
+      console.warn("No audio source configured for the fortune tip button.");
+      return;
+    }
+
+    fortuneTipButton.disabled = true;
+    fortuneTipButton.classList.add("is-playing");
+
+    try {
+      fortuneTipAudio.pause();
+      fortuneTipAudio.currentTime = 0;
+    } catch (err) {
+      console.warn("Unable to reset fortune tip audio state.", err);
+    }
+
+    fortuneTipAudio
+      .play()
+      .catch((err) => {
+        console.warn("Failed to play fortune tip audio.", err);
+        resetTipButtonState();
+      });
+  });
+
+  fortuneTipAudio.addEventListener("ended", resetTipButtonState);
+  fortuneTipAudio.addEventListener("error", resetTipButtonState);
 }
 
 fortuneWheelApi = initFortuneWheel();

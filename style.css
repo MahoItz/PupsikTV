@@ -2694,12 +2694,51 @@ select option {
     box-shadow: 0 0 20px rgba(255, 108, 66, 0.55);
 }
 
+.fortune-note-wrapper {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .fortune-note {
     margin: 0;
-    margin-top: auto;
     font-size: 0.78rem;
     color: var(--text-secondary);
     line-height: 1.4;
+}
+
+.fortune-tip-audio-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fortune-tip-audio-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.fortune-tip-audio-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.fortune-tip-audio-button.is-playing {
+    background: linear-gradient(135deg, var(--primary-color), #ff8a65);
+    color: #fff;
+    border-color: transparent;
 }
 
 @media (max-width: 600px) {

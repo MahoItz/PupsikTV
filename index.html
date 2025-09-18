@@ -940,9 +940,16 @@
               </div>
             </div>
 
-            <p class="fortune-note">
-              Совет: добавьте 2–20 пунктов для оптимальной читаемости. Выпавшие элементы зачёркиваются и исключаются из следующих вращений.
-            </p>
+            <div class="fortune-note-wrapper">
+              <p class="fortune-note">
+                Совет: не нажимать эту кнопку *davilsmile *стрелочка вправо
+              </p>
+              <button id="fortuneTipButton" class="fortune-tip-audio-button" type="button"
+                      aria-label="Проиграть подсказку" data-audio-src="Music/fortune-tip.mp3">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+            </div>
+            <audio id="fortuneTipAudio" preload="none"></audio>
           </div>
         </section>
       </div>
