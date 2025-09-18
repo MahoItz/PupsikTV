@@ -3786,6 +3786,7 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
 
 if (fortuneTipButton && fortuneTipAudio) {
   fortuneTipAudio.loop = false;
+  fortuneTipAudio.volume = 0.25;
 
   const ensureTipAudioSource = () => {
     const configuredSrc = fortuneTipButton.getAttribute("data-audio-src");

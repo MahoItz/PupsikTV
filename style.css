@@ -2713,7 +2713,7 @@ select option {
     height: 32px;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(153, 153, 153, 0.075);
     color: var(--text-primary);
     display: inline-flex;
     align-items: center;
