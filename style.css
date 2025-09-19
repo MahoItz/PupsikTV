@@ -2177,6 +2177,7 @@ select option {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    --collapsed-width: clamp(240px, 32vw, 360px);
 }
 
 .music-menu.open {
@@ -2184,7 +2185,7 @@ select option {
 }
 
 .music-menu.collapsed {
-    width: clamp(240px, 32vw, 360px);
+    width: var(--collapsed-width);
     padding: 28px 24px;
 }
 
@@ -2962,6 +2963,7 @@ select option {
 @media (max-width: 600px) {
     .music-menu {
         padding: 24px 16px 28px;
+        --collapsed-width: min(92vw, 300px);
     }
 
     .music-menu-content {
@@ -2971,7 +2973,7 @@ select option {
     }
 
     .music-menu.collapsed {
-        width: min(92vw, 300px);
+        width: var(--collapsed-width);
         padding: 24px 18px;
     }
 

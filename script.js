@@ -3957,6 +3957,37 @@ const musicMenuButton = document.getElementById("musicMenuButton");
 const closeMusicMenu = document.getElementById("closeMusicMenu");
 const collapseMusicMenuButton = document.getElementById("collapseMusicMenu");
 const musicMenuContent = musicMenu ? musicMenu.querySelector(".music-menu-content") : null;
+
+const updateCollapsedMenuWidth = (() => {
+  const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
+
+  return () => {
+    if (!musicMenu) return;
+
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+
+    let collapsedWidth;
+    if (viewportWidth <= 600) {
+      collapsedWidth = Math.min(viewportWidth * 0.92, 300);
+    } else if (viewportWidth <= 900) {
+      collapsedWidth = clampValue(viewportWidth * 0.42, 260, 340);
+    } else if (viewportWidth <= 1280) {
+      collapsedWidth = clampValue(viewportWidth * 0.32, 280, 380);
+    } else if (viewportWidth <= 1600) {
+      collapsedWidth = clampValue(viewportWidth * 0.26, 300, 420);
+    } else {
+      collapsedWidth = clampValue(viewportWidth * 0.22, 320, 460);
+    }
+
+    musicMenu.style.setProperty("--collapsed-width", `${Math.round(collapsedWidth)}px`);
+  };
+})();
+
+if (musicMenu) {
+  updateCollapsedMenuWidth();
+  window.addEventListener("resize", updateCollapsedMenuWidth);
+}
+
 const musicList = document.getElementById("musicList");
 const audioPlayer = document.getElementById("audioPlayer");
 const playPauseBtn = document.getElementById("playPauseBtn");
