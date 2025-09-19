@@ -22,6 +22,9 @@
     --glow-animation: glow 2s ease-in-out infinite alternate;
     --rating-low: #f44336;
     --rating-high: #4caf50;
+    --rules-panel-width: clamp(280px, 28vw, 420px);
+    --music-menu-expanded-max-width: 80vw;
+    --music-menu-min-width: 220px;
 
     /* Header */
     --primary-purple: #6b46c1;
@@ -2201,7 +2204,10 @@ select option {
     position: fixed;
     top: 0;
     left: 0;
-    width: 80%;
+    width: min(
+        var(--music-menu-expanded-max-width),
+        max(var(--music-menu-min-width), calc(100vw - var(--rules-panel-width)))
+    );
     height: 100%;
     background: var(--card-bg);
     transform: translateX(-100%);
@@ -2221,7 +2227,10 @@ select option {
 }
 
 .music-menu.collapsed {
-    width: clamp(240px, 32vw, 360px);
+    width: min(
+        clamp(240px, 32vw, 360px),
+        max(var(--music-menu-min-width), calc(100vw - var(--rules-panel-width)))
+    );
     padding: 28px 24px;
 }
 
@@ -2280,7 +2289,7 @@ select option {
     top: 0;
     right: 0;
     height: 100%;
-    width: clamp(280px, 28vw, 420px);
+    width: var(--rules-panel-width);
     padding: 36px 32px;
     background: var(--card-bg);
     border-left: 1px solid rgba(255, 255, 255, 0.08);
@@ -3168,6 +3177,10 @@ select option {
 }
 
 @media (max-width: 1024px) {
+    :root {
+        --rules-panel-width: 0px;
+    }
+
     .fortune-body {
         grid-template-columns: minmax(280px, 1fr) minmax(240px, 1fr);
     }
