@@ -3957,6 +3957,43 @@ const musicMenuButton = document.getElementById("musicMenuButton");
 const closeMusicMenu = document.getElementById("closeMusicMenu");
 const collapseMusicMenuButton = document.getElementById("collapseMusicMenu");
 const musicMenuContent = musicMenu ? musicMenu.querySelector(".music-menu-content") : null;
+const FORTUNE_MIN_SCALE = 0.6;
+const FORTUNE_BASE_WIDTH = 1280;
+let pendingFortuneScaleFrame = null;
+
+const updateFortuneMenuScale = () => {
+  if (!musicMenu) {
+    return;
+  }
+
+  const widthScale = Math.min(1, Math.max(FORTUNE_MIN_SCALE, window.innerWidth / FORTUNE_BASE_WIDTH));
+  musicMenu.style.setProperty("--fortune-scale", widthScale.toFixed(3));
+
+  if (!musicMenuContent) {
+    return;
+  }
+
+  if (pendingFortuneScaleFrame !== null) {
+    cancelAnimationFrame(pendingFortuneScaleFrame);
+  }
+
+  pendingFortuneScaleFrame = requestAnimationFrame(() => {
+    pendingFortuneScaleFrame = null;
+    const computedStyles = window.getComputedStyle(musicMenu);
+    const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
+    const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
+    const availableHeight = Math.max(120, window.innerHeight - 16);
+    const contentHeight = musicMenuContent.getBoundingClientRect().height + paddingTop + paddingBottom;
+
+    if (contentHeight > availableHeight) {
+      const adjustedScale = Math.max(
+        FORTUNE_MIN_SCALE,
+        widthScale * (availableHeight / contentHeight),
+      );
+      musicMenu.style.setProperty("--fortune-scale", adjustedScale.toFixed(3));
+    }
+  });
+};
 const musicList = document.getElementById("musicList");
 const audioPlayer = document.getElementById("audioPlayer");
 const playPauseBtn = document.getElementById("playPauseBtn");
@@ -3969,6 +4006,18 @@ let fortuneWheelApi = null;
 
 if (audioPlayer) {
   audioPlayer.loop = true;
+}
+
+if (musicMenu) {
+  updateFortuneMenuScale();
+  window.addEventListener("resize", updateFortuneMenuScale);
+  window.addEventListener("orientationchange", updateFortuneMenuScale);
+  if (typeof ResizeObserver === "function" && musicMenuContent) {
+    const fortuneMenuObserver = new ResizeObserver(() => {
+      updateFortuneMenuScale();
+    });
+    fortuneMenuObserver.observe(musicMenuContent);
+  }
 }
 
 if (playPauseBtn && audioPlayer) {
@@ -4044,6 +4093,7 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
         collapseLabel.textContent = shouldCollapse ? "Развернуть" : "Свернуть";
       }
     }
+    updateFortuneMenuScale();
   };
 
   const closeMenu = () => {
@@ -4063,6 +4113,7 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     if (fortuneWheelApi && typeof fortuneWheelApi.handleMenuOpen === "function") {
       fortuneWheelApi.handleMenuOpen();
     }
+    updateFortuneMenuScale();
   });
 
   closeMusicMenu.addEventListener("click", () => {
