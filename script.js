@@ -4340,7 +4340,20 @@ function initFortuneWheel() {
   function parseInput(text) {
     return text
       .split(/\n|,/)
-      .map((s) => s.trim())
+      .map((segment) => {
+        const trimmed = segment.trim();
+        if (!trimmed) {
+          return "";
+        }
+
+        const letterMatch = trimmed.match(/^(.*?)(\p{L})(.*)$/u);
+        if (!letterMatch) {
+          return trimmed;
+        }
+
+        const [, prefix, letter, suffix] = letterMatch;
+        return `${prefix}${letter.toUpperCase()}${suffix}`;
+      })
       .filter(Boolean);
   }
 
@@ -4622,7 +4635,12 @@ function initFortuneWheel() {
       return;
     }
 
-    const newItems = parseInput(input.value).slice(0, 128);
+    const parsedItems = parseInput(input.value);
+    const newItems = parsedItems.slice(0, 128);
+    const formattedText = parsedItems.join("\n");
+    if (input.value !== formattedText) {
+      input.value = formattedText;
+    }
     if (JSON.stringify(items) === JSON.stringify(newItems)) {
       return;
     }
