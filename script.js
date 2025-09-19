@@ -3959,17 +3959,11 @@ const collapseMusicMenuButton = document.getElementById("collapseMusicMenu");
 const musicMenuContent = musicMenu ? musicMenu.querySelector(".music-menu-content") : null;
 const FORTUNE_MIN_SCALE = 0.6;
 const FORTUNE_BASE_WIDTH = 1280;
+const FORTUNE_HEIGHT_MARGIN = 24;
 let pendingFortuneScaleFrame = null;
 
 const updateFortuneMenuScale = () => {
   if (!musicMenu) {
-    return;
-  }
-
-  const widthScale = Math.min(1, Math.max(FORTUNE_MIN_SCALE, window.innerWidth / FORTUNE_BASE_WIDTH));
-  musicMenu.style.setProperty("--fortune-scale", widthScale.toFixed(3));
-
-  if (!musicMenuContent) {
     return;
   }
 
@@ -3979,19 +3973,49 @@ const updateFortuneMenuScale = () => {
 
   pendingFortuneScaleFrame = requestAnimationFrame(() => {
     pendingFortuneScaleFrame = null;
+    const widthScale = Math.min(1, window.innerWidth / FORTUNE_BASE_WIDTH);
+
+    if (!musicMenuContent) {
+      const nextScale = Math.max(FORTUNE_MIN_SCALE, widthScale);
+      musicMenu.style.setProperty("--fortune-scale", nextScale.toFixed(3));
+      return;
+    }
+
+    const previousScaleValue =
+      musicMenu.style.getPropertyValue("--fortune-scale") ||
+      window.getComputedStyle(musicMenu).getPropertyValue("--fortune-scale") ||
+      "1";
+    const previousScale = Number.parseFloat(previousScaleValue) || 1;
+
+    musicMenu.style.setProperty("--fortune-scale", "1");
+
     const computedStyles = window.getComputedStyle(musicMenu);
     const paddingTop = Number.parseFloat(computedStyles.paddingTop) || 0;
     const paddingBottom = Number.parseFloat(computedStyles.paddingBottom) || 0;
-    const availableHeight = Math.max(120, window.innerHeight - 16);
-    const contentHeight = musicMenuContent.getBoundingClientRect().height + paddingTop + paddingBottom;
+    const availableHeight = Math.max(160, window.innerHeight - FORTUNE_HEIGHT_MARGIN);
+    const naturalHeight =
+      musicMenuContent.getBoundingClientRect().height + paddingTop + paddingBottom;
 
-    if (contentHeight > availableHeight) {
-      const adjustedScale = Math.max(
-        FORTUNE_MIN_SCALE,
-        widthScale * (availableHeight / contentHeight),
-      );
-      musicMenu.style.setProperty("--fortune-scale", adjustedScale.toFixed(3));
+    let heightScale = 1;
+    if (naturalHeight > 0 && Number.isFinite(naturalHeight)) {
+      heightScale = Math.min(1, availableHeight / naturalHeight);
     }
+
+    const constrainedScale = Math.max(
+      FORTUNE_MIN_SCALE,
+      Math.min(widthScale, heightScale),
+    );
+
+    const fallbackScale = Math.max(
+      FORTUNE_MIN_SCALE,
+      Math.min(widthScale, previousScale),
+    );
+
+    const finalScale = Number.isFinite(constrainedScale)
+      ? constrainedScale
+      : fallbackScale;
+
+    musicMenu.style.setProperty("--fortune-scale", finalScale.toFixed(3));
   });
 };
 const musicList = document.getElementById("musicList");
