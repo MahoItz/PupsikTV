@@ -135,6 +135,270 @@ let deleteMovieId = null;
 let deleteOrderId = null;
 let deleteGameOrderId = null;
 
+const fortuneWinnerModal = document.getElementById("fortuneWinnerModal");
+const fortuneWinnerFilmNameEl = document.getElementById("fortuneWinnerFilmName");
+const fortuneWinnerKinopoiskBtn = document.getElementById("fortuneWinnerKinopoisk");
+const fortuneWinnerReYohohoBtn = document.getElementById("fortuneWinnerReYohoho");
+const fortuneWinnerCancelBtn = document.getElementById("fortuneWinnerCancel");
+let fortuneWinnerMovie = null;
+
+function normalizeFortuneText(str) {
+  return String(str || "")
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[^a-z0-9а-я\s]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractYearValue(value) {
+  if (!value) return "";
+  const match = String(value).match(/(19|20)\d{2}/);
+  return match ? match[0] : "";
+}
+
+function parseFortuneLabel(label) {
+  const originalLabel = (label || "").trim();
+  if (!originalLabel) {
+    return { originalLabel: "", title: "", originalTitle: "", year: "" };
+  }
+
+  const parenthesesValues = Array.from(originalLabel.matchAll(/\(([^)]+)\)/g)).map((m) =>
+    m[1].trim(),
+  );
+  let year = "";
+  let originalTitle = "";
+
+  for (const value of parenthesesValues) {
+    if (!year && /^(19|20)\d{2}$/.test(value)) {
+      year = value;
+    } else if (!originalTitle && value) {
+      originalTitle = value;
+    }
+  }
+
+  const quotedMatch = originalLabel.match(/«([^»]+)»/);
+  if (!originalTitle && quotedMatch) {
+    originalTitle = quotedMatch[1].trim();
+  }
+
+  let base = originalLabel;
+  if (year) {
+    const yearRegex = new RegExp(`\\b${year}\\b`, "g");
+    base = base.replace(yearRegex, " ");
+  }
+
+  base = base.replace(/[()«»"]/g, " ");
+
+  if (!originalTitle) {
+    const pipeParts = base.split("|").map((part) => part.trim()).filter(Boolean);
+    if (pipeParts.length > 1) {
+      originalTitle = pipeParts.slice(1).join(" ");
+      base = pipeParts[0];
+    }
+  } else {
+    base = base.split("|")[0];
+  }
+
+  if (!originalTitle) {
+    const slashParts = base.split("/").map((part) => part.trim()).filter(Boolean);
+    if (slashParts.length > 1) {
+      originalTitle = slashParts.slice(1).join(" ");
+      base = slashParts[0];
+    }
+  } else {
+    base = base.split("/")[0];
+  }
+
+  const dashParts = base
+    .split(/\s[-–—]\s/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (dashParts.length > 1) {
+    if (!originalTitle) {
+      originalTitle = dashParts.slice(1).join(" ");
+    }
+    base = dashParts[0];
+  }
+
+  base = base.replace(/\s+/g, " ").trim();
+
+  return {
+    originalLabel,
+    title: base || originalLabel,
+    originalTitle,
+    year,
+  };
+}
+
+function findFortuneMovieMatch(parsed) {
+  const candidates = [...watchlist, ...allMovies];
+  if (!candidates.length) {
+    return null;
+  }
+
+  const normalizedTitle = normalizeFortuneText(parsed.title);
+  const normalizedOriginal = normalizeFortuneText(parsed.originalTitle);
+  const normalizedLabel = normalizeFortuneText(parsed.originalLabel);
+  const targetYear = parsed.year;
+
+  let best = null;
+  let bestScore = -Infinity;
+
+  candidates.forEach((movie) => {
+    const movieTitle = normalizeFortuneText(movie.title);
+    const movieOriginal = normalizeFortuneText(movie.originalTitle || movie.original_title || "");
+    const movieYear = extractYearValue(movie.year);
+    let score = 0;
+
+    if (normalizedTitle && movieTitle) {
+      if (movieTitle === normalizedTitle) {
+        score += 6;
+      } else if (movieTitle.includes(normalizedTitle) || normalizedTitle.includes(movieTitle)) {
+        score += 3;
+      } else if (normalizedLabel && normalizedLabel.includes(movieTitle)) {
+        score += 2;
+      }
+    }
+
+    if (normalizedOriginal && movieOriginal) {
+      if (movieOriginal === normalizedOriginal) {
+        score += 5;
+      } else if (
+        movieOriginal.includes(normalizedOriginal) ||
+        normalizedOriginal.includes(movieOriginal)
+      ) {
+        score += 2;
+      } else if (normalizedLabel && normalizedLabel.includes(movieOriginal)) {
+        score += 2;
+      }
+    } else if (!normalizedTitle && normalizedLabel && movieOriginal && normalizedLabel.includes(movieOriginal)) {
+      score += 2;
+    }
+
+    if (!normalizedTitle && normalizedLabel && movieTitle && normalizedLabel.includes(movieTitle)) {
+      score += 2;
+    }
+
+    if (targetYear) {
+      if (movieYear && movieYear === targetYear) {
+        score += 3;
+      } else if (movieYear && Math.abs(Number(movieYear) - Number(targetYear)) <= 1) {
+        score += 1;
+      } else if (movieYear) {
+        score -= 2;
+      }
+    } else if (movieYear && parsed.originalLabel.includes(movieYear)) {
+      score += 1;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      best = movie;
+    }
+  });
+
+  return bestScore > 0 ? best : null;
+}
+
+function buildFortuneWinnerMovie(label) {
+  const parsed = parseFortuneLabel(label);
+  const match = findFortuneMovieMatch(parsed);
+  const year = extractYearValue(match?.year) || parsed.year;
+  const title = (match?.title || parsed.title || label || "").trim();
+  const originalTitle = (
+    match?.originalTitle ||
+    match?.original_title ||
+    parsed.originalTitle ||
+    ""
+  ).trim();
+
+  const normalizedTitle = normalizeFortuneText(title);
+  const normalizedOriginal = normalizeFortuneText(originalTitle);
+
+  const displayParts = [];
+  if (title) {
+    displayParts.push(`«${title}»`);
+  }
+  if (year) {
+    displayParts.push(`(${year})`);
+  }
+  if (originalTitle && normalizedOriginal && normalizedOriginal !== normalizedTitle) {
+    displayParts.push(originalTitle);
+  }
+
+  return {
+    label,
+    title: title || label,
+    originalTitle,
+    year,
+    displayText: displayParts.join(" ").trim() || label,
+  };
+}
+
+function showFortuneWinnerModal(label) {
+  if (!fortuneWinnerModal || !label) {
+    return;
+  }
+
+  fortuneWinnerMovie = buildFortuneWinnerMovie(label);
+
+  if (fortuneWinnerFilmNameEl) {
+    if (fortuneWinnerMovie.displayText) {
+      fortuneWinnerFilmNameEl.textContent = fortuneWinnerMovie.displayText;
+      fortuneWinnerFilmNameEl.style.display = "block";
+    } else {
+      fortuneWinnerFilmNameEl.textContent = "";
+      fortuneWinnerFilmNameEl.style.display = "none";
+    }
+  }
+
+  fortuneWinnerModal.style.display = "block";
+}
+
+function closeFortuneWinnerModal() {
+  fortuneWinnerMovie = null;
+  if (fortuneWinnerFilmNameEl) {
+    fortuneWinnerFilmNameEl.textContent = "";
+    fortuneWinnerFilmNameEl.style.display = "";
+  }
+  closeModal("fortuneWinnerModal");
+}
+
+if (fortuneWinnerKinopoiskBtn) {
+  fortuneWinnerKinopoiskBtn.addEventListener("click", () => {
+    if (!fortuneWinnerMovie) {
+      return;
+    }
+    openKinopoiskPage(
+      fortuneWinnerMovie.title,
+      fortuneWinnerMovie.year,
+      fortuneWinnerMovie.originalTitle,
+    );
+    closeFortuneWinnerModal();
+  });
+}
+
+if (fortuneWinnerReYohohoBtn) {
+  fortuneWinnerReYohohoBtn.addEventListener("click", () => {
+    if (!fortuneWinnerMovie) {
+      return;
+    }
+    openReYohohoPage(
+      fortuneWinnerMovie.title,
+      fortuneWinnerMovie.year,
+      fortuneWinnerMovie.originalTitle,
+    );
+    closeFortuneWinnerModal();
+  });
+}
+
+if (fortuneWinnerCancelBtn) {
+  fortuneWinnerCancelBtn.addEventListener("click", () => {
+    closeFortuneWinnerModal();
+  });
+}
+
 // Pagination
 let currentPage = 1;
 const moviesPerPage = 12;
@@ -2001,14 +2265,13 @@ function showWatchlistKPPreview() {
   preview.style.display = "block";
 }
 
-async function openKinopoiskPage(title, year, originalTitle = "") {
-  const query = originalTitle || title;
+async function fetchKinopoiskFilm(title, year, originalTitle = "") {
   if (!KINOPOISK_API_KEY) {
-    window.open(
-      `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(query)}`,
-      "_blank"
-    );
-    return;
+    return null;
+  }
+  const query = (originalTitle || title || "").trim();
+  if (!query) {
+    return null;
   }
   try {
     const res = await fetch(
@@ -2020,19 +2283,77 @@ async function openKinopoiskPage(title, year, originalTitle = "") {
         },
       }
     );
+    if (!res.ok) {
+      console.error("Kinopoisk search error", res.status, res.statusText);
+      return null;
+    }
     const data = await res.json();
     const films = data.films || [];
-    let film = films.find((f) => Number(f.year) === Number(year));
-    if (!film && films.length) film = films[0];
-    if (film && film.filmId) {
-      window.open(`https://www.kinopoisk.ru/film/${film.filmId}/`, "_blank");
-      return;
+    if (!films.length) {
+      return null;
     }
+    const targetYear = Number(year);
+    let film = null;
+    if (targetYear) {
+      film =
+        films.find((f) => Number(f.year) === targetYear) ||
+        films.find((f) => {
+          const filmYear = Number(f.year);
+          return filmYear && Math.abs(filmYear - targetYear) <= 1;
+        });
+    }
+    if (!film && title) {
+      const normalizedTitle = title.trim().toLowerCase();
+      film = films.find((f) => (f.nameRu || f.nameEn || "").trim().toLowerCase() === normalizedTitle) || null;
+    }
+    return film || films[0] || null;
   } catch (err) {
     console.error("Kinopoisk search error", err);
+    return null;
+  }
+}
+
+async function openKinopoiskPage(title, year, originalTitle = "") {
+  const query = (originalTitle || title || "").trim();
+  if (!query) {
+    return;
+  }
+  if (!KINOPOISK_API_KEY) {
+    window.open(
+      `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(query)}`,
+      "_blank"
+    );
+    return;
+  }
+  const film = await fetchKinopoiskFilm(title, year, originalTitle);
+  if (film && film.filmId) {
+    window.open(`https://www.kinopoisk.ru/film/${film.filmId}/`, "_blank");
+    return;
   }
   window.open(
     `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(query)}`,
+    "_blank"
+  );
+}
+
+async function openReYohohoPage(title, year, originalTitle = "") {
+  const query = (originalTitle || title || "").trim();
+  if (!query) {
+    return;
+  }
+  let filmId = null;
+  if (KINOPOISK_API_KEY) {
+    const film = await fetchKinopoiskFilm(title, year, originalTitle);
+    if (film && film.filmId) {
+      filmId = film.filmId;
+    }
+  }
+  if (filmId) {
+    window.open(`https://re.yohoho.cc/movies/${filmId}/`, "_blank");
+    return;
+  }
+  window.open(
+    `https://re.yohoho.cc/search/?q=${encodeURIComponent(query)}`,
     "_blank"
   );
 }
@@ -3517,7 +3838,11 @@ function resetForm() {
 window.onclick = function (event) {
   document.querySelectorAll(".modal").forEach((modal) => {
     if (event.target === modal) {
-      closeModal(modal.id);
+      if (modal.id === "fortuneWinnerModal") {
+        closeFortuneWinnerModal();
+      } else {
+        closeModal(modal.id);
+      }
     }
   });
 };
@@ -4214,6 +4539,14 @@ function initFortuneWheel() {
       statusEl.innerHTML = `Результат: <b>${escapeHtml(text)}</b><br><span class="fortune-status-success">🎉 Игра завершена! Все элементы были выбраны.</span>`;
     } else {
       statusEl.innerHTML = `Результат: <b>${escapeHtml(text)}</b><br><span class="fortune-status-remaining">Осталось элементов: ${remainingItems.length}</span>`;
+    }
+
+    if (remainingItems.length === 1) {
+      eliminatedItems.add(text);
+      pendingEliminationItem = null;
+      drawWheel();
+      showFortuneWinnerModal(remainingItems[0]);
+      return;
     }
 
     if (resultOverlay && resultNameEl) {

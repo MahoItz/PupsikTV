@@ -1217,6 +1217,13 @@ select option {
     margin: 0 auto;
 }
 
+.modal-film-name {
+    margin-bottom: 24px;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 420px;
+}
+
 .close {
     position: absolute;
     right: 20px;
