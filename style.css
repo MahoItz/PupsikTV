@@ -2212,12 +2212,11 @@ select option {
         0px,
         calc((100vw - min(100vw, var(--layout-max-width))) / 2)
     );
-    --music-menu-safe-offset: calc(
-        var(--layout-horizontal-gap) + var(--container-side-padding)
-    );
-    --music-menu-visible-width: max(
-        var(--music-menu-safe-offset),
-        var(--music-menu-collapsed-peek)
+    --music-menu-safe-offset: max(
+        0px,
+        calc(
+            var(--layout-horizontal-gap) + var(--container-side-padding)
+        )
     );
     width: min(
         var(--music-menu-expanded-max-width),
@@ -2251,12 +2250,11 @@ select option {
     );
     --music-menu-visible-width: min(
         var(--music-menu-target-width),
-        var(--music-menu-safe-offset)
+        max(var(--music-menu-safe-offset), 0px)
     );
-    width: var(--music-menu-target-width);
-    -webkit-clip-path: inset(0 calc(100% - var(--music-menu-visible-width)) 0 0);
-    clip-path: inset(0 calc(100% - var(--music-menu-visible-width)) 0 0);
-    padding: 28px 24px;
+    width: var(--music-menu-visible-width);
+    padding: clamp(20px, calc(var(--music-menu-visible-width) / 2.2), 28px)
+             clamp(6px, calc(var(--music-menu-visible-width) / 4), 24px);
 }
 
 .music-menu.open.collapsed {
@@ -2267,6 +2265,24 @@ select option {
     pointer-events: none;
     filter: saturate(0.75);
     opacity: 0.95;
+}
+
+.music-menu.collapsed .music-menu-content,
+.music-menu.collapsed .fortune-body,
+.music-menu.collapsed .fortune-side,
+.music-menu.collapsed .fortune-list-section,
+.music-menu.collapsed .fortune-controls {
+    min-width: 0;
+}
+
+.music-menu.collapsed .fortune-body {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, calc(var(--music-menu-visible-width) / 3.2), 24px);
+}
+
+.music-menu.collapsed .fortune-section {
+    padding: clamp(8px, calc(var(--music-menu-visible-width) / 5.5), 18px);
 }
 
 .music-menu.collapsed .close-music-menu {
@@ -2290,7 +2306,8 @@ select option {
 
 .music-menu.collapsed .fortune-title {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: clamp(8px, calc(var(--music-menu-visible-width) / 8), 14px);
+    font-size: clamp(0.85rem, calc(0.75rem + var(--music-menu-visible-width) / 420), 1.05rem);
 }
 
 .music-menu.collapsed #itemsInput {
@@ -2301,16 +2318,20 @@ select option {
     border-color: rgba(255, 255, 255, 0.08);
     min-height: clamp(320px, 68vh, 560px);
     height: 100%;
+    padding: clamp(8px, calc(var(--music-menu-visible-width) / 6), 14px);
+    font-size: clamp(0.75rem, calc(0.7rem + var(--music-menu-visible-width) / 520), 0.95rem);
 }
 
 .music-menu.collapsed .fortune-list-section {
     display: flex;
     flex-direction: column;
     flex: 1;
+    gap: clamp(12px, calc(var(--music-menu-visible-width) / 4), 20px);
 }
 
 .music-menu.collapsed .fortune-controls {
     flex: 1;
+    gap: clamp(10px, calc(var(--music-menu-visible-width) / 5), 18px);
 }
 
 .rules-panel {
@@ -3162,7 +3183,8 @@ select option {
             var(--music-menu-collapsed-min-width),
             min(92vw, 300px)
         );
-        padding: 24px 18px;
+        padding: clamp(18px, calc(var(--music-menu-visible-width) / 2.2), 26px)
+                 clamp(6px, calc(var(--music-menu-visible-width) / 4.2), 18px);
     }
 
     .collapse-music-menu {
