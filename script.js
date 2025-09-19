@@ -4339,7 +4339,7 @@ function initFortuneWheel() {
 
   function parseInput(text) {
     return text
-      .split(/\n|,/)
+      .split(/\r?\n/)
       .map((s) => s.trim())
       .filter(Boolean);
   }
