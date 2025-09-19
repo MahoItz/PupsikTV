@@ -2164,19 +2164,22 @@ select option {
     position: fixed;
     top: 0;
     left: 0;
-    width: 80%;
+    width: min(80vw, 120vh, 960px);
+    max-width: 100%;
     height: 100%;
+    max-height: 100vh;
     background: var(--card-bg);
     transform: translateX(-100%);
     transition: transform 0.3s ease, width 0.3s ease, padding 0.3s ease;
     z-index: 1500;
-    padding: 36px 32px;
+    padding: clamp(20px, calc(12px + 2.5vh), 36px) clamp(18px, calc(12px + 4vw), 32px);
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    font-size: clamp(0.78rem, calc(0.7rem + 0.35vw + 0.18vh), 1rem);
 }
 
 .music-menu.open {
@@ -2184,8 +2187,8 @@ select option {
 }
 
 .music-menu.collapsed {
-    width: clamp(240px, 32vw, 360px);
-    padding: 28px 24px;
+    width: clamp(240px, min(32vw, 72vh), 360px);
+    padding: clamp(20px, calc(10px + 2vh), 28px) clamp(16px, calc(10px + 3vw), 24px);
 }
 
 .music-menu.collapsed .music-menu-content {
@@ -2393,15 +2396,15 @@ select option {
 
 .audio-controls {
     width: 100%;
-    margin-top: 6px;
+    margin-top: clamp(4px, calc(2px + 0.8vh), 8px);
     background: var(--glass-bg);
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--border-radius-small);
-    padding: 6px 8px;
+    padding: clamp(4px, calc(2px + 0.6vh), 8px) clamp(6px, calc(4px + 0.8vw), 10px);
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: clamp(6px, calc(4px + 1vh), 10px);
 }
 
 .audio-controls .audio-btn {
@@ -2409,12 +2412,12 @@ select option {
     border: none;
     color: var(--text-primary);
     cursor: pointer;
-    padding: 8px;
+    padding: clamp(6px, calc(4px + 0.6vh), 8px);
     border-radius: var(--border-radius-small);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    font-size: clamp(0.9rem, calc(0.85rem + 0.3vh), 1rem);
     transition: var(--transition);
 }
 
@@ -2429,7 +2432,7 @@ select option {
 
 .volume-slider {
     width: 70%;
-    height: 6px;
+    height: clamp(4px, calc(2px + 0.5vh), 6px);
     background: rgba(255, 255, 255, 0.2);
     border-radius: var(--border-radius-small);
     -webkit-appearance: none;
@@ -2438,16 +2441,16 @@ select option {
 
 .volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
+    width: clamp(10px, calc(6px + 0.8vh), 14px);
+    height: clamp(10px, calc(6px + 0.8vh), 14px);
     background: var(--primary-color);
     border-radius: 50%;
     cursor: pointer;
 }
 
 .volume-slider::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
+    width: clamp(10px, calc(6px + 0.8vh), 14px);
+    height: clamp(10px, calc(6px + 0.8vh), 14px);
     background: var(--primary-color);
     border: none;
     border-radius: 50%;
@@ -2457,7 +2460,7 @@ select option {
 #volumeValue {
   margin-left: 8px;
   color: #fff;
-  font-size: 14px;
+  font-size: clamp(12px, calc(10px + 0.4vh), 14px);
   min-width: 40px;
   display: inline-block;
 }
@@ -2471,14 +2474,14 @@ select option {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 32px;
+    gap: clamp(20px, calc(8px + 3vh), 32px);
     width: 100%;
-    margin: 32px auto 24px;
+    margin: clamp(20px, calc(8px + 3vh), 32px) auto clamp(16px, calc(6px + 2vh), 24px);
     transition: opacity 0.3s ease;
 }
 
 .music-menu h2 {
-    font-size: 1.6rem;
+    font-size: clamp(1.2rem, calc(1rem + 1.2vh), 1.6rem);
     margin: 0;
     letter-spacing: 0.04em;
     text-align: center;
@@ -2490,14 +2493,14 @@ select option {
     background: var(--glass-bg);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--border-radius-small);
-    padding: 6px 18px 18px 18px;
+    padding: clamp(6px, calc(4px + 1vh), 12px) clamp(12px, calc(8px + 1.2vw), 18px) clamp(14px, calc(10px + 1.4vh), 18px);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
 
 .music-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: clamp(8px, calc(4px + 1.2vh), 12px);
     width: 100%;
     margin: 0;
 }
@@ -2505,7 +2508,7 @@ select option {
 .music-section-title,
 .fortune-title {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: clamp(0.95rem, calc(0.85rem + 0.6vh), 1.1rem);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-primary);
@@ -2514,7 +2517,7 @@ select option {
 .music-track-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: clamp(8px, calc(4px + 1vh), 12px);
     margin: 0;
     padding: 0;
     width: 100%;
@@ -2526,9 +2529,9 @@ select option {
 
 .music-track-list li button {
     width: auto;
-    min-width: 110px;
+    min-width: clamp(96px, calc(70px + 6vw), 110px);
     text-align: center;
-    padding: 10px 16px;
+    padding: clamp(8px, calc(6px + 0.6vh), 10px) clamp(12px, calc(10px + 1vw), 16px);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2542,7 +2545,7 @@ select option {
 .fortune-section {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: clamp(14px, calc(6px + 2.4vh), 20px);
     width: 100%;
     min-height: 0;
 }
@@ -2550,7 +2553,7 @@ select option {
 .fortune-body {
     display: grid;
     grid-template-columns: minmax(320px, 1fr) minmax(360px, 1fr);
-    gap: 32px;
+    gap: clamp(20px, calc(8px + 3vh), 32px);
     align-items: stretch;
     justify-items: stretch;
     width: 100%;
@@ -2559,7 +2562,7 @@ select option {
 .fortune-side {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: clamp(16px, calc(6px + 2.2vh), 24px);
     height: 100%;
     min-height: 0;
 }
@@ -2576,10 +2579,10 @@ select option {
     background: rgba(10, 15, 35, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
-    padding: 16px;
+    padding: clamp(12px, calc(6px + 2vh), 16px);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: clamp(10px, calc(4px + 1.6vh), 12px);
     width: 100%;
     height: 100%;
 }
@@ -2587,7 +2590,7 @@ select option {
 .fortune-spin-settings {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: clamp(6px, calc(2px + 1.2vh), 8px);
     padding: 4px 0 6px;
 }
 
@@ -2596,7 +2599,7 @@ select option {
     align-items: center;
     justify-content: space-between;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, calc(0.75rem + 0.25vh), 0.9rem);
     color: var(--text-primary);
 }
 
@@ -2608,7 +2611,7 @@ select option {
 .fortune-spin-slider {
     appearance: none;
     width: 100%;
-    height: 6px;
+    height: clamp(4px, calc(2px + 0.5vh), 6px);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.1);
     outline: none;
@@ -2629,8 +2632,8 @@ select option {
 
 .fortune-spin-slider::-webkit-slider-thumb {
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: clamp(12px, calc(8px + 0.8vh), 16px);
+    height: clamp(12px, calc(8px + 0.8vh), 16px);
     border-radius: 50%;
     background: linear-gradient(135deg, var(--primary-color), #ff8a65);
     box-shadow: 0 0 0 3px rgba(255, 108, 66, 0.25);
@@ -2639,8 +2642,8 @@ select option {
 }
 
 .fortune-spin-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
+    width: clamp(12px, calc(8px + 0.8vh), 16px);
+    height: clamp(12px, calc(8px + 0.8vh), 16px);
     border-radius: 50%;
     background: linear-gradient(135deg, var(--primary-color), #ff8a65);
     box-shadow: 0 0 0 3px rgba(255, 108, 66, 0.25);
@@ -2654,8 +2657,9 @@ select option {
 
 .fortune-wheel-wrap {
     position: relative;
-    width: 100%;
+    width: min(100%, min(62vh, 560px));
     aspect-ratio: 1 / 1;
+    margin: 0 auto;
 }
 
 .fortune-wheel-wrap canvas {
@@ -2699,9 +2703,9 @@ select option {
     transform: translateY(-50%);
     width: 0;
     height: 0;
-    border-top: 18px solid transparent;
-    border-bottom: 18px solid transparent;
-    border-right:28px solid #28c76f;
+    border-top: clamp(12px, calc(6px + 1.2vh), 18px) solid transparent;
+    border-bottom: clamp(12px, calc(6px + 1.2vh), 18px) solid transparent;
+    border-right: clamp(20px, calc(12px + 1.6vh), 28px) solid #28c76f;
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
     z-index: 2;
 }
@@ -2751,9 +2755,9 @@ select option {
 }
 
 .fortune-status {
-    font-size: 0.9rem;
+    font-size: clamp(0.8rem, calc(0.75rem + 0.25vh), 0.9rem);
     color: var(--text-secondary);
-    min-height: 42px;
+    min-height: clamp(32px, calc(20px + 3vh), 42px);
 }
 
 .fortune-status b {
@@ -2764,7 +2768,7 @@ select option {
 .fortune-status-remaining {
     display: inline-block;
     margin-top: 4px;
-    font-size: 0.8rem;
+    font-size: clamp(0.72rem, calc(0.68rem + 0.18vh), 0.8rem);
 }
 
 .fortune-status-success {
@@ -2778,8 +2782,8 @@ select option {
 .fortune-legend {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 8px 12px;
-    max-height: 160px;
+    gap: clamp(6px, calc(2px + 1vh), 12px);
+    max-height: min(160px, 32vh);
     overflow-y: auto;
     padding-right: 4px;
 }
@@ -2832,14 +2836,14 @@ select option {
 
 .fortune-textarea {
     width: 100%;
-    min-height: 160px;
+    min-height: clamp(120px, calc(80px + 12vh), 200px);
     resize: vertical;
     background: rgba(7, 11, 25, 0.9);
     color: var(--text-primary);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
-    padding: 12px 14px;
-    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    padding: clamp(10px, calc(6px + 1.2vh), 12px) clamp(12px, calc(8px + 1vw), 14px);
+    font: clamp(13px, calc(12px + 0.3vh), 14px)/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     outline: none;
     box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
 }
@@ -2856,7 +2860,7 @@ select option {
 .fortune-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: clamp(8px, calc(4px + 1vh), 12px);
     justify-content: space-between;
     align-items: center;
 }
@@ -2864,7 +2868,7 @@ select option {
 .fortune-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: clamp(6px, calc(2px + 0.8vh), 10px);
 }
 
 .fortune-buttons-right {
@@ -2876,11 +2880,11 @@ select option {
     border: 1px solid rgba(255, 0, 0, 0.14);
     background: rgba(0, 248, 41, 0.08);
     color: var(--text-primary);
-    padding: 9px 14px;
+    padding: clamp(7px, calc(5px + 0.8vh), 9px) clamp(12px, calc(8px + 1vw), 14px);
     border-radius: 12px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: clamp(0.78rem, calc(0.72rem + 0.2vh), 0.85rem);
     letter-spacing: 0.03em;
     transition: var(--transition);
 }
@@ -2916,19 +2920,19 @@ select option {
     margin-top: auto;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: clamp(8px, calc(4px + 1vh), 12px);
 }
 
 .fortune-note {
     margin: 0;
-    font-size: 0.78rem;
+    font-size: clamp(0.72rem, calc(0.68rem + 0.18vh), 0.78rem);
     color: var(--text-secondary);
     line-height: 1.4;
 }
 
 .fortune-tip-audio-button {
-    width: 32px;
-    height: 32px;
+    width: clamp(26px, calc(20px + 1.8vh), 32px);
+    height: clamp(26px, calc(20px + 1.8vh), 32px);
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.2);
     background: rgba(153, 153, 153, 0.075);
