@@ -320,7 +320,7 @@ function buildFortuneWinnerMovie(label) {
 
   const displayParts = [];
   if (title) {
-    displayParts.push(`«${title}»`);
+    displayParts.push(title);
   }
   if (year) {
     displayParts.push(`(${year})`);
