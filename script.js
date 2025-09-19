@@ -3957,6 +3957,8 @@ const musicMenuButton = document.getElementById("musicMenuButton");
 const closeMusicMenu = document.getElementById("closeMusicMenu");
 const collapseMusicMenuButton = document.getElementById("collapseMusicMenu");
 const musicMenuContent = musicMenu ? musicMenu.querySelector(".music-menu-content") : null;
+const rulesPanel = document.getElementById("rulesPanel");
+const collapseRulesPanel = document.getElementById("collapseRulesPanel");
 const musicList = document.getElementById("musicList");
 const audioPlayer = document.getElementById("audioPlayer");
 const playPauseBtn = document.getElementById("playPauseBtn");
@@ -3966,6 +3968,7 @@ const volumeValue = document.getElementById("volumeValue");
 const fortuneTipButton = document.getElementById("fortuneTipButton");
 const fortuneTipAudio = document.getElementById("fortuneTipAudio");
 let fortuneWheelApi = null;
+let rulesPanelManuallyCollapsed = false;
 
 if (audioPlayer) {
   audioPlayer.loop = true;
@@ -4021,6 +4024,24 @@ if (volumeSlider && audioPlayer) {
 }
 
 
+const updateRulesPanelState = () => {
+  if (!rulesPanel || !musicMenu) return;
+  const shouldOpen =
+    musicMenu.classList.contains("open") &&
+    !musicMenu.classList.contains("collapsed") &&
+    !rulesPanelManuallyCollapsed;
+
+  rulesPanel.classList.toggle("open", shouldOpen);
+  rulesPanel.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+};
+
+if (collapseRulesPanel) {
+  collapseRulesPanel.addEventListener("click", () => {
+    rulesPanelManuallyCollapsed = true;
+    updateRulesPanelState();
+  });
+}
+
 if (musicMenu && musicMenuButton && closeMusicMenu) {
   const setMenuCollapsed = (shouldCollapse) => {
     musicMenu.classList.toggle("collapsed", shouldCollapse);
@@ -4044,11 +4065,14 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
         collapseLabel.textContent = shouldCollapse ? "Развернуть" : "Свернуть";
       }
     }
+    updateRulesPanelState();
   };
 
   const closeMenu = () => {
     musicMenu.classList.remove("open");
     setMenuCollapsed(false);
+    rulesPanelManuallyCollapsed = false;
+    updateRulesPanelState();
     if (audioPlayer) audioPlayer.pause();
     if (musicList) {
       musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
@@ -4056,10 +4080,13 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
   };
 
   setMenuCollapsed(false);
+  updateRulesPanelState();
 
   musicMenuButton.addEventListener("click", () => {
     musicMenu.classList.add("open");
     setMenuCollapsed(false);
+    rulesPanelManuallyCollapsed = false;
+    updateRulesPanelState();
     if (fortuneWheelApi && typeof fortuneWheelApi.handleMenuOpen === "function") {
       fortuneWheelApi.handleMenuOpen();
     }
@@ -4073,6 +4100,9 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     collapseMusicMenuButton.addEventListener("click", () => {
       const shouldCollapse = !musicMenu.classList.contains("collapsed");
       setMenuCollapsed(shouldCollapse);
+      if (!shouldCollapse) {
+        rulesPanelManuallyCollapsed = false;
+      }
       if (!shouldCollapse && fortuneWheelApi && typeof fortuneWheelApi.handleMenuOpen === "function") {
         fortuneWheelApi.handleMenuOpen();
       }
