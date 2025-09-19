@@ -4177,6 +4177,48 @@ function initFortuneWheel() {
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
   let pendingEliminationItem = null;
+  function setInputValuePreservingState(value) {
+    if (!input) {
+      return;
+    }
+
+    if (input.value === value) {
+      return;
+    }
+
+    const previousScrollTop = input.scrollTop;
+    const isFocused = document.activeElement === input;
+    let selectionStart = null;
+    let selectionEnd = null;
+
+    if (isFocused) {
+      selectionStart = input.selectionStart;
+      selectionEnd = input.selectionEnd;
+    }
+
+    input.value = value;
+
+    if (isFocused && selectionStart !== null && selectionEnd !== null) {
+      const length = input.value.length;
+      const clampedStart = Math.min(selectionStart, length);
+      const clampedEnd = Math.min(selectionEnd, length);
+      try {
+        input.setSelectionRange(clampedStart, clampedEnd);
+      } catch (err) {
+        /* ignore */
+      }
+    }
+
+    input.scrollTop = previousScrollTop;
+  }
+
+  function updateInputFromActiveItems() {
+    if (!input) {
+      return;
+    }
+    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+    setInputValuePreservingState(activeItems.join("\n"));
+  }
   const placeholderColors = [
     "hsl(0deg 84% 55%)",
     "hsl(24deg 86% 57%)",
@@ -4198,6 +4240,7 @@ function initFortuneWheel() {
     if (pendingEliminationItem !== null) {
       eliminatedItems.add(pendingEliminationItem);
       pendingEliminationItem = null;
+      updateInputFromActiveItems();
     }
     drawWheel();
   }
@@ -4516,6 +4559,7 @@ function initFortuneWheel() {
       eliminatedItems.add(text);
       pendingEliminationItem = null;
       drawWheel();
+      updateInputFromActiveItems();
       showFortuneWinnerModal(remainingItems[0]);
       return;
     }
@@ -4526,6 +4570,7 @@ function initFortuneWheel() {
       eliminatedItems.add(text);
       pendingEliminationItem = null;
       drawWheel();
+      updateInputFromActiveItems();
     }
     showResultOverlay(text);
 
@@ -4677,6 +4722,7 @@ function initFortuneWheel() {
 
   function resetEliminated() {
     eliminatedItems.clear();
+    updateInputFromActiveItems();
     drawWheel();
     clearPendingElimination();
     hideResultOverlay();
