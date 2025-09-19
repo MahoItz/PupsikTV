@@ -377,21 +377,12 @@ if (fortuneWinnerKinopoiskBtn) {
       fortuneWinnerMovie.year,
       fortuneWinnerMovie.originalTitle,
     );
-    closeFortuneWinnerModal();
   });
 }
 
 if (fortuneWinnerReYohohoBtn) {
   fortuneWinnerReYohohoBtn.addEventListener("click", () => {
-    if (!fortuneWinnerMovie) {
-      return;
-    }
-    openReYohohoPage(
-      fortuneWinnerMovie.title,
-      fortuneWinnerMovie.year,
-      fortuneWinnerMovie.originalTitle,
-    );
-    closeFortuneWinnerModal();
+    window.open(REYOHOHO_BASE_URL, "_blank");
   });
 }
 
@@ -2334,28 +2325,6 @@ async function openKinopoiskPage(title, year, originalTitle = "") {
   }
   window.open(
     `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(query)}`,
-    "_blank"
-  );
-}
-
-async function openReYohohoPage(title, year, originalTitle = "") {
-  const query = (originalTitle || title || "").trim();
-  if (!query) {
-    return;
-  }
-  let filmId = null;
-  if (KINOPOISK_API_KEY) {
-    const film = await fetchKinopoiskFilm(title, year, originalTitle);
-    if (film && film.filmId) {
-      filmId = film.filmId;
-    }
-  }
-  if (filmId) {
-    window.open(`${REYOHOHO_BASE_URL}#/player?kp_id=${filmId}`, "_blank");
-    return;
-  }
-  window.open(
-    `${REYOHOHO_BASE_URL}#/search?query=${encodeURIComponent(query)}`,
     "_blank"
   );
 }

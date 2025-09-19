@@ -1224,6 +1224,35 @@ select option {
     max-width: 420px;
 }
 
+#fortuneWinnerModal .modal-content {
+    text-align: center;
+}
+
+#fortuneWinnerModal .fortune-winner-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#fortuneWinnerModal .fortune-winner-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+#fortuneWinnerModal .fortune-winner-text {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+}
+
+#fortuneWinnerModal .modal-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
 .close {
     position: absolute;
     right: 20px;

@@ -857,12 +857,20 @@
     <div id="fortuneWinnerModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeFortuneWinnerModal()">&times;</span>
-            <h2>Найти фильм?</h2>
+            <h2>Выигравший фильм</h2>
             <p id="fortuneWinnerFilmName" class="modal-film-name"></p>
+            <div class="fortune-winner-actions">
+                <div class="fortune-winner-option">
+                    <span class="fortune-winner-text">Найти фильм на</span>
+                    <button id="fortuneWinnerKinopoisk" class="btn btn-primary">Кинопоиск</button>
+                </div>
+                <div class="fortune-winner-option">
+                    <span class="fortune-winner-text">Перейти на</span>
+                    <button id="fortuneWinnerReYohoho" class="btn btn-primary">ReYohoho</button>
+                </div>
+            </div>
             <div class="modal-buttons">
-                <button id="fortuneWinnerKinopoisk" class="btn btn-primary">Кинопоиск</button>
-                <button id="fortuneWinnerReYohoho" class="btn btn-primary">ReYohoho</button>
-                <button id="fortuneWinnerCancel" class="btn btn-secondary">Отмена</button>
+                <button id="fortuneWinnerCancel" class="btn btn-secondary">Закрыть</button>
             </div>
         </div>
     </div>
