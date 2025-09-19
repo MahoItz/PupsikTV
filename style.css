@@ -1219,9 +1219,14 @@ select option {
 
 .modal-film-name {
     margin-bottom: 24px;
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-    max-width: 420px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-align: center;
+    color: #ffd700;
+    padding: 8px 16px;
+    border-radius: 12px;
+    background: rgba(78, 78, 78, 0.226);
+    display: inline-block;
 }
 
 #fortuneWinnerModal .modal-content {
@@ -1229,6 +1234,7 @@ select option {
 }
 
 #fortuneWinnerModal .fortune-winner-actions {
+    margin-top: 32px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -1238,9 +1244,9 @@ select option {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    width: 100%;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
 }
 
 #fortuneWinnerModal .fortune-winner-text {
