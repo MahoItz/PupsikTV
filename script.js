@@ -135,6 +135,8 @@ let deleteMovieId = null;
 let deleteOrderId = null;
 let deleteGameOrderId = null;
 
+const REYOHOHO_BASE_URL = "https://reyohoho.github.io/reyohoho/";
+
 const fortuneWinnerModal = document.getElementById("fortuneWinnerModal");
 const fortuneWinnerFilmNameEl = document.getElementById("fortuneWinnerFilmName");
 const fortuneWinnerKinopoiskBtn = document.getElementById("fortuneWinnerKinopoisk");
@@ -2349,11 +2351,11 @@ async function openReYohohoPage(title, year, originalTitle = "") {
     }
   }
   if (filmId) {
-    window.open(`https://re.yohoho.cc/movies/${filmId}/`, "_blank");
+    window.open(`${REYOHOHO_BASE_URL}#/player?kp_id=${filmId}`, "_blank");
     return;
   }
   window.open(
-    `https://re.yohoho.cc/search/?q=${encodeURIComponent(query)}`,
+    `${REYOHOHO_BASE_URL}#/search?query=${encodeURIComponent(query)}`,
     "_blank"
   );
 }
