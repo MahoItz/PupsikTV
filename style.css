@@ -2243,12 +2243,13 @@ select option {
 
 .music-menu.collapsed {
     --music-menu-collapsed-width: min(
-        clamp(240px, 32vw, 360px),
+        clamp(var(--music-menu-collapsed-min-width), 32vw, 360px),
         max(
             var(--music-menu-collapsed-min-width),
             calc(100vw - var(--rules-panel-width))
         )
     );
+    --music-menu-visible-width: var(--music-menu-collapsed-width);
     width: var(--music-menu-collapsed-width);
     padding: 28px 24px;
 }
