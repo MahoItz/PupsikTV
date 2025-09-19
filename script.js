@@ -4194,10 +4194,21 @@ function initFortuneWheel() {
   let idleLastTimestamp = null;
   let idleActive = false;
 
+  function updateInputFromState(showAll = false) {
+    if (!input) {
+      return;
+    }
+    const sourceItems = showAll
+      ? items
+      : items.filter((item) => !eliminatedItems.has(item));
+    input.value = sourceItems.join("\n");
+  }
+
   function applyPendingElimination() {
     if (pendingEliminationItem !== null) {
       eliminatedItems.add(pendingEliminationItem);
       pendingEliminationItem = null;
+      updateInputFromState();
     }
     drawWheel();
   }
@@ -4515,6 +4526,7 @@ function initFortuneWheel() {
     if (remainingItems.length === 1) {
       eliminatedItems.add(text);
       pendingEliminationItem = null;
+      updateInputFromState();
       drawWheel();
       showFortuneWinnerModal(remainingItems[0]);
       return;
@@ -4525,6 +4537,7 @@ function initFortuneWheel() {
     } else {
       eliminatedItems.add(text);
       pendingEliminationItem = null;
+      updateInputFromState();
       drawWheel();
     }
     showResultOverlay(text);
@@ -4669,7 +4682,7 @@ function initFortuneWheel() {
       return;
     }
     items = shuffleArray(items);
-    input.value = items.join("\n");
+    updateInputFromState();
     drawWheel();
     hideResultOverlay();
     statusEl.textContent = "Порядок пунктов перемешан.";
@@ -4677,6 +4690,7 @@ function initFortuneWheel() {
 
   function resetEliminated() {
     eliminatedItems.clear();
+    updateInputFromState(true);
     drawWheel();
     clearPendingElimination();
     hideResultOverlay();
@@ -4713,7 +4727,7 @@ function initFortuneWheel() {
     shuffleBtn.addEventListener("click", reshuffle);
   }
 
-  input.value = items.join("\n");
+  updateInputFromState(true);
   drawWheel();
   if (items.length === 0) {
     startIdleAnimation();
