@@ -25,6 +25,7 @@
     --rules-panel-width: clamp(280px, 28vw, 420px);
     --music-menu-expanded-max-width: 80vw;
     --music-menu-min-width: 220px;
+    --music-menu-collapsed-min-width: 120px;
     --layout-max-width: 1400px;
     --container-side-padding: 20px;
     --music-menu-collapsed-peek: 72px;
@@ -2243,7 +2244,10 @@ select option {
 .music-menu.collapsed {
     --music-menu-collapsed-width: min(
         clamp(240px, 32vw, 360px),
-        max(var(--music-menu-min-width), calc(100vw - var(--rules-panel-width)))
+        max(
+            var(--music-menu-collapsed-min-width),
+            calc(100vw - var(--rules-panel-width))
+        )
     );
     width: var(--music-menu-collapsed-width);
     padding: 28px 24px;
@@ -3155,7 +3159,10 @@ select option {
     }
 
     .music-menu.collapsed {
-        --music-menu-collapsed-width: min(92vw, 300px);
+        --music-menu-collapsed-width: max(
+            var(--music-menu-collapsed-min-width),
+            min(92vw, 300px)
+        );
         padding: 24px 18px;
     }
 
