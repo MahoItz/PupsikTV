@@ -25,6 +25,9 @@
     --rules-panel-width: clamp(280px, 28vw, 420px);
     --music-menu-expanded-max-width: 80vw;
     --music-menu-min-width: 220px;
+    --layout-max-width: 1400px;
+    --container-side-padding: 20px;
+    --music-menu-collapsed-peek: 72px;
 
     /* Header */
     --primary-purple: #6b46c1;
@@ -124,9 +127,9 @@ body {
 
 /* Основные контейнеры */
 .container {
-    max-width: 1400px;
+    max-width: var(--layout-max-width);
     margin: 0 auto;
-    padding: 20px;
+    padding: var(--container-side-padding);
     min-height: 100vh;
     padding-top: 90px;
 }
@@ -2204,6 +2207,17 @@ select option {
     position: fixed;
     top: 0;
     left: 0;
+    --layout-horizontal-gap: max(
+        0px,
+        calc((100vw - min(100vw, var(--layout-max-width))) / 2)
+    );
+    --music-menu-safe-offset: calc(
+        var(--layout-horizontal-gap) + var(--container-side-padding)
+    );
+    --music-menu-visible-width: max(
+        var(--music-menu-safe-offset),
+        var(--music-menu-collapsed-peek)
+    );
     width: min(
         var(--music-menu-expanded-max-width),
         max(var(--music-menu-min-width), calc(100vw - var(--rules-panel-width)))
@@ -2227,11 +2241,23 @@ select option {
 }
 
 .music-menu.collapsed {
-    width: min(
+    --music-menu-collapsed-width: min(
         clamp(240px, 32vw, 360px),
         max(var(--music-menu-min-width), calc(100vw - var(--rules-panel-width)))
     );
+    width: var(--music-menu-collapsed-width);
     padding: 28px 24px;
+}
+
+.music-menu.open.collapsed {
+    transform: translateX(
+        calc(
+            -1 * max(
+                0px,
+                var(--music-menu-collapsed-width) - var(--music-menu-visible-width)
+            )
+        )
+    );
 }
 
 .music-menu.collapsed .music-menu-content {
@@ -3129,7 +3155,7 @@ select option {
     }
 
     .music-menu.collapsed {
-        width: min(92vw, 300px);
+        --music-menu-collapsed-width: min(92vw, 300px);
         padding: 24px 18px;
     }
 
