@@ -2392,8 +2392,8 @@ select option {
 }
 
 .audio-controls {
-    width: 100%;
-    margin-top: 20px;
+    width: 24%;
+    margin-top: 6px;
     background: var(--glass-bg);
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--border-radius-small);
@@ -2490,7 +2490,7 @@ select option {
     background: var(--glass-bg);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--border-radius-small);
-    padding: 18px;
+    padding: 6px 18px 18px 18px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
 
@@ -2532,6 +2532,11 @@ select option {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
 }
 
 .fortune-section {
