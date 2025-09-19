@@ -2356,19 +2356,22 @@ select option {
 
 .rules-panel__close {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 36px;
-    height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    top: 24px;
+    left: 12px;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 50%;
-    border: none;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(10, 15, 35, 0.9);
     color: var(--text-primary);
     cursor: pointer;
-    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    transition: background 0.2s ease, color 0.2s ease, transform 0.3s ease;
+    z-index: 3;
+    overflow: hidden;
 }
 
 .rules-panel__close:hover {
