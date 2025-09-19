@@ -2156,6 +2156,43 @@ select option {
     border-radius: 8px; /* округлим фон под картинку */
 }
 
+.rules-panel-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(10, 15, 35, 0.85);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1600;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, color 0.25s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+}
+
+.rules-panel-toggle:hover,
+.rules-panel-toggle.is-active {
+    transform: translateY(-1px) scale(1.03);
+    background: linear-gradient(135deg, rgba(63, 81, 181, 0.85), rgba(123, 97, 255, 0.85));
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(68, 97, 242, 0.35);
+}
+
+.rules-panel-toggle:focus-visible {
+    outline: 2px solid rgba(123, 97, 255, 0.85);
+    outline-offset: 3px;
+}
+
+.rules-panel-toggle i {
+    font-size: 1.2rem;
+}
+
 .music-menu-button img{
     width: 3em;
 }
@@ -2336,6 +2373,15 @@ select option {
 .music-menu.collapsed + .rules-panel {
     transform: translateX(100%);
     pointer-events: none;
+}
+
+.rules-panel.rules-panel--standalone {
+    pointer-events: auto;
+}
+
+.music-menu.collapsed + .rules-panel.rules-panel--standalone {
+    transform: translateX(0);
+    pointer-events: auto;
 }
 
 .close-music-menu {
@@ -3127,6 +3173,10 @@ select option {
     }
 
     .rules-panel {
+        display: none;
+    }
+
+    .rules-panel-toggle {
         display: none;
     }
 }

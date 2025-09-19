@@ -3958,6 +3958,7 @@ const closeMusicMenu = document.getElementById("closeMusicMenu");
 const collapseMusicMenuButton = document.getElementById("collapseMusicMenu");
 const musicMenuContent = musicMenu ? musicMenu.querySelector(".music-menu-content") : null;
 const rulesPanel = document.getElementById("rulesPanel");
+const rulesPanelToggleButton = document.getElementById("rulesPanelToggleButton");
 const collapseRulesPanel = document.getElementById("collapseRulesPanel");
 const musicList = document.getElementById("musicList");
 const audioPlayer = document.getElementById("audioPlayer");
@@ -3969,6 +3970,7 @@ const fortuneTipButton = document.getElementById("fortuneTipButton");
 const fortuneTipAudio = document.getElementById("fortuneTipAudio");
 let fortuneWheelApi = null;
 let rulesPanelManuallyCollapsed = false;
+let rulesPanelStandaloneOpen = false;
 
 if (audioPlayer) {
   audioPlayer.loop = true;
@@ -4024,20 +4026,64 @@ if (volumeSlider && audioPlayer) {
 }
 
 
+const syncRulesPanelToggleButton = () => {
+  if (!rulesPanelToggleButton) return;
+  const isActive =
+    rulesPanelStandaloneOpen &&
+    rulesPanel &&
+    rulesPanel.classList.contains("open");
+  const label = isActive ? "Скрыть правила" : "Показать правила";
+
+  rulesPanelToggleButton.classList.toggle("is-active", isActive);
+  rulesPanelToggleButton.setAttribute("aria-pressed", isActive ? "true" : "false");
+  rulesPanelToggleButton.setAttribute("aria-label", label);
+  rulesPanelToggleButton.setAttribute("title", label);
+};
+
 const updateRulesPanelState = () => {
-  if (!rulesPanel || !musicMenu) return;
-  const shouldOpen =
-    musicMenu.classList.contains("open") &&
-    !musicMenu.classList.contains("collapsed") &&
-    !rulesPanelManuallyCollapsed;
+  if (!rulesPanel) {
+    syncRulesPanelToggleButton();
+    return;
+  }
+
+  const menuIsOpen = musicMenu ? musicMenu.classList.contains("open") : false;
+  const menuIsCollapsed = musicMenu ? musicMenu.classList.contains("collapsed") : false;
+  const shouldOpenFromMenu = menuIsOpen && !menuIsCollapsed && !rulesPanelManuallyCollapsed;
+  const shouldOpen = shouldOpenFromMenu || rulesPanelStandaloneOpen;
 
   rulesPanel.classList.toggle("open", shouldOpen);
+  rulesPanel.classList.toggle("rules-panel--standalone", shouldOpen && rulesPanelStandaloneOpen);
   rulesPanel.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+
+  if (!shouldOpen) {
+    rulesPanelStandaloneOpen = false;
+    rulesPanel.classList.remove("rules-panel--standalone");
+  }
+
+  syncRulesPanelToggleButton();
 };
+
+if (rulesPanelToggleButton) {
+  rulesPanelToggleButton.addEventListener("click", () => {
+    const isActive =
+      rulesPanelStandaloneOpen &&
+      rulesPanel &&
+      rulesPanel.classList.contains("open");
+
+    rulesPanelStandaloneOpen = !isActive;
+
+    if (rulesPanelStandaloneOpen) {
+      rulesPanelManuallyCollapsed = false;
+    }
+
+    updateRulesPanelState();
+  });
+}
 
 if (collapseRulesPanel) {
   collapseRulesPanel.addEventListener("click", () => {
     rulesPanelManuallyCollapsed = true;
+    rulesPanelStandaloneOpen = false;
     updateRulesPanelState();
   });
 }
@@ -4065,6 +4111,9 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
         collapseLabel.textContent = shouldCollapse ? "Развернуть" : "Свернуть";
       }
     }
+    if (shouldCollapse) {
+      rulesPanelStandaloneOpen = false;
+    }
     updateRulesPanelState();
   };
 
@@ -4072,6 +4121,7 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     musicMenu.classList.remove("open");
     setMenuCollapsed(false);
     rulesPanelManuallyCollapsed = false;
+    rulesPanelStandaloneOpen = false;
     updateRulesPanelState();
     if (audioPlayer) audioPlayer.pause();
     if (musicList) {
