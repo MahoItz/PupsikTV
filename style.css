@@ -2392,7 +2392,7 @@ select option {
 }
 
 .audio-controls {
-    width: 24%;
+    width: 100%;
     margin-top: 6px;
     background: var(--glass-bg);
     border: 2px solid rgba(255, 255, 255, 0.1);
