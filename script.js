@@ -4337,23 +4337,66 @@ function initFortuneWheel() {
     return { width, height };
   }
 
+  function normalizeFortuneItemText(value) {
+    const trimmed = String(value || "").trim();
+    if (!trimmed) {
+      return "";
+    }
+
+    const letterMatch = trimmed.match(/^(.*?)(\p{L})(.*)$/u);
+    if (!letterMatch) {
+      return trimmed;
+    }
+
+    const [, prefix, letter, suffix] = letterMatch;
+    const uppercased =
+      typeof letter.toLocaleUpperCase === "function"
+        ? letter.toLocaleUpperCase()
+        : letter.toUpperCase();
+    return `${prefix}${uppercased}${suffix}`;
+  }
+
+  function normalizeTextareaValue(value) {
+    const text = String(value || "");
+    if (!text) {
+      return "";
+    }
+
+    const segmentRegex = /([^\n,]+)/g;
+    let result = "";
+    let lastIndex = 0;
+    let match;
+
+    while ((match = segmentRegex.exec(text)) !== null) {
+      const segment = match[0];
+      const start = match.index;
+      const end = segmentRegex.lastIndex;
+      let separator = text.slice(lastIndex, start);
+      const normalized = normalizeFortuneItemText(segment);
+
+      if (normalized) {
+        if (separator.endsWith(",") && !/[\r\n]/.test(separator)) {
+          separator = separator.replace(/,(\s*)$/u, ", ");
+        }
+        result += separator + normalized;
+      } else {
+        result += separator;
+      }
+
+      lastIndex = end;
+    }
+
+    if (lastIndex < text.length) {
+      result += text.slice(lastIndex);
+    }
+
+    return result;
+  }
+
   function parseInput(text) {
-    return text
+    return String(text || "")
       .split(/\n|,/)
-      .map((segment) => {
-        const trimmed = segment.trim();
-        if (!trimmed) {
-          return "";
-        }
-
-        const letterMatch = trimmed.match(/^(.*?)(\p{L})(.*)$/u);
-        if (!letterMatch) {
-          return trimmed;
-        }
-
-        const [, prefix, letter, suffix] = letterMatch;
-        return `${prefix}${letter.toUpperCase()}${suffix}`;
-      })
+      .map((segment) => normalizeFortuneItemText(segment))
       .filter(Boolean);
   }
 
@@ -4635,9 +4678,25 @@ function initFortuneWheel() {
       return;
     }
 
+    const normalizedText = normalizeTextareaValue(input.value);
+    if (input.value !== normalizedText) {
+      input.value = normalizedText;
+    }
+
     const parsedItems = parseInput(input.value);
     const newItems = parsedItems.slice(0, 128);
-    const formattedText = parsedItems.join("\n");
+
+    let formattedText = normalizedText;
+    if (newItems.length === 0) {
+      formattedText = "";
+    } else if (/[\r\n]/.test(normalizedText)) {
+      formattedText = newItems.join("\n");
+    } else if (normalizedText.includes(",")) {
+      formattedText = newItems.join(", ");
+    } else {
+      formattedText = newItems.join("\n");
+    }
+
     if (input.value !== formattedText) {
       input.value = formattedText;
     }
