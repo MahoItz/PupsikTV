@@ -2513,9 +2513,9 @@ select option {
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     flex-direction: column;
     font-size: 1rem;
     font-weight: 600;
@@ -2523,6 +2523,7 @@ select option {
     text-transform: uppercase;
     z-index: 10;
     touch-action: pan-y;
+    padding-bottom: 32px;
 }
 
 .music-menu.collapsed .collapse-music-menu::before {
