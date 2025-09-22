@@ -23,6 +23,7 @@
     --rating-low: #f44336;
     --rating-high: #4caf50;
     --rules-panel-width: clamp(280px, 28vw, 420px);
+    --panels-gap: clamp(16px, 2vw, 32px);
     --music-menu-expanded-max-width: 80vw;
     --music-menu-min-width: 220px;
     --music-menu-collapsed-min-width: 120px;
@@ -2208,19 +2209,10 @@ select option {
     position: fixed;
     top: 0;
     left: 0;
-    --layout-horizontal-gap: max(
-        0px,
-        calc((100vw - min(100vw, var(--layout-max-width))) / 2)
-    );
-    --music-menu-safe-offset: max(
-        0px,
-        calc(
-            var(--layout-horizontal-gap) + var(--container-side-padding)
-        )
-    );
-    width: min(
-        var(--music-menu-expanded-max-width),
-        max(var(--music-menu-min-width), calc(100vw - var(--rules-panel-width)))
+    width: clamp(
+        var(--music-menu-min-width),
+        calc(100vw - var(--rules-panel-width) - (2 * var(--panels-gap))),
+        var(--music-menu-expanded-max-width)
     );
     height: 100%;
     background: var(--card-bg);
@@ -2241,17 +2233,12 @@ select option {
 }
 
 .music-menu.collapsed {
-    --music-menu-target-width: min(
-        clamp(var(--music-menu-collapsed-min-width), 32vw, 360px),
-        max(
-            var(--music-menu-collapsed-min-width),
-            calc(100vw - var(--rules-panel-width))
-        )
+    --music-menu-target-width: clamp(
+        var(--music-menu-collapsed-min-width),
+        calc(100vw - var(--rules-panel-width) - (2 * var(--panels-gap))),
+        clamp(var(--music-menu-collapsed-min-width), 32vw, 360px)
     );
-    --music-menu-visible-width: min(
-        var(--music-menu-target-width),
-        max(var(--music-menu-safe-offset), 0px)
-    );
+    --music-menu-visible-width: var(--music-menu-target-width);
     width: var(--music-menu-visible-width);
     padding: clamp(20px, calc(var(--music-menu-visible-width) / 2.2), 28px)
              clamp(6px, calc(var(--music-menu-visible-width) / 4), 24px);
@@ -2337,7 +2324,7 @@ select option {
 .rules-panel {
     position: fixed;
     top: 0;
-    right: 0;
+    right: var(--panels-gap);
     height: 100%;
     width: var(--rules-panel-width);
     padding: 36px 32px;
