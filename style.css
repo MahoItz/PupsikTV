@@ -30,7 +30,7 @@
     --layout-max-width: 1400px;
     --container-side-padding: 20px;
     --music-menu-collapsed-peek: 72px;
-    --fortune-layout-gap: clamp(16px, 2.8vw, 28px);
+    --fortune-layout-gap: clamp(16px, 2.4vw, 28px);
     --fortune-section-padding: clamp(16px, 2.2vw, 24px);
     --fortune-section-padding-top: calc(var(--fortune-section-padding) * 0.4);
 
@@ -2673,7 +2673,9 @@ select option {
     align-items: stretch;
     gap: var(--fortune-layout-gap);
     width: 100%;
-    margin: clamp(12px, 2vh, 20px) auto clamp(14px, 2vh, 22px);
+    flex: 1 1 auto;
+    margin: 0;
+    padding-block: clamp(12px, 1.6vh, 20px);
     transition: opacity 0.3s ease;
 }
 
@@ -2700,6 +2702,9 @@ select option {
     gap: 12px;
     width: 100%;
     margin: 0;
+    height: 100%;
+    overflow: auto;
+    min-height: 0;
 }
 
 .music-section-title,
@@ -2749,50 +2754,59 @@ select option {
 
 .fortune-body {
     display: flex;
-    justify-content: center;
+    flex: 1 1 auto;
     width: 100%;
+    min-height: 0;
+    align-items: stretch;
 }
 
 .fortune-layout {
-    --fortune-column-max-size: clamp(340px, min(52vw, 72vh), 820px);
+    --fortune-column-max-size: clamp(360px, min(58vw, 88vh), 960px);
+    --fortune-side-music-max: clamp(260px, calc(var(--fortune-column-max-size) * 0.46), 480px);
     display: flex;
+    flex: 1 1 auto;
     flex-wrap: wrap;
     justify-content: center;
     align-items: stretch;
     gap: var(--fortune-layout-gap);
-    width: min(100%, calc(var(--fortune-column-max-size) * 2 + var(--fortune-layout-gap)));
+    width: 100%;
+    min-height: 0;
 }
 
 .fortune-wheel-section {
+    display: flex;
+    flex-direction: column;
     flex: 1 1 var(--fortune-column-max-size);
-    max-width: var(--fortune-column-max-size);
-    width: min(100%, var(--fortune-column-max-size));
+    min-width: clamp(320px, 45vw, var(--fortune-column-max-size));
+    max-width: 100%;
 }
 
 .fortune-side {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: minmax(
+            clamp(220px, 32vh, var(--fortune-side-music-max)),
+            var(--fortune-side-music-max)
+        )
+        minmax(0, 1fr);
     gap: var(--fortune-layout-gap);
     flex: 1 1 var(--fortune-column-max-size);
-    max-width: var(--fortune-column-max-size);
-    width: min(100%, var(--fortune-column-max-size));
+    min-width: clamp(320px, 45vw, var(--fortune-column-max-size));
+    max-width: 100%;
     min-height: 0;
 }
 
 .music-section,
 .fortune-list-section {
-    max-width: var(--fortune-column-max-size);
     width: 100%;
-}
-
-.music-section {
-    max-height: min(520px, calc(var(--fortune-column-max-size) * 0.65));
-    overflow: auto;
+    min-width: 0;
+    min-height: 0;
 }
 
 .fortune-list-section {
+    display: flex;
+    flex-direction: column;
     flex: 1 1 auto;
-    max-height: var(--fortune-column-max-size);
+    height: 100%;
     overflow: auto;
 }
 
@@ -3191,6 +3205,7 @@ select option {
     .music-menu-content {
         gap: 20px;
         margin: 24px auto 16px;
+        padding-block: 0;
         align-items: stretch;
     }
 
@@ -3222,24 +3237,30 @@ select option {
 
     .fortune-body {
         justify-content: flex-start;
+        min-height: 0;
     }
 
     .fortune-side {
+        display: flex;
+        flex-direction: column;
         gap: 20px;
         width: 100%;
         max-width: none;
         height: auto;
+        min-width: 0;
     }
 
     .fortune-wheel-section,
     .fortune-side {
         max-width: none;
         width: 100%;
+        min-width: 0;
     }
 
     .fortune-list-section {
         flex: initial;
         max-height: none;
+        height: auto;
         overflow: visible;
     }
 
@@ -3264,6 +3285,7 @@ select option {
 
     .music-section {
         max-height: none;
+        height: auto;
         overflow: visible;
     }
 }
@@ -3281,7 +3303,13 @@ select option {
     .fortune-wheel-section,
     .fortune-side {
         max-width: none;
-        width: min(100%, clamp(320px, 70vw, 60vh));
+        width: min(100%, clamp(280px, 72vw, 62vh));
+        min-width: 0;
+    }
+
+    .fortune-side {
+        display: flex;
+        flex-direction: column;
     }
 
     .rules-panel {
