@@ -2898,9 +2898,11 @@ select option {
     text-transform: uppercase;
 }
 
+
 .fortune-wheel-wrap {
     position: relative;
-    width: 100%;
+    width: min(100%, 65vh, 640px);
+    margin: 0 auto;
     aspect-ratio: 1 / 1;
 }
 
