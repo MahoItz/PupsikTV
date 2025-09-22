@@ -30,6 +30,9 @@
     --layout-max-width: 1400px;
     --container-side-padding: 20px;
     --music-menu-collapsed-peek: 72px;
+    --fortune-layout-gap: clamp(20px, 4vw, 36px);
+    --fortune-section-padding: clamp(16px, 2.4vw, 24px);
+    --fortune-section-padding-top: calc(var(--fortune-section-padding) * 0.4);
 
     /* Header */
     --primary-purple: #6b46c1;
@@ -2256,13 +2259,14 @@ select option {
 
 .music-menu.collapsed .music-menu-content,
 .music-menu.collapsed .fortune-body,
+.music-menu.collapsed .fortune-layout,
 .music-menu.collapsed .fortune-side,
 .music-menu.collapsed .fortune-list-section,
 .music-menu.collapsed .fortune-controls {
     min-width: 0;
 }
 
-.music-menu.collapsed .fortune-body {
+.music-menu.collapsed .fortune-layout {
     display: flex;
     flex-direction: column;
     gap: clamp(14px, calc(var(--music-menu-visible-width) / 3.2), 24px);
@@ -2667,7 +2671,7 @@ select option {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 32px;
+    gap: var(--fortune-layout-gap);
     width: 100%;
     margin: 32px auto 24px;
     transition: opacity 0.3s ease;
@@ -2686,7 +2690,7 @@ select option {
     background: var(--glass-bg);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--border-radius-small);
-    padding: 6px 18px 18px 18px;
+    padding: var(--fortune-section-padding-top) var(--fortune-section-padding) var(--fortune-section-padding);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
 
@@ -2744,28 +2748,52 @@ select option {
 }
 
 .fortune-body {
-    display: grid;
-    grid-template-columns: minmax(320px, 1fr) minmax(360px, 1fr);
-    gap: 32px;
-    align-items: stretch;
-    justify-items: stretch;
+    display: flex;
+    justify-content: center;
     width: 100%;
+}
+
+.fortune-layout {
+    --fortune-column-max-size: clamp(320px, 45vw, 60vh);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: var(--fortune-layout-gap);
+    width: 100%;
+}
+
+.fortune-wheel-section {
+    flex: 1 1 var(--fortune-column-max-size);
+    max-width: var(--fortune-column-max-size);
+    width: min(100%, var(--fortune-column-max-size));
 }
 
 .fortune-side {
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    height: 100%;
+    gap: var(--fortune-layout-gap);
+    flex: 1 1 var(--fortune-column-max-size);
+    max-width: var(--fortune-column-max-size);
+    width: min(100%, var(--fortune-column-max-size));
     min-height: 0;
 }
 
-.fortune-wheel-section {
-    height: 100%;
+.music-section,
+.fortune-list-section {
+    max-width: var(--fortune-column-max-size);
+    width: 100%;
+}
+
+.music-section {
+    max-height: clamp(220px, 32vw, 60vh);
+    overflow: auto;
 }
 
 .fortune-list-section {
-    flex: 1;
+    flex: 1 1 auto;
+    max-height: clamp(320px, 45vw, 60vh);
+    overflow: auto;
 }
 
 .fortune-wheel-card {
@@ -3186,18 +3214,33 @@ select option {
         gap: 12px;
     }
 
-    .fortune-body {
-        grid-template-columns: 1fr;
+    .fortune-layout {
+        flex-direction: column;
+        align-items: stretch;
         gap: 20px;
-        max-width: none;
+    }
+
+    .fortune-body {
+        justify-content: flex-start;
     }
 
     .fortune-side {
+        gap: 20px;
+        width: 100%;
+        max-width: none;
         height: auto;
+    }
+
+    .fortune-wheel-section,
+    .fortune-side {
+        max-width: none;
+        width: 100%;
     }
 
     .fortune-list-section {
         flex: initial;
+        max-height: none;
+        overflow: visible;
     }
 
     .fortune-row {
@@ -3213,11 +3256,15 @@ select option {
     .music-section,
     .fortune-section,
     .fortune-wheel-card,
-    .fortune-controls,
-    .fortune-side {
+    .fortune-controls {
         max-width: none;
         width: 100%;
         margin: 0;
+    }
+
+    .music-section {
+        max-height: none;
+        overflow: visible;
     }
 }
 
@@ -3226,8 +3273,15 @@ select option {
         --rules-panel-width: 0px;
     }
 
-    .fortune-body {
-        grid-template-columns: minmax(280px, 1fr) minmax(240px, 1fr);
+    .fortune-layout {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .fortune-wheel-section,
+    .fortune-side {
+        max-width: none;
+        width: min(100%, clamp(320px, 70vw, 60vh));
     }
 
     .rules-panel {
