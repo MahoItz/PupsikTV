@@ -24,12 +24,15 @@
     --rating-high: #4caf50;
     --rules-panel-width: clamp(280px, 28vw, 420px);
     --panels-gap: clamp(16px, 2vw, 32px);
-    --music-menu-expanded-max-width: 80vw;
+    --music-menu-expanded-max-width: min(72vw, 960px);
     --music-menu-min-width: 220px;
     --music-menu-collapsed-min-width: 120px;
     --layout-max-width: 1400px;
     --container-side-padding: 20px;
     --music-menu-collapsed-peek: 72px;
+    --music-menu-padding-block: clamp(28px, 5vh, 36px);
+    --music-menu-padding-inline: clamp(24px, 4vw, 32px);
+    --music-menu-wheel-offset: calc(var(--music-menu-padding-block) * 2 + 56px);
 
     /* Header */
     --primary-purple: #6b46c1;
@@ -2219,7 +2222,7 @@ select option {
     transform: translateX(-100%);
     transition: transform 0.3s ease, width 0.3s ease, padding 0.3s ease;
     z-index: 1500;
-    padding: 36px 32px;
+    padding: var(--music-menu-padding-block) var(--music-menu-padding-inline);
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
     overflow-x: hidden;
@@ -2923,6 +2926,8 @@ select option {
     width: 100%;
     margin: 0;
     aspect-ratio: 1 / 1;
+    max-height: calc(100vh - var(--music-menu-wheel-offset));
+    max-width: calc(100vh - var(--music-menu-wheel-offset));
     flex: 1;
     display: flex;
     align-items: center;
