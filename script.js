@@ -3956,7 +3956,9 @@ const musicMenu = document.getElementById("musicMenu");
 const musicMenuButton = document.getElementById("musicMenuButton");
 const closeMusicMenu = document.getElementById("closeMusicMenu");
 const collapseMusicMenuButton = document.getElementById("collapseMusicMenu");
-const musicMenuContent = musicMenu ? musicMenu.querySelector(".music-menu-content") : null;
+const musicMenuCollapseInertTargets = musicMenu
+  ? Array.from(musicMenu.querySelectorAll("[data-menu-collapse-inert]"))
+  : [];
 const rulesPanel = document.getElementById("rulesPanel");
 const rulesPanelToggleButton = document.getElementById("rulesPanelToggleButton");
 const collapseRulesPanel = document.getElementById("collapseRulesPanel");
@@ -4092,14 +4094,20 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
   const setMenuCollapsed = (shouldCollapse) => {
     musicMenu.classList.toggle("collapsed", shouldCollapse);
     musicMenu.setAttribute("aria-expanded", shouldCollapse ? "false" : "true");
-    if (musicMenuContent) {
-      if (shouldCollapse) {
-        musicMenuContent.setAttribute("inert", "");
-        musicMenuContent.setAttribute("aria-hidden", "true");
-      } else {
-        musicMenuContent.removeAttribute("inert");
-        musicMenuContent.removeAttribute("aria-hidden");
-      }
+    if (musicMenuCollapseInertTargets.length > 0) {
+      musicMenuCollapseInertTargets.forEach((element) => {
+        if (!element) {
+          return;
+        }
+
+        if (shouldCollapse) {
+          element.setAttribute("inert", "");
+          element.setAttribute("aria-hidden", "true");
+        } else {
+          element.removeAttribute("inert");
+          element.removeAttribute("aria-hidden");
+        }
+      });
     }
     if (collapseMusicMenuButton) {
       collapseMusicMenuButton.setAttribute(
@@ -4233,7 +4241,7 @@ function initFortuneWheel() {
   const clearBtn = document.getElementById("clearBtn");
   const resetBtn = document.getElementById("resetBtn");
   const shuffleBtn = document.getElementById("shuffleBtn");
-  const durationSlider = document.getElementById("spinDurationSlider");
+  const durationInput = document.getElementById("spinDurationInput");
   const durationValue = document.getElementById("spinDurationValue");
   const resultOverlay = document.getElementById("fortuneResultOverlay");
   const resultNameEl = document.getElementById("fortuneResultName");
@@ -4442,15 +4450,58 @@ function initFortuneWheel() {
     }
   };
 
-  if (durationSlider) {
-    const initialSeconds = Number(durationSlider.value) || Math.round(spinDurationMs / 1000);
-    spinDurationMs = Math.max(1, initialSeconds) * 1000;
-    updateDurationLabel(initialSeconds);
-    durationSlider.addEventListener("input", (event) => {
-      const seconds = Number(event.target.value) || 0;
-      const clamped = Math.max(1, seconds);
-      spinDurationMs = clamped * 1000;
-      updateDurationLabel(clamped);
+  const parseDurationSeconds = (value) => {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const normalized = String(value).trim().replace(",", ".");
+    if (!normalized) {
+      return null;
+    }
+
+    const parsed = Number(normalized);
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+
+    return Math.max(1, Math.round(parsed));
+  };
+
+  if (durationInput) {
+    const fallbackSeconds = Math.round(spinDurationMs / 1000);
+    const initial = parseDurationSeconds(durationInput.value);
+    let lastValidDurationSeconds = initial ?? fallbackSeconds;
+
+    lastValidDurationSeconds = Math.max(1, lastValidDurationSeconds);
+    durationInput.value = String(lastValidDurationSeconds);
+    spinDurationMs = lastValidDurationSeconds * 1000;
+    updateDurationLabel(lastValidDurationSeconds);
+
+    const commitDuration = (rawValue) => {
+      const parsed = parseDurationSeconds(rawValue);
+      const seconds = parsed ?? lastValidDurationSeconds;
+      lastValidDurationSeconds = Math.max(1, seconds);
+      spinDurationMs = lastValidDurationSeconds * 1000;
+      durationInput.value = String(lastValidDurationSeconds);
+      updateDurationLabel(lastValidDurationSeconds);
+    };
+
+    durationInput.addEventListener("input", (event) => {
+      const parsed = parseDurationSeconds(event.target.value);
+      if (parsed !== null) {
+        lastValidDurationSeconds = parsed;
+        spinDurationMs = parsed * 1000;
+        updateDurationLabel(parsed);
+      }
+    });
+
+    durationInput.addEventListener("change", (event) => {
+      commitDuration(event.target.value);
+    });
+
+    durationInput.addEventListener("blur", (event) => {
+      commitDuration(event.target.value);
     });
   } else if (durationValue) {
     updateDurationLabel(Math.round(spinDurationMs / 1000));
