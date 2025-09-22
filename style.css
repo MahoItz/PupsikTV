@@ -30,8 +30,8 @@
     --layout-max-width: 1400px;
     --container-side-padding: 20px;
     --music-menu-collapsed-peek: 72px;
-    --fortune-layout-gap: clamp(20px, 4vw, 36px);
-    --fortune-section-padding: clamp(16px, 2.4vw, 24px);
+    --fortune-layout-gap: clamp(16px, 2.8vw, 28px);
+    --fortune-section-padding: clamp(16px, 2.2vw, 24px);
     --fortune-section-padding-top: calc(var(--fortune-section-padding) * 0.4);
 
     /* Header */
@@ -2222,7 +2222,7 @@ select option {
     transform: translateX(-100%);
     transition: transform 0.3s ease, width 0.3s ease, padding 0.3s ease;
     z-index: 1500;
-    padding: 36px 32px;
+    padding: clamp(20px, 3vh, 28px) clamp(18px, 3vw, 28px);
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
     overflow-y: auto;
     overflow-x: hidden;
@@ -2673,7 +2673,7 @@ select option {
     align-items: stretch;
     gap: var(--fortune-layout-gap);
     width: 100%;
-    margin: 32px auto 24px;
+    margin: clamp(12px, 2vh, 20px) auto clamp(14px, 2vh, 22px);
     transition: opacity 0.3s ease;
 }
 
@@ -2754,13 +2754,13 @@ select option {
 }
 
 .fortune-layout {
-    --fortune-column-max-size: clamp(320px, 45vw, 60vh);
+    --fortune-column-max-size: clamp(340px, min(52vw, 72vh), 820px);
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: stretch;
     gap: var(--fortune-layout-gap);
-    width: 100%;
+    width: min(100%, calc(var(--fortune-column-max-size) * 2 + var(--fortune-layout-gap)));
 }
 
 .fortune-wheel-section {
@@ -2786,13 +2786,13 @@ select option {
 }
 
 .music-section {
-    max-height: clamp(220px, 32vw, 60vh);
+    max-height: min(520px, calc(var(--fortune-column-max-size) * 0.65));
     overflow: auto;
 }
 
 .fortune-list-section {
     flex: 1 1 auto;
-    max-height: clamp(320px, 45vw, 60vh);
+    max-height: var(--fortune-column-max-size);
     overflow: auto;
 }
 
