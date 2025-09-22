@@ -894,44 +894,6 @@
   <div class="music-menu-content">
 
     <div class="fortune-body">
-        <section class="fortune-section fortune-wheel-section">
-          <div class="fortune-wheel-card">
-            <div class="fortune-spin-settings">
-              <label class="fortune-spin-label" for="spinDurationSlider">
-                Время вращения: <span id="spinDurationValue">12&nbsp;с</span>
-              </label>
-              <input
-                type="range"
-                id="spinDurationSlider"
-                class="fortune-spin-slider"
-                min="3"
-                max="15"
-                step="1"
-                value="7"
-                aria-label="Настройка времени вращения колеса"
-              >
-            </div>
-            <div class="fortune-wheel-wrap">
-              <div class="fortune-pointer" aria-hidden="true"></div>
-              <canvas id="wheelCanvas" width="800" height="800"
-                      aria-label="Колесо фортуны" role="img"></canvas>
-              <div class="fortune-wheel-center" aria-hidden="true">
-                <img src="images/tomkruz.webp" alt="Эмблема колеса фортуны">
-              </div>
-              <div class="fortune-result-overlay" id="fortuneResultOverlay" aria-hidden="true">
-                <div class="fortune-result-message" role="alert">
-                  <strong id="fortuneResultName"></strong>
-                  <span class="fortune-result-suffix"> выбывает</span>
-                </div>
-              </div>
-            </div>
-            <div class="fortune-status" id="status">
-              Нажмите на колесо, чтобы запустить вращение.
-            </div>
-            <div class="fortune-legend" id="legend"></div>
-          </div>
-        </section>
-
       <div class="fortune-side">
         <section class="music-section">
           <ul id="musicList" class="music-track-list">
@@ -1004,6 +966,44 @@
           </div>
         </section>
       </div>
+
+        <section class="fortune-section fortune-wheel-section">
+          <div class="fortune-wheel-card">
+            <div class="fortune-spin-settings">
+              <label class="fortune-spin-label" for="spinDurationSlider">
+                Время вращения: <span id="spinDurationValue">12&nbsp;с</span>
+              </label>
+              <input
+                type="range"
+                id="spinDurationSlider"
+                class="fortune-spin-slider"
+                min="3"
+                max="15"
+                step="1"
+                value="7"
+                aria-label="Настройка времени вращения колеса"
+              >
+            </div>
+            <div class="fortune-wheel-wrap">
+              <div class="fortune-pointer" aria-hidden="true"></div>
+              <canvas id="wheelCanvas" width="800" height="800"
+                      aria-label="Колесо фортуны" role="img"></canvas>
+              <div class="fortune-wheel-center" aria-hidden="true">
+                <img src="images/tomkruz.webp" alt="Эмблема колеса фортуны">
+              </div>
+              <div class="fortune-result-overlay" id="fortuneResultOverlay" aria-hidden="true">
+                <div class="fortune-result-message" role="alert">
+                  <strong id="fortuneResultName"></strong>
+                  <span class="fortune-result-suffix"> выбывает</span>
+                </div>
+              </div>
+            </div>
+            <div class="fortune-status" id="status">
+              Нажмите на колесо, чтобы запустить вращение.
+            </div>
+            <div class="fortune-legend" id="legend"></div>
+          </div>
+        </section>
     </div>
   </div>
 </div>
@@ -1013,7 +1013,7 @@
       <i class="fa-solid fa-angle-right" aria-hidden="true"></i>
     </button>
   <div class="rules-panel__content">
-    <h2 class="rules-panel__title">Правила заказа фильмов</h2>
+    <h2 class="rules-panel__title">Правила заказа</h2>
     <ol class="rules-panel__list">
       <li>Заказать фильм можно с помощью доната, за баллы канала или во время рулетки.</li>
       <li>Без наготы, банвордов и других моментов, которые нарушают правила твича и законы РФ.</li>

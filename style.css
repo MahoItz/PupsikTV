@@ -2327,7 +2327,7 @@ select option {
     right: 0;
     height: 100%;
     width: var(--rules-panel-width);
-    padding: 36px 32px;
+    padding: 32px 28px;
     background: var(--card-bg);
     border-left: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: -2px 0 20px rgba(0, 0, 0, 0.4);
@@ -2336,7 +2336,7 @@ select option {
     z-index: 1400;
     pointer-events: none;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 }
 
@@ -2349,39 +2349,66 @@ select option {
     background: var(--glass-bg);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 16px;
-    padding: 24px 24px 32px;
+    padding: 28px 28px 32px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
     width: 100%;
     position: relative;
     overflow-y: auto;
     max-height: calc(100% - 48px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .rules-panel__title {
-    font-size: 1.6rem;
-    margin-bottom: 20px;
+    font-size: 1.5rem;
+    margin: 0;
     text-align: center;
     letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .rules-panel__list {
-    list-style: decimal inside;
+    list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     font-size: 0.95rem;
     color: var(--text-secondary);
     padding: 0;
-    margin: 0 0 20px;
+    margin: 0;
+    counter-reset: rules-order;
 }
 
 .rules-panel__list li {
+    position: relative;
     background: rgba(12, 16, 32, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
-    padding: 12px 14px;
+    border-radius: 14px;
+    padding: 16px 16px 16px 56px;
     line-height: 1.5;
     color: var(--text-primary);
+    counter-increment: rules-order;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.rules-panel__list li::before {
+    content: counter(rules-order);
+    position: absolute;
+    top: 50%;
+    left: 18px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(63, 81, 181, 0.85), rgba(123, 97, 255, 0.85));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.85rem;
+    box-shadow: 0 6px 16px rgba(63, 81, 181, 0.3);
 }
 
 .rules-panel__note {
@@ -2389,12 +2416,13 @@ select option {
     font-size: 0.85rem;
     color: var(--text-secondary);
     text-align: center;
+    margin-top: auto;
 }
 
 .rules-panel__close {
     position: absolute;
-    top: 24px;
-    left: 12px;
+    top: 22px;
+    left: 10px;
     width: 38px;
     height: 38px;
     border: 1px solid rgba(255, 255, 255, 0.16);
@@ -2745,9 +2773,9 @@ select option {
 
 .fortune-body {
     display: grid;
-    grid-template-columns: minmax(320px, 1fr) minmax(360px, 1fr);
-    gap: 32px;
-    align-items: stretch;
+    grid-template-columns: minmax(260px, 320px) minmax(520px, 1fr);
+    gap: 36px;
+    align-items: start;
     justify-items: stretch;
     width: 100%;
 }
@@ -2756,12 +2784,15 @@ select option {
     display: flex;
     flex-direction: column;
     gap: 24px;
-    height: 100%;
     min-height: 0;
+    align-self: stretch;
 }
 
 .fortune-wheel-section {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .fortune-list-section {
@@ -2778,6 +2809,7 @@ select option {
     gap: 12px;
     width: 100%;
     height: 100%;
+    flex: 1;
 }
 
 .fortune-spin-settings {
@@ -3232,6 +3264,21 @@ select option {
     border-color: transparent;
 }
 
+@media (max-width: 900px) {
+    .fortune-body {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .fortune-wheel-section {
+        order: 1;
+    }
+
+    .fortune-side {
+        order: 2;
+    }
+}
+
 @media (max-width: 600px) {
     .music-menu {
         padding: 24px 16px 28px;
@@ -3264,13 +3311,8 @@ select option {
     }
 
     .fortune-body {
-        grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 24px;
         max-width: none;
-    }
-
-    .fortune-side {
-        height: auto;
     }
 
     .fortune-list-section {
@@ -3304,7 +3346,7 @@ select option {
     }
 
     .fortune-body {
-        grid-template-columns: minmax(280px, 1fr) minmax(240px, 1fr);
+        grid-template-columns: minmax(240px, 1fr) minmax(320px, 1.2fr);
     }
 
     .rules-panel {
