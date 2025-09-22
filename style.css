@@ -2331,7 +2331,7 @@ select option {
     background: var(--card-bg);
     border-left: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: -2px 0 20px rgba(0, 0, 0, 0.4);
-    transform: translateX(100%);
+    transform: translateX(calc(100% + var(--panels-gap)));
     transition: transform 0.3s ease;
     z-index: 1400;
     pointer-events: none;
@@ -2420,7 +2420,7 @@ select option {
 }
 
 .music-menu.collapsed + .rules-panel {
-    transform: translateX(100%);
+    transform: translateX(calc(100% + var(--panels-gap)));
     pointer-events: none;
 }
 
