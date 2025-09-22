@@ -2698,6 +2698,8 @@ select option {
     width: 100%;
     margin: 32px auto 24px;
     transition: opacity 0.3s ease;
+    flex: 1;
+    min-height: 0;
 }
 
 .music-menu h2 {
@@ -2774,9 +2776,11 @@ select option {
     display: grid;
     grid-template-columns: minmax(260px, 320px) minmax(520px, 1fr);
     gap: 36px;
-    align-items: start;
+    align-items: stretch;
     justify-items: stretch;
     width: 100%;
+    flex: 1;
+    min-height: 0;
 }
 
 .fortune-side {
@@ -2785,6 +2789,7 @@ select option {
     gap: 24px;
     min-height: 0;
     align-self: stretch;
+    height: 100%;
 }
 
 .fortune-wheel-section {
@@ -2829,6 +2834,8 @@ select option {
     width: 100%;
     height: 100%;
     padding-top: 40px;
+    flex: 1;
+    min-height: 0;
 }
 
 .fortune-spin-settings {
@@ -2904,6 +2911,10 @@ select option {
     width: min(100%, 65vh, 640px);
     margin: 0 auto;
     aspect-ratio: 1 / 1;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .fortune-wheel-wrap canvas {
@@ -3030,6 +3041,7 @@ select option {
     max-height: 160px;
     overflow-y: auto;
     padding-right: 4px;
+    margin-top: auto;
 }
 
 .fortune-legend-item {
@@ -3105,9 +3117,10 @@ select option {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
     padding: 8px 8px;
-    max-height: 540px;
     overflow-y: auto;
     box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+    flex: 1;
+    min-height: 0;
 }
 
 .fortune-items-list {
