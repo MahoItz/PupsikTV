@@ -2816,24 +2816,33 @@ select option {
     position: relative;
 }
 
-.fortune-wheel-card__actions {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    display: flex;
+.fortune-wheel-card__header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    z-index: 4;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.fortune-wheel-card__header > .collapse-music-menu {
+    justify-self: start;
+}
+
+.fortune-wheel-card__header .fortune-spin-settings {
+    justify-self: center;
+}
+
+.fortune-wheel-card__header > .close-music-menu {
+    justify-self: end;
 }
 
 .fortune-wheel-card__content {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     width: 100%;
     height: 100%;
-    padding-top: 40px;
+    padding-top: 0;
     flex: 1;
     min-height: 0;
 }
@@ -2841,14 +2850,17 @@ select option {
 .fortune-spin-settings {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     padding: 4px 0 6px;
+    align-items: center;
+    text-align: center;
 }
 
 .fortune-spin-label {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 8px;
     font-weight: 600;
     font-size: 0.9rem;
     color: var(--text-primary);
@@ -2862,7 +2874,7 @@ select option {
 .fortune-spin-input-wrapper {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 12px;
 }
 
@@ -2908,8 +2920,8 @@ select option {
 
 .fortune-wheel-wrap {
     position: relative;
-    width: min(100%, 85vh, 940px);
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
     aspect-ratio: 1 / 1;
     flex: 1;
     display: flex;
