@@ -4806,8 +4806,8 @@ function initFortuneWheel() {
     if (progress >= 1) {
       rotation = normalizeAngle(rotation);
       spinning = false;
-      if (durationSlider) {
-        durationSlider.disabled = false;
+      if (durationInput) {
+        durationInput.disabled = false;
       }
       drawWheel();
       const winner = pickCurrentIndex();
@@ -4850,8 +4850,8 @@ function initFortuneWheel() {
     spinning = true;
     rotation = startRotation;
     statusEl.textContent = "Вращение… Удачи!";
-    if (durationSlider) {
-      durationSlider.disabled = true;
+    if (durationInput) {
+      durationInput.disabled = true;
     }
     requestAnimationFrame(animate);
   }

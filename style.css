@@ -2291,8 +2291,32 @@ select option {
 .music-menu.collapsed .fortune-status,
 .music-menu.collapsed .fortune-legend,
 .music-menu.collapsed .fortune-tip-audio-button,
-.music-menu.collapsed .fortune-wheel-card__content,
 .music-menu.collapsed .fortune-result-overlay {
+    display: none;
+}
+
+.music-menu.collapsed .fortune-wheel-wrap {
+    display: none;
+}
+
+.music-menu.collapsed .fortune-wheel-card__content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 100%;
+}
+
+.music-menu.collapsed .fortune-wheel-card__header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.music-menu.collapsed .fortune-wheel-card__header .fortune-spin-settings,
+.music-menu.collapsed .fortune-wheel-card__header > .close-music-menu {
     display: none;
 }
 
