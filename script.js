@@ -4228,6 +4228,8 @@ function initFortuneWheel() {
   const legendEl = document.getElementById("legend");
   const statusEl = document.getElementById("status");
   const input = document.getElementById("itemsInput");
+  const fortuneItemInput = document.getElementById("fortuneItemInput");
+  const itemsListEl = document.getElementById("fortuneItemsList");
   const clearBtn = document.getElementById("clearBtn");
   const resetBtn = document.getElementById("resetBtn");
   const shuffleBtn = document.getElementById("shuffleBtn");
@@ -4247,6 +4249,66 @@ function initFortuneWheel() {
 
   let items = [];
   let eliminatedItems = new Set();
+
+  function getActiveItems() {
+    return items.filter((item) => !eliminatedItems.has(item));
+  }
+
+  function renderFortuneItemsList() {
+    if (!itemsListEl) {
+      return;
+    }
+
+    itemsListEl.innerHTML = "";
+
+    const activeItems = getActiveItems();
+
+    if (activeItems.length === 0) {
+      const emptyEl = document.createElement("li");
+      emptyEl.className = "fortune-items-empty";
+      emptyEl.textContent = "Список пуст. Добавьте фильм выше.";
+      itemsListEl.appendChild(emptyEl);
+      return;
+    }
+
+    activeItems.forEach((label, index) => {
+      const listItem = document.createElement("li");
+      listItem.className = "fortune-items-list-item";
+
+      const titleEl = document.createElement("span");
+      titleEl.className = "fortune-items-list-title";
+      titleEl.textContent = label;
+      listItem.appendChild(titleEl);
+
+      const actionsEl = document.createElement("div");
+      actionsEl.className = "fortune-items-list-actions";
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "fortune-items-remove";
+      removeBtn.setAttribute("aria-label", `Удалить «${label}» из списка`);
+      removeBtn.title = "Удалить";
+      removeBtn.innerHTML = '<span aria-hidden="true">✕</span>';
+      removeBtn.addEventListener("click", () => {
+        if (spinning) {
+          return;
+        }
+
+        const currentActive = getActiveItems();
+        if (index < 0 || index >= currentActive.length) {
+          return;
+        }
+
+        currentActive.splice(index, 1);
+        input.value = currentActive.join("\n");
+        updateFromInput();
+      });
+
+      actionsEl.appendChild(removeBtn);
+      listItem.appendChild(actionsEl);
+      itemsListEl.appendChild(listItem);
+    });
+  }
 
   let rotation = 0;
   let spinning = false;
@@ -4296,8 +4358,9 @@ function initFortuneWheel() {
     if (!input) {
       return;
     }
-    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+    const activeItems = getActiveItems();
     setInputValuePreservingState(activeItems.join("\n"));
+    renderFortuneItemsList();
   }
   const placeholderColors = [
     "hsl(0deg 84% 55%)",
@@ -4779,6 +4842,8 @@ function initFortuneWheel() {
     } else {
       statusEl.textContent = "Нажмите на колесо, чтобы запустить вращение.";
     }
+
+    renderFortuneItemsList();
   }
 
   function clearInput() {
@@ -4794,7 +4859,7 @@ function initFortuneWheel() {
       return;
     }
     items = shuffleArray(items);
-    input.value = items.join("\n");
+    updateInputFromActiveItems();
     drawWheel();
     hideResultOverlay();
     statusEl.textContent = "Порядок пунктов перемешан.";
@@ -4812,6 +4877,34 @@ function initFortuneWheel() {
     } else if (activeItems.length === 1) {
       statusEl.textContent = "Добавьте больше активных элементов или нажмите на колесо для вращения.";
     }
+  }
+
+  if (fortuneItemInput) {
+    fortuneItemInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" || event.shiftKey || event.isComposing) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const value = fortuneItemInput.value.trim();
+      if (!value) {
+        fortuneItemInput.value = "";
+        return;
+      }
+
+      const activeItems = getActiveItems();
+      if (activeItems.length >= 128) {
+        statusEl.textContent = "Нельзя добавить больше 128 фильмов для рулетки.";
+        return;
+      }
+
+      activeItems.push(value);
+      input.value = activeItems.join("\n");
+      fortuneItemInput.value = "";
+      hideResultOverlay();
+      updateFromInput();
+    });
   }
 
   input.addEventListener("input", updateFromInput);
@@ -4841,6 +4934,7 @@ function initFortuneWheel() {
 
   input.value = items.join("\n");
   drawWheel();
+  renderFortuneItemsList();
   if (items.length === 0) {
     startIdleAnimation();
   }

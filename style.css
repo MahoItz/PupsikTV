@@ -3026,27 +3026,104 @@ select option {
     font-size: 0.85rem;
 }
 
-.fortune-textarea {
+.fortune-item-input {
     width: 100%;
-    min-height: 160px;
-    resize: vertical;
     background: rgba(7, 11, 25, 0.9);
     color: var(--text-primary);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
     padding: 12px 14px;
-    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font: 15px/1.5 "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
     outline: none;
     box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.fortune-controls .fortune-textarea {
+.fortune-item-input:focus {
+    border-color: rgba(0, 190, 255, 0.45);
+    box-shadow: 0 0 0 3px rgba(0, 190, 255, 0.15);
+}
+
+.fortune-item-input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.fortune-items-wrapper {
+    background: rgba(7, 11, 25, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 8px 0;
+    max-height: 240px;
+    overflow-y: auto;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.fortune-items-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.fortune-items-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 14px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+}
+
+.fortune-items-list-title {
     flex: 1;
-    min-height: 0;
+    word-break: break-word;
 }
 
-.fortune-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+.fortune-items-list-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fortune-items-remove {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    line-height: 1;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.fortune-items-remove:hover,
+.fortune-items-remove:focus-visible {
+    background: rgba(255, 59, 59, 0.35);
+    border-color: rgba(255, 59, 59, 0.6);
+    transform: scale(1.05);
+}
+
+.fortune-items-remove span {
+    pointer-events: none;
+}
+
+.fortune-items-empty {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.fortune-textarea {
+    display: none;
 }
 
 .fortune-row {
