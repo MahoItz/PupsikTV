@@ -3256,21 +3256,20 @@ select option {
     word-break: break-word;
     padding-right: 42px;
     min-height: 1.75em;
-    border-radius: 8px;
-    overflow: hidden;
 }
 
 .fortune-items-list-title::after {
     content: "";
     position: absolute;
-    top: 3px;
-    bottom: 3px;
-    right: 0;
-    width: 32px;
-    border-radius: 0 8px 8px 0;
+    top: 50%;
+    right: 14px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
     background: var(--fortune-item-color, transparent);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
     pointer-events: none;
+    transform: translateY(-50%);
     transition: background 0.2s ease;
 }
 
