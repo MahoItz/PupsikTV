@@ -4034,9 +4034,11 @@ const syncRulesPanelToggleButton = () => {
     rulesPanelStandaloneOpen &&
     rulesPanel &&
     rulesPanel.classList.contains("open");
+  const panelIsOpen = !!(rulesPanel && rulesPanel.classList.contains("open"));
   const label = isActive ? "Скрыть правила" : "Показать правила";
 
   rulesPanelToggleButton.classList.toggle("is-active", isActive);
+  rulesPanelToggleButton.classList.toggle("is-hidden", panelIsOpen);
   rulesPanelToggleButton.setAttribute("aria-pressed", isActive ? "true" : "false");
   rulesPanelToggleButton.setAttribute("aria-label", label);
   rulesPanelToggleButton.setAttribute("title", label);

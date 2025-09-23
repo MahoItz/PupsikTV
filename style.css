@@ -2246,6 +2246,10 @@ select option {
     font-size: 1.2rem;
 }
 
+.rules-panel-toggle.is-hidden {
+    display: none;
+}
+
 .music-menu-button img {
     width: 3em;
 }
@@ -2962,23 +2966,25 @@ select option {
 }
 
 .fortune-wheel-card__header {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     margin-bottom: 0;
 }
 
-.fortune-wheel-card__header>.collapse-music-menu {
-    justify-self: start;
+.fortune-wheel-card__header .fortune-spin-settings {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
-.fortune-wheel-card__header .fortune-spin-settings {
-    justify-self: center;
+.fortune-wheel-card__header>.collapse-music-menu {
+    order: 2;
+    margin-left: auto;
 }
 
 .fortune-wheel-card__header>.close-music-menu {
-    justify-self: end;
+    order: 3;
 }
 
 .fortune-wheel-card__content {
