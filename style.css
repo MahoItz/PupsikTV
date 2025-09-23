@@ -3139,16 +3139,64 @@ select option {
 
 .fortune-pointer {
     position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-top: 18px solid transparent;
-    border-bottom: 18px solid transparent;
-    border-right: 28px solid #28c76f;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    pointer-events: none;
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+    z-index: 3;
+    isolation: isolate;
+    overflow: visible;
+    width: 100%;
+    height: 100%;
+    --pointer-arrow-height: clamp(16px, 5%, 28px);
+    --pointer-arrow-length: clamp(40px, 12%, 80px);
+    --pointer-arrow-offset: clamp(2px, 0.8vw, 12px);
+    --pointer-cap-size: calc(var(--pointer-arrow-height) * 1.45);
+}
+
+.fortune-pointer__arrow {
+    position: relative;
+    display: block;
+    width: var(--pointer-arrow-length);
+    height: calc(var(--pointer-arrow-height) * 2);
+    clip-path: polygon(0% 50%, 78% 0%, 100% 0%, 100% 100%, 78% 100%);
+    background: linear-gradient(135deg, #45f7b3 0%, #20aa68 52%, #117b43 100%);
+    margin-right: var(--pointer-arrow-offset);
+    box-shadow:
+        inset -6px 0 10px rgba(0, 0, 0, 0.25),
+        -12px 0 22px rgba(40, 199, 111, 0.4);
+    border-radius: 12px 0 0 12px;
+    z-index: 1;
+}
+
+.fortune-pointer__cap {
+    position: absolute;
+    left: calc(100% - var(--pointer-arrow-offset) - var(--pointer-arrow-length));
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: var(--pointer-cap-size);
+    height: var(--pointer-cap-size);
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.85), rgba(40, 199, 111, 0.75) 60%, rgba(11, 64, 33, 0.92) 100%);
+    box-shadow:
+        inset -6px 8px 12px rgba(0, 0, 0, 0.35),
+        0 8px 18px rgba(0, 0, 0, 0.45);
     z-index: 2;
+}
+
+.fortune-pointer__shadow {
+    position: absolute;
+    top: 50%;
+    right: calc(var(--pointer-arrow-offset) * -0.2);
+    transform: translate(55%, -50%) scaleX(1.2);
+    width: calc(var(--pointer-arrow-length) * 1.1);
+    height: calc(var(--pointer-arrow-height) * 1.6);
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 72%);
+    opacity: 0.75;
+    filter: blur(4px);
+    z-index: -1;
 }
 
 .fortune-result-overlay {
