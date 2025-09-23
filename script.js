@@ -4093,6 +4093,7 @@ if (collapseRulesPanel) {
 if (musicMenu && musicMenuButton && closeMusicMenu) {
   const setMenuCollapsed = (shouldCollapse) => {
     musicMenu.classList.toggle("collapsed", shouldCollapse);
+    document.body.classList.toggle("music-menu-is-collapsed", shouldCollapse);
     musicMenu.setAttribute("aria-expanded", shouldCollapse ? "false" : "true");
     if (musicMenuCollapseInertTargets.length > 0) {
       musicMenuCollapseInertTargets.forEach((element) => {

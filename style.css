@@ -2298,6 +2298,26 @@ select option {
     pointer-events: none;
 }
 
+@media (min-width: 1025px) {
+    body.music-menu-is-collapsed {
+        --collapsed-music-menu-width: clamp(var(--music-menu-collapsed-min-width),
+                calc(100vw - var(--rules-panel-width) - var(--panels-gap)),
+                clamp(var(--music-menu-collapsed-min-width), 32vw, 360px));
+    }
+
+    body.music-menu-is-collapsed .container {
+        margin-left: var(--collapsed-music-menu-width);
+    }
+
+    body.music-menu-is-collapsed .music-menu-button {
+        left: calc(var(--collapsed-music-menu-width) + var(--container-side-padding));
+    }
+
+    body.music-menu-is-collapsed .rules-panel-toggle {
+        right: calc(var(--collapsed-music-menu-width) + var(--container-side-padding));
+    }
+}
+
 .music-menu.collapsed .music-menu-content,
 .music-menu.collapsed .fortune-body,
 .music-menu.collapsed .fortune-side,
