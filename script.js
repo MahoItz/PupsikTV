@@ -126,15 +126,18 @@ function updateMusicMenuCollapsedWidthLimit() {
     return;
   }
 
+  rootElement.style.removeProperty("--left-panel-width");
+
   if (leftPanelElement) {
-    const { width } = leftPanelElement.getBoundingClientRect();
-    if (width > 0) {
-      rootElement.style.setProperty("--left-panel-width", `${Math.round(width)}px`);
+    const { left } = leftPanelElement.getBoundingClientRect();
+    const leftOffset = Math.max(0, Math.floor(left));
+    if (leftOffset > 0) {
+      rootElement.style.setProperty("--left-panel-left", `${leftOffset}px`);
       return;
     }
   }
 
-  rootElement.style.removeProperty("--left-panel-width");
+  rootElement.style.removeProperty("--left-panel-left");
 }
 
 if (leftPanelElement && "ResizeObserver" in window) {

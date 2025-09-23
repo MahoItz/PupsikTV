@@ -2281,7 +2281,7 @@ select option {
     --music-menu-target-width: min(
             var(--music-menu-collapsed-preferred-width),
             calc(100vw - var(--rules-panel-width) - var(--panels-gap)),
-            var(--left-panel-width, var(--music-menu-collapsed-preferred-width))
+            var(--left-panel-left, var(--music-menu-collapsed-preferred-width))
         );
     --music-menu-visible-width: max(var(--music-menu-collapsed-min-width), var(--music-menu-target-width));
     width: var(--music-menu-visible-width);
