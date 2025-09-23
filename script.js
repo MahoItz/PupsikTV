@@ -4256,6 +4256,7 @@ function initFortuneWheel() {
   const durationValue = document.getElementById("spinDurationValue");
   const resultOverlay = document.getElementById("fortuneResultOverlay");
   const resultNameEl = document.getElementById("fortuneResultName");
+  const pointerEl = document.querySelector(".fortune-pointer");
 
   if (!canvas || !statusEl || !input) {
     return null;
@@ -4607,12 +4608,49 @@ function initFortuneWheel() {
     return `hsl(${hue}deg 75% 55%)`;
   }
 
+  let pointerMeasuredWidth = null;
+  let pointerRightOffset = null;
+
+  function updatePointerPosition(size, radius) {
+    if (!pointerEl) {
+      return;
+    }
+
+    let width = pointerEl.offsetWidth;
+    if (!width) {
+      if (pointerMeasuredWidth === null) {
+        const computed = parseFloat(window.getComputedStyle(pointerEl).borderRightWidth);
+        width = Number.isFinite(computed) ? computed : 0;
+      } else {
+        width = pointerMeasuredWidth;
+      }
+    }
+
+    if (pointerMeasuredWidth !== width) {
+      pointerMeasuredWidth = width;
+      pointerRightOffset = null;
+    }
+
+    const wheelOuterRadius = radius + 8;
+    const distanceToEdge = Math.max(0, size / 2 - wheelOuterRadius);
+    const offset = distanceToEdge - pointerMeasuredWidth;
+
+    if (pointerRightOffset === offset) {
+      return;
+    }
+
+    pointerEl.style.right = `${offset}px`;
+    pointerRightOffset = offset;
+  }
+
   function drawWheel() {
     const { width: w, height: h } = dprScaleCanvas(canvas);
     const size = Math.min(w, h);
     const cx = w / 2;
     const cy = h / 2;
     const radius = Math.max(40, size / 2 - 12);
+
+    updatePointerPosition(size, radius);
 
     ctx.clearRect(0, 0, w, h);
 
@@ -4741,9 +4779,8 @@ function initFortuneWheel() {
     }
     showResultOverlay(text);
 
-    const pointer = document.querySelector(".fortune-pointer");
-    if (pointer && pointer.animate) {
-      pointer.animate(
+    if (pointerEl && pointerEl.animate) {
+      pointerEl.animate(
         [
           { filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" },
           { filter: "drop-shadow(0 0 14px rgba(40,199,111,0.9))" },
