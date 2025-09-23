@@ -118,6 +118,33 @@ let currentMode = "auto";
 let currentRating = 0;
 let editingMovieId = null;
 let ratingMovieId = null;
+const rootElement = document.documentElement;
+const leftPanelElement = document.querySelector(".left-panel");
+
+function updateMusicMenuCollapsedWidthLimit() {
+  if (!rootElement) {
+    return;
+  }
+
+  if (leftPanelElement) {
+    const { width } = leftPanelElement.getBoundingClientRect();
+    if (width > 0) {
+      rootElement.style.setProperty("--left-panel-width", `${Math.round(width)}px`);
+      return;
+    }
+  }
+
+  rootElement.style.removeProperty("--left-panel-width");
+}
+
+if (leftPanelElement && "ResizeObserver" in window) {
+  const leftPanelResizeObserver = new ResizeObserver(() => {
+    updateMusicMenuCollapsedWidthLimit();
+  });
+  leftPanelResizeObserver.observe(leftPanelElement);
+}
+
+updateMusicMenuCollapsedWidthLimit();
 let isSubmittingRating = false;
 let userRatingMovieId = null;
 let movieUserRatings = {};
@@ -3893,6 +3920,8 @@ function updateTabVisibility() {
     if (watch) watch.style.display = "block";
     if (games) games.style.display = "block";
   }
+
+  updateMusicMenuCollapsedWidthLimit();
 }
 
 let activeListTab = "movies";

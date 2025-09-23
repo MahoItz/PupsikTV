@@ -2270,6 +2270,7 @@ select option {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    --music-menu-collapsed-preferred-width: clamp(var(--music-menu-collapsed-min-width), 32vw, 360px);
 }
 
 .music-menu.open {
@@ -2277,10 +2278,12 @@ select option {
 }
 
 .music-menu.collapsed {
-    --music-menu-target-width: clamp(var(--music-menu-collapsed-min-width),
+    --music-menu-target-width: min(
+            var(--music-menu-collapsed-preferred-width),
             calc(100vw - var(--rules-panel-width) - var(--panels-gap)),
-            clamp(var(--music-menu-collapsed-min-width), 32vw, 360px));
-    --music-menu-visible-width: var(--music-menu-target-width);
+            var(--left-panel-width, var(--music-menu-collapsed-preferred-width))
+        );
+    --music-menu-visible-width: max(var(--music-menu-collapsed-min-width), var(--music-menu-target-width));
     width: var(--music-menu-visible-width);
     padding: 0;
 }
@@ -3440,6 +3443,7 @@ select option {
 @media (max-width: 600px) {
     .music-menu {
         padding: 24px 16px 28px;
+        --music-menu-collapsed-preferred-width: min(92vw, 300px);
     }
 
     .music-menu-content {
@@ -3449,8 +3453,6 @@ select option {
     }
 
     .music-menu.collapsed {
-        --music-menu-target-width: max(var(--music-menu-collapsed-min-width),
-                min(92vw, 300px));
         padding: clamp(18px, calc(var(--music-menu-visible-width) / 2.2), 26px) clamp(6px, calc(var(--music-menu-visible-width) / 4.2), 18px);
     }
 
