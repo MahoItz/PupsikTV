@@ -4242,7 +4242,6 @@ fortuneWheelApi = initFortuneWheel();
 
 function initFortuneWheel() {
   const canvas = document.getElementById("wheelCanvas");
-  const legendEl = document.getElementById("legend");
   const statusEl = document.getElementById("status");
   const input = document.getElementById("itemsInput");
   const fortuneItemInput = document.getElementById("fortuneItemInput");
@@ -4255,7 +4254,7 @@ function initFortuneWheel() {
   const resultOverlay = document.getElementById("fortuneResultOverlay");
   const resultNameEl = document.getElementById("fortuneResultName");
 
-  if (!canvas || !legendEl || !statusEl || !input) {
+  if (!canvas || !statusEl || !input) {
     return null;
   }
 
@@ -4295,6 +4294,7 @@ function initFortuneWheel() {
       const titleEl = document.createElement("span");
       titleEl.className = "fortune-items-list-title";
       titleEl.textContent = label;
+      titleEl.style.setProperty("--fortune-item-color", colorForIndex(index, activeItems.length));
       listItem.appendChild(titleEl);
 
       const actionsEl = document.createElement("div");
@@ -4692,45 +4692,6 @@ function initFortuneWheel() {
     ctx.stroke();
     ctx.restore();
 
-    if (usePlaceholder) {
-      if (legendEl && legendEl.firstChild) {
-        legendEl.innerHTML = "";
-      }
-    } else {
-      renderLegend();
-    }
-  }
-
-  function renderLegend() {
-    legendEl.innerHTML = "";
-    const activeItems = items.filter((item) => !eliminatedItems.has(item));
-
-    items.forEach((label) => {
-      const div = document.createElement("div");
-      div.className = "fortune-legend-item";
-      if (eliminatedItems.has(label)) {
-        div.classList.add("eliminated");
-      }
-
-      const sw = document.createElement("span");
-      sw.className = "fortune-legend-swatch";
-
-      if (!eliminatedItems.has(label)) {
-        const activeIndex = activeItems.indexOf(label);
-        if (activeIndex >= 0) {
-          sw.style.background = colorForIndex(activeIndex, activeItems.length);
-        }
-      } else {
-        sw.style.background = "#4a4a4a";
-      }
-
-      const txt = document.createElement("span");
-      txt.textContent = label;
-
-      div.appendChild(sw);
-      div.appendChild(txt);
-      legendEl.appendChild(div);
-    });
   }
 
   function pickCurrentIndex() {

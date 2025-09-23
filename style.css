@@ -2328,7 +2328,6 @@ select option {
 .music-menu.collapsed .fortune-buttons-right,
 .music-menu.collapsed .fortune-note-wrapper,
 .music-menu.collapsed .fortune-status,
-.music-menu.collapsed .fortune-legend,
 .music-menu.collapsed .fortune-tip-audio-button,
 .music-menu.collapsed .fortune-result-overlay {
     display: none;
@@ -3177,42 +3176,6 @@ select option {
     color: var(--text-secondary);
 }
 
-.fortune-legend {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 8px 12px;
-    max-height: 160px;
-    overflow-y: auto;
-    padding-right: 4px;
-    margin-top: auto;
-}
-
-.fortune-legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-.fortune-legend-swatch {
-    width: 14px;
-    height: 14px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    flex-shrink: 0;
-}
-
-.fortune-legend-item.eliminated {
-    text-decoration: line-through;
-    opacity: 0.6;
-}
-
-.fortune-legend-item.eliminated .fortune-legend-swatch {
-    background: #4a4a4a;
-    opacity: 0.5;
-}
-
 .fortune-controls {
     display: flex;
     flex-direction: column;
@@ -3288,7 +3251,27 @@ select option {
 
 .fortune-items-list-title {
     flex: 1;
+    position: relative;
+    display: block;
     word-break: break-word;
+    padding-right: 42px;
+    min-height: 1.75em;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.fortune-items-list-title::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    right: 0;
+    width: 32px;
+    border-radius: 0 8px 8px 0;
+    background: var(--fortune-item-color, transparent);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+    pointer-events: none;
+    transition: background 0.2s ease;
 }
 
 .fortune-items-list-actions {
