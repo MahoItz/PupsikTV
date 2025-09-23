@@ -4282,13 +4282,7 @@ function initFortuneWheel() {
 
     const activeItems = getActiveItems();
 
-    const createFortuneSearchLink = (
-      href,
-      ariaLabel,
-      extraClass,
-      iconClass,
-      textContent = "",
-    ) => {
+    const createFortuneSearchLink = (href, ariaLabel, extraClass) => {
       const link = document.createElement("a");
       link.href = href;
       link.target = "_blank";
@@ -4296,14 +4290,13 @@ function initFortuneWheel() {
       link.className = ["fortune-items-link", extraClass].filter(Boolean).join(" ");
       link.setAttribute("aria-label", ariaLabel);
       link.title = ariaLabel;
-      if (iconClass) {
-        const icon = document.createElement("i");
-        icon.className = iconClass;
-        icon.setAttribute("aria-hidden", "true");
-        link.appendChild(icon);
-      } else if (textContent) {
-        link.textContent = textContent;
-      }
+      const icon = document.createElement("img");
+      icon.src = "images/kp_icon.webp";
+      icon.alt = "";
+      icon.className = "fortune-items-link-icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.draggable = false;
+      link.appendChild(icon);
       return link;
     };
 
@@ -4316,13 +4309,13 @@ function initFortuneWheel() {
     }
 
     activeItems.forEach((label, index) => {
+      const itemColor = colorForIndex(index, activeItems.length);
       const listItem = document.createElement("li");
       listItem.className = "fortune-items-list-item";
 
       const titleEl = document.createElement("span");
       titleEl.className = "fortune-items-list-title";
       titleEl.textContent = label;
-      titleEl.style.setProperty("--fortune-item-color", colorForIndex(index, activeItems.length));
       listItem.appendChild(titleEl);
 
       const actionsEl = document.createElement("div");
@@ -4336,16 +4329,22 @@ function initFortuneWheel() {
         `https://www.kinopoisk.ru/index.php?kp_query=${encodedLabel}`,
         kpAriaLabel,
         "fortune-items-link-kinopoisk",
-        "fa-solid fa-clapperboard",
       );
       const imdbLink = createFortuneSearchLink(
         `https://www.imdb.com/find/?q=${encodedLabel}&s=tt`,
         imdbAriaLabel,
         "fortune-items-link-imdb",
-        "fa-brands fa-imdb",
       );
       actionsEl.appendChild(kinopoiskLink);
       actionsEl.appendChild(imdbLink);
+
+      const colorIndicator = document.createElement("span");
+      colorIndicator.className = "fortune-items-color-indicator";
+      colorIndicator.setAttribute("aria-hidden", "true");
+      if (itemColor) {
+        colorIndicator.style.setProperty("--fortune-item-color", itemColor);
+      }
+      actionsEl.appendChild(colorIndicator);
 
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";

@@ -3298,23 +3298,7 @@ select option {
     position: relative;
     display: block;
     word-break: break-word;
-    padding-right: 42px;
     min-height: 1.75em;
-}
-
-.fortune-items-list-title::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    right: 14px;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--fortune-item-color, transparent);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
-    pointer-events: none;
-    transform: translateY(-50%);
-    transition: background 0.2s ease;
 }
 
 .fortune-items-list-actions {
@@ -3340,9 +3324,12 @@ select option {
     transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
 }
 
-.fortune-items-link i {
+.fortune-items-link-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    display: block;
     pointer-events: none;
-    font-size: 0.95rem;
 }
 
 .fortune-items-link:hover,
@@ -3375,6 +3362,17 @@ select option {
 .fortune-items-link-imdb:focus-visible {
     background: rgba(245, 197, 24, 0.25);
     border-color: rgba(245, 197, 24, 0.55);
+}
+
+.fortune-items-color-indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--fortune-item-color, transparent);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
 }
 
 .fortune-items-remove {
