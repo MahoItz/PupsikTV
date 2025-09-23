@@ -4100,6 +4100,15 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
           return;
         }
 
+        const containsExpandButton =
+          collapseMusicMenuButton && element.contains(collapseMusicMenuButton);
+
+        if (containsExpandButton) {
+          element.removeAttribute("inert");
+          element.removeAttribute("aria-hidden");
+          return;
+        }
+
         if (shouldCollapse) {
           element.setAttribute("inert", "");
           element.setAttribute("aria-hidden", "true");
