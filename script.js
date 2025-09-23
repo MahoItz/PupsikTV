@@ -4282,6 +4282,31 @@ function initFortuneWheel() {
 
     const activeItems = getActiveItems();
 
+    const createFortuneSearchLink = (
+      href,
+      ariaLabel,
+      extraClass,
+      iconClass,
+      textContent = "",
+    ) => {
+      const link = document.createElement("a");
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.className = ["fortune-items-link", extraClass].filter(Boolean).join(" ");
+      link.setAttribute("aria-label", ariaLabel);
+      link.title = ariaLabel;
+      if (iconClass) {
+        const icon = document.createElement("i");
+        icon.className = iconClass;
+        icon.setAttribute("aria-hidden", "true");
+        link.appendChild(icon);
+      } else if (textContent) {
+        link.textContent = textContent;
+      }
+      return link;
+    };
+
     if (activeItems.length === 0) {
       const emptyEl = document.createElement("li");
       emptyEl.className = "fortune-items-empty";
@@ -4302,6 +4327,25 @@ function initFortuneWheel() {
 
       const actionsEl = document.createElement("div");
       actionsEl.className = "fortune-items-list-actions";
+
+      const searchLabel = label.trim();
+      const encodedLabel = encodeURIComponent(searchLabel || label);
+      const kpAriaLabel = `Открыть поиск Кинопоиска для «${label}»`;
+      const imdbAriaLabel = `Открыть поиск IMDb для «${label}»`;
+      const kinopoiskLink = createFortuneSearchLink(
+        `https://www.kinopoisk.ru/index.php?kp_query=${encodedLabel}`,
+        kpAriaLabel,
+        "fortune-items-link-kinopoisk",
+        "fa-solid fa-clapperboard",
+      );
+      const imdbLink = createFortuneSearchLink(
+        `https://www.imdb.com/find/?q=${encodedLabel}&s=tt`,
+        imdbAriaLabel,
+        "fortune-items-link-imdb",
+        "fa-brands fa-imdb",
+      );
+      actionsEl.appendChild(kinopoiskLink);
+      actionsEl.appendChild(imdbLink);
 
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
