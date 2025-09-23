@@ -2217,7 +2217,8 @@ select option {
         calc(100vw - var(--rules-panel-width) - var(--panels-gap)),
         var(--music-menu-expanded-max-width)
     );
-    height: 100%;
+    height: 100vh;
+    max-height: 100vh;
     background: var(--card-bg);
     transform: translateX(-100%);
     transition: transform 0.3s ease, width 0.3s ease, padding 0.3s ease;
@@ -2720,6 +2721,7 @@ select option {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    justify-content: center;
     gap: 32px;
     width: 100%;
     transition: opacity 0.3s ease;
@@ -2822,6 +2824,7 @@ select option {
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0;
 }
 
 .fortune-list-section {
@@ -2839,6 +2842,8 @@ select option {
     height: 100%;
     flex: 1;
     position: relative;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .fortune-wheel-card__header {
@@ -2846,7 +2851,7 @@ select option {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 16px;
-    margin-bottom: 16px;
+    margin-bottom: 0;
 }
 
 .fortune-wheel-card__header > .collapse-music-menu {
@@ -2862,14 +2867,15 @@ select option {
 }
 
 .fortune-wheel-card__content {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
     gap: 16px;
     width: 100%;
     height: 100%;
     padding-top: 0;
     flex: 1;
     min-height: 0;
+    align-content: start;
 }
 
 .fortune-spin-settings {
@@ -2948,12 +2954,14 @@ select option {
     width: 100%;
     margin: 0;
     aspect-ratio: 1 / 1;
-    max-height: calc(100vh - var(--music-menu-wheel-offset));
-    max-width: calc(100vh - var(--music-menu-wheel-offset));
+    max-height: min(100%, calc(100vh - var(--music-menu-wheel-offset)));
+    max-width: min(100%, calc(100vh - var(--music-menu-wheel-offset)));
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-height: 0;
+    place-self: center;
 }
 
 .fortune-wheel-wrap canvas {
