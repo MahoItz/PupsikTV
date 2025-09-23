@@ -2646,7 +2646,7 @@ select option {
     border: none;
     background: transparent;
     color: var(--text-primary);
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
     gap: 12px;
     flex-direction: column;
