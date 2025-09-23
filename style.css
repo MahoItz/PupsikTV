@@ -2350,6 +2350,31 @@ select option {
     gap: clamp(10px, calc(var(--music-menu-visible-width) / 5), 18px);
 }
 
+.music-menu.collapsed .fortune-controls > *:not(.fortune-items-wrapper) {
+    display: none !important;
+}
+
+.music-menu.collapsed .fortune-items-wrapper {
+    flex: 1;
+    display: block;
+    max-height: none;
+}
+
+.music-menu.collapsed .fortune-wheel-card__content {
+    position: relative;
+    min-height: clamp(220px, 56vh, 520px);
+    justify-content: center;
+}
+
+.music-menu.collapsed .fortune-wheel-card__header {
+    width: 100%;
+    height: 100%;
+}
+
+.music-menu.collapsed .collapse-music-menu {
+    pointer-events: auto;
+}
+
 .rules-panel {
     position: fixed;
     top: 0;
