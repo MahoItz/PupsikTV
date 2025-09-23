@@ -2379,7 +2379,7 @@ select option {
 }
 
 .music-menu.collapsed .fortune-wheel-card__header .fortune-spin-settings,
-.music-menu.collapsed .fortune-wheel-card__header>.close-music-menu {
+.music-menu.collapsed .fortune-wheel-card__actions .close-music-menu {
     display: none;
 }
 
@@ -2453,7 +2453,13 @@ select option {
     height: 100%;
 }
 
-.music-menu.collapsed .fortune-wheel-card__header>.collapse-music-menu {
+.music-menu.collapsed .fortune-wheel-card__actions {
+    position: absolute;
+    inset: 0;
+    transform: none;
+}
+
+.music-menu.collapsed .fortune-wheel-card__actions .collapse-music-menu {
     pointer-events: auto;
     position: absolute;
     inset: 0;
@@ -2968,23 +2974,35 @@ select option {
 .fortune-wheel-card__header {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
     margin-bottom: 0;
+    position: relative;
 }
 
 .fortune-wheel-card__header .fortune-spin-settings {
     order: 1;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
+    margin: 0 auto;
 }
 
-.fortune-wheel-card__header>.collapse-music-menu {
+.fortune-wheel-card__actions {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateY(-50%);
+}
+
+.fortune-wheel-card__actions .collapse-music-menu {
+    order: 1;
+}
+
+.fortune-wheel-card__actions .close-music-menu {
     order: 2;
-    margin-left: auto;
-}
-
-.fortune-wheel-card__header>.close-music-menu {
-    order: 3;
 }
 
 .fortune-wheel-card__content {
