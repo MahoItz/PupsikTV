@@ -3314,9 +3314,15 @@ select option {
     color: var(--fortune-link-color, var(--text-primary));
     width: 28px;
     height: 28px;
+    min-width: 28px;
+    min-height: 28px;
     border-radius: 50%;
-    display: grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    aspect-ratio: 1 / 1;
+    flex: 0 0 auto;
     cursor: pointer;
     font-size: 0.85rem;
     line-height: 1;
