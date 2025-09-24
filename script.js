@@ -4016,6 +4016,14 @@ if (volumeSlider && audioPlayer) {
     updateVolumeText();
   };
 
+  const sliderValue = parseFloat(volumeSlider.value);
+  if (!Number.isNaN(sliderValue)) {
+    audioPlayer.volume = sliderValue;
+  } else {
+    audioPlayer.volume = 0.3;
+    volumeSlider.value = "0.3";
+  }
+
   volumeSlider.addEventListener("input", updateFromSlider);
 
   audioPlayer.addEventListener("volumechange", () => {
