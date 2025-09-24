@@ -911,7 +911,12 @@
         </section>
 
         <section class="fortune-section fortune-list-section">
-          <h3 class="fortune-title">Список для рулетки</h3>
+          <div class="fortune-list-header">
+            <h3 class="fortune-title">Список для рулетки</h3>
+            <span class="fortune-items-count" aria-live="polite">
+              Всего: <span id="fortuneItemsCount" class="fortune-items-count-value">0</span>
+            </span>
+          </div>
           <div class="fortune-controls">
             <input
               id="fortuneItemInput"
@@ -967,7 +972,7 @@
           <div class="fortune-wheel-card__header">
             <div class="fortune-spin-settings">
               <label class="fortune-spin-label" for="spinDurationInput">
-                Время вращения: <span id="spinDurationValue">7&nbsp;с</span>
+                Время вращения
               </label>
               <div class="fortune-spin-input-wrapper">
                 <input
@@ -980,7 +985,7 @@
                   inputmode="numeric"
                   aria-label="Настройка времени вращения колеса в секундах"
                 >
-                <span class="fortune-spin-unit">сек</span>
+                <span class="fortune-spin-unit">СЕК</span>
               </div>
             </div>
             <div class="fortune-wheel-card__actions">
