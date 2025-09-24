@@ -4339,7 +4339,7 @@ function initFortuneWheel() {
         `https://www.imdb.com/find/?q=${encodedLabel}&s=tt`,
         imdbAriaLabel,
         "fortune-items-link-imdb",
-        "images/imdb.png",
+        "images/imdb_icon.webp",
       );
       actionsEl.appendChild(kinopoiskLink);
       actionsEl.appendChild(imdbLink);
