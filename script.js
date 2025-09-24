@@ -4375,6 +4375,28 @@ function initFortuneWheel() {
 
   let items = [];
   let eliminatedItems = new Set();
+  let eliminatedOrder = [];
+  let lastEliminatedLabel = null;
+
+  function registerElimination(label) {
+    if (!label) {
+      return;
+    }
+
+    eliminatedItems.add(label);
+    if (!eliminatedOrder.includes(label)) {
+      eliminatedOrder.push(label);
+    }
+    lastEliminatedLabel = label;
+    if (!items.includes(label)) {
+      items.push(label);
+    }
+  }
+
+  function clearEliminatedHistory() {
+    eliminatedOrder = [];
+    lastEliminatedLabel = null;
+  }
 
   function getActiveItems() {
     return items.filter((item) => !eliminatedItems.has(item));
@@ -4421,7 +4443,7 @@ function initFortuneWheel() {
       return link;
     };
 
-    if (activeItems.length === 0) {
+    if (activeItems.length === 0 && eliminatedOrder.length === 0) {
       const emptyEl = document.createElement("li");
       emptyEl.className = "fortune-items-empty";
       emptyEl.textContent = "Список пуст. Добавьте фильм выше.";
@@ -4429,16 +4451,19 @@ function initFortuneWheel() {
       return;
     }
 
-    activeItems.forEach((label, index) => {
-      const itemColor = colorForIndex(index, activeItems.length);
+    const appendItem = (label, options = {}) => {
+      const { isEliminated = false, color } = options;
       const listItem = document.createElement("li");
       listItem.className = "fortune-items-list-item";
+      if (isEliminated) {
+        listItem.setAttribute("data-fortune-item-state", "eliminated");
+      }
 
       const colorStrip = document.createElement("span");
       colorStrip.className = "fortune-items-color-strip";
       colorStrip.setAttribute("aria-hidden", "true");
-      if (itemColor) {
-        colorStrip.style.setProperty("--fortune-item-color", itemColor);
+      if (color) {
+        colorStrip.style.setProperty("--fortune-item-color", color);
       }
       listItem.appendChild(colorStrip);
 
@@ -4468,31 +4493,59 @@ function initFortuneWheel() {
       actionsEl.appendChild(kinopoiskLink);
       actionsEl.appendChild(imdbLink);
 
-      const removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className = "fortune-items-remove";
-      removeBtn.setAttribute("aria-label", `Удалить «${label}» из списка`);
-      removeBtn.title = "Удалить";
-      removeBtn.innerHTML = '<span aria-hidden="true">✕</span>';
-      removeBtn.addEventListener("click", () => {
-        if (spinning) {
-          return;
-        }
+      if (!isEliminated) {
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "fortune-items-remove";
+        removeBtn.setAttribute("aria-label", `Удалить «${label}» из списка`);
+        removeBtn.title = "Удалить";
+        removeBtn.innerHTML = '<span aria-hidden="true">✕</span>';
+        removeBtn.addEventListener("click", () => {
+          if (spinning) {
+            return;
+          }
 
-        const currentActive = getActiveItems();
-        if (index < 0 || index >= currentActive.length) {
-          return;
-        }
+          const currentActive = getActiveItems();
+          const removeIndex = currentActive.indexOf(label);
+          if (removeIndex === -1) {
+            return;
+          }
 
-        currentActive.splice(index, 1);
-        input.value = currentActive.join("\n");
-        updateFromInput();
-      });
+          currentActive.splice(removeIndex, 1);
+          input.value = currentActive.join("\n");
+          updateFromInput();
+        });
 
-      actionsEl.appendChild(removeBtn);
+        actionsEl.appendChild(removeBtn);
+      }
+
       listItem.appendChild(actionsEl);
       itemsListEl.appendChild(listItem);
+      return listItem;
+    };
+
+    activeItems.forEach((label, index) => {
+      const itemColor = colorForIndex(index, activeItems.length);
+      appendItem(label, { color: itemColor });
     });
+
+    if (eliminatedOrder.length > 0) {
+      eliminatedOrder.forEach((label) => {
+        const listItem = appendItem(label, { isEliminated: true });
+        if (label === lastEliminatedLabel) {
+          requestAnimationFrame(() => {
+            listItem.classList.add(
+              "fortune-items-list-item--eliminated",
+              "fortune-items-list-item--animate"
+            );
+          });
+        } else {
+          listItem.classList.add("fortune-items-list-item--eliminated");
+        }
+      });
+    }
+
+    lastEliminatedLabel = null;
   }
 
   let rotation = 0;
@@ -4566,7 +4619,7 @@ function initFortuneWheel() {
 
   function applyPendingElimination() {
     if (pendingEliminationItem !== null) {
-      eliminatedItems.add(pendingEliminationItem);
+      registerElimination(pendingEliminationItem);
       pendingEliminationItem = null;
       updateInputFromActiveItems();
     }
@@ -4575,6 +4628,7 @@ function initFortuneWheel() {
 
   function clearPendingElimination() {
     pendingEliminationItem = null;
+    lastEliminatedLabel = null;
   }
 
   function setResultOverlayVisible(visible) {
@@ -4894,7 +4948,7 @@ function initFortuneWheel() {
     }
 
     if (remainingItems.length === 1) {
-      eliminatedItems.add(text);
+      registerElimination(text);
       pendingEliminationItem = null;
       drawWheel();
       updateInputFromActiveItems();
@@ -4905,7 +4959,7 @@ function initFortuneWheel() {
     if (resultOverlay && resultNameEl) {
       pendingEliminationItem = text;
     } else {
-      eliminatedItems.add(text);
+      registerElimination(text);
       pendingEliminationItem = null;
       drawWheel();
       updateInputFromActiveItems();
@@ -5007,20 +5061,24 @@ function initFortuneWheel() {
       return;
     }
 
-    const newItems = parseInput(input.value).slice(0, 128);
-    if (JSON.stringify(items) === JSON.stringify(newItems)) {
-      return;
-    }
+    const previousActive = getActiveItems();
+    const newActiveItems = parseInput(input.value).slice(0, 128);
+    const hasActiveChanged =
+      JSON.stringify(previousActive) !== JSON.stringify(newActiveItems);
 
-    const updatedEliminated = new Set();
-    eliminatedItems.forEach((item) => {
-      if (newItems.includes(item)) {
-        updatedEliminated.add(item);
+    const combinedItems = [...newActiveItems];
+    eliminatedOrder.forEach((label) => {
+      if (!combinedItems.includes(label)) {
+        combinedItems.push(label);
       }
     });
 
-    items = newItems;
-    eliminatedItems = updatedEliminated;
+    items = combinedItems;
+    eliminatedItems = new Set(eliminatedOrder);
+    if (hasActiveChanged) {
+      lastEliminatedLabel = null;
+    }
+
     if (items.length === 0) {
       startIdleAnimation();
     } else {
@@ -5029,7 +5087,7 @@ function initFortuneWheel() {
     drawWheel();
     hideResultOverlay();
 
-    const activeItems = items.filter((item) => !eliminatedItems.has(item));
+    const activeItems = getActiveItems();
     if (items.length === 0) {
       statusEl.textContent = "Добавьте элементы в список для создания колеса.";
     } else if (activeItems.length === 0) {
@@ -5047,7 +5105,9 @@ function initFortuneWheel() {
 
   function clearInput() {
     input.value = "";
+    items = [];
     eliminatedItems.clear();
+    clearEliminatedHistory();
     clearPendingElimination();
     hideResultOverlay();
     updateFromInput();
@@ -5066,6 +5126,7 @@ function initFortuneWheel() {
 
   function resetEliminated() {
     eliminatedItems.clear();
+    clearEliminatedHistory();
     updateInputFromActiveItems();
     drawWheel();
     clearPendingElimination();

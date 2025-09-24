@@ -3364,6 +3364,7 @@ select option {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    perspective: 1200px;
 }
 
 .fortune-items-list-item {
@@ -3375,6 +3376,79 @@ select option {
     font-size: 0.95rem;
     background: rgba(255, 255, 255, 0.04);
     border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    transform-origin: center;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    transition:
+        transform 0.6s ease,
+        background-color 0.35s ease,
+        color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.35s ease;
+    overflow: hidden;
+}
+
+.fortune-items-list-item--animate {
+    animation: fortune-item-flip 0.6s ease forwards;
+    will-change: transform;
+}
+
+.fortune-items-list-item--eliminated {
+    background: linear-gradient(135deg, rgba(32, 41, 66, 0.85), rgba(20, 26, 44, 0.78));
+    color: rgba(224, 232, 255, 0.72);
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow:
+        inset 0 0 0 1px rgba(10, 16, 32, 0.45),
+        0 3px 12px rgba(0, 0, 0, 0.25);
+}
+
+.fortune-items-list-item--eliminated.fortune-items-list-item--animate {
+    transition:
+        background-color 0.35s ease 0.3s,
+        color 0.35s ease 0.3s,
+        border-color 0.35s ease 0.3s,
+        box-shadow 0.35s ease 0.3s;
+}
+
+.fortune-items-list-item--eliminated .fortune-items-color-strip {
+    background: linear-gradient(180deg, rgba(126, 136, 168, 0.85), rgba(84, 92, 120, 0.8));
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.fortune-items-list-item--eliminated .fortune-items-list-actions,
+.fortune-items-list-item--eliminated .fortune-items-list-title {
+    color: inherit;
+    opacity: 0.85;
+}
+
+.fortune-items-list-item--eliminated .fortune-items-link {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(220, 228, 255, 0.7);
+}
+
+.fortune-items-list-item--eliminated .fortune-items-link:hover,
+.fortune-items-list-item--eliminated .fortune-items-link:focus-visible {
+    transform: none;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+@keyframes fortune-item-flip {
+    0% {
+        transform: rotateX(0deg);
+    }
+    49% {
+        transform: rotateX(90deg);
+    }
+    50% {
+        transform: rotateX(-90deg);
+    }
+    100% {
+        transform: rotateX(-360deg);
+    }
 }
 
 .fortune-items-list-title {
