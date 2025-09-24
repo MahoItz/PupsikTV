@@ -3195,7 +3195,7 @@ select option {
 .fortune-pointer {
     position: absolute;
     top: 50%;
-    right: 0;
+    right: var(--fortune-pointer-offset, 0px);
     transform: translateY(-50%);
     width: 0;
     height: 0;

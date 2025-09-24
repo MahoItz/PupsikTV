@@ -4363,6 +4363,11 @@ function initFortuneWheel() {
   const fortuneItemsCountValue = document.getElementById("fortuneItemsCount");
   const resultOverlay = document.getElementById("fortuneResultOverlay");
   const resultNameEl = document.getElementById("fortuneResultName");
+  const wheelWrap = document.querySelector(".fortune-wheel-wrap");
+  const pointerEl =
+    wheelWrap instanceof HTMLElement
+      ? wheelWrap.querySelector(".fortune-pointer")
+      : null;
 
   if (!canvas || !statusEl || !input) {
     return null;
@@ -4758,6 +4763,31 @@ function initFortuneWheel() {
     return cloned;
   }
 
+  function updatePointerPosition() {
+    if (!(wheelWrap instanceof HTMLElement)) {
+      return;
+    }
+
+    if (!pointerEl) {
+      wheelWrap.style.removeProperty("--fortune-pointer-offset");
+      return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const size = Math.min(rect.width, rect.height);
+
+    if (!size) {
+      wheelWrap.style.removeProperty("--fortune-pointer-offset");
+      return;
+    }
+
+    const radius = Math.max(40, size / 2 - 12);
+    const outerRadius = radius + 4;
+    const offset = Math.max(0, size / 2 - outerRadius);
+
+    wheelWrap.style.setProperty("--fortune-pointer-offset", `${offset}px`);
+  }
+
   function colorForIndex(i, n) {
     const hue = Math.round((360 * i) / Math.max(1, n));
     return `hsl(${hue}deg 75% 55%)`;
@@ -4860,6 +4890,8 @@ function initFortuneWheel() {
     ctx.lineWidth = 8;
     ctx.stroke();
     ctx.restore();
+
+    updatePointerPosition();
   }
 
   function pickCurrentIndex() {
