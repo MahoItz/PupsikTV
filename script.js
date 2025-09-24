@@ -9,8 +9,7 @@ let adminElements = [];
 let KINOPOISK_API_KEY;
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
-const KINOPOISK_FILM_URL =
-  "https://kinopoiskapiunofficial.tech/api/v2.2/films";
+const KINOPOISK_FILM_URL = "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 let kpResults = [];
 let selectedKPMovie = null;
 
@@ -138,9 +137,15 @@ let deleteGameOrderId = null;
 const REYOHOHO_BASE_URL = "https://reyohoho.github.io/reyohoho/";
 
 const fortuneWinnerModal = document.getElementById("fortuneWinnerModal");
-const fortuneWinnerFilmNameEl = document.getElementById("fortuneWinnerFilmName");
-const fortuneWinnerKinopoiskBtn = document.getElementById("fortuneWinnerKinopoisk");
-const fortuneWinnerReYohohoBtn = document.getElementById("fortuneWinnerReYohoho");
+const fortuneWinnerFilmNameEl = document.getElementById(
+  "fortuneWinnerFilmName"
+);
+const fortuneWinnerKinopoiskBtn = document.getElementById(
+  "fortuneWinnerKinopoisk"
+);
+const fortuneWinnerReYohohoBtn = document.getElementById(
+  "fortuneWinnerReYohoho"
+);
 const fortuneWinnerCancelBtn = document.getElementById("fortuneWinnerCancel");
 let fortuneWinnerMovie = null;
 
@@ -165,9 +170,9 @@ function parseFortuneLabel(label) {
     return { originalLabel: "", title: "", originalTitle: "", year: "" };
   }
 
-  const parenthesesValues = Array.from(originalLabel.matchAll(/\(([^)]+)\)/g)).map((m) =>
-    m[1].trim(),
-  );
+  const parenthesesValues = Array.from(
+    originalLabel.matchAll(/\(([^)]+)\)/g)
+  ).map((m) => m[1].trim());
   let year = "";
   let originalTitle = "";
 
@@ -193,7 +198,10 @@ function parseFortuneLabel(label) {
   base = base.replace(/[()«»"]/g, " ");
 
   if (!originalTitle) {
-    const pipeParts = base.split("|").map((part) => part.trim()).filter(Boolean);
+    const pipeParts = base
+      .split("|")
+      .map((part) => part.trim())
+      .filter(Boolean);
     if (pipeParts.length > 1) {
       originalTitle = pipeParts.slice(1).join(" ");
       base = pipeParts[0];
@@ -203,7 +211,10 @@ function parseFortuneLabel(label) {
   }
 
   if (!originalTitle) {
-    const slashParts = base.split("/").map((part) => part.trim()).filter(Boolean);
+    const slashParts = base
+      .split("/")
+      .map((part) => part.trim())
+      .filter(Boolean);
     if (slashParts.length > 1) {
       originalTitle = slashParts.slice(1).join(" ");
       base = slashParts[0];
@@ -249,14 +260,19 @@ function findFortuneMovieMatch(parsed) {
 
   candidates.forEach((movie) => {
     const movieTitle = normalizeFortuneText(movie.title);
-    const movieOriginal = normalizeFortuneText(movie.originalTitle || movie.original_title || "");
+    const movieOriginal = normalizeFortuneText(
+      movie.originalTitle || movie.original_title || ""
+    );
     const movieYear = extractYearValue(movie.year);
     let score = 0;
 
     if (normalizedTitle && movieTitle) {
       if (movieTitle === normalizedTitle) {
         score += 6;
-      } else if (movieTitle.includes(normalizedTitle) || normalizedTitle.includes(movieTitle)) {
+      } else if (
+        movieTitle.includes(normalizedTitle) ||
+        normalizedTitle.includes(movieTitle)
+      ) {
         score += 3;
       } else if (normalizedLabel && normalizedLabel.includes(movieTitle)) {
         score += 2;
@@ -274,18 +290,31 @@ function findFortuneMovieMatch(parsed) {
       } else if (normalizedLabel && normalizedLabel.includes(movieOriginal)) {
         score += 2;
       }
-    } else if (!normalizedTitle && normalizedLabel && movieOriginal && normalizedLabel.includes(movieOriginal)) {
+    } else if (
+      !normalizedTitle &&
+      normalizedLabel &&
+      movieOriginal &&
+      normalizedLabel.includes(movieOriginal)
+    ) {
       score += 2;
     }
 
-    if (!normalizedTitle && normalizedLabel && movieTitle && normalizedLabel.includes(movieTitle)) {
+    if (
+      !normalizedTitle &&
+      normalizedLabel &&
+      movieTitle &&
+      normalizedLabel.includes(movieTitle)
+    ) {
       score += 2;
     }
 
     if (targetYear) {
       if (movieYear && movieYear === targetYear) {
         score += 3;
-      } else if (movieYear && Math.abs(Number(movieYear) - Number(targetYear)) <= 1) {
+      } else if (
+        movieYear &&
+        Math.abs(Number(movieYear) - Number(targetYear)) <= 1
+      ) {
         score += 1;
       } else if (movieYear) {
         score -= 2;
@@ -325,7 +354,11 @@ function buildFortuneWinnerMovie(label) {
   if (year) {
     displayParts.push(`(${year})`);
   }
-  if (originalTitle && normalizedOriginal && normalizedOriginal !== normalizedTitle) {
+  if (
+    originalTitle &&
+    normalizedOriginal &&
+    normalizedOriginal !== normalizedTitle
+  ) {
     displayParts.push(originalTitle);
   }
 
@@ -375,7 +408,7 @@ if (fortuneWinnerKinopoiskBtn) {
     openKinopoiskPage(
       fortuneWinnerMovie.title,
       fortuneWinnerMovie.year,
-      fortuneWinnerMovie.originalTitle,
+      fortuneWinnerMovie.originalTitle
     );
   });
 }
@@ -448,7 +481,9 @@ async function fetchSteamGridPosters(title) {
   steamGridPosters = [];
   if (!title) return;
   try {
-    const res = await fetch(`/api/steamgriddb?search=${encodeURIComponent(title)}`);
+    const res = await fetch(
+      `/api/steamgriddb?search=${encodeURIComponent(title)}`
+    );
     if (!res.ok) return;
     const data = await res.json();
     const posters = Array.isArray(data.posters) ? data.posters : [];
@@ -664,17 +699,17 @@ async function loadMoviesFromSupabase() {
     const current = JSON.stringify(allMovies);
     const fresh = JSON.stringify(newMovies);
 
-      if (current !== fresh) {
-        allMovies = newMovies;
-        totalMovies = allMovies.length;
-        localStorage.setItem("moviesCache", fresh);
+    if (current !== fresh) {
+      allMovies = newMovies;
+      totalMovies = allMovies.length;
+      localStorage.setItem("moviesCache", fresh);
 
-        await loadUserRatingsFromSupabase();
-      }
-    } catch (err) {
-      console.error("Error loading movies from Supabase", err);
+      await loadUserRatingsFromSupabase();
     }
+  } catch (err) {
+    console.error("Error loading movies from Supabase", err);
   }
+}
 
 // Загрузка заказов из Supabase
 async function loadWatchlistFromSupabase() {
@@ -745,7 +780,9 @@ async function loadPlayedGamesFromSupabase() {
   try {
     const { data, error } = await supabaseClient
       .from("games")
-      .select("id, title, genres, poster, year, rating_numeric, date, order_by, order_type")
+      .select(
+        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type"
+      )
       .order("id", { ascending: false });
 
     if (error) throw error;
@@ -841,7 +878,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     );
   document
     .querySelectorAll(".list-tabs button")
-    .forEach((btn) => btn.addEventListener("click", () => showListTab(btn.dataset.list)));
+    .forEach((btn) =>
+      btn.addEventListener("click", () => showListTab(btn.dataset.list))
+    );
   updateTabVisibility();
   updateListVisibility();
   showListTab(activeListTab);
@@ -933,10 +972,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     watchTitleInput.addEventListener("input", () => {
       const q = watchTitleInput.value.trim();
       if (q) {
-        showSearchLoading(
-          "watchAutoResultsContainer",
-          "watchAutoResults"
-        );
+        showSearchLoading("watchAutoResultsContainer", "watchAutoResults");
       } else {
         document.getElementById("watchAutoResultsContainer").style.display =
           "none";
@@ -954,7 +990,8 @@ document.addEventListener("DOMContentLoaded", async function () {
           selectedKPOrderMovie.nameRu || selectedKPOrderMovie.nameEn || "";
       }
       showWatchlistKPPreview();
-      document.getElementById("watchAutoResultsContainer").style.display = "none";
+      document.getElementById("watchAutoResultsContainer").style.display =
+        "none";
     });
 
   const gameSearchBtn = document.getElementById("gameAutoSearchBtn");
@@ -983,11 +1020,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showRAWGPreview();
-      document.getElementById("gameAutoResultsContainer").style.display = "none";
+      document.getElementById("gameAutoResultsContainer").style.display =
+        "none";
     });
 
   const playedSearchBtn = document.getElementById("playedGameAutoSearchBtn");
-  const playedResultsContainer = document.getElementById("playedGameAutoResults");
+  const playedResultsContainer = document.getElementById(
+    "playedGameAutoResults"
+  );
   const playedTitleInput = document.getElementById("playedGameAutoTitle");
   if (playedSearchBtn)
     playedSearchBtn.addEventListener("click", handlePlayedGameSearch);
@@ -1000,8 +1040,9 @@ document.addEventListener("DOMContentLoaded", async function () {
           "playedGameAutoResults"
         );
       } else {
-        document.getElementById("playedGameAutoResultsContainer").style.display =
-          "none";
+        document.getElementById(
+          "playedGameAutoResultsContainer"
+        ).style.display = "none";
       }
       debouncedPlayedRAWGSearch(q);
     });
@@ -1016,7 +1057,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showPlayedGamePreview();
-      document.getElementById("playedGameAutoResultsContainer").style.display = "none";
+      document.getElementById("playedGameAutoResultsContainer").style.display =
+        "none";
     });
 
   const preview = document.getElementById("editPosterPreview");
@@ -1081,7 +1123,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         return;
       }
       const overlay = gamePreview.parentElement.nextElementSibling;
-      if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
+      if (overlay && overlay.classList.contains("poster-overlay"))
+        overlay.remove();
       gamePreview.src = steamGridPoster;
       editGamePosterData = steamGridPoster;
       createPosterOverlay(gamePreview, steamGridPosters, true);
@@ -1118,7 +1161,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         return;
       }
       const overlay = playedPreview.parentElement.nextElementSibling;
-      if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
+      if (overlay && overlay.classList.contains("poster-overlay"))
+        overlay.remove();
       playedPreview.src = steamGridPoster;
       editPlayedGamePosterData = steamGridPoster;
       createPosterOverlay(playedPreview, steamGridPosters, true);
@@ -1681,14 +1725,20 @@ function getFilteredSortedPlayedGames() {
   switch (currentGameSort) {
     case "title":
       result.sort((a, b) =>
-        gameSortAscending ? a.title.localeCompare(b.title) : b.title.localeCompare(a.title)
+        gameSortAscending
+          ? a.title.localeCompare(b.title)
+          : b.title.localeCompare(a.title)
       );
       break;
     case "year":
-      result.sort((a, b) => (gameSortAscending ? a.year - b.year : b.year - a.year));
+      result.sort((a, b) =>
+        gameSortAscending ? a.year - b.year : b.year - a.year
+      );
       break;
     case "rating":
-      result.sort((a, b) => (gameSortAscending ? a.rating - b.rating : b.rating - a.rating));
+      result.sort((a, b) =>
+        gameSortAscending ? a.rating - b.rating : b.rating - a.rating
+      );
       break;
     case "date":
     default:
@@ -1893,7 +1943,9 @@ function toggleGameSortOrder() {
   const btn = document.getElementById("gameSortOrderBtn");
   if (btn) {
     const img = document.createElement("img");
-    img.src = gameSortAscending ? "images/up-arrow.webp" : "images/down-arrow.webp";
+    img.src = gameSortAscending
+      ? "images/up-arrow.webp"
+      : "images/down-arrow.webp";
     img.alt = "";
     img.className = "sort-arrow";
     btn.replaceChildren(img);
@@ -1935,7 +1987,9 @@ const debouncedKPSearch = debounce(async (query) => {
   }
 
   try {
-    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`;
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      query
+    )}&page=1`;
     const res = await fetch(url, {
       headers: {
         "X-API-KEY": KINOPOISK_API_KEY,
@@ -1978,7 +2032,9 @@ const debouncedWatchlistKPSearch = debounce(async (query) => {
   }
 
   try {
-    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`;
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      query
+    )}&page=1`;
     const res = await fetch(url, {
       headers: {
         "X-API-KEY": KINOPOISK_API_KEY,
@@ -2023,7 +2079,9 @@ const debouncedRAWGSearch = debounce(async (query) => {
   }
 
   try {
-    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(query)}&page_size=5`;
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      query
+    )}&page_size=5`;
     const res = await fetch(url);
     const data = await res.json();
     rawgResults = data.results || [];
@@ -2061,7 +2119,9 @@ const debouncedPlayedRAWGSearch = debounce(async (query) => {
   }
 
   try {
-    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(query)}&page_size=5`;
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      query
+    )}&page_size=5`;
     const res = await fetch(url);
     const data = await res.json();
     rawgResults = data.results || [];
@@ -2297,7 +2357,12 @@ async function fetchKinopoiskFilm(title, year, originalTitle = "") {
     }
     if (!film && title) {
       const normalizedTitle = title.trim().toLowerCase();
-      film = films.find((f) => (f.nameRu || f.nameEn || "").trim().toLowerCase() === normalizedTitle) || null;
+      film =
+        films.find(
+          (f) =>
+            (f.nameRu || f.nameEn || "").trim().toLowerCase() ===
+            normalizedTitle
+        ) || null;
     }
     return film || films[0] || null;
   } catch (err) {
@@ -2313,7 +2378,9 @@ async function openKinopoiskPage(title, year, originalTitle = "") {
   }
   if (!KINOPOISK_API_KEY) {
     window.open(
-      `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(query)}`,
+      `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(
+        query
+      )}`,
       "_blank"
     );
     return;
@@ -2404,7 +2471,11 @@ function showRAWGPreview() {
   };
   const card = createGameCard(game, false);
   preview.appendChild(card);
-  createPosterOverlay(card.querySelector(".order-poster"), steamGridPosters, true);
+  createPosterOverlay(
+    card.querySelector(".order-poster"),
+    steamGridPosters,
+    true
+  );
   preview.style.display = "block";
 }
 
@@ -2483,7 +2554,11 @@ function showPlayedGamePreview() {
   };
   const card = createPlayedGameCard(game, false);
   preview.appendChild(card);
-  createPosterOverlay(card.querySelector(".movie-poster"), steamGridPosters, true);
+  createPosterOverlay(
+    card.querySelector(".movie-poster"),
+    steamGridPosters,
+    true
+  );
   preview.style.display = "block";
 }
 
@@ -2534,7 +2609,8 @@ function openRateModal(id) {
     document.getElementById("rateMoviePoster").src = item.poster;
   } else {
     document.getElementById("rateMovieTitle").textContent = "";
-    document.getElementById("rateMoviePoster").src = "https://via.placeholder.com/300x400?text=Нет+постера";
+    document.getElementById("rateMoviePoster").src =
+      "https://via.placeholder.com/300x400?text=Нет+постера";
   }
   document.getElementById("rateMovieModal").style.display = "block";
   setRatingStars("rateMovieStars", 0);
@@ -2551,7 +2627,8 @@ function openRateGameModal(id) {
     document.getElementById("rateGamePoster").src = item.poster;
   } else {
     document.getElementById("rateGameTitle").textContent = "";
-    document.getElementById("rateGamePoster").src = "https://via.placeholder.com/300x400?text=Нет+постера";
+    document.getElementById("rateGamePoster").src =
+      "https://via.placeholder.com/300x400?text=Нет+постера";
   }
   document.getElementById("rateGameModal").style.display = "block";
   setRatingStars("rateGameStars", 0);
@@ -2608,7 +2685,6 @@ async function performDeleteMovie(id) {
 }
 
 async function performDeleteOrder(id) {
-
   const index = watchlist.findIndex((o) => o.id === id);
   if (index !== -1) {
     watchlist.splice(index, 1);
@@ -2622,7 +2698,6 @@ async function performDeleteOrder(id) {
 }
 
 async function performDeleteGameOrder(id) {
-
   const index = gameOrders.findIndex((g) => g.id === id);
   if (index !== -1) {
     gameOrders.splice(index, 1);
@@ -2672,7 +2747,8 @@ function openEditPlayedGameModal(id) {
   document.getElementById("editPlayedGameYear").value = game.year || "";
   document.getElementById("editPlayedGameGenres").value = game.genres || "";
   document.getElementById("editPlayedGameOrderBy").value = game.orderBy || "";
-  document.getElementById("editPlayedGameOrderType").value = game.orderType || "";
+  document.getElementById("editPlayedGameOrderType").value =
+    game.orderType || "";
   preview.src = game.poster;
   document.getElementById("editPlayedGamePoster").value = "";
   setRatingStars("editPlayedGameRatingStars", game.rating);
@@ -2706,7 +2782,8 @@ async function confirmDeleteMovie() {
 
 function openConfirmDeletePlayedGameModal(id) {
   deletePlayedGameId = id;
-  document.getElementById("confirmDeletePlayedGameModal").style.display = "block";
+  document.getElementById("confirmDeletePlayedGameModal").style.display =
+    "block";
 }
 
 async function confirmDeletePlayedGame() {
@@ -2732,7 +2809,8 @@ async function confirmDeleteOrder() {
 
 function openConfirmDeleteGameOrderModal(id) {
   deleteGameOrderId = id;
-  document.getElementById("confirmDeleteGameOrderModal").style.display = "block";
+  document.getElementById("confirmDeleteGameOrderModal").style.display =
+    "block";
 }
 
 async function confirmDeleteGameOrder() {
@@ -2906,12 +2984,12 @@ function setRatingStars(containerId, rating, updateInput = true) {
 
 function highlightStars(containerId, rating) {
   const stars = document.querySelectorAll(`#${containerId} .rating-star`);
-  
+
   stars.forEach((star, index) => {
     // Удаляем маску и цвет
     star.classList.remove("hovered");
     star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
-    
+
     if (star.classList.contains("rating-label")) {
       star.style.backgroundColor = "transparent";
     }
@@ -2930,7 +3008,6 @@ function highlightStars(containerId, rating) {
   }
 }
 
-
 function getCurrentRating(containerId) {
   const container = document.getElementById(containerId);
   return parseFloat(container.dataset.currentRating) || 0;
@@ -2945,20 +3022,18 @@ function getRatingValue(inputId) {
   return el ? parseFloat(el.value.replace(/,/, ".")) : NaN;
 }
 
-
-
 // Обработка форм
 document
   .getElementById("addMovieForm")
   .addEventListener("submit", async function (e) {
     e.preventDefault();
 
-  const rating = getRatingValue("ratingInput");
-  if (!isRatingValid(rating)) {
-    alert("Неверная оценка");
-    document.getElementById("ratingInput").reportValidity();
-    return;
-  }
+    const rating = getRatingValue("ratingInput");
+    if (!isRatingValid(rating)) {
+      alert("Неверная оценка");
+      document.getElementById("ratingInput").reportValidity();
+      return;
+    }
 
     let movieData;
 
@@ -3333,14 +3408,14 @@ document
   ?.addEventListener("submit", async function (e) {
     e.preventDefault();
 
-  const orderBy = document.getElementById("playedGameOrderBy").value;
-  const orderType = document.getElementById("playedGameOrderType").value;
-  const rating = getRatingValue("playedGameRatingInput");
-  if (!isRatingValid(rating)) {
-    alert("Неверная оценка");
-    document.getElementById("playedGameRatingInput").reportValidity();
-    return;
-  }
+    const orderBy = document.getElementById("playedGameOrderBy").value;
+    const orderType = document.getElementById("playedGameOrderType").value;
+    const rating = getRatingValue("playedGameRatingInput");
+    if (!isRatingValid(rating)) {
+      alert("Неверная оценка");
+      document.getElementById("playedGameRatingInput").reportValidity();
+      return;
+    }
 
     let gameData;
 
@@ -3392,7 +3467,8 @@ document
     }
 
     const duplicate = allPlayedGames.some(
-      (g) => g.title.trim().toLowerCase() === gameData.title.trim().toLowerCase()
+      (g) =>
+        g.title.trim().toLowerCase() === gameData.title.trim().toLowerCase()
     );
     if (duplicate) {
       showDuplicateModal();
@@ -3544,7 +3620,8 @@ async function submitGameRating() {
       year: source.year,
       rating: rating,
       genres: source.genres || "",
-      poster: source.poster || "https://via.placeholder.com/300x400?text=Нет+постера",
+      poster:
+        source.poster || "https://via.placeholder.com/300x400?text=Нет+постера",
       dateAdded: new Date().toISOString().split("T")[0],
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
@@ -3908,7 +3985,8 @@ function showListTab(tab) {
 function updateListVisibility() {
   const movies = document.getElementById("moviesSection");
   const games = document.getElementById("gamesListSection");
-  if (movies) movies.style.display = activeListTab === "movies" ? "block" : "none";
+  if (movies)
+    movies.style.display = activeListTab === "movies" ? "block" : "none";
   if (games) games.style.display = activeListTab === "games" ? "block" : "none";
 }
 
@@ -3960,7 +4038,9 @@ const musicMenuCollapseInertTargets = musicMenu
   ? Array.from(musicMenu.querySelectorAll("[data-menu-collapse-inert]"))
   : [];
 const rulesPanel = document.getElementById("rulesPanel");
-const rulesPanelToggleButton = document.getElementById("rulesPanelToggleButton");
+const rulesPanelToggleButton = document.getElementById(
+  "rulesPanelToggleButton"
+);
 const collapseRulesPanel = document.getElementById("collapseRulesPanel");
 const musicList = document.getElementById("musicList");
 const audioPlayer = document.getElementById("audioPlayer");
@@ -4016,6 +4096,14 @@ if (volumeSlider && audioPlayer) {
     updateVolumeText();
   };
 
+  const sliderValue = parseFloat(volumeSlider.value);
+  if (!Number.isNaN(sliderValue)) {
+    audioPlayer.volume = sliderValue;
+  } else {
+    audioPlayer.volume = 0.3;
+    volumeSlider.value = "0.3";
+  }
+
   volumeSlider.addEventListener("input", updateFromSlider);
 
   audioPlayer.addEventListener("volumechange", () => {
@@ -4026,7 +4114,6 @@ if (volumeSlider && audioPlayer) {
   volumeSlider.value = String(audioPlayer.volume);
   updateVolumeText();
 }
-
 
 const syncRulesPanelToggleButton = () => {
   if (!rulesPanelToggleButton) return;
@@ -4039,7 +4126,10 @@ const syncRulesPanelToggleButton = () => {
 
   rulesPanelToggleButton.classList.toggle("is-active", isActive);
   rulesPanelToggleButton.classList.toggle("is-hidden", panelIsOpen);
-  rulesPanelToggleButton.setAttribute("aria-pressed", isActive ? "true" : "false");
+  rulesPanelToggleButton.setAttribute(
+    "aria-pressed",
+    isActive ? "true" : "false"
+  );
   rulesPanelToggleButton.setAttribute("aria-label", label);
   rulesPanelToggleButton.setAttribute("title", label);
 };
@@ -4051,12 +4141,18 @@ const updateRulesPanelState = () => {
   }
 
   const menuIsOpen = musicMenu ? musicMenu.classList.contains("open") : false;
-  const menuIsCollapsed = musicMenu ? musicMenu.classList.contains("collapsed") : false;
-  const shouldOpenFromMenu = menuIsOpen && !menuIsCollapsed && !rulesPanelManuallyCollapsed;
+  const menuIsCollapsed = musicMenu
+    ? musicMenu.classList.contains("collapsed")
+    : false;
+  const shouldOpenFromMenu =
+    menuIsOpen && !menuIsCollapsed && !rulesPanelManuallyCollapsed;
   const shouldOpen = shouldOpenFromMenu || rulesPanelStandaloneOpen;
 
   rulesPanel.classList.toggle("open", shouldOpen);
-  rulesPanel.classList.toggle("rules-panel--standalone", shouldOpen && rulesPanelStandaloneOpen);
+  rulesPanel.classList.toggle(
+    "rules-panel--standalone",
+    shouldOpen && rulesPanelStandaloneOpen
+  );
   rulesPanel.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
 
   if (!shouldOpen) {
@@ -4124,9 +4220,11 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     if (collapseMusicMenuButton) {
       collapseMusicMenuButton.setAttribute(
         "aria-label",
-        shouldCollapse ? "Развернуть панель" : "Свернуть панель",
+        shouldCollapse ? "Развернуть панель" : "Свернуть панель"
       );
-      const collapseLabel = collapseMusicMenuButton.querySelector(".collapse-music-menu-label");
+      const collapseLabel = collapseMusicMenuButton.querySelector(
+        ".collapse-music-menu-label"
+      );
       if (collapseLabel) {
         collapseLabel.textContent = shouldCollapse ? "Развернуть" : "Свернуть";
       }
@@ -4145,7 +4243,9 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     updateRulesPanelState();
     if (audioPlayer) audioPlayer.pause();
     if (musicList) {
-      musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      musicList
+        .querySelectorAll("button")
+        .forEach((b) => b.classList.remove("active"));
     }
   };
 
@@ -4157,7 +4257,10 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     setMenuCollapsed(false);
     rulesPanelManuallyCollapsed = false;
     updateRulesPanelState();
-    if (fortuneWheelApi && typeof fortuneWheelApi.handleMenuOpen === "function") {
+    if (
+      fortuneWheelApi &&
+      typeof fortuneWheelApi.handleMenuOpen === "function"
+    ) {
       fortuneWheelApi.handleMenuOpen();
     }
   });
@@ -4173,7 +4276,11 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
       if (!shouldCollapse) {
         rulesPanelManuallyCollapsed = false;
       }
-      if (!shouldCollapse && fortuneWheelApi && typeof fortuneWheelApi.handleMenuOpen === "function") {
+      if (
+        !shouldCollapse &&
+        fortuneWheelApi &&
+        typeof fortuneWheelApi.handleMenuOpen === "function"
+      ) {
         fortuneWheelApi.handleMenuOpen();
       }
     });
@@ -4189,7 +4296,9 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
 
       audioPlayer.src = src;
       audioPlayer.play().catch(() => {});
-      musicList.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+      musicList
+        .querySelectorAll("button")
+        .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
     });
   }
@@ -4229,12 +4338,10 @@ if (fortuneTipButton && fortuneTipAudio) {
       console.warn("Unable to reset fortune tip audio state.", err);
     }
 
-    fortuneTipAudio
-      .play()
-      .catch((err) => {
-        console.warn("Failed to play fortune tip audio.", err);
-        resetTipButtonState();
-      });
+    fortuneTipAudio.play().catch((err) => {
+      console.warn("Failed to play fortune tip audio.", err);
+      resetTipButtonState();
+    });
   });
 
   fortuneTipAudio.addEventListener("ended", resetTipButtonState);
@@ -4293,13 +4400,15 @@ function initFortuneWheel() {
       href,
       ariaLabel,
       extraClass,
-      iconSrc = "images/kp_icon.webp",
+      iconSrc = "images/kp_icon.webp"
     ) => {
       const link = document.createElement("a");
       link.href = href;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.className = ["fortune-items-link", extraClass].filter(Boolean).join(" ");
+      link.className = ["fortune-items-link", extraClass]
+        .filter(Boolean)
+        .join(" ");
       link.setAttribute("aria-label", ariaLabel);
       link.title = ariaLabel;
       const icon = document.createElement("img");
@@ -4348,13 +4457,13 @@ function initFortuneWheel() {
       const kinopoiskLink = createFortuneSearchLink(
         `https://www.kinopoisk.ru/index.php?kp_query=${encodedLabel}`,
         kpAriaLabel,
-        "fortune-items-link-kinopoisk",
+        "fortune-items-link-kinopoisk"
       );
       const imdbLink = createFortuneSearchLink(
         `https://www.imdb.com/find/?q=${encodedLabel}&s=tt`,
         imdbAriaLabel,
         "fortune-items-link-imdb",
-        "images/imdb_icon.webp",
+        "images/imdb_icon.webp"
       );
       actionsEl.appendChild(kinopoiskLink);
       actionsEl.appendChild(imdbLink);
@@ -4579,7 +4688,9 @@ function initFortuneWheel() {
     if (typeof timestamp === "number") {
       if (idleLastTimestamp !== null) {
         const delta = timestamp - idleLastTimestamp;
-        idleRotation = normalizeAngle(idleRotation + delta * idleAngularVelocity);
+        idleRotation = normalizeAngle(
+          idleRotation + delta * idleAngularVelocity
+        );
       }
       idleLastTimestamp = timestamp;
     }
@@ -4663,7 +4774,9 @@ function initFortuneWheel() {
 
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
     const usePlaceholder = items.length === 0;
-    const segmentCount = usePlaceholder ? placeholderSegmentsCount : Math.max(1, activeItems.length);
+    const segmentCount = usePlaceholder
+      ? placeholderSegmentsCount
+      : Math.max(1, activeItems.length);
     const segAngle = (Math.PI * 2) / segmentCount;
 
     ctx.save();
@@ -4684,7 +4797,9 @@ function initFortuneWheel() {
       ctx.fill();
 
       if (segmentCount > 1) {
-        ctx.strokeStyle = usePlaceholder ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.35)";
+        ctx.strokeStyle = usePlaceholder
+          ? "rgba(255,255,255,0.28)"
+          : "rgba(0,0,0,0.35)";
         ctx.lineWidth = usePlaceholder ? 2 : 1.5;
         ctx.stroke();
       }
@@ -4698,7 +4813,10 @@ function initFortuneWheel() {
 
         const fontSize = Math.max(
           10,
-          Math.min(18, Math.floor(radius * 0.095 * (8 / Math.sqrt(segmentCount)))),
+          Math.min(
+            18,
+            Math.floor(radius * 0.095 * (8 / Math.sqrt(segmentCount)))
+          )
         );
         ctx.font = `600 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial`;
         ctx.fillStyle = "#fff";
@@ -4709,7 +4827,10 @@ function initFortuneWheel() {
         const label = String(activeItems[i] ?? "");
         const maxTextWidth = radius * 0.8;
         let display = label;
-        while (ctx.measureText(display).width > maxTextWidth && display.length > 3) {
+        while (
+          ctx.measureText(display).width > maxTextWidth &&
+          display.length > 3
+        ) {
           display = display.slice(0, -2);
         }
         if (display !== label) {
@@ -4739,7 +4860,6 @@ function initFortuneWheel() {
     ctx.lineWidth = 8;
     ctx.stroke();
     ctx.restore();
-
   }
 
   function pickCurrentIndex() {
@@ -4762,9 +4882,15 @@ function initFortuneWheel() {
     const remainingItems = activeItems.filter((item) => item !== text);
 
     if (remainingItems.length === 0) {
-      statusEl.innerHTML = `Результат: <b>${escapeHtml(text)}</b><br><span class="fortune-status-success">🎉 Игра завершена! Все элементы были выбраны.</span>`;
+      statusEl.innerHTML = `Результат: <b>${escapeHtml(
+        text
+      )}</b><br><span class="fortune-status-success">🎉 Игра завершена! Все элементы были выбраны.</span>`;
     } else {
-      statusEl.innerHTML = `Результат: <b>${escapeHtml(text)}</b><br><span class="fortune-status-remaining">Осталось элементов: ${remainingItems.length}</span>`;
+      statusEl.innerHTML = `Результат: <b>${escapeHtml(
+        text
+      )}</b><br><span class="fortune-status-remaining">Осталось элементов: ${
+        remainingItems.length
+      }</span>`;
     }
 
     if (remainingItems.length === 1) {
@@ -4850,7 +4976,7 @@ function initFortuneWheel() {
     const winnerIndex = Math.floor(Math.random() * activeItems.length);
     const randomOffset = 0.15 + Math.random() * 0.7;
     const finalRotation = normalizeAngle(
-      pointerAngle - (winnerIndex + randomOffset) * segmentAngle,
+      pointerAngle - (winnerIndex + randomOffset) * segmentAngle
     );
 
     const currentRotation = normalizeAngle(rotation);
@@ -4859,7 +4985,9 @@ function initFortuneWheel() {
       delta += Math.PI * 2;
     }
 
-    const extraTurns = Math.max(3, Math.round(spinDurationMs / 1000) + 2) + Math.floor(Math.random() * 2);
+    const extraTurns =
+      Math.max(3, Math.round(spinDurationMs / 1000) + 2) +
+      Math.floor(Math.random() * 2);
     delta += extraTurns * Math.PI * 2;
 
     startRotation = currentRotation;
@@ -4905,9 +5033,11 @@ function initFortuneWheel() {
     if (items.length === 0) {
       statusEl.textContent = "Добавьте элементы в список для создания колеса.";
     } else if (activeItems.length === 0) {
-      statusEl.innerHTML = '<span class="fortune-status-success">🎉 Все элементы были исключены! Добавьте новые или очистите список.</span>';
+      statusEl.innerHTML =
+        '<span class="fortune-status-success">🎉 Все элементы были исключены! Добавьте новые или очистите список.</span>';
     } else if (activeItems.length === 1) {
-      statusEl.textContent = "Добавьте больше активных элементов или нажмите на колесо для вращения.";
+      statusEl.textContent =
+        "Добавьте больше активных элементов или нажмите на колесо для вращения.";
     } else {
       statusEl.textContent = "Нажмите на колесо, чтобы запустить вращение.";
     }
@@ -4942,9 +5072,11 @@ function initFortuneWheel() {
     hideResultOverlay();
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
     if (activeItems.length > 1) {
-      statusEl.textContent = "Все элементы восстановлены. Нажмите на колесо для вращения.";
+      statusEl.textContent =
+        "Все элементы восстановлены. Нажмите на колесо для вращения.";
     } else if (activeItems.length === 1) {
-      statusEl.textContent = "Добавьте больше активных элементов или нажмите на колесо для вращения.";
+      statusEl.textContent =
+        "Добавьте больше активных элементов или нажмите на колесо для вращения.";
     }
   }
 
@@ -4964,7 +5096,8 @@ function initFortuneWheel() {
 
       const activeItems = getActiveItems();
       if (activeItems.length >= 128) {
-        statusEl.textContent = "Нельзя добавить больше 128 фильмов для рулетки.";
+        statusEl.textContent =
+          "Нельзя добавить больше 128 фильмов для рулетки.";
         return;
       }
 
@@ -5015,4 +5148,3 @@ function initFortuneWheel() {
     },
   };
 }
-
