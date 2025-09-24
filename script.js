@@ -4282,7 +4282,12 @@ function initFortuneWheel() {
 
     const activeItems = getActiveItems();
 
-    const createFortuneSearchLink = (href, ariaLabel, extraClass) => {
+    const createFortuneSearchLink = (
+      href,
+      ariaLabel,
+      extraClass,
+      iconSrc = "images/kp_icon.webp",
+    ) => {
       const link = document.createElement("a");
       link.href = href;
       link.target = "_blank";
@@ -4291,7 +4296,7 @@ function initFortuneWheel() {
       link.setAttribute("aria-label", ariaLabel);
       link.title = ariaLabel;
       const icon = document.createElement("img");
-      icon.src = "images/kp_icon.webp";
+      icon.src = iconSrc;
       icon.alt = "";
       icon.className = "fortune-items-link-icon";
       icon.setAttribute("aria-hidden", "true");
@@ -4334,6 +4339,7 @@ function initFortuneWheel() {
         `https://www.imdb.com/find/?q=${encodedLabel}&s=tt`,
         imdbAriaLabel,
         "fortune-items-link-imdb",
+        "images/imdb.png",
       );
       actionsEl.appendChild(kinopoiskLink);
       actionsEl.appendChild(imdbLink);
