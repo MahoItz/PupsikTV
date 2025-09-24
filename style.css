@@ -3101,6 +3101,9 @@ select option {
     justify-content: center;
     min-height: 0;
     place-self: center;
+    --fortune-pointer-width: clamp(22px, 3.6vw, 34px);
+    --fortune-pointer-height: calc(var(--fortune-pointer-width) * 0.62);
+    --fortune-pointer-offset: calc(var(--fortune-pointer-width) - 4px);
 }
 
 .fortune-wheel-wrap canvas {
@@ -3140,13 +3143,13 @@ select option {
 .fortune-pointer {
     position: absolute;
     top: 50%;
-    right: 0;
+    right: calc(-1 * var(--fortune-pointer-offset));
     transform: translateY(-50%);
     width: 0;
     height: 0;
-    border-top: 18px solid transparent;
-    border-bottom: 18px solid transparent;
-    border-right: 28px solid #28c76f;
+    border-top: var(--fortune-pointer-height) solid transparent;
+    border-bottom: var(--fortune-pointer-height) solid transparent;
+    border-right: var(--fortune-pointer-width) solid #28c76f;
     filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
     z-index: 2;
 }
