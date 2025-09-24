@@ -4253,7 +4253,7 @@ function initFortuneWheel() {
   const resetBtn = document.getElementById("resetBtn");
   const shuffleBtn = document.getElementById("shuffleBtn");
   const durationInput = document.getElementById("spinDurationInput");
-  const durationValue = document.getElementById("spinDurationValue");
+  const fortuneItemsCountValue = document.getElementById("fortuneItemsCount");
   const resultOverlay = document.getElementById("fortuneResultOverlay");
   const resultNameEl = document.getElementById("fortuneResultName");
 
@@ -4273,14 +4273,21 @@ function initFortuneWheel() {
     return items.filter((item) => !eliminatedItems.has(item));
   }
 
+  const updateFortuneItemsCount = (count) => {
+    if (fortuneItemsCountValue) {
+      fortuneItemsCountValue.textContent = String(count);
+    }
+  };
+
   function renderFortuneItemsList() {
+    const activeItems = getActiveItems();
+    updateFortuneItemsCount(activeItems.length);
+
     if (!itemsListEl) {
       return;
     }
 
     itemsListEl.innerHTML = "";
-
-    const activeItems = getActiveItems();
 
     const createFortuneSearchLink = (
       href,
@@ -4505,12 +4512,6 @@ function initFortuneWheel() {
     resultOverlay.addEventListener("click", hideResultOverlay);
   }
 
-  const updateDurationLabel = (value) => {
-    if (durationValue) {
-      durationValue.textContent = `${value}\u00A0с`;
-    }
-  };
-
   const parseDurationSeconds = (value) => {
     if (value === null || value === undefined) {
       return null;
@@ -4537,7 +4538,6 @@ function initFortuneWheel() {
     lastValidDurationSeconds = Math.max(1, lastValidDurationSeconds);
     durationInput.value = String(lastValidDurationSeconds);
     spinDurationMs = lastValidDurationSeconds * 1000;
-    updateDurationLabel(lastValidDurationSeconds);
 
     const commitDuration = (rawValue) => {
       const parsed = parseDurationSeconds(rawValue);
@@ -4545,7 +4545,6 @@ function initFortuneWheel() {
       lastValidDurationSeconds = Math.max(1, seconds);
       spinDurationMs = lastValidDurationSeconds * 1000;
       durationInput.value = String(lastValidDurationSeconds);
-      updateDurationLabel(lastValidDurationSeconds);
     };
 
     durationInput.addEventListener("input", (event) => {
@@ -4553,7 +4552,6 @@ function initFortuneWheel() {
       if (parsed !== null) {
         lastValidDurationSeconds = parsed;
         spinDurationMs = parsed * 1000;
-        updateDurationLabel(parsed);
       }
     });
 
@@ -4564,8 +4562,6 @@ function initFortuneWheel() {
     durationInput.addEventListener("blur", (event) => {
       commitDuration(event.target.value);
     });
-  } else if (durationValue) {
-    updateDurationLabel(Math.round(spinDurationMs / 1000));
   }
 
   function normalizeAngle(angle) {

@@ -2954,6 +2954,31 @@ select option {
     min-height: 0;
 }
 
+.fortune-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.fortune-items-count {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.fortune-items-count-value {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: normal;
+    margin-left: 4px;
+}
+
 .fortune-body {
     display: grid;
     grid-template-columns: minmax(260px, 520px) minmax(520px, 1fr);
