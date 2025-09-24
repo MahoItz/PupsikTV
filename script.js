@@ -4318,6 +4318,14 @@ function initFortuneWheel() {
       const listItem = document.createElement("li");
       listItem.className = "fortune-items-list-item";
 
+      const colorStrip = document.createElement("span");
+      colorStrip.className = "fortune-items-color-strip";
+      colorStrip.setAttribute("aria-hidden", "true");
+      if (itemColor) {
+        colorStrip.style.setProperty("--fortune-item-color", itemColor);
+      }
+      listItem.appendChild(colorStrip);
+
       const titleEl = document.createElement("span");
       titleEl.className = "fortune-items-list-title";
       titleEl.textContent = label;
@@ -4343,14 +4351,6 @@ function initFortuneWheel() {
       );
       actionsEl.appendChild(kinopoiskLink);
       actionsEl.appendChild(imdbLink);
-
-      const colorIndicator = document.createElement("span");
-      colorIndicator.className = "fortune-items-color-indicator";
-      colorIndicator.setAttribute("aria-hidden", "true");
-      if (itemColor) {
-        colorIndicator.style.setProperty("--fortune-item-color", itemColor);
-      }
-      actionsEl.appendChild(colorIndicator);
 
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
