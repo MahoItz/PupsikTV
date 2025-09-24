@@ -4418,6 +4418,13 @@ function initFortuneWheel() {
 
     itemsListEl.innerHTML = "";
 
+    const activeItemColors = new Map();
+    if (activeItems.length > 0) {
+      activeItems.forEach((label, index) => {
+        activeItemColors.set(label, colorForIndex(index, activeItems.length));
+      });
+    }
+
     const createFortuneSearchLink = (
       href,
       ariaLabel,
@@ -4443,7 +4450,7 @@ function initFortuneWheel() {
       return link;
     };
 
-    if (activeItems.length === 0 && eliminatedOrder.length === 0) {
+    if (items.length === 0) {
       const emptyEl = document.createElement("li");
       emptyEl.className = "fortune-items-empty";
       emptyEl.textContent = "Список пуст. Добавьте фильм выше.";
@@ -4524,26 +4531,26 @@ function initFortuneWheel() {
       return listItem;
     };
 
-    activeItems.forEach((label, index) => {
-      const itemColor = colorForIndex(index, activeItems.length);
-      appendItem(label, { color: itemColor });
-    });
+    items.forEach((label) => {
+      const isEliminated = eliminatedItems.has(label);
+      const itemColor = isEliminated ? null : activeItemColors.get(label);
+      const listItem = appendItem(label, { isEliminated, color: itemColor });
 
-    if (eliminatedOrder.length > 0) {
-      eliminatedOrder.forEach((label) => {
-        const listItem = appendItem(label, { isEliminated: true });
-        if (label === lastEliminatedLabel) {
-          requestAnimationFrame(() => {
-            listItem.classList.add(
-              "fortune-items-list-item--eliminated",
-              "fortune-items-list-item--animate"
-            );
-          });
-        } else {
-          listItem.classList.add("fortune-items-list-item--eliminated");
-        }
-      });
-    }
+      if (!isEliminated) {
+        return;
+      }
+
+      if (label === lastEliminatedLabel) {
+        requestAnimationFrame(() => {
+          listItem.classList.add(
+            "fortune-items-list-item--eliminated",
+            "fortune-items-list-item--animate"
+          );
+        });
+      } else {
+        listItem.classList.add("fortune-items-list-item--eliminated");
+      }
+    });
 
     lastEliminatedLabel = null;
   }
@@ -4556,7 +4563,6 @@ function initFortuneWheel() {
   let spinDurationMs = 7000;
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
-  let pendingEliminationItem = null;
   function setInputValuePreservingState(value) {
     if (!input) {
       return;
@@ -4617,33 +4623,13 @@ function initFortuneWheel() {
   let idleLastTimestamp = null;
   let idleActive = false;
 
-  function applyPendingElimination() {
-    if (pendingEliminationItem !== null) {
-      registerElimination(pendingEliminationItem);
-      pendingEliminationItem = null;
-      updateInputFromActiveItems();
-    }
-    drawWheel();
-  }
-
-  function clearPendingElimination() {
-    pendingEliminationItem = null;
-    lastEliminatedLabel = null;
-  }
-
   function setResultOverlayVisible(visible) {
     if (!resultOverlay) {
-      if (!visible) {
-        applyPendingElimination();
-      }
       return;
     }
     const wasVisible = resultOverlay.classList.contains("visible");
     resultOverlay.classList.toggle("visible", visible);
     resultOverlay.setAttribute("aria-hidden", String(!visible));
-    if (wasVisible && !visible) {
-      applyPendingElimination();
-    }
   }
 
   function hideResultOverlay() {
@@ -4947,23 +4933,15 @@ function initFortuneWheel() {
       }</span>`;
     }
 
+    registerElimination(text);
+    updateInputFromActiveItems();
+    drawWheel();
+
     if (remainingItems.length === 1) {
-      registerElimination(text);
-      pendingEliminationItem = null;
-      drawWheel();
-      updateInputFromActiveItems();
       showFortuneWinnerModal(remainingItems[0]);
       return;
     }
 
-    if (resultOverlay && resultNameEl) {
-      pendingEliminationItem = text;
-    } else {
-      registerElimination(text);
-      pendingEliminationItem = null;
-      drawWheel();
-      updateInputFromActiveItems();
-    }
     showResultOverlay(text);
 
     const pointer = document.querySelector(".fortune-pointer");
@@ -5066,14 +5044,40 @@ function initFortuneWheel() {
     const hasActiveChanged =
       JSON.stringify(previousActive) !== JSON.stringify(newActiveItems);
 
-    const combinedItems = [...newActiveItems];
+    const previousItems = [...items];
+    const eliminatedSet = new Set(eliminatedOrder);
+    const remainingActive = [...newActiveItems];
+    const nextItems = [];
+    const placedEliminated = new Set();
+
+    if (previousItems.length > 0) {
+      previousItems.forEach((label) => {
+        if (eliminatedSet.has(label)) {
+          if (!placedEliminated.has(label)) {
+            nextItems.push(label);
+            placedEliminated.add(label);
+          }
+          return;
+        }
+
+        if (remainingActive.length > 0) {
+          nextItems.push(remainingActive.shift());
+        }
+      });
+    }
+
+    while (remainingActive.length > 0) {
+      nextItems.push(remainingActive.shift());
+    }
+
     eliminatedOrder.forEach((label) => {
-      if (!combinedItems.includes(label)) {
-        combinedItems.push(label);
+      if (!placedEliminated.has(label)) {
+        nextItems.push(label);
+        placedEliminated.add(label);
       }
     });
 
-    items = combinedItems;
+    items = nextItems;
     eliminatedItems = new Set(eliminatedOrder);
     if (hasActiveChanged) {
       lastEliminatedLabel = null;
@@ -5108,7 +5112,7 @@ function initFortuneWheel() {
     items = [];
     eliminatedItems.clear();
     clearEliminatedHistory();
-    clearPendingElimination();
+    lastEliminatedLabel = null;
     hideResultOverlay();
     updateFromInput();
   }
@@ -5127,9 +5131,9 @@ function initFortuneWheel() {
   function resetEliminated() {
     eliminatedItems.clear();
     clearEliminatedHistory();
+    lastEliminatedLabel = null;
     updateInputFromActiveItems();
     drawWheel();
-    clearPendingElimination();
     hideResultOverlay();
     const activeItems = items.filter((item) => !eliminatedItems.has(item));
     if (activeItems.length > 1) {
