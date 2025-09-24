@@ -3272,7 +3272,7 @@ select option {
     flex: 1;
     min-height: 0;
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 212, 255, 0.7) rgba(255, 255, 255, 0.05);
+    scrollbar-color: rgba(241, 241, 241, 0.425) rgba(255, 255, 255, 0.05);
 }
 
 .fortune-items-wrapper::-webkit-scrollbar {
