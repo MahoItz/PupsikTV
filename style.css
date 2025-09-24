@@ -2318,7 +2318,7 @@ select option {
     }
 
     body.music-menu-is-collapsed .rules-panel-toggle {
-        right: calc(var(--collapsed-music-menu-width) + var(--container-side-padding));
+        right: 20px;
     }
 }
 
