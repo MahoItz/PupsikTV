@@ -807,6 +807,20 @@
         </div>
     </div>
 
+    <!-- Модальное окно предупреждения о просмотренном фильме -->
+    <div id="watchedDuplicateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="handleWatchedDuplicateCancel()">&times;</span>
+            <h2>Фильм уже просмотрен</h2>
+            <img class="modal-image" src="images/Angry_Winston.webp" alt="Watched duplicate" loading="lazy">
+            <p id="watchedDuplicateMessage">Этот фильм уже есть в списке просмотренных. Добавить его в рулетку?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="handleWatchedDuplicateCancel()">Отменить</button>
+                <button class="btn btn-primary" onclick="handleWatchedDuplicateConfirm()">Всё равно добавить</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Модальное окно напоминания о поиске -->
     <div id="searchReminderModal" class="modal">
         <div class="modal-content">

@@ -132,6 +132,8 @@ let deletePlayedGameId = null;
 let deleteMovieId = null;
 let deleteOrderId = null;
 let deleteGameOrderId = null;
+let pendingWatchlistOrder = null;
+let pendingWatchlistForm = null;
 
 const REYOHOHO_BASE_URL = "https://reyohoho.github.io/reyohoho/";
 
@@ -2593,6 +2595,87 @@ function showDuplicateModal() {
   document.getElementById("duplicateModal").style.display = "block";
 }
 
+function showWatchedDuplicateModal(orderData) {
+  const modal = document.getElementById("watchedDuplicateModal");
+  if (!modal) return;
+  const messageEl = document.getElementById("watchedDuplicateMessage");
+  if (messageEl) {
+    const title = (orderData?.title || "").trim();
+    const year = (orderData?.year || "").toString().trim();
+    let filmLabel = title ? `«${title}»` : "Этот фильм";
+    if (year) {
+      filmLabel += ` (${year})`;
+    }
+    messageEl.textContent = `${filmLabel} уже есть в списке просмотренных. Добавить его в рулетку?`;
+  }
+  modal.style.display = "block";
+}
+
+function handleWatchedDuplicateCancel() {
+  pendingWatchlistOrder = null;
+  pendingWatchlistForm = null;
+  closeModal("watchedDuplicateModal");
+}
+
+async function handleWatchedDuplicateConfirm() {
+  if (!pendingWatchlistOrder || !pendingWatchlistForm) {
+    closeModal("watchedDuplicateModal");
+    return;
+  }
+  const orderData = pendingWatchlistOrder;
+  const formElement = pendingWatchlistForm;
+  closeModal("watchedDuplicateModal");
+  pendingWatchlistOrder = null;
+  pendingWatchlistForm = null;
+  await submitWatchlistOrder(orderData, formElement);
+}
+
+async function submitWatchlistOrder(orderData, formElement) {
+  try {
+    const { data, error } = await supabaseClient
+      .from("Movie_Orders")
+      .insert({
+        order_title: orderData.title,
+        order_origin_title: orderData.originalTitle || "",
+        order_year: orderData.year,
+        order_genres: orderData.genres,
+        order_poster: orderData.poster,
+        order_by: orderData.orderBy,
+        order_type: orderData.orderType,
+        kinopoisk_rate: orderData.kpRating,
+        order_length: orderData.length,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    watchlist.push({
+      id: data.id,
+      title: data.order_title,
+      originalTitle: data.order_origin_title,
+      genres: data.order_genres,
+      poster: data.order_poster,
+      year: data.order_year || "",
+      length: data.order_length || null,
+      kpRating: data.kinopoisk_rate,
+      orderBy: data.order_by,
+      orderType: data.order_type,
+      dateAdded: data.created_at,
+    });
+    renderWatchlist();
+  } catch (err) {
+    console.error("Error adding order", err);
+    return;
+  }
+
+  closeModal("addWatchlistModal", true);
+  formElement?.reset();
+  selectedKPOrderMovie = null;
+  kpOrderResults = [];
+  showWatchlistKPPreview();
+}
+
 function showSearchReminderModal() {
   document.getElementById("searchReminderModal").style.display = "block";
 }
@@ -2836,6 +2919,10 @@ function openEditOrderModal(id) {
 
 function closeModal(modalId, shouldReset = false) {
   document.getElementById(modalId).style.display = "none";
+  if (modalId === "watchedDuplicateModal" || modalId === "addWatchlistModal") {
+    pendingWatchlistOrder = null;
+    pendingWatchlistForm = null;
+  }
   if (shouldReset) {
     resetForm();
   }
@@ -3240,66 +3327,30 @@ document
       };
     }
 
-    const duplicateOrder =
-      watchlist.some(
-        (o) =>
-          o.title.trim().toLowerCase() ===
-            orderData.title.trim().toLowerCase() &&
-          Number(o.year) === Number(orderData.year)
-      ) ||
-      allMovies.some(
-        (m) =>
-          m.title.trim().toLowerCase() ===
-            orderData.title.trim().toLowerCase() &&
-          Number(m.year) === Number(orderData.year)
-      );
-    if (duplicateOrder) {
+    const isDuplicateInWatchlist = watchlist.some(
+      (o) =>
+        o.title.trim().toLowerCase() === orderData.title.trim().toLowerCase() &&
+        Number(o.year) === Number(orderData.year)
+    );
+    if (isDuplicateInWatchlist) {
       showDuplicateModal();
       return;
     }
 
-    try {
-      const { data, error } = await supabaseClient
-        .from("Movie_Orders")
-        .insert({
-          order_title: orderData.title,
-          order_origin_title: orderData.originalTitle || "",
-          order_year: orderData.year,
-          order_genres: orderData.genres,
-          order_poster: orderData.poster,
-          order_by: orderData.orderBy,
-          order_type: orderData.orderType,
-          kinopoisk_rate: orderData.kpRating,
-          order_length: orderData.length,
-        })
-        .select()
-        .single();
+    const isWatchedMovieDuplicate = allMovies.some(
+      (m) =>
+        m.title.trim().toLowerCase() === orderData.title.trim().toLowerCase() &&
+        Number(m.year) === Number(orderData.year)
+    );
 
-      if (error) throw error;
-
-      watchlist.push({
-        id: data.id,
-        title: data.order_title,
-        originalTitle: data.order_origin_title,
-        genres: data.order_genres,
-        poster: data.order_poster,
-        year: data.order_year || "",
-        length: data.order_length || null,
-        kpRating: data.kinopoisk_rate,
-        orderBy: data.order_by,
-        orderType: data.order_type,
-        dateAdded: data.created_at,
-      });
-      renderWatchlist();
-    } catch (err) {
-      console.error("Error adding order", err);
+    if (isWatchedMovieDuplicate) {
+      pendingWatchlistOrder = orderData;
+      pendingWatchlistForm = this;
+      showWatchedDuplicateModal(orderData);
+      return;
     }
 
-    closeModal("addWatchlistModal", true);
-    this.reset();
-    selectedKPOrderMovie = null;
-    kpOrderResults = [];
-    showWatchlistKPPreview();
+    await submitWatchlistOrder(orderData, this);
   });
 
 document
