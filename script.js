@@ -157,6 +157,76 @@ function normalizeFortuneText(str) {
     .trim();
 }
 
+function normalizeSearchText(str) {
+  return normalizeFortuneText(str);
+}
+
+function getAllowedFuzzyErrors(length) {
+  if (length <= 2) return 0;
+  if (length <= 5) return 1;
+  return 2;
+}
+
+function levenshteinDistance(a, b) {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return dp[m][n];
+}
+
+function isFuzzyMatch(normalizedQueryToken, target) {
+  if (!normalizedQueryToken) return true;
+  const normalizedTarget = normalizeSearchText(target);
+  if (!normalizedTarget) return false;
+
+  const collapsedToken = normalizedQueryToken.replace(/\s+/g, "");
+  const collapsedTarget = normalizedTarget.replace(/\s+/g, "");
+
+  if (!collapsedToken) return true;
+
+  if (collapsedTarget.includes(collapsedToken)) {
+    return true;
+  }
+
+  const tokenLength = collapsedToken.length;
+  const targetLength = collapsedTarget.length;
+  if (tokenLength === 0) return true;
+
+  let minDistance = Infinity;
+  if (targetLength >= tokenLength) {
+    for (let i = 0; i <= targetLength - tokenLength; i++) {
+      const window = collapsedTarget.slice(i, i + tokenLength);
+      const dist = levenshteinDistance(collapsedToken, window);
+      if (dist < minDistance) {
+        minDistance = dist;
+        if (minDistance === 0) break;
+      }
+    }
+  } else {
+    minDistance = levenshteinDistance(collapsedToken, collapsedTarget);
+  }
+
+  const allowedErrors = getAllowedFuzzyErrors(tokenLength);
+  return minDistance <= allowedErrors;
+}
+
 function extractYearValue(value) {
   if (!value) return "";
   const match = String(value).match(/(19|20)\d{2}/);
@@ -1166,17 +1236,51 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 });
 
+function getMovieSearchableValues(movie) {
+  const values = [
+    movie.title,
+    movie.originalTitle,
+    movie.genre,
+    movie.orderBy,
+    movie.orderType,
+  ];
+
+  if (movie.kpRating !== undefined && movie.kpRating !== null && movie.kpRating !== "-") {
+    values.push(String(movie.kpRating));
+  }
+  if (movie.rating !== undefined && movie.rating !== null && movie.rating !== "-") {
+    values.push(String(movie.rating));
+  }
+  if (movie.year !== undefined && movie.year !== null && movie.year !== "-") {
+    values.push(String(movie.year));
+  }
+  if (movie.dateAdded) {
+    values.push(movie.dateAdded);
+    const formatted = formatDate(movie.dateAdded);
+    if (formatted && formatted !== "Invalid Date") {
+      values.push(formatted);
+    }
+  }
+
+  return values.filter((value) => value !== undefined && value !== null && String(value).trim() !== "");
+}
+
 // Отображение фильмов
 function getFilteredSortedMovies() {
   let result = [...allMovies];
 
   if (currentSearchQuery) {
-    const q = currentSearchQuery.toLowerCase();
-    result = result.filter(
-      (movie) =>
-        movie.title.toLowerCase().includes(q) ||
-        movie.year.toString().includes(q)
-    );
+    const normalizedQuery = normalizeSearchText(currentSearchQuery);
+    const tokens = normalizedQuery.split(" ").filter(Boolean);
+
+    if (tokens.length) {
+      result = result.filter((movie) => {
+        const searchableValues = getMovieSearchableValues(movie);
+        return tokens.every((token) =>
+          searchableValues.some((value) => isFuzzyMatch(token, value))
+        );
+      });
+    }
   }
 
   switch (currentSort) {
