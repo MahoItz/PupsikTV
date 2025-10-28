@@ -119,7 +119,6 @@ let editingMovieId = null;
 let ratingMovieId = null;
 let isSubmittingRating = false;
 let userRatingMovieId = null;
-let movieUserRatings = {};
 let ratingTooltip;
 let ratedMovies = JSON.parse(localStorage.getItem("ratedMovies") || "{}");
 let editPosterData = null;
@@ -670,31 +669,55 @@ function clearFile(fileInput, label, fileName, removeBtn, preview) {
   }
 }
 
+function recalculateMovieUserRatings(targetMovies = allMovies) {
+  if (!Array.isArray(targetMovies)) return;
+
+  targetMovies.forEach((movie) => {
+    const sum = Number(movie?.ratingSum ?? 0) || 0;
+    const count = Number(movie?.ratingCount ?? 0) || 0;
+
+    movie.ratingSum = sum;
+    movie.ratingCount = count;
+    movie.userRating = count > 0 ? Math.round((sum / count) * 10) / 10 : null;
+  });
+}
+
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
   try {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, date, order_by, order_type"
+        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type"
       )
       .order("id", { ascending: false });
 
     if (error) throw error;
 
-    const newMovies = data.map((item) => ({
-      id: item.id,
-      title: item.title,
-      originalTitle: item.original_title,
-      genre: item.genres,
-      poster: item.poster,
-      year: item.year,
-      rating: item.rating_numeric,
-      kpRating: item.rating_OMDB,
-      dateAdded: item.date,
-      orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
-      orderType: item.order_type,
-    }));
+    const newMovies = data.map((item) => {
+      const ratingSum = Number(item.rating_sum ?? 0) || 0;
+      const ratingCount = Number(item.rating_count ?? 0) || 0;
+
+      return {
+        id: item.id,
+        title: item.title,
+        originalTitle: item.original_title,
+        genre: item.genres,
+        poster: item.poster,
+        year: item.year,
+        rating: item.rating_numeric,
+        kpRating: item.rating_OMDB,
+        ratingSum,
+        ratingCount,
+        userRating:
+          ratingCount > 0
+            ? Math.round((ratingSum / ratingCount) * 10) / 10
+            : null,
+        dateAdded: item.date,
+        orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
+        orderType: item.order_type,
+      };
+    });
 
     const current = JSON.stringify(allMovies);
     const fresh = JSON.stringify(newMovies);
@@ -702,9 +725,8 @@ async function loadMoviesFromSupabase() {
     if (current !== fresh) {
       allMovies = newMovies;
       totalMovies = allMovies.length;
+      recalculateMovieUserRatings(allMovies);
       localStorage.setItem("moviesCache", fresh);
-
-      await loadUserRatingsFromSupabase();
     }
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
@@ -806,33 +828,6 @@ async function loadPlayedGamesFromSupabase() {
   }
 }
 
-// Загрузка пользовательских оценок из Supabase
-async function loadUserRatingsFromSupabase() {
-  if (!supabaseClient) return;
-  try {
-    const { data, error } = await supabaseClient
-      .from("movie_ratings")
-      .select("movie_id, rating");
-    if (error) throw error;
-
-    movieUserRatings = {};
-    data.forEach((r) => {
-      if (!movieUserRatings[r.movie_id]) {
-        movieUserRatings[r.movie_id] = { sum: 0, count: 0 };
-      }
-      movieUserRatings[r.movie_id].sum += r.rating;
-      movieUserRatings[r.movie_id].count += 1;
-    });
-
-    allMovies.forEach((m) => {
-      const r = movieUserRatings[m.id];
-      m.userRating = r ? Math.round((r.sum / r.count) * 10) / 10 : null;
-    });
-  } catch (err) {
-    console.error("Error loading user ratings", err);
-  }
-}
-
 // Инициализация
 document.addEventListener("DOMContentLoaded", async function () {
   await loadEnv();
@@ -844,6 +839,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (cached) {
     allMovies = JSON.parse(cached);
     totalMovies = allMovies.length;
+    recalculateMovieUserRatings();
   }
   const ratedStored = localStorage.getItem("ratedMovies");
   if (ratedStored) {
@@ -866,7 +862,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     hideAdminControls(true);
   }
 
-  await loadUserRatingsFromSupabase();
+  recalculateMovieUserRatings();
   renderPlayedGames();
   setupRatingStars();
   initFileUpload();
@@ -1411,7 +1407,7 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   span3.textContent = movie.userRating ?? "-";
   ratingItem3.appendChild(icon3);
   ratingItem3.appendChild(span3);
-  const votes = movieUserRatings[movie.id]?.count ?? 0;
+  const votes = Math.round(movie.ratingCount ?? 0);
   ratingItem3.addEventListener("mouseenter", (e) => {
     if (!ratingTooltip) return;
     ratingTooltip.textContent = `Голосов: ${votes}`;
@@ -3131,6 +3127,8 @@ document
           rating_numeric: movieData.rating,
           rating_OMDB: movieData.kpRating,
           date: movieData.dateAdded,
+          rating_sum: 0,
+          rating_count: 0,
         })
         .select()
         .single();
@@ -3149,6 +3147,8 @@ document
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        ratingSum: Number(data.rating_sum ?? 0) || 0,
+        ratingCount: Number(data.rating_count ?? 0) || 0,
         userRating: null,
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
@@ -3680,12 +3680,26 @@ async function submitUserMovieRating() {
     closeModal("userRateModal", true);
     return;
   }
+  const movie = allMovies.find((m) => m.id === userRatingMovieId);
+  const currentSum = movie ? Number(movie.ratingSum ?? 0) || 0 : 0;
+  const currentCount = movie ? Number(movie.ratingCount ?? 0) || 0 : 0;
+  const newSum = currentSum + rating;
+  const newCount = currentCount + 1;
   try {
-    await supabaseClient.from("movie_ratings").insert({
-      movie_id: userRatingMovieId,
-      rating: rating,
-    });
-    await loadUserRatingsFromSupabase();
+    const { error } = await supabaseClient
+      .from("movies")
+      .update({
+        rating_sum: newSum,
+        rating_count: newCount,
+      })
+      .eq("id", userRatingMovieId);
+    if (error) throw error;
+    if (movie) {
+      movie.ratingSum = newSum;
+      movie.ratingCount = newCount;
+      movie.userRating = Math.round((newSum / newCount) * 10) / 10;
+    }
+    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     ratedMovies[userRatingMovieId] = rating;
     localStorage.setItem("ratedMovies", JSON.stringify(ratedMovies));
     renderMovies();
