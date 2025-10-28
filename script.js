@@ -243,8 +243,8 @@ function parseFortuneLabel(label) {
   };
 }
 
-function findFortuneMovieMatch(parsed) {
-  const candidates = [...watchlist, ...allMovies];
+function findFortuneMovieMatch(parsed, candidateList = null) {
+  const candidates = candidateList ? [...candidateList] : [...watchlist, ...allMovies];
   if (!candidates.length) {
     return null;
   }
@@ -4377,6 +4377,12 @@ function initFortuneWheel() {
   const fortuneItemsCountValue = document.getElementById("fortuneItemsCount");
   const resultOverlay = document.getElementById("fortuneResultOverlay");
   const resultNameEl = document.getElementById("fortuneResultName");
+  const fortuneDuplicateModal = document.getElementById("fortuneDuplicateModal");
+  const fortuneDuplicateMessage = document.getElementById("fortuneDuplicateMessage");
+  const fortuneDuplicateDetails = document.getElementById("fortuneDuplicateDetails");
+  const fortuneDuplicateCancel = document.getElementById("fortuneDuplicateCancel");
+  const fortuneDuplicateConfirm = document.getElementById("fortuneDuplicateConfirm");
+  const fortuneDuplicateClose = document.getElementById("fortuneDuplicateClose");
 
   if (!canvas || !statusEl || !input) {
     return null;
@@ -4391,6 +4397,7 @@ function initFortuneWheel() {
   let eliminatedItems = new Set();
   let eliminatedOrder = [];
   let lastEliminatedLabel = null;
+  let pendingFortuneItemLabel = null;
 
   function registerElimination(label) {
     if (!label) {
@@ -4421,6 +4428,159 @@ function initFortuneWheel() {
       fortuneItemsCountValue.textContent = String(count);
     }
   };
+
+  function resetFortuneDuplicateState() {
+    pendingFortuneItemLabel = null;
+    if (fortuneDuplicateDetails) {
+      fortuneDuplicateDetails.textContent = "";
+    }
+  }
+
+  function showFortuneDuplicateNotice(match, label) {
+    if (!fortuneDuplicateModal || !fortuneDuplicateMessage) {
+      commitFortuneItem(label);
+      resetFortuneDuplicateState();
+      return;
+    }
+
+    const displayTitle = (match?.title || label || "").trim();
+    const displayYear = extractYearValue(match?.year);
+    const originalTitle = (match?.originalTitle || match?.original_title || "").trim();
+
+    const baseMessageParts = [];
+    if (displayTitle) {
+      baseMessageParts.push(`«${displayTitle}»`);
+    }
+    if (displayYear) {
+      baseMessageParts.push(`(${displayYear})`);
+    }
+
+    const baseMessage =
+      baseMessageParts.length > 0
+        ? `Фильм ${baseMessageParts.join(" ")} уже есть в списке просмотренных.`
+        : "Этот фильм уже есть в списке просмотренных.";
+
+    fortuneDuplicateMessage.textContent = baseMessage;
+    if (fortuneDuplicateDetails) {
+      if (
+        originalTitle &&
+        normalizeFortuneText(originalTitle) !==
+          normalizeFortuneText(displayTitle)
+      ) {
+        fortuneDuplicateDetails.textContent = `Оригинальное название: ${originalTitle}`;
+      } else {
+        fortuneDuplicateDetails.textContent = "";
+      }
+    }
+
+    fortuneDuplicateModal.style.display = "block";
+    if (statusEl) {
+      statusEl.textContent = "Фильм уже есть в списке просмотренных.";
+    }
+    if (fortuneDuplicateConfirm) {
+      setTimeout(() => fortuneDuplicateConfirm.focus(), 0);
+    }
+  }
+
+  function commitFortuneItem(label) {
+    const value = (label || "").trim();
+    if (!value) {
+      if (fortuneItemInput) {
+        fortuneItemInput.value = "";
+      }
+      return;
+    }
+
+    const activeItems = getActiveItems();
+    if (activeItems.length >= 128) {
+      if (statusEl) {
+        statusEl.textContent = "Нельзя добавить больше 128 фильмов для рулетки.";
+      }
+      return;
+    }
+
+    activeItems.push(value);
+    input.value = activeItems.join("\n");
+    if (fortuneItemInput) {
+      fortuneItemInput.value = "";
+    }
+    hideResultOverlay();
+    updateFromInput();
+  }
+
+  function addFortuneItem(label, options = {}) {
+    const { skipDuplicateCheck = false } = options;
+    const value = (label || "").trim();
+    if (!value) {
+      if (fortuneItemInput) {
+        fortuneItemInput.value = "";
+      }
+      return;
+    }
+
+    const activeItems = getActiveItems();
+    if (activeItems.length >= 128) {
+      if (statusEl) {
+        statusEl.textContent = "Нельзя добавить больше 128 фильмов для рулетки.";
+      }
+      return;
+    }
+
+    if (!skipDuplicateCheck) {
+      const parsed = parseFortuneLabel(value);
+      const match = findFortuneMovieMatch(parsed, allMovies);
+      if (match) {
+        pendingFortuneItemLabel = value;
+        showFortuneDuplicateNotice(match, value);
+        return;
+      }
+    }
+
+    commitFortuneItem(value);
+    resetFortuneDuplicateState();
+  }
+
+  if (fortuneDuplicateCancel) {
+    fortuneDuplicateCancel.addEventListener("click", () => {
+      closeModal("fortuneDuplicateModal");
+      resetFortuneDuplicateState();
+      if (fortuneItemInput) {
+        fortuneItemInput.focus();
+      }
+    });
+  }
+
+  if (fortuneDuplicateClose) {
+    fortuneDuplicateClose.addEventListener("click", () => {
+      closeModal("fortuneDuplicateModal");
+      resetFortuneDuplicateState();
+      if (fortuneItemInput) {
+        fortuneItemInput.focus();
+      }
+    });
+  }
+
+  if (fortuneDuplicateConfirm) {
+    fortuneDuplicateConfirm.addEventListener("click", () => {
+      const pendingLabel = pendingFortuneItemLabel;
+      closeModal("fortuneDuplicateModal");
+      resetFortuneDuplicateState();
+      if (pendingLabel) {
+        addFortuneItem(pendingLabel, { skipDuplicateCheck: true });
+      }
+    });
+  }
+
+  if (fortuneDuplicateModal) {
+    fortuneDuplicateModal.addEventListener("click", (event) => {
+      if (event.target === fortuneDuplicateModal) {
+        resetFortuneDuplicateState();
+        if (fortuneItemInput) {
+          setTimeout(() => fortuneItemInput.focus(), 0);
+        }
+      }
+    });
+  }
 
   function renderFortuneItemsList() {
     const activeItems = getActiveItems();
@@ -5167,24 +5327,13 @@ function initFortuneWheel() {
 
       event.preventDefault();
 
-      const value = fortuneItemInput.value.trim();
-      if (!value) {
+      const rawValue = fortuneItemInput.value;
+      if (!rawValue.trim()) {
         fortuneItemInput.value = "";
         return;
       }
 
-      const activeItems = getActiveItems();
-      if (activeItems.length >= 128) {
-        statusEl.textContent =
-          "Нельзя добавить больше 128 фильмов для рулетки.";
-        return;
-      }
-
-      activeItems.push(value);
-      input.value = activeItems.join("\n");
-      fortuneItemInput.value = "";
-      hideResultOverlay();
-      updateFromInput();
+      addFortuneItem(rawValue);
     });
   }
 

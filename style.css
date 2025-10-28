@@ -1366,6 +1366,33 @@ select option {
     margin-top: 10px;
 }
 
+#fortuneDuplicateModal .modal-content {
+    text-align: center;
+}
+
+.fortune-duplicate-message,
+.fortune-duplicate-details {
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.fortune-duplicate-message {
+    margin-top: 16px;
+    font-size: 1.05rem;
+}
+
+.fortune-duplicate-details {
+    margin-top: 8px;
+    font-size: 0.95rem;
+}
+
+#fortuneDuplicateModal .modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 24px;
+}
+
 /* Специальное оформление модального окна напоминания */
 #searchReminderModal .modal-content {
     text-align: center;
