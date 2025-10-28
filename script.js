@@ -159,6 +159,68 @@ function normalizeFortuneText(str) {
     .trim();
 }
 
+function normalizeMovieNameForComparison(value) {
+  const normalized = normalizeFortuneText(value);
+  return normalized;
+}
+
+function normalizeMovieYearForComparison(year) {
+  if (year === undefined || year === null) return "";
+  const match = String(year).match(/\d{4}/);
+  return match ? match[0] : "";
+}
+
+function moviesMatchByNameAndYear(movieA, movieB) {
+  if (!movieA || !movieB) return false;
+
+  const namesA = new Set();
+  const namesB = new Set();
+
+  const addName = (set, value) => {
+    const name = normalizeMovieNameForComparison(value);
+    if (name) set.add(name);
+  };
+
+  const collectNames = (source, set) => {
+    if (!source) return;
+    const fields = [
+      "title",
+      "originalTitle",
+      "original_title",
+      "name",
+      "nameOriginal",
+      "name_original",
+      "nameRu",
+      "name_ru",
+      "nameEn",
+      "name_en",
+    ];
+    fields.forEach((field) => addName(set, source?.[field]));
+  };
+
+  collectNames(movieA, namesA);
+  collectNames(movieB, namesB);
+
+  let hasCommonName = false;
+  for (const name of namesA) {
+    if (namesB.has(name)) {
+      hasCommonName = true;
+      break;
+    }
+  }
+
+  if (!hasCommonName) return false;
+
+  const yearA = normalizeMovieYearForComparison(movieA.year);
+  const yearB = normalizeMovieYearForComparison(movieB.year);
+
+  if (yearA && yearB && yearA !== yearB) {
+    return false;
+  }
+
+  return true;
+}
+
 function extractYearValue(value) {
   if (!value) return "";
   const match = String(value).match(/(19|20)\d{2}/);
@@ -3327,20 +3389,22 @@ document
       };
     }
 
-    const isDuplicateInWatchlist = watchlist.some(
-      (o) =>
-        o.title.trim().toLowerCase() === orderData.title.trim().toLowerCase() &&
-        Number(o.year) === Number(orderData.year)
+    const comparisonTarget = {
+      title: orderData.title,
+      originalTitle: orderData.originalTitle,
+      year: orderData.year,
+    };
+
+    const isDuplicateInWatchlist = watchlist.some((o) =>
+      moviesMatchByNameAndYear(o, comparisonTarget)
     );
     if (isDuplicateInWatchlist) {
       showDuplicateModal();
       return;
     }
 
-    const isWatchedMovieDuplicate = allMovies.some(
-      (m) =>
-        m.title.trim().toLowerCase() === orderData.title.trim().toLowerCase() &&
-        Number(m.year) === Number(orderData.year)
+    const isWatchedMovieDuplicate = allMovies.some((m) =>
+      moviesMatchByNameAndYear(m, comparisonTarget)
     );
 
     if (isWatchedMovieDuplicate) {
