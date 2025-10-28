@@ -161,6 +161,68 @@ function normalizeSearchText(str) {
   return normalizeFortuneText(str);
 }
 
+function getNormalizedTitleVariants(title, originalTitle) {
+  const variants = new Set();
+  const normalizedTitle = normalizeFortuneText(title);
+  const normalizedOriginalTitle = normalizeFortuneText(originalTitle);
+
+  if (normalizedTitle) variants.add(normalizedTitle);
+  if (normalizedOriginalTitle) variants.add(normalizedOriginalTitle);
+
+  return Array.from(variants);
+}
+
+function normalizeYearValue(year) {
+  if (year === null || year === undefined || year === "") return null;
+  const parsed = parseInt(year, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function areYearsComparable(yearA, yearB) {
+  const normalizedA = normalizeYearValue(yearA);
+  const normalizedB = normalizeYearValue(yearB);
+
+  if (normalizedA === null || normalizedB === null) {
+    return normalizedA === normalizedB;
+  }
+
+  return normalizedA === normalizedB;
+}
+
+function areNormalizedStringsSimilar(a, b, maxDistance = 2) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+
+  const condensedA = a.replace(/\s+/g, "");
+  const condensedB = b.replace(/\s+/g, "");
+
+  if (!condensedA || !condensedB) return false;
+  if (condensedA === condensedB) return true;
+  if (condensedA.includes(condensedB) || condensedB.includes(condensedA)) {
+    return Math.abs(condensedA.length - condensedB.length) <= maxDistance;
+  }
+
+  return levenshteinDistance(condensedA, condensedB) <= maxDistance;
+}
+
+function areTitlesPotentialDuplicates(existingTitle, existingOriginalTitle, title, originalTitle, maxDistance = 2) {
+  const existingVariants = getNormalizedTitleVariants(
+    existingTitle,
+    existingOriginalTitle
+  );
+  const targetVariants = getNormalizedTitleVariants(title, originalTitle);
+
+  for (const existing of existingVariants) {
+    for (const target of targetVariants) {
+      if (areNormalizedStringsSimilar(existing, target, maxDistance)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function levenshteinDistance(a, b) {
   const strA = String(a || "");
   const strB = String(b || "");
@@ -3182,15 +3244,23 @@ document
     const duplicate =
       allMovies.some(
         (m) =>
-          m.title.trim().toLowerCase() ===
-            movieData.title.trim().toLowerCase() &&
-          Number(m.year) === Number(movieData.year)
+          areYearsComparable(m.year, movieData.year) &&
+          areTitlesPotentialDuplicates(
+            m.title,
+            m.originalTitle,
+            movieData.title,
+            movieData.originalTitle
+          )
       ) ||
       watchlist.some(
         (o) =>
-          o.title.trim().toLowerCase() ===
-            movieData.title.trim().toLowerCase() &&
-          Number(o.year) === Number(movieData.year)
+          areYearsComparable(o.year, movieData.year) &&
+          areTitlesPotentialDuplicates(
+            o.title,
+            o.originalTitle,
+            movieData.title,
+            movieData.originalTitle
+          )
       );
     if (duplicate) {
       showDuplicateModal();
@@ -3325,15 +3395,23 @@ document
     const duplicateOrder =
       watchlist.some(
         (o) =>
-          o.title.trim().toLowerCase() ===
-            orderData.title.trim().toLowerCase() &&
-          Number(o.year) === Number(orderData.year)
+          areYearsComparable(o.year, orderData.year) &&
+          areTitlesPotentialDuplicates(
+            o.title,
+            o.originalTitle,
+            orderData.title,
+            orderData.originalTitle
+          )
       ) ||
       allMovies.some(
         (m) =>
-          m.title.trim().toLowerCase() ===
-            orderData.title.trim().toLowerCase() &&
-          Number(m.year) === Number(orderData.year)
+          areYearsComparable(m.year, orderData.year) &&
+          areTitlesPotentialDuplicates(
+            m.title,
+            m.originalTitle,
+            orderData.title,
+            orderData.originalTitle
+          )
       );
     if (duplicateOrder) {
       showDuplicateModal();
