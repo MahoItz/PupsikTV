@@ -157,6 +157,69 @@ function normalizeFortuneText(str) {
     .trim();
 }
 
+function normalizeSearchText(str) {
+  return normalizeFortuneText(str);
+}
+
+function levenshteinDistance(a, b) {
+  const strA = String(a || "");
+  const strB = String(b || "");
+  const lenA = strA.length;
+  const lenB = strB.length;
+
+  if (!lenA) return lenB;
+  if (!lenB) return lenA;
+
+  const dp = Array.from({ length: lenA + 1 }, () => new Array(lenB + 1).fill(0));
+
+  for (let i = 0; i <= lenA; i++) dp[i][0] = i;
+  for (let j = 0; j <= lenB; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= lenA; i++) {
+    for (let j = 1; j <= lenB; j++) {
+      const cost = strA[i - 1] === strB[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return dp[lenA][lenB];
+}
+
+function fuzzyMatchNormalized(normalizedQuery, value) {
+  if (!normalizedQuery) return false;
+
+  const normalizedValue = normalizeSearchText(value);
+  if (!normalizedValue) return false;
+
+  if (normalizedValue.includes(normalizedQuery)) return true;
+
+  const queryClean = normalizedQuery.replace(/\s+/g, "");
+  const valueClean = normalizedValue.replace(/\s+/g, "");
+
+  if (!queryClean || !valueClean) return false;
+
+  if (valueClean.includes(queryClean)) return true;
+
+  const allowedDistance = queryClean.length <= 4 ? 1 : 2;
+
+  if (valueClean.length < queryClean.length) {
+    return levenshteinDistance(queryClean, valueClean) <= allowedDistance;
+  }
+
+  for (let i = 0; i <= valueClean.length - queryClean.length; i++) {
+    const segment = valueClean.slice(i, i + queryClean.length);
+    if (levenshteinDistance(queryClean, segment) <= allowedDistance) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function extractYearValue(value) {
   if (!value) return "";
   const match = String(value).match(/(19|20)\d{2}/);
@@ -1171,12 +1234,31 @@ function getFilteredSortedMovies() {
   let result = [...allMovies];
 
   if (currentSearchQuery) {
-    const q = currentSearchQuery.toLowerCase();
-    result = result.filter(
-      (movie) =>
-        movie.title.toLowerCase().includes(q) ||
-        movie.year.toString().includes(q)
-    );
+    const normalizedQuery = normalizeSearchText(currentSearchQuery);
+
+    if (normalizedQuery) {
+      const queryClean = normalizedQuery.replace(/\s+/g, "");
+      const queryDigits = normalizedQuery.replace(/\D+/g, "");
+
+      result = result.filter((movie) => {
+        const matchesTitle = fuzzyMatchNormalized(normalizedQuery, movie.title);
+        const matchesOriginal = fuzzyMatchNormalized(
+          normalizedQuery,
+          movie.originalTitle || movie.original_title || ""
+        );
+
+        const yearString = movie.year ? String(movie.year) : "";
+        const normalizedYear = normalizeSearchText(yearString);
+        const cleanYear = normalizedYear.replace(/\s+/g, "");
+
+        const matchesYear =
+          (!!normalizedYear && normalizedYear.includes(normalizedQuery)) ||
+          (!!cleanYear && !!queryClean && cleanYear.includes(queryClean)) ||
+          (!!queryDigits && yearString.includes(queryDigits));
+
+        return matchesTitle || matchesOriginal || matchesYear;
+      });
+    }
   }
 
   switch (currentSort) {
