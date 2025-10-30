@@ -415,6 +415,43 @@
         </div>
     </div>
 
+    <!-- Модальное окно оценки пользователями игр -->
+    <div id="userRateGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('userRateGameModal')">&times;</span>
+            <div class="rate-header">
+                <h2>Ваша оценка игры</h2>
+                <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image" loading="lazy">
+            </div>
+            <div class="rate-poster">
+                <img id="userRateGamePoster" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
+                <p id="userRateGameTitle"></p>
+            </div>
+            <div class="form-group">
+                <label>Ваша оценка:</label>
+                <div class="rating-stars" id="userRateGameStars" data-input="userRateGameInput">
+                    <span class="rating-star rating-label" data-rating="0">worst</span>
+                    <span class="rating-star" data-rating="1"></span>
+                    <span class="rating-star" data-rating="2"></span>
+                    <span class="rating-star" data-rating="3"></span>
+                    <span class="rating-star" data-rating="4"></span>
+                    <span class="rating-star" data-rating="5"></span>
+                    <span class="rating-star" data-rating="6"></span>
+                    <span class="rating-star" data-rating="7"></span>
+                    <span class="rating-star" data-rating="8"></span>
+                    <span class="rating-star" data-rating="9"></span>
+                    <span class="rating-star" data-rating="10"></span>
+                    <span class="rating-star rating-label" data-rating="11">best</span>
+                </div>
+                <div class="rating-input-wrapper">
+                    <input id="userRateGameInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                    <span class="rating-max">/10</span>
+                </div>
+            </div>
+            <button onclick="submitUserGameRating()" class="btn btn-rate" style="width:100%;">Оценить</button>
+        </div>
+    </div>
+
     <!-- Модальное окно редактирования фильма -->
     <div id="editMovieModal" class="modal">
         <div class="modal-content">

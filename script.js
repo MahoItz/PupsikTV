@@ -119,8 +119,10 @@ let editingMovieId = null;
 let ratingMovieId = null;
 let isSubmittingRating = false;
 let userRatingMovieId = null;
+let userRatingGameId = null;
 let ratingTooltip;
 let ratedMovies = JSON.parse(localStorage.getItem("ratedMovies") || "{}");
+let ratedGames = JSON.parse(localStorage.getItem("ratedGames") || "{}");
 let editPosterData = null;
 let editingOrderId = null;
 let editOrderPosterData = null;
@@ -745,6 +747,23 @@ function recalculateMovieUserRatings(targetMovies = allMovies) {
   });
 }
 
+function recalculateGameUserRatings(targetGames = allPlayedGames) {
+  if (!Array.isArray(targetGames)) return;
+
+  targetGames.forEach((game) => {
+    const sum = Number(game?.ratingSum ?? game?.game_rating_sum ?? 0) || 0;
+    const count = Number(game?.ratingCount ?? game?.game_rating_count ?? 0) || 0;
+
+    game.ratingSum = sum;
+    game.ratingCount = count;
+    game.userRating = count > 0 ? Math.round((sum / count) * 10) / 10 : null;
+  });
+}
+
+function hasRatedGame(id) {
+  return Object.prototype.hasOwnProperty.call(ratedGames, id);
+}
+
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
   try {
@@ -866,24 +885,36 @@ async function loadPlayedGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("games")
       .select(
-        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type"
+        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type, game_rating_sum, game_rating_count"
       )
       .order("id", { ascending: false });
 
     if (error) throw error;
 
-    allPlayedGames = data.map((item) => ({
-      id: item.id,
-      title: item.title,
-      genres: item.genres,
-      poster: item.poster,
-      year: item.year,
-      rating: item.rating_numeric,
-      dateAdded: item.date,
-      orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
-      orderType: item.order_type,
-    }));
+    allPlayedGames = data.map((item) => {
+      const ratingSum = Number(item.game_rating_sum ?? 0) || 0;
+      const ratingCount = Number(item.game_rating_count ?? 0) || 0;
+
+      return {
+        id: item.id,
+        title: item.title,
+        genres: item.genres,
+        poster: item.poster,
+        year: item.year,
+        rating: item.rating_numeric,
+        dateAdded: item.date,
+        orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
+        orderType: item.order_type,
+        ratingSum,
+        ratingCount,
+        userRating:
+          ratingCount > 0
+            ? Math.round((ratingSum / ratingCount) * 10) / 10
+            : null,
+      };
+    });
     totalGamesPlayed = allPlayedGames.length;
+    recalculateGameUserRatings(allPlayedGames);
     localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
     renderPlayedGames();
   } catch (err) {
@@ -908,10 +939,15 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (ratedStored) {
     ratedMovies = JSON.parse(ratedStored);
   }
+  const ratedGamesStored = localStorage.getItem("ratedGames");
+  if (ratedGamesStored) {
+    ratedGames = JSON.parse(ratedGamesStored);
+  }
   const gamesCached = localStorage.getItem("gamesCache");
   if (gamesCached) {
     allPlayedGames = JSON.parse(gamesCached);
     totalGamesPlayed = allPlayedGames.length;
+    recalculateGameUserRatings(allPlayedGames);
   }
 
   ratingTooltip = document.createElement("div");
@@ -926,6 +962,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   recalculateMovieUserRatings();
+  recalculateGameUserRatings();
   renderPlayedGames();
   setupRatingStars();
   initFileUpload();
@@ -1826,7 +1863,11 @@ function getFilteredSortedPlayedGames() {
   return result;
 }
 
-function createPlayedGameCard(game, showActions = isAdmin) {
+function createPlayedGameCard(
+  game,
+  showActions = isAdmin,
+  showRateButton = true
+) {
   const card = document.createElement("div");
   card.dataset.id = game.id;
   let cardClass = "movie-card";
@@ -1892,6 +1933,33 @@ function createPlayedGameCard(game, showActions = isAdmin) {
   item1.appendChild(icon1);
   item1.appendChild(span1);
   ratingDiv.appendChild(item1);
+
+  const userRatingItem = document.createElement("div");
+  userRatingItem.className = "rating-item rating-user";
+  const userIcon = document.createElement("i");
+  userIcon.className = "fa-solid fa-star";
+  const userSpan = document.createElement("span");
+  userSpan.textContent = game.userRating ?? "-";
+  userRatingItem.appendChild(userIcon);
+  userRatingItem.appendChild(userSpan);
+  const votes = Math.round(game.ratingCount ?? 0);
+  userRatingItem.addEventListener("mouseenter", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = `Голосов: ${votes}`;
+    ratingTooltip.style.display = "block";
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  userRatingItem.addEventListener("mousemove", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  userRatingItem.addEventListener("mouseleave", () => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.display = "none";
+  });
+  ratingDiv.appendChild(userRatingItem);
   info.appendChild(ratingDiv);
 
   const footer = document.createElement("div");
@@ -1900,9 +1968,21 @@ function createPlayedGameCard(game, showActions = isAdmin) {
   dateDiv.className = "movie-date";
   dateDiv.textContent = `Добавлен: ${formatDate(game.dateAdded)}`;
   footer.appendChild(dateDiv);
+  const actions = document.createElement("div");
+  actions.className = "movie-actions";
+  if (showRateButton) {
+    const rateBtn = document.createElement("button");
+    rateBtn.className = "btn btn-rate btn-icon";
+    rateBtn.textContent = "★";
+    if (hasRatedGame(game.id)) {
+      rateBtn.disabled = true;
+      rateBtn.title = "Вы уже оценили";
+    } else {
+      rateBtn.onclick = () => openUserRateGameModal(game.id);
+    }
+    actions.appendChild(rateBtn);
+  }
   if (showActions) {
-    const actions = document.createElement("div");
-    actions.className = "movie-actions";
     const editBtn = document.createElement("button");
     editBtn.className = "btn btn-edit btn-icon";
     editBtn.textContent = "✏️";
@@ -1913,8 +1993,8 @@ function createPlayedGameCard(game, showActions = isAdmin) {
     delBtn.textContent = "🗑️";
     delBtn.onclick = () => openConfirmDeletePlayedGameModal(game.id);
     actions.appendChild(delBtn);
-    footer.appendChild(actions);
   }
+  if (actions.childElementCount > 0) footer.appendChild(actions);
   info.appendChild(footer);
 
   card.appendChild(poster);
@@ -1934,13 +2014,14 @@ function renderPlayedGames() {
   if (countEl) countEl.textContent = totalGamesPlayed;
   const start = (gamePage - 1) * gamesPerPage;
   playedGames = filtered.slice(start, start + gamesPerPage);
+  recalculateGameUserRatings(playedGames);
 
   const fragment = document.createDocumentFragment();
   const newElements = new Map();
   const newData = new Map();
 
   playedGames.forEach((game) => {
-    const dataKey = JSON.stringify(game) + isAdmin;
+    const dataKey = JSON.stringify(game) + isAdmin + hasRatedGame(game.id);
     let card = playedGameCardElements.get(game.id);
     const prevData = playedGameDataMap.get(game.id);
     if (!card || prevData !== dataKey) {
@@ -2039,6 +2120,10 @@ async function deletePlayedGame(id) {
       await supabaseClient.from("games").delete().eq("id", id);
     } catch (err) {
       console.error("Error deleting game", err);
+    }
+    if (hasRatedGame(id)) {
+      delete ratedGames[id];
+      localStorage.setItem("ratedGames", JSON.stringify(ratedGames));
     }
     localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
     renderPlayedGames();
@@ -2630,7 +2715,7 @@ function showPlayedGamePreview() {
     orderType: document.getElementById("playedGameOrderType").value || "",
     dateAdded: new Date().toISOString().split("T")[0],
   };
-  const card = createPlayedGameCard(game, false);
+  const card = createPlayedGameCard(game, false, false);
   preview.appendChild(card);
   createPosterOverlay(
     card.querySelector(".movie-poster"),
@@ -2727,6 +2812,25 @@ function openUserRateModal(id) {
   }
   document.getElementById("userRateModal").style.display = "block";
   setupRatingStars("userRateStars");
+}
+
+function openUserRateGameModal(id) {
+  if (hasRatedGame(id)) {
+    alert("Вы уже оценили эту игру");
+    return;
+  }
+  userRatingGameId = id;
+  const game = allPlayedGames.find((g) => g.id === id);
+  if (game) {
+    const titleEl = document.getElementById("userRateGameTitle");
+    if (titleEl) titleEl.textContent = game.title;
+    const posterEl = document.getElementById("userRateGamePoster");
+    if (posterEl) posterEl.src = game.poster;
+    setRatingStars("userRateGameStars", 0);
+  }
+  const modal = document.getElementById("userRateGameModal");
+  if (modal) modal.style.display = "block";
+  setupRatingStars("userRateGameStars");
 }
 
 function openEditModal(id) {
@@ -3569,6 +3673,8 @@ document
           date: new Date().toISOString().split("T")[0],
           order_by: gameData.orderBy,
           order_type: gameData.orderType,
+          game_rating_sum: 0,
+          game_rating_count: 0,
         })
         .select()
         .single();
@@ -3585,6 +3691,9 @@ document
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        ratingSum: Number(data.game_rating_sum ?? 0) || 0,
+        ratingCount: Number(data.game_rating_count ?? 0) || 0,
+        userRating: null,
       });
       localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
     } catch (err) {
@@ -3720,6 +3829,8 @@ async function submitGameRating() {
           date: played.dateAdded,
           order_by: played.orderBy,
           order_type: played.orderType,
+          game_rating_sum: 0,
+          game_rating_count: 0,
         })
         .select()
         .single();
@@ -3736,6 +3847,9 @@ async function submitGameRating() {
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        ratingSum: Number(data.game_rating_sum ?? 0) || 0,
+        ratingCount: Number(data.game_rating_count ?? 0) || 0,
+        userRating: null,
       });
       localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
       await supabaseClient.from("Game_Orders").delete().eq("id", ratingGameId);
@@ -3789,6 +3903,51 @@ async function submitUserMovieRating() {
     console.error("Error submitting user rating", err);
   }
   closeModal("userRateModal", true);
+}
+
+async function submitUserGameRating() {
+  const rating = getRatingValue("userRateGameInput");
+  if (!isRatingValid(rating)) {
+    alert("Неверная оценка");
+    const input = document.getElementById("userRateGameInput");
+    if (input) input.reportValidity();
+    return;
+  }
+  if (!userRatingGameId) return;
+  if (hasRatedGame(userRatingGameId)) {
+    alert("Вы уже оценили эту игру");
+    closeModal("userRateGameModal", true);
+    userRatingGameId = null;
+    return;
+  }
+  const game = allPlayedGames.find((g) => g.id === userRatingGameId);
+  const currentSum = game ? Number(game.ratingSum ?? 0) || 0 : 0;
+  const currentCount = game ? Number(game.ratingCount ?? 0) || 0 : 0;
+  const newSum = currentSum + rating;
+  const newCount = currentCount + 1;
+  try {
+    const { error } = await supabaseClient
+      .from("games")
+      .update({
+        game_rating_sum: newSum,
+        game_rating_count: newCount,
+      })
+      .eq("id", userRatingGameId);
+    if (error) throw error;
+    if (game) {
+      game.ratingSum = newSum;
+      game.ratingCount = newCount;
+      game.userRating = Math.round((newSum / newCount) * 10) / 10;
+    }
+    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+    ratedGames[userRatingGameId] = rating;
+    localStorage.setItem("ratedGames", JSON.stringify(ratedGames));
+    renderPlayedGames();
+  } catch (err) {
+    console.error("Error submitting user game rating", err);
+  }
+  closeModal("userRateGameModal", true);
+  userRatingGameId = null;
 }
 
 // Редактирование фильма
