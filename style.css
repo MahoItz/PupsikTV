@@ -1490,18 +1490,6 @@ select option {
     text-align: center;
 }
 
-#rateGameModal .rate-game-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-#rateGameModal .rate-game-label-icon {
-    width: 0.85em;
-    height: 0.85em;
-    object-fit: contain;
-    flex-shrink: 0;
-}
 
 #rateGameModal #rateMoviePoster {
     display: block;
