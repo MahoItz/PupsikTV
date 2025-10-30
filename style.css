@@ -1482,10 +1482,6 @@ select option {
     text-align: center;
 }
 
-#rateGameModal .rate-image {
-    width: 3rem;
-}
-
 #rateGameModal .rate-poster {
     text-align: center;
 }
