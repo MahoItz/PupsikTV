@@ -1497,9 +1497,10 @@ select option {
 }
 
 #rateGameModal .rate-game-label-icon {
-    width: 1em;
-    height: 1em;
+    width: 0.85em;
+    height: 0.85em;
     object-fit: contain;
+    flex-shrink: 0;
 }
 
 #rateGameModal #rateMoviePoster {
