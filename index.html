@@ -347,14 +347,16 @@
             <span class="close" onclick="closeModal('rateGameModal')">&times;</span>
             <div class="rate-header">
                 <h2>Оценить игру</h2>
-                <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image" loading="lazy">
             </div>
             <div class="rate-poster">
                 <img id="rateGamePoster" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                 <p id="rateGameTitle"></p>
             </div>
             <div class="form-group">
-                <label>Ваша оценка:</label>
+                <label class="rate-game-label">
+                    <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="rate-game-label-icon" loading="lazy">
+                    <span>Ваша оценка игры:</span>
+                </label>
                 <div class="rating-stars" id="rateGameStars" data-input="rateGameInput">
                     <span class="rating-star rating-label" data-rating="0">worst</span>
                     <span class="rating-star" data-rating="1"></span>
