@@ -3899,6 +3899,9 @@ async function submitUserMovieRating() {
         p_movie_id: userRatingMovieId,
         p_rating: rating,
         p_source: "user",
+        p_category: "Movie",
+        p_title: movie ? movie.title : null,
+        p_user_id: getGuestId(),
       }
     );
 
