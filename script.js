@@ -4,6 +4,7 @@ let SUPABASE_KEY;
 let supabaseClient;
 
 let cachedGuestId = null;
+let isSubmittingUserRating = false;
 
 function getGuestId() {
   if (cachedGuestId) return cachedGuestId;
@@ -3876,27 +3877,45 @@ async function submitGameRating() {
   closeModal("rateGameModal", true);
 }
 
+let isSubmittingUserRating = false;
+
 async function submitUserMovieRating() {
+  // если уже идёт отправка — выходим
+  if (isSubmittingUserRating) return;
+  isSubmittingUserRating = true;
+
+  // ищем кнопку и блокируем её
+  const submitBtn = document.querySelector('[data-user-rating-submit]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Отправка...";
+  }
+
   const rating = getRatingValue("userRateInput");
+
   if (!isRatingValid(rating)) {
     alert("Неверная оценка");
     document.getElementById("userRateInput").reportValidity();
+    resetSubmitState();
     return;
   }
 
-  if (!userRatingMovieId) return;
+  if (!userRatingMovieId) {
+    resetSubmitState();
+    return;
+  }
 
-  // защита от повторной оценки с этого устройства
   if (ratedMovies[userRatingMovieId]) {
     alert("Вы уже оценили этот фильм");
     closeModal("userRateModal", true);
+    resetSubmitState();
     return;
   }
 
   const movie = allMovies.find((m) => m.id === userRatingMovieId);
 
   try {
-    // Пишем лог в ratings
+    // 1) вставляем лог в таблицу ratings
     const { error: ratingError } = await supabaseClient
       .from("ratings")
       .insert({
@@ -3910,12 +3929,8 @@ async function submitUserMovieRating() {
 
     if (ratingError) throw ratingError;
 
-    // Считаем все оценки по этому фильму в таблице ratings
-    const {
-      data: ratingsData,
-      count,
-      error: aggError,
-    } = await supabaseClient
+    // 2) получаем все оценки для этого фильма
+    const { data: ratingsData, count, error: aggError } = await supabaseClient
       .from("ratings")
       .select("rating", { count: "exact", head: false })
       .eq("movie_id", userRatingMovieId);
@@ -3923,14 +3938,10 @@ async function submitUserMovieRating() {
     if (aggError) throw aggError;
 
     const rows = ratingsData || [];
-
-    const newSum = rows.reduce(
-      (acc, row) => acc + Number(row.rating ?? 0),
-      0
-    );
+    const newSum = rows.reduce((acc, row) => acc + Number(row.rating ?? 0), 0);
     const newCount = typeof count === "number" ? count : rows.length;
 
-    // Обновляем агрегаты в таблице movies
+    // 3) обновляем таблицу movies
     const { error: movieError } = await supabaseClient
       .from("movies")
       .update({
@@ -3941,28 +3952,37 @@ async function submitUserMovieRating() {
 
     if (movieError) throw movieError;
 
-    // Обновляем локальные данные и UI
+    // 4) обновляем локальные данные
     if (movie) {
       movie.ratingSum = newSum;
       movie.ratingCount = newCount;
       movie.userRating =
-        newCount > 0
-          ? Math.round((newSum / newCount) * 10) / 10
-          : null;
+        newCount > 0 ? Math.round((newSum / newCount) * 10) / 10 : null;
     }
 
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
-
     ratedMovies[userRatingMovieId] = rating;
     localStorage.setItem("ratedMovies", JSON.stringify(ratedMovies));
 
     renderMovies();
   } catch (err) {
-    console.error("Error submitting user rating", err);
+    console.error("Error submitting user rating:", err);
+  } finally {
+    resetSubmitState();
   }
 
   closeModal("userRateModal", true);
 }
+
+function resetSubmitState() {
+  const submitBtn = document.querySelector('[data-user-rating-submit]');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Отправить";
+  }
+  isSubmittingUserRating = false;
+}
+
 
 async function submitUserGameRating() {
   const rating = getRatingValue("userRateGameInput");
