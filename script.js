@@ -1343,11 +1343,11 @@ function getFilteredSortedMovies() {
   if (normalizedQuery) {
     const queryDigits = normalizedQuery.replace(/\D+/g, "");
 
-    // Считаем "вес" совпадения для каждого фильма
+    // Вес совпадения для каждого фильма
     const scored = result.map((movie) => {
       let score = 0;
 
-      // Название / оригинальное название
+      // Название
       score = Math.max(
         score,
         scoreMatch(normalizedQuery, movie.title),
@@ -1357,13 +1357,13 @@ function getFilteredSortedMovies() {
         )
       );
 
-      // Жанры тоже учитываем (чуть слабее по смыслу)
+      // Жанры
       score = Math.max(
         score,
         scoreMatch(normalizedQuery, movie.genre || movie.genres || "") - 10
       );
 
-      // Год (если в запросе есть цифры)
+      // Год
       const yearString = movie.year ? String(movie.year) : "";
       const normalizedYear = normalizeSearchText(yearString);
       if (
@@ -1376,17 +1376,14 @@ function getFilteredSortedMovies() {
       return { movie, searchScore: score };
     });
 
-    // Отбрасываем всё, что вообще не похоже
     result = scored
       .filter((item) => item.searchScore > 0)
       .sort((a, b) => b.searchScore - a.searchScore)
       .map((item) => item.movie);
 
-    // При активном поиске дальше по дате/рейтингу уже не сортируем — и так по релевантности
     return result;
   }
 
-  // Если запрос пустой — старое поведение сортировки
   switch (currentSort) {
     case "title":
       result.sort((a, b) =>
