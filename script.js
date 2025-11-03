@@ -3883,7 +3883,10 @@ async function submitUserMovieRating() {
     document.getElementById("userRateInput").reportValidity();
     return;
   }
+
   if (!userRatingMovieId) return;
+
+  // защита от повторной оценки с этого устройства
   if (ratedMovies[userRatingMovieId]) {
     alert("Вы уже оценили этот фильм");
     closeModal("userRateModal", true);
@@ -3893,33 +3896,66 @@ async function submitUserMovieRating() {
   const movie = allMovies.find((m) => m.id === userRatingMovieId);
 
   try {
-    const { data, error } = await supabaseClient.rpc(
-      "add_user_movie_rating",
-      {
-        p_movie_id: userRatingMovieId,
-        p_rating: rating,
-        p_source: "user",
-        p_category: "Movie",
-        p_title: movie ? movie.title : null,
-        p_user_id: getGuestId(),
-      }
+    // Пишем лог в ratings
+    const { error: ratingError } = await supabaseClient
+      .from("ratings")
+      .insert({
+        movie_id: userRatingMovieId,
+        rating,
+        source: "user",
+        category: "Movie",
+        title: movie ? movie.title : null,
+        user_id: getGuestId(),
+      });
+
+    if (ratingError) throw ratingError;
+
+    // Считаем все оценки по этому фильму в таблице ratings
+    const {
+      data: ratingsData,
+      count,
+      error: aggError,
+    } = await supabaseClient
+      .from("ratings")
+      .select("rating", { count: "exact", head: false })
+      .eq("movie_id", userRatingMovieId);
+
+    if (aggError) throw aggError;
+
+    const rows = ratingsData || [];
+
+    const newSum = rows.reduce(
+      (acc, row) => acc + Number(row.rating ?? 0),
+      0
     );
+    const newCount = typeof count === "number" ? count : rows.length;
 
-    if (error) throw error;
+    // Обновляем агрегаты в таблице movies
+    const { error: movieError } = await supabaseClient
+      .from("movies")
+      .update({
+        rating_sum: newSum,
+        rating_count: newCount,
+      })
+      .eq("id", userRatingMovieId);
 
-    // data — обновлённая строка из movies
-    if (movie && data) {
-      movie.ratingSum = Number(data.rating_sum ?? 0) || 0;
-      movie.ratingCount = Number(data.rating_count ?? 0) || 0;
+    if (movieError) throw movieError;
+
+    // Обновляем локальные данные и UI
+    if (movie) {
+      movie.ratingSum = newSum;
+      movie.ratingCount = newCount;
       movie.userRating =
-        movie.ratingCount > 0
-          ? Math.round((movie.ratingSum / movie.ratingCount) * 10) / 10
+        newCount > 0
+          ? Math.round((newSum / newCount) * 10) / 10
           : null;
     }
 
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+
     ratedMovies[userRatingMovieId] = rating;
     localStorage.setItem("ratedMovies", JSON.stringify(ratedMovies));
+
     renderMovies();
   } catch (err) {
     console.error("Error submitting user rating", err);
