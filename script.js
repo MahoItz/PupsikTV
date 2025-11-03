@@ -186,7 +186,9 @@ function levenshteinDistance(a, b) {
   if (!lenA) return lenB;
   if (!lenB) return lenA;
 
-  const dp = Array.from({ length: lenA + 1 }, () => new Array(lenB + 1).fill(0));
+  const dp = Array.from({ length: lenA + 1 }, () =>
+    new Array(lenB + 1).fill(0)
+  );
 
   for (let i = 0; i <= lenA; i++) dp[i][0] = i;
   for (let j = 0; j <= lenB; j++) dp[0][j] = j;
@@ -218,22 +220,35 @@ function fuzzyMatchNormalized(normalizedQuery, value) {
 
   if (!queryClean || !valueClean) return false;
 
-  if (valueClean.includes(queryClean)) return true;
+  if (queryClean.length <= 2) {
+    return valueClean.includes(queryClean);
+  }
 
-  const allowedDistance = queryClean.length <= 4 ? 1 : 2;
+  if (Math.abs(valueClean.length - queryClean.length) > queryClean.length) {
+    return false;
+  }
+
+  const allowedDistance =
+    queryClean.length <= 4 ? 1 : queryClean.length <= 8 ? 2 : 3;
 
   if (valueClean.length < queryClean.length) {
-    return levenshteinDistance(queryClean, valueClean) <= allowedDistance;
+    const dist = levenshteinDistance(queryClean, valueClean);
+    const norm = dist / queryClean.length;
+    return dist <= allowedDistance && norm <= 0.35;
   }
+
+  let best = Infinity;
 
   for (let i = 0; i <= valueClean.length - queryClean.length; i++) {
     const segment = valueClean.slice(i, i + queryClean.length);
-    if (levenshteinDistance(queryClean, segment) <= allowedDistance) {
-      return true;
-    }
+    const dist = levenshteinDistance(queryClean, segment);
+    if (dist < best) best = dist;
+    if (dist === 0) break;
   }
 
-  return false;
+  const normalizedDistance = best / queryClean.length;
+
+  return best <= allowedDistance && normalizedDistance <= 0.35;
 }
 
 function extractYearValue(value) {
@@ -323,7 +338,9 @@ function parseFortuneLabel(label) {
 }
 
 function findFortuneMovieMatch(parsed, candidateList = null) {
-  const candidates = candidateList ? [...candidateList] : [...watchlist, ...allMovies];
+  const candidates = candidateList
+    ? [...candidateList]
+    : [...watchlist, ...allMovies];
   if (!candidates.length) {
     return null;
   }
@@ -766,7 +783,8 @@ function recalculateGameUserRatings(targetGames = allPlayedGames) {
 
   targetGames.forEach((game) => {
     const sum = Number(game?.ratingSum ?? game?.game_rating_sum ?? 0) || 0;
-    const count = Number(game?.ratingCount ?? game?.game_rating_count ?? 0) || 0;
+    const count =
+      Number(game?.ratingCount ?? game?.game_rating_count ?? 0) || 0;
 
     game.ratingSum = sum;
     game.ratingCount = count;
@@ -1290,23 +1308,28 @@ function getFilteredSortedMovies() {
     if (normalizedQuery) {
       const queryClean = normalizedQuery.replace(/\s+/g, "");
       const queryDigits = normalizedQuery.replace(/\D+/g, "");
+      const hasLetters = /[a-zа-я]/i.test(normalizedQuery);
+
+      const isPureYearQuery =
+        !hasLetters && queryDigits.length === 4;
 
       result = result.filter((movie) => {
-        const matchesTitle = fuzzyMatchNormalized(normalizedQuery, movie.title);
+        const matchesTitle = fuzzyMatchNormalized(
+          normalizedQuery,
+          movie.title
+        );
+
         const matchesOriginal = fuzzyMatchNormalized(
           normalizedQuery,
           movie.originalTitle || movie.original_title || ""
         );
 
-        const yearString = movie.year ? String(movie.year) : "";
-        const normalizedYear = normalizeSearchText(yearString);
-        const cleanYear = normalizedYear.replace(/\s+/g, "");
-
-        const matchesYear =
-          (!!normalizedYear && normalizedYear.includes(normalizedQuery)) ||
-          (!!cleanYear && !!queryClean && cleanYear.includes(queryClean)) ||
-          (!!queryDigits && yearString.includes(queryDigits));
-
+        let matchesYear = false;
+        if (isPureYearQuery && movie.year) {
+          const yearString = String(movie.year);
+          matchesYear = yearString.includes(queryDigits);
+        }
+        
         return matchesTitle || matchesOriginal || matchesYear;
       });
     }
@@ -3905,16 +3928,14 @@ async function submitUserMovieRating() {
 
   try {
     // пишем лог
-    const { error: ratingError } = await supabaseClient
-      .from("ratings")
-      .insert({
-        movie_id: userRatingMovieId,
-        rating,
-        source: "user",
-        category: "Movie",
-        title: movie ? movie.title : null,
-        user_id: getGuestId(),
-      });
+    const { error: ratingError } = await supabaseClient.from("ratings").insert({
+      movie_id: userRatingMovieId,
+      rating,
+      source: "user",
+      category: "Movie",
+      title: movie ? movie.title : null,
+      user_id: getGuestId(),
+    });
 
     if (ratingError) throw ratingError;
 
@@ -3931,10 +3952,7 @@ async function submitUserMovieRating() {
     if (aggError) throw aggError;
 
     const rows = ratingsData || [];
-    const newSum = rows.reduce(
-      (acc, row) => acc + Number(row.rating ?? 0),
-      0
-    );
+    const newSum = rows.reduce((acc, row) => acc + Number(row.rating ?? 0), 0);
     const newCount = typeof count === "number" ? count : rows.length;
 
     // обновляем movies
@@ -3953,9 +3971,7 @@ async function submitUserMovieRating() {
       movie.ratingSum = newSum;
       movie.ratingCount = newCount;
       movie.userRating =
-        newCount > 0
-          ? Math.round((newSum / newCount) * 10) / 10
-          : null;
+        newCount > 0 ? Math.round((newSum / newCount) * 10) / 10 : null;
     }
 
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
@@ -4001,16 +4017,14 @@ async function submitUserGameRating() {
       })
       .eq("id", userRatingGameId);
     if (error) throw error;
-    const { error: ratingError } = await supabaseClient
-      .from("ratings")
-      .insert({
-        movie_id: userRatingGameId,
-        rating,
-        source: "user",
-        category: "Games",
-        title: game ? game.title : null,
-        user_id: getGuestId(),
-      });
+    const { error: ratingError } = await supabaseClient.from("ratings").insert({
+      movie_id: userRatingGameId,
+      rating,
+      source: "user",
+      category: "Games",
+      title: game ? game.title : null,
+      user_id: getGuestId(),
+    });
     if (ratingError) throw ratingError;
     if (game) {
       game.ratingSum = newSum;
@@ -4696,12 +4710,24 @@ function initFortuneWheel() {
   const fortuneItemsCountValue = document.getElementById("fortuneItemsCount");
   const resultOverlay = document.getElementById("fortuneResultOverlay");
   const resultNameEl = document.getElementById("fortuneResultName");
-  const fortuneDuplicateModal = document.getElementById("fortuneDuplicateModal");
-  const fortuneDuplicateMessage = document.getElementById("fortuneDuplicateMessage");
-  const fortuneDuplicateDetails = document.getElementById("fortuneDuplicateDetails");
-  const fortuneDuplicateCancel = document.getElementById("fortuneDuplicateCancel");
-  const fortuneDuplicateConfirm = document.getElementById("fortuneDuplicateConfirm");
-  const fortuneDuplicateClose = document.getElementById("fortuneDuplicateClose");
+  const fortuneDuplicateModal = document.getElementById(
+    "fortuneDuplicateModal"
+  );
+  const fortuneDuplicateMessage = document.getElementById(
+    "fortuneDuplicateMessage"
+  );
+  const fortuneDuplicateDetails = document.getElementById(
+    "fortuneDuplicateDetails"
+  );
+  const fortuneDuplicateCancel = document.getElementById(
+    "fortuneDuplicateCancel"
+  );
+  const fortuneDuplicateConfirm = document.getElementById(
+    "fortuneDuplicateConfirm"
+  );
+  const fortuneDuplicateClose = document.getElementById(
+    "fortuneDuplicateClose"
+  );
 
   if (!canvas || !statusEl || !input) {
     return null;
@@ -4764,7 +4790,11 @@ function initFortuneWheel() {
 
     const displayTitle = (match?.title || label || "").trim();
     const displayYear = extractYearValue(match?.year);
-    const originalTitle = (match?.originalTitle || match?.original_title || "").trim();
+    const originalTitle = (
+      match?.originalTitle ||
+      match?.original_title ||
+      ""
+    ).trim();
 
     const baseMessageParts = [];
     if (displayTitle) {
@@ -4813,7 +4843,8 @@ function initFortuneWheel() {
     const activeItems = getActiveItems();
     if (activeItems.length >= 128) {
       if (statusEl) {
-        statusEl.textContent = "Нельзя добавить больше 128 фильмов для рулетки.";
+        statusEl.textContent =
+          "Нельзя добавить больше 128 фильмов для рулетки.";
       }
       return;
     }
@@ -4840,7 +4871,8 @@ function initFortuneWheel() {
     const activeItems = getActiveItems();
     if (activeItems.length >= 128) {
       if (statusEl) {
-        statusEl.textContent = "Нельзя добавить больше 128 фильмов для рулетки.";
+        statusEl.textContent =
+          "Нельзя добавить больше 128 фильмов для рулетки.";
       }
       return;
     }
