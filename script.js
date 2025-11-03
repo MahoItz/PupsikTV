@@ -3,6 +3,19 @@ const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 let SUPABASE_KEY;
 let supabaseClient;
 
+let cachedGuestId = null;
+
+function getGuestId() {
+  if (cachedGuestId) return cachedGuestId;
+  let guestId = localStorage.getItem("guest_id");
+  if (!guestId) {
+    guestId = `guest_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+    localStorage.setItem("guest_id", guestId);
+  }
+  cachedGuestId = guestId;
+  return guestId;
+}
+
 let isAdmin = localStorage.getItem("isAdmin") === "true";
 let adminElements = [];
 // Kinopoisk (unofficial API)
@@ -3897,6 +3910,9 @@ async function submitUserMovieRating() {
         movie_id: userRatingMovieId,
         rating,
         source: "user",
+        category: "Movie",
+        title: movie ? movie.title : null,
+        user_id: getGuestId(),
       });
     if (ratingError) throw ratingError;
     if (movie) {
@@ -3943,6 +3959,17 @@ async function submitUserGameRating() {
       })
       .eq("id", userRatingGameId);
     if (error) throw error;
+    const { error: ratingError } = await supabaseClient
+      .from("ratings")
+      .insert({
+        movie_id: userRatingGameId,
+        rating,
+        source: "user",
+        category: "Games",
+        title: game ? game.title : null,
+        user_id: getGuestId(),
+      });
+    if (ratingError) throw ratingError;
     if (game) {
       game.ratingSum = newSum;
       game.ratingCount = newCount;
