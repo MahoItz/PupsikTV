@@ -3890,6 +3890,14 @@ async function submitUserMovieRating() {
       })
       .eq("id", userRatingMovieId);
     if (error) throw error;
+    const { error: ratingsError } = await supabaseClient
+      .from("ratings")
+      .insert({
+        movie_id: userRatingMovieId,
+        rating,
+        source: "user",
+      });
+    if (ratingsError) throw ratingsError;
     if (movie) {
       movie.ratingSum = newSum;
       movie.ratingCount = newCount;
