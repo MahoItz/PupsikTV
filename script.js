@@ -3889,37 +3889,31 @@ async function submitUserMovieRating() {
     closeModal("userRateModal", true);
     return;
   }
+
   const movie = allMovies.find((m) => m.id === userRatingMovieId);
-  const currentSum = movie ? Number(movie.ratingSum ?? 0) || 0 : 0;
-  const currentCount = movie ? Number(movie.ratingCount ?? 0) || 0 : 0;
-  const newSum = currentSum + rating;
-  const newCount = currentCount + 1;
+
   try {
-    const { error } = await supabaseClient
-      .from("movies")
-      .update({
-        rating_sum: newSum,
-        rating_count: newCount,
-      })
-      .eq("id", userRatingMovieId);
+    const { data, error } = await supabaseClient.rpc(
+      "add_user_movie_rating",
+      {
+        p_movie_id: userRatingMovieId,
+        p_rating: rating,
+        p_source: "user",
+      }
+    );
+
     if (error) throw error;
 
-    const { error: ratingError } = await supabaseClient
-      .from("ratings")
-      .insert({
-        movie_id: userRatingMovieId,
-        rating,
-        source: "user",
-        category: "Movie",
-        title: movie ? movie.title : null,
-        user_id: getGuestId(),
-      });
-    if (ratingError) throw ratingError;
-    if (movie) {
-      movie.ratingSum = newSum;
-      movie.ratingCount = newCount;
-      movie.userRating = Math.round((newSum / newCount) * 10) / 10;
+    // data — обновлённая строка из movies
+    if (movie && data) {
+      movie.ratingSum = Number(data.rating_sum ?? 0) || 0;
+      movie.ratingCount = Number(data.rating_count ?? 0) || 0;
+      movie.userRating =
+        movie.ratingCount > 0
+          ? Math.round((movie.ratingSum / movie.ratingCount) * 10) / 10
+          : null;
     }
+
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     ratedMovies[userRatingMovieId] = rating;
     localStorage.setItem("ratedMovies", JSON.stringify(ratedMovies));
@@ -3927,6 +3921,7 @@ async function submitUserMovieRating() {
   } catch (err) {
     console.error("Error submitting user rating", err);
   }
+
   closeModal("userRateModal", true);
 }
 
