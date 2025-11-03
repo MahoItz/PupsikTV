@@ -251,6 +251,42 @@ function fuzzyMatchNormalized(normalizedQuery, value) {
   return best <= allowedDistance && normalizedDistance <= 0.35;
 }
 
+function scoreMatch(normalizedQuery, value) {
+  const normalizedValue = normalizeSearchText(value);
+  if (!normalizedQuery || !normalizedValue) return 0;
+
+  // Идеальное совпадение
+  if (normalizedValue === normalizedQuery) return 100;
+  // Начало строки — очень хорошо
+  if (normalizedValue.startsWith(normalizedQuery)) return 90;
+  // Вхождение где-то в середине
+  if (normalizedValue.includes(normalizedQuery)) return 80;
+
+  const queryClean = normalizedQuery.replace(/\s+/g, "");
+  const valueClean = normalizedValue.replace(/\s+/g, "");
+  if (!queryClean || !valueClean) return 0;
+
+  const allowedDistance = queryClean.length <= 4 ? 1 : 2;
+  let best = Infinity;
+
+  if (valueClean.length <= queryClean.length) {
+    best = levenshteinDistance(queryClean, valueClean);
+  } else {
+    const lenDiff = valueClean.length - queryClean.length;
+    for (let i = 0; i <= lenDiff; i++) {
+      const segment = valueClean.slice(i, i + queryClean.length);
+      const d = levenshteinDistance(queryClean, segment);
+      if (d < best) best = d;
+      if (best === 0) break;
+    }
+  }
+
+  if (best > allowedDistance) return 0;
+
+  // Чем меньше расстояние — тем выше балл
+  return 70 - best * 10; // 70, 60, 50...
+}
+
 function extractYearValue(value) {
   if (!value) return "";
   const match = String(value).match(/(19|20)\d{2}/);
@@ -1302,39 +1338,55 @@ document.addEventListener("DOMContentLoaded", async function () {
 function getFilteredSortedMovies() {
   let result = [...allMovies];
 
-  if (currentSearchQuery) {
-    const normalizedQuery = normalizeSearchText(currentSearchQuery);
+  const normalizedQuery = normalizeSearchText(currentSearchQuery);
 
-    if (normalizedQuery) {
-      const queryClean = normalizedQuery.replace(/\s+/g, "");
-      const queryDigits = normalizedQuery.replace(/\D+/g, "");
-      const hasLetters = /[a-zа-я]/i.test(normalizedQuery);
+  if (normalizedQuery) {
+    const queryDigits = normalizedQuery.replace(/\D+/g, "");
 
-      const isPureYearQuery =
-        !hasLetters && queryDigits.length === 4;
+    // Считаем "вес" совпадения для каждого фильма
+    const scored = result.map((movie) => {
+      let score = 0;
 
-      result = result.filter((movie) => {
-        const matchesTitle = fuzzyMatchNormalized(
-          normalizedQuery,
-          movie.title
-        );
-
-        const matchesOriginal = fuzzyMatchNormalized(
+      // Название / оригинальное название
+      score = Math.max(
+        score,
+        scoreMatch(normalizedQuery, movie.title),
+        scoreMatch(
           normalizedQuery,
           movie.originalTitle || movie.original_title || ""
-        );
+        )
+      );
 
-        let matchesYear = false;
-        if (isPureYearQuery && movie.year) {
-          const yearString = String(movie.year);
-          matchesYear = yearString.includes(queryDigits);
-        }
-        
-        return matchesTitle || matchesOriginal || matchesYear;
-      });
-    }
+      // Жанры тоже учитываем (чуть слабее по смыслу)
+      score = Math.max(
+        score,
+        scoreMatch(normalizedQuery, movie.genre || movie.genres || "") - 10
+      );
+
+      // Год (если в запросе есть цифры)
+      const yearString = movie.year ? String(movie.year) : "";
+      const normalizedYear = normalizeSearchText(yearString);
+      if (
+        (normalizedYear && normalizedYear.includes(normalizedQuery)) ||
+        (queryDigits && yearString.includes(queryDigits))
+      ) {
+        score += 5;
+      }
+
+      return { movie, searchScore: score };
+    });
+
+    // Отбрасываем всё, что вообще не похоже
+    result = scored
+      .filter((item) => item.searchScore > 0)
+      .sort((a, b) => b.searchScore - a.searchScore)
+      .map((item) => item.movie);
+
+    // При активном поиске дальше по дате/рейтингу уже не сортируем — и так по релевантности
+    return result;
   }
 
+  // Если запрос пустой — старое поведение сортировки
   switch (currentSort) {
     case "title":
       result.sort((a, b) =>
@@ -1344,9 +1396,7 @@ function getFilteredSortedMovies() {
       );
       break;
     case "year":
-      result.sort((a, b) =>
-        sortAscending ? a.year - b.year : b.year - a.year
-      );
+      result.sort((a, b) => (sortAscending ? a.year - b.year : b.year - a.year));
       break;
     case "rating":
       result.sort((a, b) =>
