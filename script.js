@@ -374,9 +374,7 @@ function parseFortuneLabel(label) {
 }
 
 function findFortuneMovieMatch(parsed, candidateList = null) {
-  const candidates = candidateList
-    ? [...candidateList]
-    : [...watchlist, ...allMovies];
+  const candidates = candidateList ? [...candidateList] : [...watchlist, ...allMovies];
   if (!candidates.length) {
     return null;
   }
@@ -460,8 +458,10 @@ function findFortuneMovieMatch(parsed, candidateList = null) {
     }
   });
 
-  return bestScore > 0 ? best : null;
+  const MIN_SCORE = 5;
+  return bestScore >= MIN_SCORE ? best : null;
 }
+
 
 function buildFortuneWinnerMovie(label) {
   const parsed = parseFortuneLabel(label);
