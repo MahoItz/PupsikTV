@@ -65,18 +65,6 @@ body {
 
 /* Анимации */
 
-@keyframes slideInGlow {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 @keyframes textGlow {
 
     0%,
@@ -645,14 +633,9 @@ select option {
     border: 1px solid rgba(0, 212, 255, 0.2);
     transition: var(--transition);
     position: relative;
-    animation: slideInGlow 0.6s ease-out forwards;
     display: flex;
     flex-direction: column;
     height: 100%;
-}
-
-.no-animation .movie-card {
-    animation: none;
 }
 
 .movie-card.rating-low {
@@ -668,7 +651,7 @@ select option {
 }
 
 .movie-card.rating-low::after {
-    content: "💀 Worst 💀";
+    content: "Worst";
     position: absolute;
     top: -15px;
     left: 50%;

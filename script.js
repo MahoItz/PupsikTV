@@ -1441,7 +1441,6 @@ function renderMovies() {
 
   if (!hasRenderedMovies) {
     grid.replaceChildren(...orderedCards);
-    grid.classList.add("no-animation");
     hasRenderedMovies = true;
   } else {
     orderedCards.forEach((card) => grid.appendChild(card));
