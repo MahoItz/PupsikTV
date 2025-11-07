@@ -1586,6 +1586,22 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   span1.textContent = `${movie.rating}`;
   ratingItem1.appendChild(icon1);
   ratingItem1.appendChild(span1);
+  ratingItem1.addEventListener("mouseenter", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = `Оценка Pupsik_ow`;
+    ratingTooltip.style.display = "block";
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  ratingItem1.addEventListener("mousemove", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  ratingItem1.addEventListener("mouseleave", () => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.display = "none";
+  });
   rating.appendChild(ratingItem1);
 
   const ratingItem2 = document.createElement("div");
@@ -1600,6 +1616,22 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   ratingItem2.addEventListener("click", () =>
     openKinopoiskPage(movie.title, movie.year, movie.originalTitle)
   );
+  ratingItem2.addEventListener("mouseenter", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = `Перейти на Кинопоиск`;
+    ratingTooltip.style.display = "block";
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  ratingItem2.addEventListener("mousemove", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  ratingItem2.addEventListener("mouseleave", () => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.display = "none";
+  });
   rating.appendChild(ratingItem2);
 
   const ratingItem3 = document.createElement("div");
@@ -1613,7 +1645,7 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   const votes = Math.round(movie.ratingCount ?? 0);
   ratingItem3.addEventListener("mouseenter", (e) => {
     if (!ratingTooltip) return;
-    ratingTooltip.textContent = `Голосов: ${votes}`;
+    ratingTooltip.textContent = `Оценок: ${votes}`;
     ratingTooltip.style.display = "block";
     ratingTooltip.style.left = e.pageX + 10 + "px";
     ratingTooltip.style.top = e.pageY + 10 + "px";
@@ -1634,7 +1666,7 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   footer.className = "movie-footer";
   const dateDiv = document.createElement("div");
   dateDiv.className = "movie-date";
-  dateDiv.textContent = `Добавлен: ${formatDate(movie.dateAdded)}`;
+  dateDiv.textContent = `${formatDate(movie.dateAdded)}`;
   footer.appendChild(dateDiv);
 
   const actions = document.createElement("div");
@@ -1643,7 +1675,7 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   if (showRateButton) {
     const rateBtn = document.createElement("button");
     rateBtn.className = "btn btn-rate btn-icon";
-    rateBtn.textContent = "★";
+    rateBtn.textContent = isAdmin ? "" : "Оценить";
     if (ratedMovies[movie.id]) {
       rateBtn.disabled = true;
       rateBtn.title = "Вы уже оценили";
@@ -1736,6 +1768,22 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   kpRating.addEventListener("click", () =>
     openKinopoiskPage(order.title, order.year, order.originalTitle)
   );
+  kpRating.addEventListener("mouseenter", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = `Перейти на Кинопоиск`;
+    ratingTooltip.style.display = "block";
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  kpRating.addEventListener("mousemove", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  kpRating.addEventListener("mouseleave", () => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.display = "none";
+  });
   meta.appendChild(kpRating);
   info.appendChild(meta);
 
@@ -2016,6 +2064,22 @@ function createPlayedGameCard(
   span1.textContent = `${game.rating}`;
   item1.appendChild(icon1);
   item1.appendChild(span1);
+  item1.addEventListener("mouseenter", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = `Оценка Pupsik_ow`;
+    ratingTooltip.style.display = "block";
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  item1.addEventListener("mousemove", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  item1.addEventListener("mouseleave", () => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.display = "none";
+  });
   ratingDiv.appendChild(item1);
 
   const userRatingItem = document.createElement("div");
@@ -2029,7 +2093,7 @@ function createPlayedGameCard(
   const votes = Math.round(game.ratingCount ?? 0);
   userRatingItem.addEventListener("mouseenter", (e) => {
     if (!ratingTooltip) return;
-    ratingTooltip.textContent = `Голосов: ${votes}`;
+    ratingTooltip.textContent = `Оценок: ${votes}`;
     ratingTooltip.style.display = "block";
     ratingTooltip.style.left = e.pageX + 10 + "px";
     ratingTooltip.style.top = e.pageY + 10 + "px";
@@ -2050,14 +2114,14 @@ function createPlayedGameCard(
   footer.className = "movie-footer";
   const dateDiv = document.createElement("div");
   dateDiv.className = "movie-date";
-  dateDiv.textContent = `Добавлен: ${formatDate(game.dateAdded)}`;
+  dateDiv.textContent = `${formatDate(game.dateAdded)}`;
   footer.appendChild(dateDiv);
   const actions = document.createElement("div");
   actions.className = "movie-actions";
   if (showRateButton) {
     const rateBtn = document.createElement("button");
     rateBtn.className = "btn btn-rate btn-icon";
-    rateBtn.textContent = "★";
+    rateBtn.textContent = isAdmin ? "" : "Оценить";
     if (hasRatedGame(game.id)) {
       rateBtn.disabled = true;
       rateBtn.title = "Вы уже оценили";
@@ -4258,7 +4322,11 @@ document
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
-  return d.toLocaleDateString("ru-RU");
+  return d.toLocaleDateString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit"
+  });
 }
 
 // Сброс форм и рейтингов

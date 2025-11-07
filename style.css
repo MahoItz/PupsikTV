@@ -396,20 +396,48 @@ header img {
 }
 
 .btn-rate {
-    background: linear-gradient(135deg, var(--neon-pink), #e91e63);
-    color: white;
-    box-shadow: 0 0 20px rgba(255, 20, 147, 0.4);
-    border-color: var(--neon-pink);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    border-radius: var(--border-radius-small);
+    backdrop-filter: blur(6px);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    transition: var(--transition);
+}
+
+.btn-rate.btn-icon {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-rate.btn-icon::after {
+    content: "★";
+    font-size: 1rem;
+    color: #ffd75e;
+    margin-left: 4px;
 }
 
 .btn-rate:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 0 30px rgba(255, 20, 147, 0.6), 0 8px 25px rgba(255, 20, 147, 0.3);
+    background: rgba(0, 212, 255, 0.15);
+    box-shadow: 0 0 18px rgba(0, 212, 255, 0.35);
+    transform: translateY(-2px);
 }
 
-.btn:disabled {
-    opacity: 0.6;
+.btn-rate:active {
+    transform: translateY(0);
+    box-shadow: 0 0 2px rgba(0, 212, 255, 0.2);
+}
+
+.btn-rate:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .loading-spinner {
@@ -712,13 +740,13 @@ select option {
     }
 }
 
-.movie-card:hover {
+/* .movie-card:hover {
     transform: translateY(-10px) scale(1.02);
     box-shadow:
         0 20px 40px rgba(0, 0, 0, 0.3),
         0 0 30px rgba(0, 212, 255, 0.3);
     border-color: var(--secondary-color);
-}
+} */
 
 .movie-poster {
     width: 100%;
@@ -904,7 +932,7 @@ select option {
 
 .movie-rating .rating-item i {
     font-size: 1.1rem;
-    color: var(--accent-color);
+    color: #ffd75e;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
@@ -1158,6 +1186,12 @@ select option {
     align-items: center;
     gap: 4px;
     cursor: pointer;
+}
+
+.order-kp-rating:hover {
+    transform: translateY(-2px);
+    scale: 1.15;
+    transition: var(--transition);
 }
 
 .order-date {
@@ -3464,12 +3498,15 @@ select option {
     0% {
         transform: rotateX(0deg);
     }
+
     49% {
         transform: rotateX(90deg);
     }
+
     50% {
         transform: rotateX(-90deg);
     }
+
     100% {
         transform: rotateX(-360deg);
     }
