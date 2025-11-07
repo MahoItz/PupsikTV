@@ -2239,6 +2239,9 @@ select option {
 
 .music-menu-button:hover {
     transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
 }
 
 .rules-panel-toggle {
