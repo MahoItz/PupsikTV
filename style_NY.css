@@ -1,36 +1,29 @@
 /* переменные и цвета */
 :root {
-    --primary-color: #d83a4e;
-    --primary-hover: #c02a3d;
-    --secondary-color: #2ca58d;
-    --accent-color: #f5d081;
-    --accent-color-strong: #ffd166;
-    --evergreen: #0f3d2e;
-    --frost: #e0f4ff;
-    --snow: rgba(255, 255, 255, 0.8);
-    --cranberry: #b4242f;
-    --midnight: #030914;
-    --text-primary: #fdfdfd;
-    --text-secondary: rgba(255, 255, 255, 0.85);
-    --text-muted: rgba(255, 255, 255, 0.65);
-    --text-accent: #ffd166;
-    --background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 50%),
-        radial-gradient(circle at 80% 0%, rgba(45, 119, 110, 0.35), transparent 45%),
-        linear-gradient(180deg, #050b17 0%, #0c1627 40%, #081018 100%);
-    --card-bg: rgba(9, 20, 30, 0.86);
-    --modal-bg: rgba(6, 14, 22, 0.96);
-    --glass-bg: rgba(10, 26, 33, 0.78);
-    --frost-glass: rgba(15, 30, 35, 0.85);
-    --shadow-neon: 0 20px 60px rgba(8, 12, 20, 0.75);
-    --shadow-glow: 0 0 25px rgba(248, 206, 92, 0.35);
-    --border-radius: 14px;
-    --border-radius-small: 10px;
+    --primary-color: #ff6c42;
+    --primary-hover: #ff5722;
+    --secondary-color: #00d4ff;
+    --accent-color: #933bff;
+    --neon-blue: #00548b;
+    --neon-pink: #bd22d9;
+    --neon-purple: #9c27b0;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.8);
+    --text-accent: #00d4ff;
+    --background: #0a0a0f;
+    --card-bg: rgba(15, 15, 35, 0.9);
+    --modal-bg: rgba(20, 20, 35, 0.98);
+    --glass-bg: rgba(20, 25, 40, 0.85);
+    --shadow-neon: 0 0 20px rgba(0, 212, 255, 0.3);
+    --shadow-glow: 0 0 30px rgba(107, 70, 193, 0.3);
+    --border-radius: 12px;
+    --border-radius-small: 8px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --glow-animation: glow 3s ease-in-out infinite alternate;
-    --rating-low: #ff6b6b;
-    --rating-high: #52db8e;
-    --rules-panel-width: clamp(420px, 32vw, 500px);
-    --panels-gap: clamp(18px, 2.6vw, 36px);
+    --glow-animation: glow 2s ease-in-out infinite alternate;
+    --rating-low: #f44336;
+    --rating-high: #4caf50;
+    --rules-panel-width: clamp(420px, 32vw, 480px);
+    --panels-gap: clamp(16px, 2vw, 32px);
     --music-menu-expanded-max-width: min(82vw, 1660px);
     --music-menu-min-width: 220px;
     --music-menu-collapsed-min-width: 120px;
@@ -40,17 +33,14 @@
     --music-menu-padding-block: clamp(38px, 5vh, 36px);
     --music-menu-padding-inline: clamp(24px, 4vw, 32px);
     --music-menu-wheel-offset: calc(var(--music-menu-padding-block) * 2 + 56px);
-    --border-color: rgba(255, 255, 255, 0.15);
-    --frost-shadow: 0 25px 60px rgba(4, 6, 10, 0.65);
-    --twinkle-color: rgba(255, 255, 255, 0.5);
-    --accent-cyan: rgba(64, 160, 167, 0.8);
-    --accent-pink: #ff8fb7;
-    --primary-purple: #7c5fe6;
-    --secondary-purple: #9a7cff;
-    --dark-bg: #050c14;
-    --neon-blue: #7fc8f8;
-    --neon-pink: #ff88c6;
-    --neon-purple: #c79bff;
+
+    /* Header */
+    --primary-purple: #6b46c1;
+    --secondary-purple: #8b5cf6;
+    --accent-cyan: rgba(20, 25, 40, 0.85);
+    --accent-pink: #be95ff;
+    --dark-bg: #0f0f23;
+    --border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Сброс стилей */
@@ -63,46 +53,14 @@
 body {
     font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--background);
+    background-image:
+        radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 108, 66, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(255, 20, 147, 0.1) 0%, transparent 50%);
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
-    position: relative;
-}
-
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 55%),
-        radial-gradient(circle at 80% 0%, rgba(255, 214, 102, 0.12), transparent 45%),
-        linear-gradient(180deg, rgba(8, 22, 30, 0.15), rgba(0, 0, 0, 0.45));
-    pointer-events: none;
-    z-index: 0;
-}
-
-body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background-image: radial-gradient(var(--snow) 1px, transparent 1px),
-        radial-gradient(var(--snow) 1px, transparent 1px);
-    background-size: 180px 180px, 240px 240px;
-    background-position: 0 0, 90px 90px;
-    animation: snowfall 18s linear infinite;
-    opacity: 0.6;
-    pointer-events: none;
-    z-index: 1;
-}
-
-@keyframes snowfall {
-    0% {
-        background-position: 0 0, 90px 90px;
-    }
-
-    100% {
-        background-position: 0 600px, 90px 690px;
-    }
 }
 
 /* Анимации */
@@ -179,6 +137,82 @@ body::after {
     min-height: 100vh;
     padding-top: 90px;
 }
+
+/* 🌨 падающий снег */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.8;
+  background-repeat: repeat;
+  will-change: background-position; 
+}
+
+/* Передний слой — мелкий и быстрый снег */
+body::before {
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1.5px 1.5px at 30% 80%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 70% 40%, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1px 1px at 90% 60%, rgba(255,255,255,0.8), transparent);
+  background-size: 200px 200px, 250px 250px, 300px 300px, 180px 180px;
+  animation: snowfall-fore 20s linear infinite;
+}
+
+/* Задний слой — крупный и медленный снег */
+body::after {
+  background-image:
+    radial-gradient(2.5px 2.5px at 20% 30%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(3px 3px at 60% 70%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(2px 2px at 50% 50%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(3px 3px at 80% 10%, rgba(255,255,255,0.4), transparent);
+  background-size: 300px 300px, 400px 400px, 350px 350px, 280px 280px;
+  animation: snowfall-back 60s linear infinite;
+  opacity: 0.5;
+}
+
+/* Передний слой — падает быстрее и немного по диагонали */
+@keyframes snowfall-fore {
+  0% {
+    background-position:
+      0   0,
+      0   0,
+      0   0,
+      0   0;
+  }
+  100% {
+    background-position:
+      -50px 300px,
+      -80px 350px,
+      -100px 400px,
+      -60px 320px;
+  }
+}
+
+/* Задний слой — медленнее и чуть в другую сторону */
+@keyframes snowfall-back {
+  0% {
+    background-position:
+      0   0,
+      0   0,
+      0   0,
+      0   0;
+  }
+  100% {
+    background-position:
+      40px 250px,
+      60px 280px,
+      50px 260px,
+      30px 240px;
+  }
+}
+
 
 header {
     text-align: center;
@@ -2281,9 +2315,6 @@ select option {
 
 .music-menu-button:hover {
     transform: scale(1.15);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
 }
 
 .rules-panel-toggle {
@@ -2325,6 +2356,31 @@ select option {
 
 .rules-panel-toggle.is-hidden {
     display: none;
+}
+
+.admin-settings-button {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background: rgba(20, 20, 35, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.admin-settings-button:hover {
+    background: rgba(20, 20, 35, 1);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
 }
 
 .music-menu-button img {
@@ -3852,266 +3908,150 @@ select option {
     }
 }
 
-/* ===============================
-   Holiday themed surface styling
-   =============================== */
-body > * {
-    position: relative;
-    z-index: 2;
-}
-
-#headerLogo {
-    background: linear-gradient(135deg, rgba(14, 35, 45, 0.92), rgba(9, 23, 32, 0.85));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 32px;
-    box-shadow: var(--frost-shadow);
-    backdrop-filter: blur(18px);
-    position: relative;
-    overflow: hidden;
-}
-
-#headerLogo::after {
-    content: "";
-    position: absolute;
-    inset: 8px;
-    border-radius: 18px;
-    border: 1px dashed rgba(255, 214, 102, 0.35);
-    pointer-events: none;
-    animation: garlandTwinkle 3.6s ease-in-out infinite;
-}
-
-#headerLogo h1 {
-    color: var(--accent-color-strong);
-    text-shadow: 0 0 18px rgba(255, 214, 102, 0.8);
-    letter-spacing: 1px;
-}
-
-#headerLogo .social-links a {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--frost);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-}
-
-#headerLogo .social-links a:hover {
-    background: var(--primary-color);
-    border-color: var(--primary-hover);
-    color: #fff;
-}
-
-.container,
-.main-content,
-.side-panels,
-.left-panel,
-.right-panel,
-.watchlist-section,
-.music-menu,
-.rules-panel,
-.stats-card,
-.admin-settings-menu,
-.modal-content {
-    background: var(--card-bg);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    backdrop-filter: blur(22px);
-    box-shadow: var(--frost-shadow);
-}
-
-.list-tabs button,
-#mobileTabs button {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid transparent;
-    color: var(--text-secondary);
-    transition: var(--transition);
-}
-
-.list-tabs button.active,
-#mobileTabs button.active {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 12px 30px rgba(216, 58, 78, 0.4);
-}
-
-.btn,
-button,
-.btn-primary,
-.btn-secondary,
-.btn-icon {
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
-    color: #fff;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    box-shadow: 0 12px 30px rgba(216, 58, 78, 0.35);
-}
-
-.btn-secondary,
-.btn-icon.btn-secondary {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
-    color: var(--text-primary);
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow: none;
-}
-
-.btn:hover,
-.btn-primary:hover,
-.btn-secondary:hover,
-.btn-icon:hover,
-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 18px 35px rgba(255, 214, 102, 0.35);
-}
-
-.search-input,
-input,
-select,
-textarea {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 14px;
-    color: var(--text-primary);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-
-.search-input:focus,
-input:focus,
-select:focus,
-textarea:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(245, 208, 129, 0.25);
-}
-
-.movie-card,
-.games-grid .game-card,
-.watchlist-card,
-.playlist-card,
-.music-card,
-.rules-panel,
-.music-menu {
-    background: linear-gradient(160deg, rgba(7, 19, 28, 0.95), rgba(9, 25, 32, 0.78));
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: var(--frost-shadow);
-    overflow: hidden;
-}
-
-.movie-card::before,
-.games-grid .game-card::before,
-.watchlist-card::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(140deg, rgba(255, 214, 102, 0.08), transparent 60%);
-    pointer-events: none;
-}
-
-.movie-card .title,
-.games-grid .game-card .title,
-.watchlist-card .title {
-    color: var(--text-primary);
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
-}
-
-.rating-badge,
-.tag,
-.label-pill {
-    background: rgba(255, 214, 102, 0.2);
-    color: #fff;
-    border: 1px solid rgba(255, 214, 102, 0.5);
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-}
-
-.music-menu {
-    background: linear-gradient(180deg, rgba(8, 18, 27, 0.9), rgba(10, 28, 33, 0.85));
-}
-
-.rules-panel {
-    background: linear-gradient(160deg, rgba(7, 18, 26, 0.95), rgba(5, 12, 20, 0.82));
-}
-
-.rules-panel-toggle,
-.music-menu-button {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: var(--text-primary);
-}
-
-.rules-panel-toggle.is-active,
-.music-menu-button.is-active {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: #fff;
-    box-shadow: 0 10px 25px rgba(47, 181, 162, 0.35);
-}
-
+/* Выдвигающееся меню админа снизу экрана */
 .admin-settings-menu {
-    background: linear-gradient(180deg, rgba(6, 14, 22, 0.95), rgba(9, 21, 30, 0.85));
-    border-radius: 26px 26px 0 0;
+    position: fixed;
+    bottom: -200px; /* Скрыто по умолчанию */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 500px;
+    background: var(--modal-bg);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 -20px 45px rgba(0, 0, 0, 0.6);
+}
+
+.admin-settings-menu.open {
+    bottom: 0;
+}
+
+.admin-settings-menu-content {
+    padding: 20px;
+}
+
+.admin-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .admin-settings-header h3 {
-    color: var(--accent-color-strong);
-    letter-spacing: 0.04em;
+    margin: 0;
+    color: var(--text-color);
+    font-size: 18px;
+    font-weight: 600;
 }
 
-.toggle-switch .toggle-slider {
-    background: rgba(255, 255, 255, 0.18);
+.close-admin-menu {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
 }
 
-.toggle-switch .toggle-slider::before {
-    background: #fff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+.close-admin-menu:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-settings-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.admin-setting-item {
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-setting-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.setting-name {
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.setting-description {
+    margin: 0;
+    color: var(--text-secondary-color);
+    font-size: 14px;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
 }
 
 .toggle-input:checked + .toggle-slider {
-    background: linear-gradient(120deg, var(--secondary-color), var(--accent-color));
+    background-color: #4CAF50;
 }
 
-.modal-content {
-    border-radius: 28px;
-    padding: 40px;
+.toggle-input:checked + .toggle-slider:before {
+    transform: translateX(26px);
 }
 
-.pagination button,
-.pagination .active {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--text-primary);
+/* Только для админа */
+.admin-settings-menu {
+    display: none;
 }
 
-.pagination button.active,
-.pagination .active {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    border-color: transparent;
-    box-shadow: 0 12px 28px rgba(47, 181, 162, 0.35);
-}
-
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.04);
-}
-
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
-    border-radius: 999px;
-}
-
-@keyframes garlandTwinkle {
-    0%,
-    100% {
-        opacity: 0.4;
-        filter: drop-shadow(0 0 6px rgba(255, 214, 102, 0.6));
-    }
-
-    50% {
-        opacity: 1;
-        filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.85));
-    }
+body.admin-mode .admin-settings-menu {
+    display: block;
 }
