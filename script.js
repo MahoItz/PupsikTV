@@ -1069,7 +1069,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   renderMovies();
   renderPlayedGames();
   const headerImg = document.querySelector(
-    "#headerLogo img[src='images/Pupsik_TV_Header_2.webp']"
+    "#headerLogo img[src='images/Pupsik_TV_Header.webp']"
   );
   if (headerImg)
     headerImg.addEventListener("click", () => {
