@@ -924,19 +924,32 @@ if (fortuneWinnerReYohohoBtn) {
       return;
     }
 
-    const openedWindow = window.open(baseUrl, "_blank");
+    let openedWindow = window.open("about:blank", "_blank");
+
+    if (!openedWindow) {
+      openedWindow = window.open(baseUrl, "_blank");
+    } else {
+      try {
+        openedWindow.document.write(
+          "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Открываем ReYohoho...</title></head><body style='font-family:sans-serif;font-size:16px;margin:20px;'><p>Открываем страницу ReYohoho...</p></body></html>"
+        );
+        openedWindow.document.close();
+      } catch (err) {
+        console.error("Failed to prepare ReYohoho window", err);
+      }
+    }
 
     resolveFortuneMovieKinopoiskId(fortuneWinnerMovie)
       .then((resolvedId) => {
-        if (!resolvedId) {
-          return;
+        const targetUrl = resolvedId ? `${baseUrl}#${resolvedId}` : baseUrl;
+
+        if (resolvedId) {
+          fortuneWinnerMovie.kinopoiskId = resolvedId;
         }
-        const targetUrl = `${baseUrl}#${resolvedId}`;
-        fortuneWinnerMovie.kinopoiskId = resolvedId;
 
         if (openedWindow && !openedWindow.closed) {
           try {
-            openedWindow.location.href = targetUrl;
+            openedWindow.location.replace(targetUrl);
             return;
           } catch (err) {
             console.error("Failed to redirect ReYohoho window", err);
@@ -947,6 +960,14 @@ if (fortuneWinnerReYohohoBtn) {
       })
       .catch((err) => {
         console.error("Failed to resolve Kinopoisk ID for ReYohoho link", err);
+
+        if (openedWindow && !openedWindow.closed) {
+          try {
+            openedWindow.location.replace(baseUrl);
+          } catch (redirectErr) {
+            console.error("Failed to open fallback ReYohoho page", redirectErr);
+          }
+        }
       });
   });
 }
