@@ -5,6 +5,11 @@ let supabaseClient;
 
 let cachedGuestId = null;
 let isSubmittingUserRating = false;
+let settingsRowId = null;
+let rouletteLastWinner = "";
+let rouletteAutofillActive = false;
+let rouletteLastWinnerPendingValue = null;
+let rouletteLastWinnerHasPendingSync = false;
 
 function getGuestId() {
   if (cachedGuestId) return cachedGuestId;
@@ -163,6 +168,8 @@ const fortuneWinnerReYohohoBtn = document.getElementById(
 );
 const fortuneWinnerCancelBtn = document.getElementById("fortuneWinnerCancel");
 let fortuneWinnerMovie = null;
+const rouletteAutofillHint = document.getElementById("rouletteAutofillHint");
+const rouletteAutofillClearBtn = document.getElementById("rouletteAutofillClear");
 
 function normalizeFortuneText(str) {
   return String(str || "")
@@ -502,12 +509,174 @@ function buildFortuneWinnerMovie(label) {
   };
 }
 
+function getAutoTitleInput() {
+  return document.getElementById("autoTitle");
+}
+
+function isAddMovieModalOpen() {
+  const modal = document.getElementById("addMovieModal");
+  return !!modal && modal.style.display === "block";
+}
+
+function toggleRouletteAutofillVisibility(visible) {
+  if (!rouletteAutofillHint) {
+    return;
+  }
+  rouletteAutofillHint.classList.toggle("is-visible", Boolean(visible));
+}
+
+function syncRouletteAutofillState() {
+  const input = getAutoTitleInput();
+
+  if (!input) {
+    rouletteAutofillActive = false;
+    toggleRouletteAutofillVisibility(false);
+    return;
+  }
+
+  if (rouletteLastWinner) {
+    const matches = input.value.trim() === rouletteLastWinner;
+    rouletteAutofillActive = matches;
+    toggleRouletteAutofillVisibility(matches);
+  } else {
+    rouletteAutofillActive = false;
+    toggleRouletteAutofillVisibility(false);
+  }
+}
+
+function applyRouletteAutofill(options = {}) {
+  const { force = false } = options;
+  const input = getAutoTitleInput();
+  const winner = rouletteLastWinner;
+
+  if (!input) {
+    rouletteAutofillActive = false;
+    toggleRouletteAutofillVisibility(false);
+    return;
+  }
+
+  if (!winner) {
+    if (force) {
+      input.value = "";
+    }
+    rouletteAutofillActive = false;
+    toggleRouletteAutofillVisibility(false);
+    return;
+  }
+
+  if (force || !input.value.trim()) {
+    input.value = winner;
+  }
+
+  syncRouletteAutofillState();
+}
+
+async function persistRouletteLastWinner(value) {
+  const normalizedValue =
+    value === null || value === undefined
+      ? null
+      : String(value).trim() || null;
+
+  if (!supabaseClient) {
+    rouletteLastWinnerHasPendingSync = true;
+    rouletteLastWinnerPendingValue = normalizedValue;
+    return;
+  }
+
+  try {
+    if (settingsRowId) {
+      const { error } = await supabaseClient
+        .from("settings")
+        .update({ roulette_last_winner: normalizedValue })
+        .eq("id", settingsRowId);
+      if (error) throw error;
+      rouletteLastWinnerHasPendingSync = false;
+      rouletteLastWinnerPendingValue = null;
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("settings")
+      .select("id")
+      .limit(1);
+
+    if (error) throw error;
+
+    const existing = Array.isArray(data) && data.length > 0 ? data[0] : null;
+
+    if (existing) {
+      settingsRowId = existing.id ?? settingsRowId;
+      const { error: updateError } = await supabaseClient
+        .from("settings")
+        .update({ roulette_last_winner: normalizedValue })
+        .eq("id", settingsRowId);
+      if (updateError) throw updateError;
+      rouletteLastWinnerHasPendingSync = false;
+      rouletteLastWinnerPendingValue = null;
+      return;
+    }
+
+    if (normalizedValue === null) {
+      rouletteLastWinnerHasPendingSync = false;
+      rouletteLastWinnerPendingValue = null;
+      return;
+    }
+
+    const { data: inserted, error: insertError } = await supabaseClient
+      .from("settings")
+      .insert({ roulette_last_winner: normalizedValue })
+      .select("id")
+      .single();
+
+    if (insertError) throw insertError;
+
+    settingsRowId = inserted?.id ?? settingsRowId;
+    rouletteLastWinnerHasPendingSync = false;
+    rouletteLastWinnerPendingValue = null;
+  } catch (err) {
+    rouletteLastWinnerHasPendingSync = true;
+    rouletteLastWinnerPendingValue = normalizedValue;
+    console.error("Error saving roulette last winner", err);
+  }
+}
+
+async function clearRouletteLastWinner(options = {}) {
+  const { updateInput = true, persist = true } = options;
+
+  rouletteLastWinner = "";
+  const input = getAutoTitleInput();
+
+  if (updateInput && input) {
+    input.value = "";
+  }
+
+  syncRouletteAutofillState();
+
+  if (persist) {
+    await persistRouletteLastWinner(null);
+  }
+}
+
 function showFortuneWinnerModal(label) {
   if (!fortuneWinnerModal || !label) {
     return;
   }
 
   fortuneWinnerMovie = buildFortuneWinnerMovie(label);
+
+  const storageValue =
+    (fortuneWinnerMovie?.title || fortuneWinnerMovie?.label || label || "").trim();
+
+  if (storageValue) {
+    rouletteLastWinner = storageValue;
+    rouletteAutofillActive = false;
+    if (isAddMovieModalOpen()) {
+      applyRouletteAutofill({ force: true });
+    } else {
+      toggleRouletteAutofillVisibility(false);
+    }
+    persistRouletteLastWinner(storageValue);
+  }
 
   if (fortuneWinnerFilmNameEl) {
     if (fortuneWinnerMovie.displayText) {
@@ -553,6 +722,12 @@ if (fortuneWinnerReYohohoBtn) {
 if (fortuneWinnerCancelBtn) {
   fortuneWinnerCancelBtn.addEventListener("click", () => {
     closeFortuneWinnerModal();
+  });
+}
+
+if (rouletteAutofillClearBtn) {
+  rouletteAutofillClearBtn.addEventListener("click", () => {
+    clearRouletteLastWinner();
   });
 }
 
@@ -832,6 +1007,49 @@ function hasRatedGame(id) {
   return Object.prototype.hasOwnProperty.call(ratedGames, id);
 }
 
+async function loadSettingsFromSupabase() {
+  if (!supabaseClient) {
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("settings")
+      .select("id, roulette_last_winner")
+      .limit(1);
+
+    if (error) throw error;
+
+    const row = Array.isArray(data) && data.length > 0 ? data[0] : null;
+
+    settingsRowId = row?.id ?? settingsRowId;
+    const remoteValue = (row?.roulette_last_winner || "").trim();
+
+    if (rouletteLastWinnerHasPendingSync) {
+      const pending = rouletteLastWinnerPendingValue;
+      rouletteLastWinner = (pending ?? "").trim();
+      await persistRouletteLastWinner(pending);
+      syncRouletteAutofillState();
+      return;
+    }
+
+    rouletteLastWinner = remoteValue;
+
+    if (!rouletteLastWinner) {
+      syncRouletteAutofillState();
+    } else {
+      rouletteAutofillActive = false;
+      if (isAddMovieModalOpen()) {
+        applyRouletteAutofill();
+      } else {
+        toggleRouletteAutofillVisibility(false);
+      }
+    }
+  } catch (err) {
+    console.error("Error loading settings from Supabase", err);
+  }
+}
+
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
   try {
@@ -1060,6 +1278,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   await Promise.all([
+    loadSettingsFromSupabase(),
     loadMoviesFromSupabase(),
     loadWatchlistFromSupabase(),
     loadGamesFromSupabase(),
@@ -1093,6 +1312,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
           if (env.RAWG_API_KEY)
             localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
+          await loadSettingsFromSupabase();
           closeModal("adminModal");
         } else {
           alert("Неверный пароль");
@@ -1106,6 +1326,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (titleInput)
     titleInput.addEventListener("input", () => {
       const q = titleInput.value.trim();
+      syncRouletteAutofillState();
       if (q) {
         showSearchLoading("autoResultsContainer", "autoResults");
       } else {
@@ -1123,6 +1344,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         titleInput.value =
           selectedKPMovie.nameRu || selectedKPMovie.nameEn || "";
       }
+      syncRouletteAutofillState();
       showKPPreview();
       document.getElementById("autoResultsContainer").style.display = "none";
     });
@@ -2896,7 +3118,11 @@ function toggleSortOrder() {
 
 // Модальные окна
 function openAddMovieModal() {
-  document.getElementById("addMovieModal").style.display = "block";
+  const modal = document.getElementById("addMovieModal");
+  if (modal) {
+    modal.style.display = "block";
+  }
+  applyRouletteAutofill({ force: true });
 }
 
 function openAddToWatchlistModal() {
@@ -3448,6 +3674,9 @@ document
       return;
     }
 
+    const shouldClearRouletteWinner =
+      rouletteAutofillActive && Boolean(rouletteLastWinner);
+
     try {
       const { data, error } = await supabaseClient
         .from("movies")
@@ -3485,6 +3714,10 @@ document
         userRating: null,
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+
+      if (shouldClearRouletteWinner) {
+        await clearRouletteLastWinner({ updateInput: false });
+      }
     } catch (err) {
       console.error("Error adding movie to Supabase", err);
     }
@@ -4341,6 +4574,7 @@ function resetForm() {
   setRatingStars("editPlayedGameRatingStars", 0);
   setRatingStars("playedGameRatingStars", 0);
   setRatingStars("rateMovieStars", 0);
+  syncRouletteAutofillState();
 }
 
 // Клик вне модалки закрывает её

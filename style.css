@@ -562,6 +562,40 @@ header img {
     padding-right: 40px;
 }
 
+.roulette-autofill-hint {
+    display: none;
+    gap: 8px;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #ffd166;
+}
+
+.roulette-autofill-hint.is-visible {
+    display: inline-flex;
+}
+
+.roulette-autofill-clear {
+    border: none;
+    background: rgba(255, 209, 102, 0.15);
+    color: inherit;
+    padding: 4px 8px;
+    font-size: 0.9rem;
+    line-height: 1;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.roulette-autofill-clear:hover,
+.roulette-autofill-clear:focus-visible {
+    background: rgba(255, 209, 102, 0.35);
+    color: #ff6b6b;
+}
+
 select {
     padding: 14px 20px;
     border: 2px solid rgba(255, 108, 66, 0.3);
