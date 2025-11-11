@@ -469,6 +469,123 @@ function findFortuneMovieMatch(parsed, candidateList = null) {
   return bestScore >= MIN_SCORE ? best : null;
 }
 
+function extractKinopoiskIdFromValue(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const numeric = Math.abs(Math.trunc(value));
+    return numeric ? String(numeric) : null;
+  }
+  const str = String(value).trim();
+  if (!str) {
+    return null;
+  }
+  const directMatch = str.match(/^\d{5,}$/);
+  if (directMatch) {
+    return directMatch[0];
+  }
+  const urlMatch = str.match(/(?:film|series|watch)\/(\d{5,})/i);
+  if (urlMatch) {
+    return urlMatch[1];
+  }
+  const hashMatch = str.match(/#(\d{5,})/);
+  if (hashMatch) {
+    return hashMatch[1];
+  }
+  const genericMatch = str.match(/\b(\d{5,})\b/);
+  if (genericMatch) {
+    return genericMatch[1];
+  }
+  return null;
+}
+
+function getKinopoiskIdFromMovie(candidate) {
+  if (!candidate) {
+    return null;
+  }
+  if (typeof candidate !== "object") {
+    return extractKinopoiskIdFromValue(candidate);
+  }
+
+  const directKeys = [
+    "kinopoiskId",
+    "kinopoisk_id",
+    "kpId",
+    "kp_id",
+    "kpFilmId",
+    "kpFilmID",
+    "filmId",
+    "film_id",
+    "kinopoisk",
+    "kp",
+  ];
+
+  for (const key of directKeys) {
+    if (key in candidate) {
+      const id = extractKinopoiskIdFromValue(candidate[key]);
+      if (id) {
+        return id;
+      }
+    }
+  }
+
+  const urlKeys = [
+    "kinopoiskUrl",
+    "kinopoisk_url",
+    "kpUrl",
+    "kp_url",
+    "url",
+    "link",
+    "kpLink",
+    "kp_link",
+    "kinopoiskLink",
+    "kinopoisk_link",
+  ];
+
+  for (const key of urlKeys) {
+    if (key in candidate) {
+      const id = extractKinopoiskIdFromValue(candidate[key]);
+      if (id) {
+        return id;
+      }
+    }
+  }
+
+  if (Array.isArray(candidate.links)) {
+    for (const link of candidate.links) {
+      const id = extractKinopoiskIdFromValue(link);
+      if (id) {
+        return id;
+      }
+    }
+  }
+
+  if (Array.isArray(candidate.urls)) {
+    for (const url of candidate.urls) {
+      const id = extractKinopoiskIdFromValue(url);
+      if (id) {
+        return id;
+      }
+    }
+  }
+
+  if ("label" in candidate) {
+    const id = extractKinopoiskIdFromValue(candidate.label);
+    if (id) {
+      return id;
+    }
+  }
+
+  if ("displayText" in candidate) {
+    const id = extractKinopoiskIdFromValue(candidate.displayText);
+    if (id) {
+      return id;
+    }
+  }
+
+  return null;
+}
 
 function buildFortuneWinnerMovie(label) {
   const parsed = parseFortuneLabel(label);
@@ -500,13 +617,61 @@ function buildFortuneWinnerMovie(label) {
     displayParts.push(originalTitle);
   }
 
+  const kinopoiskId =
+    getKinopoiskIdFromMovie(match) ||
+    extractKinopoiskIdFromValue(parsed.originalLabel) ||
+    extractKinopoiskIdFromValue(label);
+
   return {
     label,
     title: title || label,
     originalTitle,
     year,
     displayText: displayParts.join(" ").trim() || label,
+    kinopoiskId: kinopoiskId || null,
+    match: match || null,
   };
+}
+
+async function resolveFortuneMovieKinopoiskId(movie) {
+  if (!movie) {
+    return null;
+  }
+
+  const directId = getKinopoiskIdFromMovie(movie);
+  if (directId) {
+    movie.kinopoiskId = directId;
+    return directId;
+  }
+
+  if (movie.match) {
+    const matchId = getKinopoiskIdFromMovie(movie.match);
+    if (matchId) {
+      movie.kinopoiskId = matchId;
+      return matchId;
+    }
+  }
+
+  if (!KINOPOISK_API_KEY) {
+    return null;
+  }
+
+  try {
+    const film = await fetchKinopoiskFilm(
+      movie.title,
+      movie.year,
+      movie.originalTitle
+    );
+    const filmId = extractKinopoiskIdFromValue(film?.filmId);
+    if (filmId) {
+      movie.kinopoiskId = filmId;
+      return filmId;
+    }
+  } catch (err) {
+    console.error("Failed to resolve Kinopoisk ID for fortune winner", err);
+  }
+
+  return null;
 }
 
 function getAutoTitleInput() {
@@ -742,7 +907,47 @@ if (fortuneWinnerKinopoiskBtn) {
 
 if (fortuneWinnerReYohohoBtn) {
   fortuneWinnerReYohohoBtn.addEventListener("click", () => {
-    window.open(REYOHOHO_BASE_URL, "_blank");
+    const baseUrl = REYOHOHO_BASE_URL;
+
+    if (!fortuneWinnerMovie) {
+      window.open(baseUrl, "_blank");
+      return;
+    }
+
+    const immediateId =
+      getKinopoiskIdFromMovie(fortuneWinnerMovie) ||
+      getKinopoiskIdFromMovie(fortuneWinnerMovie.match);
+
+    if (immediateId) {
+      fortuneWinnerMovie.kinopoiskId = immediateId;
+      window.open(`${baseUrl}#${immediateId}`, "_blank");
+      return;
+    }
+
+    const openedWindow = window.open(baseUrl, "_blank");
+
+    resolveFortuneMovieKinopoiskId(fortuneWinnerMovie)
+      .then((resolvedId) => {
+        if (!resolvedId) {
+          return;
+        }
+        const targetUrl = `${baseUrl}#${resolvedId}`;
+        fortuneWinnerMovie.kinopoiskId = resolvedId;
+
+        if (openedWindow && !openedWindow.closed) {
+          try {
+            openedWindow.location.href = targetUrl;
+            return;
+          } catch (err) {
+            console.error("Failed to redirect ReYohoho window", err);
+          }
+        }
+
+        window.open(targetUrl, "_blank");
+      })
+      .catch((err) => {
+        console.error("Failed to resolve Kinopoisk ID for ReYohoho link", err);
+      });
   });
 }
 
