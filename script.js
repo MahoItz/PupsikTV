@@ -5900,6 +5900,66 @@ function initFortuneWheel() {
     "fortuneDuplicateClose"
   );
 
+  const fortuneWheelWrap = canvas ? canvas.parentElement : null;
+  const fortunePointerEl =
+    fortuneWheelWrap?.querySelector(".fortune-pointer") ?? null;
+  let fortunePointerWidth = null;
+  let lastPointerGap = null;
+  let lastPointerRightValue = null;
+
+  const measurePointerWidth = () => {
+    if (!fortunePointerEl) {
+      return 0;
+    }
+    const rect = fortunePointerEl.getBoundingClientRect();
+    if (rect.width > 0) {
+      return rect.width;
+    }
+    const styles = window.getComputedStyle(fortunePointerEl);
+    const borderRight = parseFloat(styles.borderRightWidth || "0");
+    if (borderRight > 0) {
+      return borderRight;
+    }
+    const borderLeft = parseFloat(styles.borderLeftWidth || "0");
+    if (borderLeft > 0) {
+      return borderLeft;
+    }
+    const fallbackWidth = parseFloat(styles.width || "0");
+    if (fallbackWidth > 0) {
+      return fallbackWidth;
+    }
+    return 0;
+  };
+
+  const POINTER_SHIFT = 20;
+
+  const updatePointerPosition = (canvasWidth, canvasHeight) => {
+    if (!fortunePointerEl) {
+      return;
+    }
+    const pointerGap =
+      Math.max(0, (canvasWidth - Math.min(canvasWidth, canvasHeight)) / 2 + 4);
+  
+    if (pointerGap !== lastPointerGap || fortunePointerWidth === null) {
+      const measuredWidth = measurePointerWidth();
+      if (measuredWidth > 0) {
+        fortunePointerWidth = measuredWidth;
+      } else if (fortunePointerWidth === null) {
+        fortunePointerWidth = 28;
+      }
+      lastPointerGap = pointerGap;
+    }
+  
+    const effectiveWidth = fortunePointerWidth ?? 0;
+    const pointerRight = pointerGap - effectiveWidth + POINTER_SHIFT; // ← тут сдвиг
+    const pointerRightValue = `${pointerRight}px`;
+  
+    if (pointerRightValue !== lastPointerRightValue) {
+      fortunePointerEl.style.right = pointerRightValue;
+      lastPointerRightValue = pointerRightValue;
+    }
+  };
+
   if (!canvas || !statusEl || !input) {
     return null;
   }
@@ -6596,6 +6656,8 @@ function initFortuneWheel() {
     ctx.lineWidth = 8;
     ctx.stroke();
     ctx.restore();
+
+    updatePointerPosition(w, h);
   }
 
   function pickCurrentIndex() {
