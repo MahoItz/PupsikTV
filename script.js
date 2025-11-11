@@ -525,6 +525,25 @@ function toggleRouletteAutofillVisibility(visible) {
   rouletteAutofillHint.classList.toggle("is-visible", Boolean(visible));
 }
 
+function triggerAutoTitleSuggestions() {
+  if (!isAddMovieModalOpen()) {
+    return;
+  }
+
+  const input = getAutoTitleInput();
+  if (!input) {
+    return;
+  }
+
+  const query = input.value.trim();
+  if (!query) {
+    return;
+  }
+
+  showSearchLoading("autoResultsContainer", "autoResults");
+  debouncedKPSearch(query);
+}
+
 function syncRouletteAutofillState() {
   const input = getAutoTitleInput();
 
@@ -541,11 +560,14 @@ function syncRouletteAutofillState() {
   } else {
     rouletteAutofillActive = false;
     toggleRouletteAutofillVisibility(false);
+    if (input.value.trim()) {
+      rouletteLastWinner = "";
+    }
   }
 }
 
 function applyRouletteAutofill(options = {}) {
-  const { force = false } = options;
+  const { force = false, triggerSuggestions = false } = options;
   const input = getAutoTitleInput();
   const winner = rouletteLastWinner;
 
@@ -569,6 +591,10 @@ function applyRouletteAutofill(options = {}) {
   }
 
   syncRouletteAutofillState();
+
+  if (triggerSuggestions && rouletteAutofillActive && isAddMovieModalOpen()) {
+    triggerAutoTitleSuggestions();
+  }
 }
 
 async function persistRouletteLastWinner(value) {
@@ -651,6 +677,7 @@ async function clearRouletteLastWinner(options = {}) {
   }
 
   syncRouletteAutofillState();
+  debouncedKPSearch("");
 
   if (persist) {
     await persistRouletteLastWinner(null);
@@ -671,7 +698,7 @@ function showFortuneWinnerModal(label) {
     rouletteLastWinner = storageValue;
     rouletteAutofillActive = false;
     if (isAddMovieModalOpen()) {
-      applyRouletteAutofill({ force: true });
+      applyRouletteAutofill({ force: true, triggerSuggestions: true });
     } else {
       toggleRouletteAutofillVisibility(false);
     }
@@ -1040,7 +1067,7 @@ async function loadSettingsFromSupabase() {
     } else {
       rouletteAutofillActive = false;
       if (isAddMovieModalOpen()) {
-        applyRouletteAutofill();
+        applyRouletteAutofill({ triggerSuggestions: true });
       } else {
         toggleRouletteAutofillVisibility(false);
       }
@@ -1331,6 +1358,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         showSearchLoading("autoResultsContainer", "autoResults");
       } else {
         document.getElementById("autoResultsContainer").style.display = "none";
+        if (rouletteLastWinner || rouletteAutofillActive) {
+          clearRouletteLastWinner({ updateInput: false });
+        }
       }
       debouncedKPSearch(q);
     });
@@ -1348,6 +1378,45 @@ document.addEventListener("DOMContentLoaded", async function () {
       showKPPreview();
       document.getElementById("autoResultsContainer").style.display = "none";
     });
+
+  if (titleInput) {
+    titleInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Backspace" && event.key !== "Delete") {
+        return;
+      }
+
+      const currentValue = titleInput.value;
+      const selectionStart = titleInput.selectionStart ?? currentValue.length;
+      const selectionEnd = titleInput.selectionEnd ?? selectionStart;
+
+      let resultingValue = currentValue;
+
+      if (selectionStart !== selectionEnd) {
+        resultingValue =
+          currentValue.slice(0, selectionStart) +
+          currentValue.slice(selectionEnd);
+      } else if (event.key === "Backspace" && selectionStart > 0) {
+        resultingValue =
+          currentValue.slice(0, selectionStart - 1) +
+          currentValue.slice(selectionEnd);
+      } else if (event.key === "Delete" && selectionStart < currentValue.length) {
+        resultingValue =
+          currentValue.slice(0, selectionStart) +
+          currentValue.slice(selectionEnd + 1);
+      }
+
+      Promise.resolve().then(() => {
+        if (!rouletteLastWinner) {
+          return;
+        }
+
+        const trimmed = (resultingValue || "").trim();
+        if (!trimmed || trimmed !== rouletteLastWinner) {
+          clearRouletteLastWinner({ updateInput: false });
+        }
+      });
+    });
+  }
 
   const watchSearchBtn = document.getElementById("watchAutoSearchBtn");
   const watchResultsContainer = document.getElementById("watchAutoResults");
@@ -3122,7 +3191,7 @@ function openAddMovieModal() {
   if (modal) {
     modal.style.display = "block";
   }
-  applyRouletteAutofill({ force: true });
+  applyRouletteAutofill({ force: true, triggerSuggestions: true });
 }
 
 function openAddToWatchlistModal() {
@@ -3675,7 +3744,14 @@ document
     }
 
     const shouldClearRouletteWinner =
-      rouletteAutofillActive && Boolean(rouletteLastWinner);
+      Boolean(rouletteLastWinner) &&
+      (!rouletteAutofillActive ||
+        movieData.title.trim() !== rouletteLastWinner ||
+        (movieData.year && String(movieData.year).trim().length > 0 &&
+          String(movieData.year).trim() !== String(new Date().getFullYear())) ||
+        (selectedKPMovie &&
+          (selectedKPMovie.nameRu || selectedKPMovie.nameEn || "").trim() !==
+            rouletteLastWinner));
 
     try {
       const { data, error } = await supabaseClient
