@@ -168,6 +168,20 @@ const fortuneWinnerReYohohoBtn = document.getElementById(
 );
 const fortuneWinnerCancelBtn = document.getElementById("fortuneWinnerCancel");
 let fortuneWinnerMovie = null;
+const reyohohoPickerModal = document.getElementById("reyohohoPickerModal");
+const reyohohoPickerSubtitle = document.getElementById(
+  "reyohohoPickerSubtitle"
+);
+const reyohohoPickerLoading = document.getElementById(
+  "reyohohoPickerLoading"
+);
+const reyohohoOptionsContainer = document.getElementById("reyohohoOptions");
+const reyohohoPickerCancelBtn = document.getElementById(
+  "reyohohoPickerCancel"
+);
+const DEFAULT_POSTER_PLACEHOLDER =
+  "https://via.placeholder.com/300x450?text=Нет+постера";
+let reyohohoPickerContext = null;
 const rouletteAutofillHint = document.getElementById("rouletteAutofillHint");
 const rouletteAutofillClearBtn = document.getElementById("rouletteAutofillClear");
 
@@ -890,6 +904,357 @@ function closeFortuneWinnerModal() {
     fortuneWinnerFilmNameEl.style.display = "";
   }
   closeModal("fortuneWinnerModal");
+  closeReyohohoPicker();
+}
+
+function getReyohohoDisplayTitle(movie) {
+  if (!movie) {
+    return "";
+  }
+
+  if (movie.displayText) {
+    return movie.displayText;
+  }
+
+  const parts = [];
+
+  if (movie.title) {
+    parts.push(movie.title);
+  }
+
+  const movieYear =
+    movie.year ||
+    extractYearValue(movie.match?.year) ||
+    extractYearValue(movie.match?.releaseDate);
+
+  if (movieYear) {
+    parts.push(`(${movieYear})`);
+  }
+
+  const normalizedTitle = normalizeFortuneText(movie.title);
+  const normalizedOriginal = normalizeFortuneText(movie.originalTitle);
+
+  if (
+    movie.originalTitle &&
+    normalizedOriginal &&
+    normalizedOriginal !== normalizedTitle
+  ) {
+    parts.push(movie.originalTitle);
+  }
+
+  return parts.join(" ").trim();
+}
+
+function setReyohohoPickerSubtitle(movie) {
+  if (!reyohohoPickerSubtitle) {
+    return;
+  }
+
+  const displayTitle = getReyohohoDisplayTitle(movie);
+
+  if (displayTitle) {
+    reyohohoPickerSubtitle.textContent = `Выберите нужный фильм для "${displayTitle}"`;
+  } else {
+    reyohohoPickerSubtitle.textContent = "Выберите нужный фильм";
+  }
+}
+
+function openReyohohoPickerLoading(movie) {
+  if (!reyohohoPickerModal || !reyohohoOptionsContainer) {
+    return false;
+  }
+
+  reyohohoPickerContext = { movie: movie || null, options: [] };
+  setReyohohoPickerSubtitle(movie);
+
+  if (reyohohoPickerLoading) {
+    reyohohoPickerLoading.style.display = "flex";
+  }
+
+  reyohohoOptionsContainer.innerHTML = "";
+  reyohohoPickerModal.style.display = "block";
+
+  return true;
+}
+
+function renderReyohohoPickerOptions(movie, options) {
+  if (!reyohohoPickerModal || !reyohohoOptionsContainer) {
+    return;
+  }
+
+  if (!reyohohoPickerContext || reyohohoPickerContext.movie !== movie) {
+    reyohohoPickerContext = { movie: movie || null, options: [] };
+  }
+
+  reyohohoPickerContext.options = Array.isArray(options) ? options : [];
+
+  setReyohohoPickerSubtitle(movie);
+
+  if (reyohohoPickerLoading) {
+    reyohohoPickerLoading.style.display = "none";
+  }
+
+  reyohohoOptionsContainer.innerHTML = "";
+
+  if (!reyohohoPickerContext.options.length) {
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  const limitedOptions = reyohohoPickerContext.options.slice(0, 4);
+
+  for (const option of limitedOptions) {
+    fragment.appendChild(createReyohohoOptionButton(option));
+  }
+
+  reyohohoOptionsContainer.appendChild(fragment);
+}
+
+function createReyohohoOptionButton(option) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "reyohoho-option-card";
+  button.addEventListener("click", () => handleReyohohoOptionSelect(option));
+
+  const posterWrapper = document.createElement("div");
+  posterWrapper.className = "reyohoho-option-poster";
+
+  const posterImg = document.createElement("img");
+  posterImg.src =
+    option.posterUrlPreview ||
+    option.posterUrl ||
+    DEFAULT_POSTER_PLACEHOLDER;
+  posterImg.alt = option.nameRu || option.nameEn || "Постер";
+  posterImg.loading = "lazy";
+
+  posterWrapper.appendChild(posterImg);
+  button.appendChild(posterWrapper);
+
+  const infoWrapper = document.createElement("div");
+  infoWrapper.className = "reyohoho-option-info";
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "reyohoho-option-title";
+  titleEl.textContent =
+    option.nameRu || option.nameEn || option.nameOriginal || "Без названия";
+  infoWrapper.appendChild(titleEl);
+
+  const metaValues = [];
+
+  if (option.year) {
+    metaValues.push(String(option.year));
+  }
+
+  const countries = Array.isArray(option.countries)
+    ? option.countries
+        .map((country) => country?.country)
+        .filter(Boolean)
+    : [];
+
+  if (countries.length) {
+    metaValues.push(countries.slice(0, 2).join(", "));
+  }
+
+  if (
+    option.nameEn &&
+    option.nameRu &&
+    option.nameEn.trim().toLowerCase() !== option.nameRu.trim().toLowerCase()
+  ) {
+    metaValues.push(option.nameEn);
+  } else if (option.nameEn && !option.nameRu) {
+    metaValues.push(option.nameEn);
+  }
+
+  if (metaValues.length) {
+    const metaEl = document.createElement("div");
+    metaEl.className = "reyohoho-option-meta";
+    metaEl.textContent = metaValues.join(" • ");
+    infoWrapper.appendChild(metaEl);
+  }
+
+  const ratingValue =
+    option.rating && option.rating !== "null" ? String(option.rating).trim() : "";
+
+  if (ratingValue) {
+    const ratingEl = document.createElement("div");
+    ratingEl.className = "reyohoho-option-rating";
+    ratingEl.textContent = `Рейтинг КП: ${ratingValue}`;
+    infoWrapper.appendChild(ratingEl);
+  }
+
+  button.appendChild(infoWrapper);
+
+  return button;
+}
+
+function closeReyohohoPicker(shouldReturnFocus = false) {
+  if (reyohohoPickerModal) {
+    reyohohoPickerModal.style.display = "none";
+  }
+  if (reyohohoPickerLoading) {
+    reyohohoPickerLoading.style.display = "none";
+  }
+  if (reyohohoOptionsContainer) {
+    reyohohoOptionsContainer.innerHTML = "";
+  }
+  if (reyohohoPickerSubtitle) {
+    reyohohoPickerSubtitle.textContent = "";
+  }
+
+  reyohohoPickerContext = null;
+
+  if (shouldReturnFocus && fortuneWinnerReYohohoBtn) {
+    fortuneWinnerReYohohoBtn.focus();
+  }
+}
+
+function handleReyohohoOptionSelect(option) {
+  const baseUrl = REYOHOHO_BASE_URL;
+
+  if (!option) {
+    closeReyohohoPicker();
+    window.open(baseUrl, "_blank");
+    return;
+  }
+
+  const targetId = extractKinopoiskIdFromValue(
+    option.filmId || option.kinopoiskId
+  );
+  const targetUrl = targetId ? `${baseUrl}#${targetId}` : baseUrl;
+
+  if (reyohohoPickerContext?.movie) {
+    const contextMovie = reyohohoPickerContext.movie;
+
+    if (targetId) {
+      contextMovie.kinopoiskId = targetId;
+    }
+
+    const optionYear =
+      option.year ||
+      extractYearValue(option.premiereRu) ||
+      extractYearValue(option.premiereWorld) ||
+      extractYearValue(option.releaseDate);
+
+    if (optionYear) {
+      contextMovie.year = optionYear;
+    }
+
+    if (option.nameRu) {
+      contextMovie.title = option.nameRu;
+    } else if (option.nameEn && !contextMovie.title) {
+      contextMovie.title = option.nameEn;
+    }
+
+    if (option.nameEn) {
+      contextMovie.originalTitle = option.nameEn;
+    } else if (option.nameOriginal) {
+      contextMovie.originalTitle = option.nameOriginal;
+    }
+
+    contextMovie.match = option;
+
+    const normalizedTitle = normalizeFortuneText(contextMovie.title);
+    const normalizedOriginal = normalizeFortuneText(contextMovie.originalTitle);
+
+    const displayParts = [];
+    if (contextMovie.title) {
+      displayParts.push(contextMovie.title);
+    }
+    if (contextMovie.year) {
+      displayParts.push(`(${contextMovie.year})`);
+    }
+    if (
+      contextMovie.originalTitle &&
+      normalizedOriginal &&
+      normalizedOriginal !== normalizedTitle
+    ) {
+      displayParts.push(contextMovie.originalTitle);
+    }
+
+    contextMovie.displayText =
+      displayParts.join(" ").trim() ||
+      contextMovie.displayText ||
+      contextMovie.title ||
+      "";
+
+    if (fortuneWinnerFilmNameEl && fortuneWinnerMovie === contextMovie) {
+      if (contextMovie.displayText) {
+        fortuneWinnerFilmNameEl.textContent = contextMovie.displayText;
+        fortuneWinnerFilmNameEl.style.display = "block";
+      } else {
+        fortuneWinnerFilmNameEl.textContent = "";
+        fortuneWinnerFilmNameEl.style.display = "none";
+      }
+    }
+  }
+
+  closeReyohohoPicker();
+
+  const newWindow = window.open(targetUrl, "_blank");
+  if (!newWindow) {
+    console.warn("ReYohoho window was blocked by the browser");
+  }
+}
+
+async function openReyohohoFallback(baseUrl, movie) {
+  let openedWindow = window.open("about:blank", "_blank");
+
+  if (!openedWindow) {
+    openedWindow = window.open(baseUrl, "_blank");
+  } else {
+    try {
+      openedWindow.document.write(
+        "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Открываем ReYohoho...</title></head><body style='font-family:sans-serif;font-size:16px;margin:20px;'><p>Открываем страницу ReYohoho...</p></body></html>"
+      );
+      openedWindow.document.close();
+    } catch (err) {
+      console.error("Failed to prepare ReYohoho window", err);
+    }
+  }
+
+  try {
+    const resolvedId = await resolveFortuneMovieKinopoiskId(movie);
+    const targetUrl = resolvedId ? `${baseUrl}#${resolvedId}` : baseUrl;
+
+    if (resolvedId) {
+      movie.kinopoiskId = resolvedId;
+    }
+
+    if (openedWindow && !openedWindow.closed) {
+      try {
+        openedWindow.location.replace(targetUrl);
+        return;
+      } catch (err) {
+        console.error("Failed to redirect ReYohoho window", err);
+      }
+    }
+
+    window.open(targetUrl, "_blank");
+  } catch (err) {
+    console.error("Failed to resolve Kinopoisk ID for ReYohoho link", err);
+
+    if (openedWindow && !openedWindow.closed) {
+      try {
+        openedWindow.location.replace(baseUrl);
+      } catch (redirectErr) {
+        console.error("Failed to open fallback ReYohoho page", redirectErr);
+      }
+    }
+  }
+}
+
+if (reyohohoPickerCancelBtn) {
+  reyohohoPickerCancelBtn.addEventListener("click", () => {
+    closeReyohohoPicker(true);
+  });
+}
+
+if (reyohohoPickerModal) {
+  reyohohoPickerModal.addEventListener("click", (event) => {
+    if (event.target === reyohohoPickerModal) {
+      closeReyohohoPicker(true);
+    }
+  });
 }
 
 if (fortuneWinnerKinopoiskBtn) {
@@ -906,7 +1271,7 @@ if (fortuneWinnerKinopoiskBtn) {
 }
 
 if (fortuneWinnerReYohohoBtn) {
-  fortuneWinnerReYohohoBtn.addEventListener("click", () => {
+  fortuneWinnerReYohohoBtn.addEventListener("click", async () => {
     const baseUrl = REYOHOHO_BASE_URL;
 
     if (!fortuneWinnerMovie) {
@@ -924,51 +1289,39 @@ if (fortuneWinnerReYohohoBtn) {
       return;
     }
 
-    let openedWindow = window.open("about:blank", "_blank");
-
-    if (!openedWindow) {
-      openedWindow = window.open(baseUrl, "_blank");
-    } else {
-      try {
-        openedWindow.document.write(
-          "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Открываем ReYohoho...</title></head><body style='font-family:sans-serif;font-size:16px;margin:20px;'><p>Открываем страницу ReYohoho...</p></body></html>"
-        );
-        openedWindow.document.close();
-      } catch (err) {
-        console.error("Failed to prepare ReYohoho window", err);
-      }
+    if (!KINOPOISK_API_KEY) {
+      await openReyohohoFallback(baseUrl, fortuneWinnerMovie);
+      return;
     }
 
-    resolveFortuneMovieKinopoiskId(fortuneWinnerMovie)
-      .then((resolvedId) => {
-        const targetUrl = resolvedId ? `${baseUrl}#${resolvedId}` : baseUrl;
+    const targetMovie = fortuneWinnerMovie;
+    const pickerOpened = openReyohohoPickerLoading(targetMovie);
 
-        if (resolvedId) {
-          fortuneWinnerMovie.kinopoiskId = resolvedId;
-        }
+    if (pickerOpened === false) {
+      await openReyohohoFallback(baseUrl, targetMovie);
+      return;
+    }
 
-        if (openedWindow && !openedWindow.closed) {
-          try {
-            openedWindow.location.replace(targetUrl);
-            return;
-          } catch (err) {
-            console.error("Failed to redirect ReYohoho window", err);
-          }
-        }
+    try {
+      const options = await fetchKinopoiskFilmOptions(targetMovie, 4);
 
-        window.open(targetUrl, "_blank");
-      })
-      .catch((err) => {
-        console.error("Failed to resolve Kinopoisk ID for ReYohoho link", err);
+      if (fortuneWinnerMovie !== targetMovie) {
+        closeReyohohoPicker();
+        return;
+      }
 
-        if (openedWindow && !openedWindow.closed) {
-          try {
-            openedWindow.location.replace(baseUrl);
-          } catch (redirectErr) {
-            console.error("Failed to open fallback ReYohoho page", redirectErr);
-          }
-        }
-      });
+      if (!options.length) {
+        closeReyohohoPicker();
+        await openReyohohoFallback(baseUrl, targetMovie);
+        return;
+      }
+
+      renderReyohohoPickerOptions(targetMovie, options);
+    } catch (err) {
+      console.error("Failed to fetch ReYohoho suggestions", err);
+      closeReyohohoPicker();
+      await openReyohohoFallback(baseUrl, targetMovie);
+    }
   });
 }
 
@@ -3143,6 +3496,143 @@ function showWatchlistKPPreview() {
   };
   preview.appendChild(createOrderCard(order, false, false));
   preview.style.display = "block";
+}
+
+async function fetchKinopoiskFilmOptions(movie, limit = 4) {
+  if (!KINOPOISK_API_KEY || !movie) {
+    return [];
+  }
+
+  const querySource =
+    (movie.originalTitle ||
+      movie.title ||
+      movie.label ||
+      movie.match?.title ||
+      movie.match?.nameRu ||
+      movie.match?.nameEn ||
+      movie.match?.nameOriginal ||
+      movie.match?.label ||
+      "").trim();
+
+  if (!querySource) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(
+      `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+        querySource
+      )}&page=1`,
+      {
+        headers: {
+          "X-API-KEY": KINOPOISK_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error(
+        "Kinopoisk search error for ReYohoho options",
+        response.status,
+        response.statusText
+      );
+      return [];
+    }
+
+    const payload = await response.json();
+    const films = Array.isArray(payload.films)
+      ? payload.films.filter(Boolean)
+      : [];
+
+    if (!films.length) {
+      return [];
+    }
+
+    const normalizedTitle = normalizeFortuneText(movie.title);
+    const normalizedOriginal = normalizeFortuneText(movie.originalTitle);
+    const normalizedLabel = normalizeFortuneText(movie.label);
+    const targetYear = Number(
+      movie.year ||
+        movie.match?.year ||
+        extractYearValue(movie.match?.releaseDate)
+    );
+
+    const scoredFilms = [];
+    const seenIds = new Set();
+
+    films.forEach((film, index) => {
+      const filmId = extractKinopoiskIdFromValue(film?.filmId);
+      if (!filmId || seenIds.has(filmId)) {
+        return;
+      }
+      seenIds.add(filmId);
+
+      let score = 0;
+      const filmYear = Number(film.year);
+
+      if (!Number.isNaN(filmYear) && !Number.isNaN(targetYear)) {
+        const diff = Math.abs(filmYear - targetYear);
+        if (diff === 0) {
+          score += 100;
+        } else if (diff === 1) {
+          score += 60;
+        } else if (diff === 2) {
+          score += 40;
+        } else if (diff <= 4) {
+          score += 20 - diff * 2;
+        } else {
+          score -= diff;
+        }
+      }
+
+      const filmTitleNormalized = normalizeFortuneText(
+        film.nameRu || film.nameEn || film.nameOriginal || ""
+      );
+
+      if (normalizedTitle && filmTitleNormalized === normalizedTitle) {
+        score += 80;
+      }
+
+      if (normalizedOriginal) {
+        const filmOriginalNormalized = normalizeFortuneText(
+          film.nameEn || film.nameOriginal || ""
+        );
+        if (filmOriginalNormalized === normalizedOriginal) {
+          score += 60;
+        }
+      }
+
+      if (normalizedLabel && filmTitleNormalized === normalizedLabel) {
+        score += 30;
+      }
+
+      if (film.rating && film.rating !== "null") {
+        const ratingNumber = Number(film.rating);
+        if (!Number.isNaN(ratingNumber)) {
+          score += Math.min(Math.max(ratingNumber, 0), 10);
+        } else {
+          score += 5;
+        }
+      }
+
+      scoredFilms.push({ film, score, index });
+    });
+
+    scoredFilms.sort((a, b) => {
+      if (b.score === a.score) {
+        return a.index - b.index;
+      }
+      return b.score - a.score;
+    });
+
+    return scoredFilms
+      .slice(0, Math.max(1, Number(limit) || 1))
+      .map(({ film }) => film);
+  } catch (err) {
+    console.error("Kinopoisk search error for ReYohoho options", err);
+    return [];
+  }
 }
 
 async function fetchKinopoiskFilm(title, year, originalTitle = "") {
