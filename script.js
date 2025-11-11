@@ -3745,6 +3745,28 @@ function switchPlayedGameMode(mode) {
   }
 }
 
+function updateRatingTooltipPosition(event) {
+  if (!ratingTooltip || ratingTooltip.style.display !== "block") return;
+  const offsetX = 12;
+  const offsetY = 16;
+  const pageX = event?.pageX ?? 0;
+  const pageY = event?.pageY ?? 0;
+  ratingTooltip.style.left = `${pageX + offsetX}px`;
+  ratingTooltip.style.top = `${pageY + offsetY}px`;
+}
+
+function showRatingValueTooltip(event, value) {
+  if (!ratingTooltip) return;
+  ratingTooltip.textContent = String(value);
+  ratingTooltip.style.display = "block";
+  updateRatingTooltipPosition(event);
+}
+
+function hideRatingValueTooltip() {
+  if (!ratingTooltip) return;
+  ratingTooltip.style.display = "none";
+}
+
 // Настройка звездного рейтинга
 function setupRatingStars(containerId = "ratingStars") {
   const container = document.getElementById(containerId);
@@ -3762,11 +3784,20 @@ function setupRatingStars(containerId = "ratingStars") {
       const rating = parseInt(this.dataset.rating);
       highlightStars(containerId, rating);
     });
+
+    if (!star.classList.contains("rating-label")) {
+      star.addEventListener("mouseenter", function (event) {
+        showRatingValueTooltip(event, this.dataset.rating);
+      });
+      star.addEventListener("mousemove", updateRatingTooltipPosition);
+      star.addEventListener("mouseleave", hideRatingValueTooltip);
+    }
   });
 
   container.addEventListener("mouseleave", function () {
     const currentRating = getCurrentRating(containerId);
     highlightStars(containerId, currentRating);
+    hideRatingValueTooltip();
   });
 
   if (ratingInput) {

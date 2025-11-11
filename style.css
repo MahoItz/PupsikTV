@@ -969,7 +969,7 @@ select option {
     font-size: 0.85rem;
     pointer-events: none;
     white-space: nowrap;
-    z-index: 1000;
+    z-index: 4000;
     display: none;
     border: 1px solid var(--border-color);
     backdrop-filter: blur(6px);
@@ -1704,6 +1704,7 @@ select option {
 }
 
 .rating-input {
+    appearance: textfield;
     -moz-appearance: textfield;
 }
 
@@ -3198,6 +3199,7 @@ select option {
 }
 
 .fortune-spin-input[type="number"] {
+    appearance: textfield;
     -moz-appearance: textfield;
 }
 
