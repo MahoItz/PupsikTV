@@ -1001,7 +1001,7 @@ function renderReyohohoPickerOptions(movie, options) {
   }
 
   const fragment = document.createDocumentFragment();
-  const limitedOptions = reyohohoPickerContext.options.slice(0, 4);
+  const limitedOptions = reyohohoPickerContext.options.slice(0, 9);
 
   for (const option of limitedOptions) {
     fragment.appendChild(createReyohohoOptionButton(option));
@@ -1303,7 +1303,7 @@ if (fortuneWinnerReYohohoBtn) {
     }
 
     try {
-      const options = await fetchKinopoiskFilmOptions(targetMovie, 4);
+      const options = await fetchKinopoiskFilmOptions(targetMovie, 9);
 
       if (fortuneWinnerMovie !== targetMovie) {
         closeReyohohoPicker();
@@ -3498,7 +3498,7 @@ function showWatchlistKPPreview() {
   preview.style.display = "block";
 }
 
-async function fetchKinopoiskFilmOptions(movie, limit = 4) {
+async function fetchKinopoiskFilmOptions(movie, limit = 9) {
   if (!KINOPOISK_API_KEY || !movie) {
     return [];
   }
