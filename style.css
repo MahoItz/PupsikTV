@@ -2652,7 +2652,7 @@ select option {
     right: 0;
     height: 100%;
     width: var(--rules-panel-width);
-    padding: 32px 28px;
+    padding: clamp(14px, 4vh, 26px) clamp(16px, 3vw, 24px);
     background: var(--card-bg);
     border-left: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: -2px 0 20px rgba(0, 0, 0, 0.4);
@@ -2673,16 +2673,16 @@ select option {
 .rules-panel__content {
     background: var(--glass-bg);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
-    padding: 28px 28px 32px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    border-radius: 14px;
+    padding: clamp(18px, 3.8vh, 24px) clamp(18px, 3.3vw, 26px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.32);
     width: 100%;
     position: relative;
     overflow-y: auto;
-    max-height: calc(100% - 48px);
+    max-height: calc(100% - 28px);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: clamp(12px, 2.8vh, 20px);
     scrollbar-width: thin;
     scrollbar-color: rgba(241, 241, 241, 0.425) rgba(255, 255, 255, 0.05);
 }
@@ -2715,7 +2715,7 @@ select option {
 }
 
 .rules-panel__title {
-    font-size: 1.5rem;
+    font-size: clamp(1.05rem, 2.2vh, 1.35rem);
     text-align: center;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -2725,8 +2725,8 @@ select option {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    font-size: 0.95rem;
+    gap: clamp(8px, 1vh, 26px);
+    font-size: clamp(0.85rem, 2vh, 0.95rem);
     color: var(--text-secondary);
     padding: 0;
     margin: 0;
@@ -2737,22 +2737,22 @@ select option {
     position: relative;
     background: rgba(12, 16, 32, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 14px;
-    padding: 16px 16px 16px 56px;
-    line-height: 1.5;
+    border-radius: 12px;
+    padding: clamp(12px, 2.6vh, 16px) clamp(14px, 2.6vw, 18px) clamp(12px, 2.6vh, 16px) clamp(44px, 4vw, 56px);
+    line-height: 1.45;
     color: var(--text-primary);
     counter-increment: rules-order;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
 }
 
 .rules-panel__list li::before {
     content: counter(rules-order);
     position: absolute;
     top: 50%;
-    left: 18px;
+    left: clamp(12px, 2vw, 18px);
     transform: translateY(-50%);
-    width: 28px;
-    height: 28px;
+    width: clamp(24px, 2.6vh, 28px);
+    height: clamp(24px, 2.6vh, 28px);
     border-radius: 8px;
     background: linear-gradient(135deg, rgba(63, 81, 181, 0.85), rgba(123, 97, 255, 0.85));
     display: inline-flex;
@@ -2760,16 +2760,90 @@ select option {
     justify-content: center;
     font-weight: 700;
     color: #fff;
-    font-size: 0.85rem;
-    box-shadow: 0 6px 16px rgba(63, 81, 181, 0.3);
+    font-size: clamp(0.72rem, 1.8vh, 0.82rem);
+    box-shadow: 0 6px 16px rgba(63, 81, 181, 0.28);
 }
 
 .rules-panel__note {
     margin: 0;
-    font-size: 0.85rem;
+    font-size: clamp(0.75rem, 1.8vh, 0.82rem);
     color: var(--text-secondary);
     text-align: center;
-    margin-top: auto;
+    margin-top: clamp(12px, 3vh, 24px);
+}
+
+@media (max-height: 1100px) {
+    .rules-panel {
+        padding: 14px 16px;
+    }
+
+    .rules-panel__content {
+        padding: 16px;
+        gap: 24px;
+        max-height: 100%;
+        box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28);
+    }
+
+    .rules-panel__title {
+        font-size: 1.05rem;
+    }
+
+    .rules-panel__list {
+        gap: clamp(8px, 1vh, 26px);
+        font-size: 0.85rem;
+    }
+
+    .rules-panel__list li {
+        padding: clamp(10px, 2vh, 28px) clamp(12px, 2vw, 12px) clamp(10px, 2vh, 28px) clamp(44px, 4vw, 44px);
+        border-radius: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .rules-panel__list li::before {
+        left: 14px;
+        width: 24px;
+        height: 24px;
+        font-size: 0.72rem;
+    }
+
+    .rules-panel__note {
+        font-size: 0.78rem;
+        margin-top: 14px;
+    }
+}
+
+@media (max-height: 900px) {
+    .rules-panel__content {
+        padding: 14px;
+        gap: 24px;
+        max-height: calc(100% - 16px);
+    }
+
+    .rules-panel__title {
+        font-size: 0.98rem;
+        letter-spacing: 0.03em;
+    }
+
+    .rules-panel__list {
+        gap: clamp(8px, 1rem, 26px);
+        font-size: 0.8rem;
+    }
+
+    .rules-panel__list li {
+        padding: clamp(10px, 1vh, 28px) clamp(12px, 2vw, 12px) clamp(10px, 2vh, 28px) clamp(44px, 4vw, 44px);
+    }
+
+    .rules-panel__list li::before {
+        left: 12px;
+        width: 22px;
+        height: 22px;
+        font-size: 0.68rem;
+    }
+
+    .rules-panel__note {
+        font-size: 0.74rem;
+        margin-top: 12px;
+    }
 }
 
 .rules-panel__close {
