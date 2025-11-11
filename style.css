@@ -593,6 +593,7 @@ header img {
 .roulette-autofill-clear:hover,
 .roulette-autofill-clear:focus-visible {
     background: rgba(255, 209, 102, 0.35);
+    transform: scale(1.05);
     color: #ff6b6b;
 }
 
