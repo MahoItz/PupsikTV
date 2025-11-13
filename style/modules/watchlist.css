@@ -1,0 +1,186 @@
+/* Список к просмотру */
+.watchlist-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 25px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Header row with add buttons */
+.watchlist-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.watchlist-header h3 {
+    margin-bottom: 0;
+}
+
+.watchlist-header .btn-icon {
+    margin-left: auto;
+}
+
+.order-card {
+    background: var(--glass-bg);
+    border-radius: var(--border-radius-small);
+    transition: var(--transition);
+    padding: 10px;
+    display: flex;
+    gap: 15px;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.order-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: var(--border-radius-small);
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.order-complete {
+    margin-top: 0;
+    width: 100%;
+}
+
+.watch-complete-btn {
+    width: 100%;
+    padding: 8px 0;
+    background: transparent;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    border-radius: 0 0 var(--border-radius-small) var(--border-radius-small);
+}
+
+.watch-complete-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 20px 0;
+}
+
+.empty-state img {
+    max-width: 200px;
+    width: 100%;
+    opacity: 0.8;
+    margin: 0 auto 10px;
+    display: block;
+}
+
+.order-poster {
+    flex-shrink: 0;
+    width: 40%;
+    height: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.order-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #ffffff;
+}
+
+.order-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.order-original-title {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.order-genres {
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    margin-bottom: 12px;
+}
+
+.order-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+}
+
+.order-meta img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.order-year {
+    color: var(--text-accent);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+.order-length {
+    color: var(--text-secondary);
+}
+
+.order-kp-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.order-kp-rating:hover {
+    transform: translateY(-2px);
+    scale: 1.15;
+    transition: var(--transition);
+}
+
+.order-date {
+    color: #a0a0a0;
+    font-size: 14px;
+}
+
+.order-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin-top: auto;
+}
+
+.order-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-actions {
+    display: flex;
+    gap: 8px;
+}
+

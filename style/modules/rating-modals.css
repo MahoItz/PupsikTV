@@ -1,0 +1,69 @@
+/* Оценка фильма */
+#rateMovieModal .rate-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+
+#rateMovieModal .rate-image {
+    width: 3rem;
+}
+
+#rateMovieModal .rate-poster {
+    text-align: center;
+}
+
+#rateMovieModal #rateMoviePoster {
+    display: block;
+    margin: 0 auto 10px auto;
+    width: 60%;
+    max-width: 250px;
+}
+
+/* Оценка игр */
+#rateGameModal .rate-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+
+#rateGameModal .rate-poster {
+    text-align: center;
+}
+
+
+#rateGameModal #rateMoviePoster {
+    display: block;
+    margin: 0 auto 10px auto;
+    width: 60%;
+    max-width: 250px;
+}
+
+/* Пользовательская оценка фильма */
+#userRateModal .rate-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+}
+
+#userRateModal .rate-image {
+    width: 3rem;
+}
+
+#userRateModal .rate-poster {
+    text-align: center;
+}
+
+#userRateModal #userRateMoviePoster {
+    display: block;
+    margin: 0 auto 10px auto;
+    width: 60%;
+    max-width: 250px;
+}
+

@@ -1,0 +1,429 @@
+/* Сетка фильмов */
+.movies-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+/* Пагинация */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    gap: 8px;
+}
+
+.pagination .page-btn {
+    padding: 6px 12px;
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.pagination .page-btn.active {
+    background: var(--primary-color);
+}
+
+.pagination .page-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.pagination .ellipsis {
+    padding: 6px 12px;
+    color: var(--text-secondary);
+}
+
+/* Карточка фильма */
+.movie-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    transition: var(--transition);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.movie-card.rating-low {
+    position: relative;
+    overflow: visible;
+    border: 2px solid #ff4444;
+    background:
+        radial-gradient(ellipse at top, rgba(255, 68, 68, 0.1), transparent),
+        linear-gradient(135deg, rgba(139, 0, 0, 0.1), rgba(75, 0, 130, 0.1));
+    box-shadow:
+        0 0 30px rgba(255, 68, 68, 0.3),
+        inset 0 0 20px rgba(255, 68, 68, 0.1);
+}
+
+.movie-card.rating-low::after {
+    content: "Worst";
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(45deg, #ff0000, #ff4444);
+    color: #ffffff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4);
+    animation: badgeShake 3s ease-in-out infinite;
+}
+
+@keyframes badgeShake {
+
+    0%,
+    100% {
+        transform: translateX(-50%) scale(1) rotate(0deg);
+    }
+
+    25% {
+        transform: translateX(-50%) scale(1.05) rotate(-2deg);
+    }
+
+    75% {
+        transform: translateX(-50%) scale(1.05) rotate(2deg);
+    }
+}
+
+.movie-card.rating-high {
+    position: relative;
+    overflow: visible;
+    border: 2px solid #ffc400;
+    background:
+        radial-gradient(ellipse at top, rgba(212, 175, 55, 0.1), transparent),
+        linear-gradient(135deg, rgba(139, 69, 19, 0.1), rgba(25, 25, 112, 0.1));
+    box-shadow:
+        0 0 30px rgba(212, 175, 55, 0.3),
+        inset 0 0 20px rgba(212, 175, 55, 0.1);
+}
+
+
+.movie-card.rating-high::after {
+    content: "★ Best ★";
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(45deg, #ffd000, #ffd94e);
+    color: #1a1a1a;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+    animation: badgePulse 3s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+
+    0%,
+    100% {
+        transform: translateX(-50%) scale(1);
+    }
+
+    50% {
+        transform: translateX(-50%) scale(1.1);
+    }
+}
+
+/* .movie-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.3),
+        0 0 30px rgba(0, 212, 255, 0.3);
+    border-color: var(--secondary-color);
+} */
+
+.movie-poster {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Стили для заглушки когда нет постера */
+.movie-poster-placeholder {
+    width: 100%;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(255, 108, 66, 0.1));
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    position: relative;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    border: 2px dashed var(--text-secondary);
+}
+
+.movie-poster-placeholder::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.4));
+    border-radius: 0 0 6px 6px;
+}
+
+.movie-info {
+    padding: 10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.movie-header {
+    position: relative;
+    padding-right: 80px;
+}
+
+.movie-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+.movie-original-title {
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.movie-genres {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.movie-year {
+    color: var(--text-accent);
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+
+/* Ribbon showing who ordered */
+.order-badge {
+    display: block;
+    width: 100%;
+    margin: 6px 0;
+    padding: 6px 12px;
+    background: rgba(78, 78, 78, 0.133);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-align: center;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Ribbon over poster in movie cards */
+.movie-card .order-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: calc(100% - 12px);
+    margin: 0;
+}
+
+/* Keep ribbons static inside order/game cards */
+.order-card .order-badge {
+    position: static;
+    margin: 6px 0;
+}
+
+
+.ribbon-donate {
+    border-color: rgba(255, 165, 0, 0.4);
+}
+
+.ribbon-points {
+    border-color: rgba(138, 43, 226, 0.4);
+}
+
+.ribbon-balls {
+    border-color: rgba(0, 200, 255, 0.4);
+}
+
+.movie-rating {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+    margin-top: auto;
+    padding: 12px 0;
+}
+
+.movie-rating .rating-item {
+    flex: 1 1 calc(50% - 5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 700;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.movie-rating .kp-rating-item {
+    cursor: pointer;
+}
+
+.movie-rating .rating-item.rating-user {
+    flex-basis: 100%;
+}
+
+.movie-rating .rating-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.movie-rating img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.movie-rating span {
+    font-size: 1rem;
+    color: var(--text-primary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.movie-rating .rating-item i {
+    font-size: 1.1rem;
+    color: #ffd75e;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.stars {
+    color: var(--accent-color);
+    font-size: 1.2rem;
+    text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+}
+
+.rating-tooltip {
+    position: absolute;
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: var(--border-radius-small);
+    font-size: 0.85rem;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 4000;
+    display: none;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.movie-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.movie-date {
+    color: #a0a0a0;
+    font-size: 14px;
+}
+
+.movie-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-icon {
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-edit {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.btn-edit:hover {
+    background: rgba(255, 108, 66, 0.1);
+    color: var(--text-primary);
+}
+
+.btn-delete {
+    background: rgba(255, 108, 66, 0.2);
+    transform: translateY(-2px);
+}
+
+.btn-delete:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#sortOrderBtn,
+.btn-sort-toggle {
+    border: 2px solid rgba(0, 212, 255, 0.4);
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--text-primary);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    width: 48px;
+    height: 48px;
+    padding: 0;
+}
+
+/* Убираем нижний отступ, чтобы кнопка была на одной линии с выпадающим меню */
+#sortOrderBtn {
+    margin-bottom: 0;
+}
+
+#sortOrderBtn:hover,
+.btn-sort-toggle:hover {
+    background: rgba(0, 212, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+

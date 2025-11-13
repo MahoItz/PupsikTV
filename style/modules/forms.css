@@ -1,0 +1,90 @@
+/* Переключатель режимов */
+.mode-toggle {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--border-radius-small);
+    padding: 6px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 14px 24px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: var(--border-radius-small);
+    font-weight: 700;
+    transition: var(--transition);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.9rem;
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+/* Формы */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid rgba(0, 212, 255, 0.2);
+    border-radius: var(--border-radius-small);
+    font-size: 1rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    transition: var(--transition);
+    font-weight: 500;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-secondary);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.3);
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.poster-upload {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.poster-upload img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    cursor: pointer;
+    border-radius: var(--border-radius-small);
+}
+
