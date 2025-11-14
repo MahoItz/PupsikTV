@@ -1019,6 +1019,9 @@ window.onclick = function (event) {
 };
 
 function showAdminControls(skipRender = false) {
+  if (!isAdmin || !adminToken) {
+    return;
+  }
   adminElements.forEach((el) => el.classList.remove("admin-only"));
   const btn = document.getElementById("adminLoginBtn");
   const group = document.getElementById("adminPasswordGroup");
@@ -1055,9 +1058,7 @@ function hideAdminControls(skipRender = false) {
 
 function logoutAdmin() {
   isAdmin = false;
-  localStorage.removeItem("isAdmin");
-  localStorage.removeItem("KINOPOISK_API_KEY");
-  localStorage.removeItem("RAWG_API_KEY");
+  clearAdminSession();
   hideAdminControls();
   closeModal("adminModal");
 }

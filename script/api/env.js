@@ -1,3 +1,8 @@
+import {
+  extractBearerToken,
+  verifyAdminToken,
+} from "./_admin-session.js";
+
 export default function handler(req, res) {
   let password;
   try {
@@ -12,13 +17,49 @@ export default function handler(req, res) {
     return res.status(400).json({ error: "Invalid JSON" });
   }
 
-  const isAdmin = password === process.env.EDIT_PASSWORD;
+  let isAdmin = false;
 
-  const env = { SUPABASE_KEY: process.env.SUPABASE_KEY };
+  const authToken = extractBearerToken(req.headers.authorization);
+
+  if (authToken) {
+    try {
+      const verification = verifyAdminToken(authToken);
+      if (!verification.valid) {
+        return res.status(401).json({
+          error: verification.error || "Invalid token",
+          expired: Boolean(verification.expired),
+        });
+      }
+      isAdmin = true;
+    } catch (err) {
+      console.error("Admin token verification error", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+  }
+
+  if (!isAdmin && password) {
+    if (password !== process.env.EDIT_PASSWORD) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+    isAdmin = true;
+  }
+
+  if (!process.env.SUPABASE_KEY) {
+    return res.status(500).json({ error: "Missing SUPABASE_KEY" });
+  }
+
+  const env = {
+    SUPABASE_KEY: process.env.SUPABASE_KEY,
+    isAdmin,
+  };
 
   if (isAdmin) {
-    env.KINOPOISK_API_KEY = process.env.KINOPOISK_API_KEY;
-    env.RAWG_API_KEY = process.env.RAWG_API_KEY;
+    if (process.env.KINOPOISK_API_KEY) {
+      env.KINOPOISK_API_KEY = process.env.KINOPOISK_API_KEY;
+    }
+    if (process.env.RAWG_API_KEY) {
+      env.RAWG_API_KEY = process.env.RAWG_API_KEY;
+    }
   }
 
   res.status(200).json(env);

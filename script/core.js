@@ -2,6 +2,7 @@
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 let SUPABASE_KEY;
 let supabaseClient;
+let currentSupabaseKey = null;
 
 let cachedGuestId = null;
 let isSubmittingUserRating = false;
@@ -22,9 +23,41 @@ function getGuestId() {
   return guestId;
 }
 
-let isAdmin = localStorage.getItem("isAdmin") === "true";
+let adminToken = localStorage.getItem("adminToken") || null;
+let adminTokenExpiresAt = localStorage.getItem("adminTokenExpiresAt") || null;
+let isAdmin = false;
 let adminElements = [];
 // Kinopoisk (unofficial API)
+
+function updateAdminSession(token, expiresAt) {
+  adminToken = token || null;
+  if (adminToken) {
+    localStorage.setItem("adminToken", adminToken);
+    if (expiresAt) {
+      adminTokenExpiresAt = expiresAt;
+      localStorage.setItem("adminTokenExpiresAt", expiresAt);
+    } else {
+      adminTokenExpiresAt = null;
+      localStorage.removeItem("adminTokenExpiresAt");
+    }
+  } else {
+    adminTokenExpiresAt = null;
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminTokenExpiresAt");
+  }
+}
+
+function clearAdminSession() {
+  updateAdminSession(null, null);
+  isAdmin = false;
+  localStorage.removeItem("KINOPOISK_API_KEY");
+  localStorage.removeItem("RAWG_API_KEY");
+  KINOPOISK_API_KEY = undefined;
+  RAWG_API_KEY = undefined;
+  if (typeof hideAdminControls === "function") {
+    hideAdminControls(true);
+  }
+}
 let KINOPOISK_API_KEY;
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
@@ -84,16 +117,56 @@ const gamesPerPage = 12;
 let totalGamesPlayed = 0;
 let ratingGameId = null;
 
-async function loadEnv(password) {
+async function loadEnv(options = {}) {
+  let opts;
+  if (typeof options === "string") {
+    opts = { password: options };
+  } else if (options && typeof options === "object") {
+    opts = { ...options };
+  } else {
+    opts = {};
+  }
+
+  const headers = {};
+  const token = opts.token || null;
+  const password = opts.password || null;
+
+  if (password) {
+    headers["x-admin-password"] = password;
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   try {
-    const headers = {};
-    if (password) headers["x-admin-password"] = password;
     const res = await fetch("/api/env", { headers });
+    if (res.status === 401 && token && !opts._retriedWithoutToken) {
+      clearAdminSession();
+      return loadEnv({
+        ...opts,
+        token: null,
+        _retriedWithoutToken: true,
+      });
+    }
+    if (!res.ok) {
+      console.error("Failed to load environment variables", res.status);
+      return {};
+    }
     const env = await res.json();
-    SUPABASE_KEY = env.SUPABASE_KEY;
+    const key = env.SUPABASE_KEY;
+    if (key) {
+      if (!supabaseClient || currentSupabaseKey !== key) {
+        SUPABASE_KEY = key;
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, key);
+        currentSupabaseKey = key;
+      } else {
+        SUPABASE_KEY = key;
+      }
+    } else {
+      console.error("SUPABASE_KEY is missing in env response");
+    }
     if (env.KINOPOISK_API_KEY) KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
     if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     return env;
   } catch (err) {
     console.error("Failed to load environment variables", err);
@@ -102,18 +175,47 @@ async function loadEnv(password) {
 }
 
 async function verifyAdminPassword(password) {
+  if (!password) {
+    return { ok: false };
+  }
   try {
     const res = await fetch("/api/verify-admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
     });
-    if (!res.ok) return false;
+    if (!res.ok) {
+      return { ok: false };
+    }
     const data = await res.json();
-    return !!data.ok;
+    const token = typeof data.token === "string" ? data.token : null;
+    const expiresAt =
+      typeof data.expiresAt === "string" ? data.expiresAt : null;
+    return { ok: !!data.ok && !!token, token, expiresAt };
   } catch (err) {
     console.error("Failed to verify admin password", err);
-    return false;
+    return { ok: false };
+  }
+}
+
+async function verifyAdminTokenRequest(token) {
+  if (!token) {
+    return { ok: false };
+  }
+  try {
+    const res = await fetch("/api/verify-admin", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      return { ok: false, expired: res.status === 401 };
+    }
+    const data = await res.json();
+    const expiresAt =
+      typeof data.expiresAt === "string" ? data.expiresAt : null;
+    return { ok: !!data.ok, expiresAt };
+  } catch (err) {
+    console.error("Failed to validate admin token", err);
+    return { ok: false };
   }
 }
 

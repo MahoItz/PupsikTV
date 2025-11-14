@@ -1,12 +1,79 @@
+import {
+  extractBearerToken,
+  issueAdminToken,
+  verifyAdminToken,
+} from "./_admin-session.js";
+
+const ALLOWED_METHODS = ["GET", "POST"];
+
 export default function handler(req, res) {
-  let password;
-  try {
-    password =
-      req.body?.password ||
-      (typeof req.body === "string" ? JSON.parse(req.body || "{}").password : undefined);
-  } catch {
-    return res.status(401).json({ ok: false, error: "Invalid password" });
+  const method = (req.method || "").toUpperCase();
+
+  if (method === "GET") {
+    try {
+      const token = extractBearerToken(req.headers.authorization);
+      if (!token) {
+        return res
+          .status(401)
+          .json({ ok: false, error: "Missing token" });
+      }
+      const result = verifyAdminToken(token);
+      if (!result.valid) {
+        return res.status(401).json({
+          ok: false,
+          error: result.error || "Invalid token",
+          expired: Boolean(result.expired),
+        });
+      }
+      return res.status(200).json({
+        ok: true,
+        expiresAt: new Date(result.payload.exp).toISOString(),
+      });
+    } catch (err) {
+      console.error("Admin token verification error", err);
+      return res
+        .status(500)
+        .json({ ok: false, error: "Server error" });
+    }
   }
-  const isValid = password === process.env.EDIT_PASSWORD;
-  res.status(isValid ? 200 : 401).json({ ok: isValid });
+
+  if (method === "POST") {
+    let password;
+    try {
+      password =
+        req.body?.password ||
+        (typeof req.body === "string"
+          ? JSON.parse(req.body || "{}").password
+          : undefined);
+    } catch {
+      return res
+        .status(401)
+        .json({ ok: false, error: "Invalid password" });
+    }
+
+    if (password !== process.env.EDIT_PASSWORD) {
+      return res
+        .status(401)
+        .json({ ok: false, error: "Invalid password" });
+    }
+
+    try {
+      const { token, payload } = issueAdminToken();
+      return res.status(200).json({
+        ok: true,
+        token,
+        expiresAt: new Date(payload.exp).toISOString(),
+      });
+    } catch (err) {
+      console.error("Admin token issue error", err);
+      return res
+        .status(500)
+        .json({ ok: false, error: "Server error" });
+    }
+  }
+
+  res.setHeader("Allow", ALLOWED_METHODS);
+  return res
+    .status(405)
+    .json({ ok: false, error: "Method Not Allowed" });
 }

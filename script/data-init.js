@@ -351,10 +351,29 @@ document.addEventListener("DOMContentLoaded", async function () {
   document.body.appendChild(ratingTooltip);
 
   adminElements = Array.from(document.querySelectorAll(".admin-only"));
-  if (isAdmin) {
-    showAdminControls(true);
-  } else {
-    hideAdminControls(true);
+  hideAdminControls(true);
+
+  const storedToken = adminToken;
+  if (storedToken) {
+    const verification = await verifyAdminTokenRequest(storedToken);
+    if (verification.ok) {
+      const env = await loadEnv({ token: storedToken });
+      if (env.isAdmin) {
+        isAdmin = true;
+        updateAdminSession(storedToken, verification.expiresAt);
+        showAdminControls(true);
+        if (env.KINOPOISK_API_KEY) {
+          localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
+        }
+        if (env.RAWG_API_KEY) {
+          localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
+        }
+      } else {
+        clearAdminSession();
+      }
+    } else {
+      clearAdminSession();
+    }
   }
 
   recalculateMovieUserRatings();
@@ -412,18 +431,29 @@ document.addEventListener("DOMContentLoaded", async function () {
         logoutAdmin();
       } else {
         const pw = document.getElementById("adminPassword").value;
-        const ok = await verifyAdminPassword(pw);
-        if (ok) {
-          isAdmin = true;
-          localStorage.setItem("isAdmin", "true");
-          showAdminControls();
-          const env = await loadEnv(pw);
-          if (env.KINOPOISK_API_KEY)
-            localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
-          if (env.RAWG_API_KEY)
-            localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
-          await loadSettingsFromSupabase();
-          closeModal("adminModal");
+        const result = await verifyAdminPassword(pw);
+        if (result.ok && result.token) {
+          const token = result.token;
+          const env = await loadEnv({ token });
+          if (env.isAdmin) {
+            updateAdminSession(token, result.expiresAt);
+            isAdmin = true;
+            showAdminControls();
+            if (env.KINOPOISK_API_KEY) {
+              localStorage.setItem(
+                "KINOPOISK_API_KEY",
+                env.KINOPOISK_API_KEY
+              );
+            }
+            if (env.RAWG_API_KEY) {
+              localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
+            }
+            await loadSettingsFromSupabase();
+            closeModal("adminModal");
+          } else {
+            clearAdminSession();
+            alert("Не удалось подтвердить сессию администратора. Попробуйте ещё раз.");
+          }
         } else {
           alert("Неверный пароль");
         }
