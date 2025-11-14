@@ -73,6 +73,46 @@ function getFilteredSortedMovies() {
   return result;
 }
 
+const MOVIE_RENDER_KEY_DELIMITER = "\u001F";
+
+// Movie cards depend on the following fields plus admin/user rating flags:
+// id, poster, title, originalTitle, genre, year, rating, kpRating, userRating,
+// ratingCount, dateAdded, orderBy, orderType.
+function normalizeRenderKeyValue(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value.toString(10) : "";
+  }
+  if (typeof value === "boolean") return value ? "1" : "0";
+  return String(value);
+}
+
+function getMovieRenderKey(movie) {
+  const ratedValue =
+    typeof ratedMovies !== "undefined" && ratedMovies
+      ? ratedMovies[movie.id]
+      : "";
+  const parts = [
+    movie?.id,
+    movie?.poster,
+    movie?.title,
+    movie?.originalTitle,
+    movie?.genre,
+    movie?.year,
+    movie?.rating,
+    movie?.kpRating,
+    movie?.userRating,
+    movie?.ratingCount,
+    movie?.dateAdded,
+    movie?.orderBy,
+    movie?.orderType,
+    ratedValue,
+    Boolean(ratedMovies && ratedMovies[movie.id]),
+    isAdmin,
+  ];
+  return parts.map(normalizeRenderKeyValue).join(MOVIE_RENDER_KEY_DELIMITER);
+}
+
 function renderMovies() {
   const grid = document.getElementById("moviesGrid");
   if (!grid) return;
@@ -91,7 +131,7 @@ function renderMovies() {
   const orderedCards = [];
 
   movies.forEach((movie) => {
-    const dataKey = JSON.stringify(movie) + isAdmin;
+    const dataKey = getMovieRenderKey(movie);
     let card = movieCardElements.get(movie.id);
     const prevData = movieDataMap.get(movie.id);
     if (!card || prevData !== dataKey) {
