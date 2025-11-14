@@ -965,19 +965,36 @@ function toggleGameSortOrder() {
 
 async function deletePlayedGame(id) {
   const idx = allPlayedGames.findIndex((g) => g.id === id);
-  if (idx !== -1) {
-    allPlayedGames.splice(idx, 1);
-    try {
-      await supabaseClient.from("games").delete().eq("id", id);
-    } catch (err) {
-      console.error("Error deleting game", err);
-    }
-    if (hasRatedGame(id)) {
+  if (idx === -1) {
+    return;
+  }
+
+  const [removedGame] = allPlayedGames.splice(idx, 1);
+  const hadUserRating = hasRatedGame(id);
+  const previousRatingValue = hadUserRating ? ratedGames[id] : null;
+  renderPlayedGames();
+
+  try {
+    const { error } = await supabaseClient.from("games").delete().eq("id", id);
+    if (error) throw error;
+
+    if (hadUserRating) {
       delete ratedGames[id];
       localStorage.setItem("ratedGames", JSON.stringify(ratedGames));
     }
     localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+  } catch (err) {
+    console.error("Error deleting game", err);
+    allPlayedGames.splice(idx, 0, removedGame);
+    if (hadUserRating && previousRatingValue !== null) {
+      ratedGames[id] = previousRatingValue;
+      localStorage.setItem("ratedGames", JSON.stringify(ratedGames));
+    }
+    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
     renderPlayedGames();
+    alert(
+      "Не удалось удалить пройденную игру. Попробуйте ещё раз. Изменения отменены."
+    );
   }
 }
 

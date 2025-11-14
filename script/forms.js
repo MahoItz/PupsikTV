@@ -532,7 +532,6 @@ async function submitRating() {
   // Находим фильм в watchlist по id
   const itemIndex = watchlist.findIndex((item) => item.id === ratingMovieId);
   if (itemIndex !== -1) {
-    // Создаём новый объект фильма для основного списка
     const source = watchlist[itemIndex];
     const watchedMovie = {
       title: source.title,
@@ -568,10 +567,9 @@ async function submitRating() {
         })
         .select()
         .single();
-
       if (error) throw error;
 
-      allMovies.unshift({
+      const newMovie = {
         id: data.id,
         title: data.title,
         originalTitle: data.original_title,
@@ -584,24 +582,31 @@ async function submitRating() {
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
         userRating: null,
-      });
-      localStorage.setItem("moviesCache", JSON.stringify(allMovies));
-      await supabaseClient
+      };
+
+      const { error: deleteError } = await supabaseClient
         .from("Movie_Orders")
         .delete()
         .eq("id", ratingMovieId);
+      if (deleteError) throw deleteError;
+
+      allMovies.unshift(newMovie);
+      localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+      watchlist.splice(itemIndex, 1);
+      currentPage = 1;
+      renderMovies();
+      renderWatchlist();
+      closeModal("rateMovieModal", true);
     } catch (err) {
       console.error("Error adding rated movie to Supabase", err);
+      alert(
+        "Не удалось переместить фильм в список просмотренных. Попробуйте ещё раз."
+      );
     } finally {
       isSubmittingRating = false;
       if (confirmBtn) confirmBtn.disabled = false;
     }
-    currentPage = 1;
-    watchlist.splice(itemIndex, 1);
-    renderMovies();
-    renderWatchlist();
   }
-  closeModal("rateMovieModal", true);
 }
 
 async function submitGameRating() {
@@ -642,10 +647,9 @@ async function submitGameRating() {
         })
         .select()
         .single();
-
       if (error) throw error;
 
-      allPlayedGames.unshift({
+      const newGame = {
         id: data.id,
         title: data.title,
         genres: data.genres,
@@ -658,17 +662,27 @@ async function submitGameRating() {
         ratingSum: Number(data.game_rating_sum ?? 0) || 0,
         ratingCount: Number(data.game_rating_count ?? 0) || 0,
         userRating: null,
-      });
+      };
+
+      const { error: deleteError } = await supabaseClient
+        .from("Game_Orders")
+        .delete()
+        .eq("id", ratingGameId);
+      if (deleteError) throw deleteError;
+
+      allPlayedGames.unshift(newGame);
       localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
-      await supabaseClient.from("Game_Orders").delete().eq("id", ratingGameId);
+      gameOrders.splice(idx, 1);
+      renderPlayedGames();
+      renderGames();
+      closeModal("rateGameModal", true);
     } catch (err) {
       console.error("Error adding rated game", err);
+      alert(
+        "Не удалось переместить игру в список пройденных. Попробуйте ещё раз."
+      );
     }
-    gameOrders.splice(idx, 1);
-    renderPlayedGames();
-    renderGames();
   }
-  closeModal("rateGameModal", true);
 }
 
 async function submitUserMovieRating() {
@@ -820,44 +834,61 @@ document
     e.preventDefault();
 
     const movie = allMovies.find((m) => m.id === editingMovieId);
-    if (movie) {
-      movie.title = document.getElementById("editTitle").value;
-      movie.year =
-        parseInt(document.getElementById("editYear").value) || movie.year;
-      movie.genre = document.getElementById("editGenre").value || movie.genre;
-      movie.orderBy =
-        document.getElementById("editMovieOrderBy").value || movie.orderBy;
-      const rating = getRatingValue("editRatingInput");
-      if (!isRatingValid(rating)) {
-        alert("Неверная оценка");
-        document.getElementById("editRatingInput").reportValidity();
-        return;
-      }
-      movie.rating = rating;
-      movie.poster = editPosterData || movie.poster;
+    if (!movie) return;
+
+    const rating = getRatingValue("editRatingInput");
+    if (!isRatingValid(rating)) {
+      alert("Неверная оценка");
+      document.getElementById("editRatingInput").reportValidity();
+      return;
+    }
+
+    const titleValue = document.getElementById("editTitle").value;
+    const yearValue = parseInt(document.getElementById("editYear").value, 10);
+    const genreInput = document.getElementById("editGenre").value;
+    const orderByInput = document.getElementById("editMovieOrderBy").value;
+    const updatedMovie = {
+      title: titleValue,
+      year: Number.isFinite(yearValue) ? yearValue : movie.year,
+      genre: genreInput ? genreInput : movie.genre,
+      orderBy: orderByInput ? orderByInput : movie.orderBy,
+      rating,
+      poster: editPosterData || movie.poster,
+    };
+
+    try {
+      const { error } = await supabaseClient
+        .from("movies")
+        .update({
+          title: updatedMovie.title,
+          genres: updatedMovie.genre,
+          poster: updatedMovie.poster,
+          year: updatedMovie.year,
+          rating_numeric: updatedMovie.rating,
+          rating_OMDB: movie.kpRating,
+          order_by: updatedMovie.orderBy,
+        })
+        .eq("id", editingMovieId);
+
+      if (error) throw error;
+
+      movie.title = updatedMovie.title;
+      movie.year = updatedMovie.year;
+      movie.genre = updatedMovie.genre;
+      movie.orderBy = updatedMovie.orderBy;
+      movie.rating = updatedMovie.rating;
+      movie.poster = updatedMovie.poster;
       movie.dateAdded =
         movie.dateAdded || new Date().toISOString().split("T")[0];
 
-      try {
-        await supabaseClient
-          .from("movies")
-          .update({
-            title: movie.title,
-            genres: movie.genre,
-            poster: movie.poster,
-            year: movie.year,
-            rating_numeric: movie.rating,
-            rating_OMDB: movie.kpRating,
-            order_by: movie.orderBy,
-          })
-          .eq("id", editingMovieId);
-      } catch (err) {
-        console.error("Error updating movie in Supabase", err);
-      }
+      localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+      renderMovies();
+      editPosterData = null;
+      closeModal("editMovieModal", true);
+    } catch (err) {
+      console.error("Error updating movie in Supabase", err);
+      alert("Не удалось сохранить изменения фильма. Попробуйте ещё раз.");
     }
-    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
-    renderMovies();
-    closeModal("editMovieModal", true);
   });
 
 document
@@ -866,37 +897,42 @@ document
     e.preventDefault();
 
     const order = watchlist.find((o) => o.id === editingOrderId);
-    if (order) {
-      order.title = document.getElementById("editOrderTitle").value;
-      order.originalTitle = document.getElementById(
-        "editOrderOriginTitle"
-      ).value;
-      order.year = document.getElementById("editOrderYear").value;
-      order.genres = document.getElementById("editOrderGenre").value;
-      order.orderBy = document.getElementById("editOrderBy").value;
-      order.orderType = document.getElementById("editOrderType").value;
-      order.poster = editOrderPosterData || order.poster;
+    if (!order) return;
 
-      try {
-        await supabaseClient
-          .from("Movie_Orders")
-          .update({
-            order_title: order.title,
-            order_origin_title: order.originalTitle,
-            order_year: order.year,
-            order_genres: order.genres,
-            order_poster: order.poster,
-            order_by: order.orderBy,
-            order_type: order.orderType,
-          })
-          .eq("id", editingOrderId);
-      } catch (err) {
-        console.error("Error updating order in Supabase", err);
-      }
+    const updatedOrder = {
+      title: document.getElementById("editOrderTitle").value,
+      originalTitle: document.getElementById("editOrderOriginTitle").value,
+      year: document.getElementById("editOrderYear").value,
+      genres: document.getElementById("editOrderGenre").value,
+      orderBy: document.getElementById("editOrderBy").value,
+      orderType: document.getElementById("editOrderType").value,
+      poster: editOrderPosterData || order.poster,
+    };
+
+    try {
+      const { error } = await supabaseClient
+        .from("Movie_Orders")
+        .update({
+          order_title: updatedOrder.title,
+          order_origin_title: updatedOrder.originalTitle,
+          order_year: updatedOrder.year,
+          order_genres: updatedOrder.genres,
+          order_poster: updatedOrder.poster,
+          order_by: updatedOrder.orderBy,
+          order_type: updatedOrder.orderType,
+        })
+        .eq("id", editingOrderId);
+
+      if (error) throw error;
+
+      Object.assign(order, updatedOrder);
+      renderWatchlist();
+      editOrderPosterData = null;
+      closeModal("editOrderModal", true);
+    } catch (err) {
+      console.error("Error updating order in Supabase", err);
+      alert("Не удалось сохранить изменения заказа. Попробуйте ещё раз.");
     }
-
-    renderWatchlist();
-    closeModal("editOrderModal", true);
   });
 
 document
@@ -905,33 +941,40 @@ document
     e.preventDefault();
 
     const game = gameOrders.find((g) => g.id === editingGameId);
-    if (game) {
-      game.title = document.getElementById("editGameTitle").value;
-      game.year = document.getElementById("editGameYear").value;
-      game.genres = document.getElementById("editGameGenres").value;
-      game.orderBy = document.getElementById("editGameOrderBy").value;
-      game.orderType = document.getElementById("editGameOrderType").value;
-      game.poster = editGamePosterData || game.poster;
+    if (!game) return;
 
-      try {
-        await supabaseClient
-          .from("Game_Orders")
-          .update({
-            game_title: game.title,
-            game_year: game.year,
-            game_genres: game.genres,
-            game_poster: game.poster,
-            game_order_by: game.orderBy,
-            game_order_type: game.orderType,
-          })
-          .eq("id", editingGameId);
-      } catch (err) {
-        console.error("Error updating game", err);
-      }
+    const updatedGame = {
+      title: document.getElementById("editGameTitle").value,
+      year: document.getElementById("editGameYear").value,
+      genres: document.getElementById("editGameGenres").value,
+      orderBy: document.getElementById("editGameOrderBy").value,
+      orderType: document.getElementById("editGameOrderType").value,
+      poster: editGamePosterData || game.poster,
+    };
+
+    try {
+      const { error } = await supabaseClient
+        .from("Game_Orders")
+        .update({
+          game_title: updatedGame.title,
+          game_year: updatedGame.year,
+          game_genres: updatedGame.genres,
+          game_poster: updatedGame.poster,
+          game_order_by: updatedGame.orderBy,
+          game_order_type: updatedGame.orderType,
+        })
+        .eq("id", editingGameId);
+
+      if (error) throw error;
+
+      Object.assign(game, updatedGame);
+      renderGames();
+      editGamePosterData = null;
+      closeModal("editGameModal", true);
+    } catch (err) {
+      console.error("Error updating game", err);
+      alert("Не удалось сохранить изменения заказа игры. Попробуйте ещё раз.");
     }
-
-    renderGames();
-    closeModal("editGameModal", true);
   });
 
 document
@@ -940,42 +983,50 @@ document
     e.preventDefault();
 
     const game = allPlayedGames.find((g) => g.id === editingPlayedGameId);
-    if (game) {
-      game.title = document.getElementById("editPlayedGameTitle").value;
-      game.year = document.getElementById("editPlayedGameYear").value;
-      game.genres = document.getElementById("editPlayedGameGenres").value;
-      const rating = getRatingValue("editPlayedGameRatingInput");
-      if (!isRatingValid(rating)) {
-        alert("Неверная оценка");
-        document.getElementById("editPlayedGameRatingInput").reportValidity();
-        return;
-      }
-      game.rating = rating;
-      game.orderBy = document.getElementById("editPlayedGameOrderBy").value;
-      game.orderType = document.getElementById("editPlayedGameOrderType").value;
-      game.poster = editPlayedGamePosterData || game.poster;
+    if (!game) return;
 
-      try {
-        await supabaseClient
-          .from("games")
-          .update({
-            title: game.title,
-            genres: game.genres,
-            poster: game.poster,
-            year: game.year,
-            rating_numeric: game.rating,
-            order_by: game.orderBy,
-            order_type: game.orderType,
-          })
-          .eq("id", editingPlayedGameId);
-      } catch (err) {
-        console.error("Error updating played game", err);
-      }
+    const rating = getRatingValue("editPlayedGameRatingInput");
+    if (!isRatingValid(rating)) {
+      alert("Неверная оценка");
+      document.getElementById("editPlayedGameRatingInput").reportValidity();
+      return;
     }
 
-    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
-    renderPlayedGames();
-    closeModal("editPlayedGameModal", true);
+    const updatedGame = {
+      title: document.getElementById("editPlayedGameTitle").value,
+      year: document.getElementById("editPlayedGameYear").value,
+      genres: document.getElementById("editPlayedGameGenres").value,
+      rating,
+      orderBy: document.getElementById("editPlayedGameOrderBy").value,
+      orderType: document.getElementById("editPlayedGameOrderType").value,
+      poster: editPlayedGamePosterData || game.poster,
+    };
+
+    try {
+      const { error } = await supabaseClient
+        .from("games")
+        .update({
+          title: updatedGame.title,
+          genres: updatedGame.genres,
+          poster: updatedGame.poster,
+          year: updatedGame.year,
+          rating_numeric: updatedGame.rating,
+          order_by: updatedGame.orderBy,
+          order_type: updatedGame.orderType,
+        })
+        .eq("id", editingPlayedGameId);
+
+      if (error) throw error;
+
+      Object.assign(game, updatedGame);
+      localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+      renderPlayedGames();
+      editPlayedGamePosterData = null;
+      closeModal("editPlayedGameModal", true);
+    } catch (err) {
+      console.error("Error updating played game", err);
+      alert("Не удалось сохранить изменения пройденной игры. Попробуйте ещё раз.");
+    }
   });
 
 // Форматирование даты

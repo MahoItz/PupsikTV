@@ -131,41 +131,76 @@ function openEditModal(id) {
 
 async function performDeleteMovie(id) {
   const index = allMovies.findIndex((m) => m.id === id);
-  if (index !== -1) {
-    allMovies.splice(index, 1);
+  if (index === -1) {
+    return;
+  }
+
+  const [removedMovie] = allMovies.splice(index, 1);
+  renderMovies();
+
+  try {
+    const { error } = await supabaseClient.from("movies").delete().eq("id", id);
+    if (error) throw error;
+
+    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+  } catch (err) {
+    console.error("Error deleting movie from Supabase", err);
+    allMovies.splice(index, 0, removedMovie);
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     renderMovies();
-    try {
-      await supabaseClient.from("movies").delete().eq("id", id);
-    } catch (err) {
-      console.error("Error deleting movie from Supabase", err);
-    }
+    alert(
+      "Не удалось удалить фильм. Попробуйте ещё раз. Изменения отменены."
+    );
   }
 }
 
 async function performDeleteOrder(id) {
   const index = watchlist.findIndex((o) => o.id === id);
-  if (index !== -1) {
-    watchlist.splice(index, 1);
+  if (index === -1) {
+    return;
+  }
+
+  const [removedOrder] = watchlist.splice(index, 1);
+  renderWatchlist();
+
+  try {
+    const { error } = await supabaseClient
+      .from("Movie_Orders")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+  } catch (err) {
+    console.error("Error deleting order from Supabase", err);
+    watchlist.splice(index, 0, removedOrder);
     renderWatchlist();
-    try {
-      await supabaseClient.from("Movie_Orders").delete().eq("id", id);
-    } catch (err) {
-      console.error("Error deleting order from Supabase", err);
-    }
+    alert(
+      "Не удалось удалить заказанный фильм. Попробуйте ещё раз. Изменения отменены."
+    );
   }
 }
 
 async function performDeleteGameOrder(id) {
   const index = gameOrders.findIndex((g) => g.id === id);
-  if (index !== -1) {
-    gameOrders.splice(index, 1);
+  if (index === -1) {
+    return;
+  }
+
+  const [removedOrder] = gameOrders.splice(index, 1);
+  renderGames();
+
+  try {
+    const { error } = await supabaseClient
+      .from("Game_Orders")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+  } catch (err) {
+    console.error("Error deleting game order from Supabase", err);
+    gameOrders.splice(index, 0, removedOrder);
     renderGames();
-    try {
-      await supabaseClient.from("Game_Orders").delete().eq("id", id);
-    } catch (err) {
-      console.error("Error deleting game order from Supabase", err);
-    }
+    alert(
+      "Не удалось удалить заказанную игру. Попробуйте ещё раз. Изменения отменены."
+    );
   }
 }
 
