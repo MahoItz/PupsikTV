@@ -975,8 +975,16 @@ async function deletePlayedGame(id) {
   renderPlayedGames();
 
   try {
-    const { error } = await supabaseClient.from("games").delete().eq("id", id);
+    const { data, error } = await supabaseClient
+      .from("games")
+      .delete()
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!data) {
+      throw new Error("Played game delete was blocked by security rules.");
+    }
 
     if (hadUserRating) {
       delete ratedGames[id];
@@ -993,7 +1001,7 @@ async function deletePlayedGame(id) {
     localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
     renderPlayedGames();
     alert(
-      "Не удалось удалить пройденную игру. Попробуйте ещё раз. Изменения отменены."
+      "Не удалось удалить пройденную игру. Возможно, не хватает прав или запись уже удалена. Изменения отменены."
     );
   }
 }

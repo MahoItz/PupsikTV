@@ -139,8 +139,16 @@ async function performDeleteMovie(id) {
   renderMovies();
 
   try {
-    const { error } = await supabaseClient.from("movies").delete().eq("id", id);
+    const { data, error } = await supabaseClient
+      .from("movies")
+      .delete()
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!data) {
+      throw new Error("Movie delete was blocked by security rules.");
+    }
 
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
   } catch (err) {
@@ -149,7 +157,7 @@ async function performDeleteMovie(id) {
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
     renderMovies();
     alert(
-      "Не удалось удалить фильм. Попробуйте ещё раз. Изменения отменены."
+      "Не удалось удалить фильм. Возможно, не хватает прав или запись уже удалена. Изменения отменены."
     );
   }
 }
@@ -164,17 +172,22 @@ async function performDeleteOrder(id) {
   renderWatchlist();
 
   try {
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!data) {
+      throw new Error("Movie order delete was blocked by security rules.");
+    }
   } catch (err) {
     console.error("Error deleting order from Supabase", err);
     watchlist.splice(index, 0, removedOrder);
     renderWatchlist();
     alert(
-      "Не удалось удалить заказанный фильм. Попробуйте ещё раз. Изменения отменены."
+      "Не удалось удалить заказанный фильм. Возможно, не хватает прав или запись уже удалена. Изменения отменены."
     );
   }
 }
@@ -189,17 +202,22 @@ async function performDeleteGameOrder(id) {
   renderGames();
 
   try {
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("Game_Orders")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
     if (error) throw error;
+    if (!data) {
+      throw new Error("Game order delete was blocked by security rules.");
+    }
   } catch (err) {
     console.error("Error deleting game order from Supabase", err);
     gameOrders.splice(index, 0, removedOrder);
     renderGames();
     alert(
-      "Не удалось удалить заказанную игру. Попробуйте ещё раз. Изменения отменены."
+      "Не удалось удалить заказанную игру. Возможно, не хватает прав или запись уже удалена. Изменения отменены."
     );
   }
 }

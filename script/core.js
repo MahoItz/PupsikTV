@@ -116,6 +116,42 @@ let gamePage = 1;
 const gamesPerPage = 12;
 let totalGamesPlayed = 0;
 let ratingGameId = null;
+let fatalErrorBannerShown = false;
+
+function showFatalErrorBanner(message, error) {
+  if (error) {
+    console.error(message, error);
+  } else {
+    console.error(message);
+  }
+  if (fatalErrorBannerShown) return;
+  fatalErrorBannerShown = true;
+
+  const banner = document.createElement("div");
+  banner.className = "fatal-error-banner";
+  banner.textContent = message;
+  banner.style.position = "fixed";
+  banner.style.left = "0";
+  banner.style.right = "0";
+  banner.style.top = "0";
+  banner.style.padding = "16px";
+  banner.style.backgroundColor = "#8b0b0b";
+  banner.style.color = "#ffffff";
+  banner.style.textAlign = "center";
+  banner.style.fontSize = "16px";
+  banner.style.fontWeight = "600";
+  banner.style.zIndex = "9999";
+
+  const appendBanner = () => {
+    if (!document.body) {
+      window.addEventListener("DOMContentLoaded", appendBanner, { once: true });
+      return;
+    }
+    document.body.appendChild(banner);
+  };
+
+  appendBanner();
+}
 
 async function loadEnv(options = {}) {
   let opts;
@@ -149,28 +185,60 @@ async function loadEnv(options = {}) {
       });
     }
     if (!res.ok) {
-      console.error("Failed to load environment variables", res.status);
-      return {};
+      let errorPayload = null;
+      let errorMessage = `Не удалось загрузить конфигурацию (код ${res.status})`;
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        try {
+          errorPayload = await res.json();
+          if (errorPayload && typeof errorPayload.error === "string") {
+            errorMessage = errorPayload.error;
+          }
+        } catch (parseErr) {
+          console.error("Failed to parse env error payload", parseErr);
+        }
+      } else {
+        try {
+          const text = await res.text();
+          if (text) {
+            errorMessage = text;
+          }
+        } catch (textErr) {
+          console.error("Failed to read env error text", textErr);
+        }
+      }
+      const error = new Error(errorMessage);
+      error.status = res.status;
+      error.payload = errorPayload;
+      throw error;
     }
     const env = await res.json();
+    if (!env || typeof env !== "object") {
+      const error = new Error(
+        "Некорректный ответ сервера при загрузке конфигурации."
+      );
+      error.status = 500;
+      throw error;
+    }
     const key = env.SUPABASE_KEY;
-    if (key) {
-      if (!supabaseClient || currentSupabaseKey !== key) {
-        SUPABASE_KEY = key;
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, key);
-        currentSupabaseKey = key;
-      } else {
-        SUPABASE_KEY = key;
-      }
+    if (!key) {
+      const error = new Error("В ответе сервера отсутствует SUPABASE_KEY.");
+      error.status = 500;
+      throw error;
+    }
+    if (!supabaseClient || currentSupabaseKey !== key) {
+      SUPABASE_KEY = key;
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, key);
+      currentSupabaseKey = key;
     } else {
-      console.error("SUPABASE_KEY is missing in env response");
+      SUPABASE_KEY = key;
     }
     if (env.KINOPOISK_API_KEY) KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
     if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
     return env;
   } catch (err) {
     console.error("Failed to load environment variables", err);
-    return {};
+    throw err;
   }
 }
 

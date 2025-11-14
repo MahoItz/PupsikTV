@@ -320,7 +320,24 @@ async function loadPlayedGamesFromSupabase() {
 
 // Инициализация
 document.addEventListener("DOMContentLoaded", async function () {
-  await loadEnv();
+  let initialEnv;
+  try {
+    initialEnv = await loadEnv();
+  } catch (err) {
+    showFatalErrorBanner(
+      "Не удалось подключиться к базе данных. Попробуйте обновить страницу позже.",
+      err
+    );
+    return;
+  }
+
+  if (!initialEnv || !initialEnv.SUPABASE_KEY) {
+    showFatalErrorBanner(
+      "От сервера не получены настройки Supabase. Попробуйте обновить страницу позже."
+    );
+    return;
+  }
+
   const kpStored = localStorage.getItem("KINOPOISK_API_KEY");
   if (kpStored) KINOPOISK_API_KEY = kpStored;
   const rawgStored = localStorage.getItem("RAWG_API_KEY");
@@ -357,18 +374,23 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (storedToken) {
     const verification = await verifyAdminTokenRequest(storedToken);
     if (verification.ok) {
-      const env = await loadEnv({ token: storedToken });
-      if (env.isAdmin) {
-        isAdmin = true;
-        updateAdminSession(storedToken, verification.expiresAt);
-        showAdminControls(true);
-        if (env.KINOPOISK_API_KEY) {
-          localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
+      try {
+        const env = await loadEnv({ token: storedToken });
+        if (env && env.isAdmin) {
+          isAdmin = true;
+          updateAdminSession(storedToken, verification.expiresAt);
+          showAdminControls(true);
+          if (env.KINOPOISK_API_KEY) {
+            localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
+          }
+          if (env.RAWG_API_KEY) {
+            localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
+          }
+        } else {
+          clearAdminSession();
         }
-        if (env.RAWG_API_KEY) {
-          localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
-        }
-      } else {
+      } catch (err) {
+        console.error("Failed to refresh admin environment", err);
         clearAdminSession();
       }
     } else {
@@ -434,25 +456,34 @@ document.addEventListener("DOMContentLoaded", async function () {
         const result = await verifyAdminPassword(pw);
         if (result.ok && result.token) {
           const token = result.token;
-          const env = await loadEnv({ token });
-          if (env.isAdmin) {
-            updateAdminSession(token, result.expiresAt);
-            isAdmin = true;
-            showAdminControls();
-            if (env.KINOPOISK_API_KEY) {
-              localStorage.setItem(
-                "KINOPOISK_API_KEY",
-                env.KINOPOISK_API_KEY
+          try {
+            const env = await loadEnv({ token });
+            if (env && env.isAdmin) {
+              updateAdminSession(token, result.expiresAt);
+              isAdmin = true;
+              showAdminControls();
+              if (env.KINOPOISK_API_KEY) {
+                localStorage.setItem(
+                  "KINOPOISK_API_KEY",
+                  env.KINOPOISK_API_KEY
+                );
+              }
+              if (env.RAWG_API_KEY) {
+                localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
+              }
+              await loadSettingsFromSupabase();
+              closeModal("adminModal");
+            } else {
+              clearAdminSession();
+              alert(
+                "Не удалось подтвердить сессию администратора. Попробуйте ещё раз."
               );
             }
-            if (env.RAWG_API_KEY) {
-              localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
-            }
-            await loadSettingsFromSupabase();
-            closeModal("adminModal");
-          } else {
-            clearAdminSession();
-            alert("Не удалось подтвердить сессию администратора. Попробуйте ещё раз.");
+          } catch (err) {
+            console.error("Failed to load environment for admin session", err);
+            alert(
+              "Не удалось получить настройки сервера. Попробуйте ещё раз позже."
+            );
           }
         } else {
           alert("Неверный пароль");
