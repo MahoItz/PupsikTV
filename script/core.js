@@ -62,16 +62,37 @@ let KINOPOISK_API_KEY;
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 const KINOPOISK_FILM_URL = "https://kinopoiskapiunofficial.tech/api/v2.2/films";
-let kpResults = [];
-let selectedKPMovie = null;
+
+const searchState = {
+  kino: {
+    movies: createKinoSearchState(),
+    watchlist: createKinoSearchState(),
+  },
+  rawg: {
+    orders: createRawgSearchState(),
+    played: createRawgSearchState(),
+  },
+};
 
 // RAWG
 let RAWG_API_KEY;
 const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
-let rawgResults = [];
-let selectedRAWGGame = null;
-let steamGridPoster = null;
-let steamGridPosters = [];
+
+function createKinoSearchState() {
+  return {
+    results: [],
+    selected: null,
+  };
+}
+
+function createRawgSearchState() {
+  return {
+    results: [],
+    selected: null,
+    poster: null,
+    posters: [],
+  };
+}
 
 function debounce(func, delay) {
   let timeout;
@@ -382,8 +403,6 @@ const ORDER_TYPE_CLASSES = {
 
 // Watchlist modal helpers
 let currentWatchlistMode = "auto";
-let kpOrderResults = [];
-let selectedKPOrderMovie = null;
 
 // Game modal helpers
 let currentGameMode = "auto";
@@ -1645,25 +1664,46 @@ async function fetchKPFilmLength(filmId) {
   }
 }
 
-async function fetchSteamGridPosters(title) {
-  steamGridPoster = null;
-  steamGridPosters = [];
-  if (!title) return;
+async function fetchSteamGridPosters(
+  title,
+  targetState = searchState.rawg.orders
+) {
+  if (!targetState) {
+    return null;
+  }
+
+  targetState.poster = null;
+  targetState.posters = [];
+
+  if (!title) {
+    return targetState;
+  }
+
   try {
     const res = await fetch(
       `/api/steamgriddb?search=${encodeURIComponent(title)}`
     );
-    if (!res.ok) return;
+    if (!res.ok) {
+      return targetState;
+    }
     const data = await res.json();
     const posters = Array.isArray(data.posters) ? data.posters : [];
-    steamGridPosters = posters.map((g) => (typeof g === "string" ? g : g.url));
-    steamGridPoster = steamGridPosters[0] || null;
+    targetState.posters = posters.map((g) =>
+      typeof g === "string" ? g : g.url
+    );
+    targetState.poster = targetState.posters[0] || null;
   } catch (err) {
     console.error("SteamGridDB fetch error", err);
   }
+  return targetState;
 }
 
-function createPosterOverlay(targetImg, posters, placeBelow = false) {
+function createPosterOverlay(
+  targetImg,
+  posters,
+  placeBelow = false,
+  state = searchState.rawg.orders
+) {
   if (!targetImg || !Array.isArray(posters) || posters.length < 2) return;
   const overlay = document.createElement("div");
   overlay.className = "poster-overlay" + (placeBelow ? " below" : "");
@@ -1706,7 +1746,9 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
       };
       img.src = url;
       img.onclick = () => {
-        steamGridPoster = url;
+        if (state && typeof state === "object") {
+          state.poster = url;
+        }
         targetImg.src = url;
         if (targetImg.id === "editGamePosterPreview") {
           editGamePosterData = url;
