@@ -118,6 +118,93 @@ let totalGamesPlayed = 0;
 let ratingGameId = null;
 let fatalErrorBannerShown = false;
 
+let moviesLoading = false;
+let watchlistLoading = false;
+let gameOrdersLoading = false;
+let playedGamesLoading = false;
+
+const sectionLoaderRegistry = new WeakMap();
+
+function toggleSectionLoading(container, isLoading, options = {}) {
+  if (!container) return;
+
+  const existing = sectionLoaderRegistry.get(container);
+
+  const config = {
+    message: "Загружаем данные...",
+    compact: false,
+    overlayWhenFilled: true,
+    mode: null,
+    ...options,
+  };
+
+  if (isLoading) {
+    if (existing) {
+      if (config.message && existing.textNode) {
+        existing.textNode.textContent = config.message;
+      }
+      return;
+    }
+
+    const hasContent = container.children.length > 0;
+    const mode =
+      config.mode ||
+      (hasContent && config.overlayWhenFilled !== false ? "overlay" : "replace");
+
+    const loader = document.createElement("div");
+    loader.className = "section-loader";
+    if (config.compact) loader.classList.add("section-loader--compact");
+    if (mode === "overlay") loader.classList.add("section-loader--overlay");
+    loader.setAttribute("role", "status");
+    loader.setAttribute("aria-live", "polite");
+
+    const spinner = document.createElement("div");
+    spinner.className = "section-loader__spinner";
+
+    const ringPrimary = document.createElement("span");
+    ringPrimary.className = "section-loader__ring";
+    const ringSecondary = document.createElement("span");
+    ringSecondary.className =
+      "section-loader__ring section-loader__ring--delay";
+    spinner.appendChild(ringPrimary);
+    spinner.appendChild(ringSecondary);
+    loader.appendChild(spinner);
+
+    let textNode = null;
+    if (config.message !== null) {
+      const text = document.createElement("p");
+      text.className = "section-loader__text";
+      text.textContent = config.message || "Загружаем...";
+      loader.appendChild(text);
+      textNode = text;
+    }
+
+    container.classList.add("is-loading");
+    if (mode === "overlay") {
+      container.classList.add("section-loader-parent");
+      container.appendChild(loader);
+    } else {
+      container.replaceChildren(loader);
+    }
+
+    sectionLoaderRegistry.set(container, { element: loader, mode, textNode });
+  } else {
+    if (!existing) return;
+
+    const { element, mode } = existing;
+    if (mode === "overlay") {
+      if (element.parentNode === container) {
+        container.removeChild(element);
+      }
+      container.classList.remove("section-loader-parent");
+    } else if (element.parentNode === container) {
+      container.removeChild(element);
+    }
+    container.classList.remove("is-loading");
+    sectionLoaderRegistry.delete(container);
+  }
+}
+
 function showFatalErrorBanner(message, error) {
   if (error) {
     console.error(message, error);

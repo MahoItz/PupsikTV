@@ -160,8 +160,25 @@ async function loadSettingsFromSupabase() {
   }
 }
 
+function containerHasRenderableContent(node) {
+  if (!node || !node.children || node.children.length === 0) return false;
+  return Array.from(node.children).some((child) => {
+    if (!child || !child.classList) return false;
+    return (
+      !child.classList.contains("section-loader") &&
+      !child.classList.contains("empty-state")
+    );
+  });
+}
+
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
+  const grid = document.getElementById("moviesGrid");
+  const hasExistingContent = containerHasRenderableContent(grid);
+  moviesLoading = true;
+  toggleSectionLoading(grid, true, {
+    message: hasExistingContent ? "Обновляем фильмы..." : "Загружаем фильмы...",
+  });
   try {
     const { data, error } = await supabaseClient
       .from("movies")
@@ -208,11 +225,24 @@ async function loadMoviesFromSupabase() {
     }
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
+  } finally {
+    moviesLoading = false;
+    toggleSectionLoading(grid, false);
+    renderMovies();
   }
 }
 
 // Загрузка заказов из Supabase
 async function loadWatchlistFromSupabase() {
+  const container = document.getElementById("watchlistContainer");
+  const hasExistingContent = containerHasRenderableContent(container);
+  watchlistLoading = true;
+  toggleSectionLoading(container, true, {
+    message: hasExistingContent
+      ? "Обновляем заказанные фильмы..."
+      : "Загружаем заказанные фильмы...",
+    compact: true,
+  });
   try {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
@@ -236,15 +266,26 @@ async function loadWatchlistFromSupabase() {
       orderType: item.order_type,
       dateAdded: item.created_at,
     }));
-
-    renderWatchlist();
   } catch (err) {
     console.error("Error loading watchlist from Supabase", err);
+  } finally {
+    watchlistLoading = false;
+    toggleSectionLoading(container, false);
+    renderWatchlist();
   }
 }
 
 // Загрузка заказанных игр из Supabase
 async function loadGamesFromSupabase() {
+  const container = document.getElementById("gamesContainer");
+  const hasExistingContent = containerHasRenderableContent(container);
+  gameOrdersLoading = true;
+  toggleSectionLoading(container, true, {
+    message: hasExistingContent
+      ? "Обновляем заказанные игры..."
+      : "Загружаем заказанные игры...",
+    compact: true,
+  });
   try {
     const { data, error } = await supabaseClient
       .from("Game_Orders")
@@ -269,14 +310,25 @@ async function loadGamesFromSupabase() {
       dateAdded: item.created_at,
     }));
 
-    renderGames();
   } catch (err) {
     console.error("Error loading game orders from Supabase", err);
+  } finally {
+    gameOrdersLoading = false;
+    toggleSectionLoading(container, false);
+    renderGames();
   }
 }
 
 // Загрузка пройденных игр из Supabase
 async function loadPlayedGamesFromSupabase() {
+  const grid = document.getElementById("gamesGridPlayed");
+  const hasExistingContent = containerHasRenderableContent(grid);
+  playedGamesLoading = true;
+  toggleSectionLoading(grid, true, {
+    message: hasExistingContent
+      ? "Обновляем библиотеку игр..."
+      : "Загружаем пройденные игры...",
+  });
   try {
     const { data, error } = await supabaseClient
       .from("games")
@@ -312,9 +364,12 @@ async function loadPlayedGamesFromSupabase() {
     totalGamesPlayed = allPlayedGames.length;
     recalculateGameUserRatings(allPlayedGames);
     localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
-    renderPlayedGames();
   } catch (err) {
     console.error("Error loading played games", err);
+  } finally {
+    playedGamesLoading = false;
+    toggleSectionLoading(grid, false);
+    renderPlayedGames();
   }
 }
 
@@ -435,9 +490,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadGamesFromSupabase(),
     loadPlayedGamesFromSupabase(),
   ]);
-
-  renderMovies();
-  renderPlayedGames();
   const headerImg = document.querySelector(
     "#headerLogo img[src='images/Pupsik_TV_Header.webp']"
   );

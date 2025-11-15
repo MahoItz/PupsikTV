@@ -1,0 +1,143 @@
+.section-loader {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    width: 100%;
+    min-height: 220px;
+    padding: 36px 20px;
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-secondary);
+    background: linear-gradient(
+        145deg,
+        rgba(18, 22, 44, 0.92),
+        rgba(10, 9, 24, 0.88)
+    );
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 32px rgba(0, 212, 255, 0.24);
+    overflow: hidden;
+    animation: loaderFadeIn 0.32s ease forwards;
+}
+
+.section-loader--overlay {
+    position: absolute;
+    inset: 0;
+    padding: clamp(24px, 5vh, 36px) clamp(18px, 4vw, 32px);
+    min-height: unset;
+    border-radius: inherit;
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    background: linear-gradient(
+        160deg,
+        rgba(6, 9, 22, 0.92),
+        rgba(11, 9, 28, 0.9)
+    );
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 36px rgba(0, 212, 255, 0.3);
+    z-index: 12;
+}
+
+.section-loader--compact {
+    min-height: 160px;
+    padding: 28px 16px;
+    box-shadow: 0 0 24px rgba(0, 212, 255, 0.2);
+}
+
+.section-loader--compact .section-loader__spinner {
+    width: 54px;
+    height: 54px;
+}
+
+.section-loader--compact .section-loader__ring {
+    border-width: 2px;
+}
+
+.section-loader--compact .section-loader__ring--inner {
+    inset: 6px;
+}
+
+.section-loader--compact .section-loader__text {
+    font-size: 0.85rem;
+}
+
+/* === ОБНОВЛЁННЫЙ СПИННЕР === */
+
+.section-loader__spinner {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Внешнее кольцо — один цвет */
+.section-loader__ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    /* один видимый цвет, остальное прозрачно */
+    border-top-color: var(--primary-color);
+    animation: loaderSpin 0.9s ease-in-out infinite;
+    box-shadow: 0 0 14px rgba(0, 212, 255, 0.35);
+    transform-origin: 50% 50%;
+}
+
+/* Внутреннее кольцо — тоже один цвет, поменьше и потише */
+.section-loader__ring--delay {
+    position: absolute;
+    inset: 9px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: rgba(147, 59, 255, 0.95);
+    animation: loaderSpinReverse 1.4s ease-in-out infinite;
+    opacity: 0.9;
+    box-shadow: 0 0 10px rgba(147, 59, 255, 0.25);
+    transform-origin: 50% 50%;
+}
+
+.section-loader__text {
+    max-width: 320px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    text-shadow: 0 0 12px rgba(0, 212, 255, 0.18);
+}
+
+.section-loader__text strong {
+    color: var(--text-primary);
+}
+
+.section-loader-parent {
+    position: relative;
+}
+
+/* Можно оставить твои же анимации — только сделал их чуть мягче */
+@keyframes loaderSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes loaderSpinReverse {
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+@keyframes loaderFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

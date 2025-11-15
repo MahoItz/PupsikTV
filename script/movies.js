@@ -116,6 +116,9 @@ function getMovieRenderKey(movie) {
 function renderMovies() {
   const grid = document.getElementById("moviesGrid");
   if (!grid) return;
+  if (typeof moviesLoading !== "undefined" && moviesLoading) {
+    return;
+  }
 
   const filtered = getFilteredSortedMovies();
   totalMovies = filtered.length;
@@ -548,6 +551,10 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
 
 function renderWatchlist() {
   const container = document.getElementById("watchlistContainer");
+  if (!container) return;
+  if (typeof watchlistLoading !== "undefined" && watchlistLoading) {
+    return;
+  }
   container.innerHTML = "";
   if (watchlist.length === 0) {
     renderEmptyState(container, "Заказанных фильмов пока нет");
@@ -656,6 +663,9 @@ function createGameCard(game, showActions = isAdmin) {
 function renderGames() {
   const container = document.getElementById("gamesContainer");
   if (!container) return;
+  if (typeof gameOrdersLoading !== "undefined" && gameOrdersLoading) {
+    return;
+  }
   container.innerHTML = "";
   if (gameOrders.length === 0) {
     renderEmptyState(container, "Заказанных игр пока нет");
@@ -858,6 +868,9 @@ function createPlayedGameCard(
 function renderPlayedGames() {
   const grid = document.getElementById("gamesGridPlayed");
   if (!grid) return;
+  if (typeof playedGamesLoading !== "undefined" && playedGamesLoading) {
+    return;
+  }
 
   const filtered = getFilteredSortedPlayedGames();
   totalGamesPlayed = filtered.length;

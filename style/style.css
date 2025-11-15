@@ -1,5 +1,6 @@
 /* Modular stylesheet entry point */
 @import url('./modules/base.css');
+@import url('./modules/loaders.css');
 @import url('./modules/layout.css');
 @import url('./modules/buttons.css');
 @import url('./modules/controls.css');
