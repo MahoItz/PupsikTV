@@ -1048,6 +1048,81 @@ function resetForm() {
   document.getElementById("addPlayedGameForm")?.reset();
   document.getElementById("editGameForm")?.reset();
   document.getElementById("editPlayedGameForm")?.reset();
+
+  // Очистка состояния автопоиска фильмов
+  kpResults = [];
+  selectedKPMovie = null;
+  const autoResults = document.getElementById("autoResults");
+  if (autoResults) autoResults.innerHTML = "";
+  const autoResultsContainer = document.getElementById("autoResultsContainer");
+  if (autoResultsContainer) autoResultsContainer.style.display = "none";
+  const autoPreview = document.getElementById("autoPreview");
+  if (autoPreview) {
+    autoPreview.innerHTML = "";
+    autoPreview.style.display = "none";
+  }
+  if (typeof showKPPreview === "function") {
+    showKPPreview();
+  }
+
+  // Очистка состояния автопоиска заказанных фильмов
+  kpOrderResults = [];
+  selectedKPOrderMovie = null;
+  const watchAutoResults = document.getElementById("watchAutoResults");
+  if (watchAutoResults) watchAutoResults.innerHTML = "";
+  const watchAutoResultsContainer = document.getElementById(
+    "watchAutoResultsContainer"
+  );
+  if (watchAutoResultsContainer)
+    watchAutoResultsContainer.style.display = "none";
+  const watchAutoPreview = document.getElementById("watchAutoPreview");
+  if (watchAutoPreview) {
+    watchAutoPreview.innerHTML = "";
+    watchAutoPreview.style.display = "none";
+  }
+  if (typeof showWatchlistKPPreview === "function") {
+    showWatchlistKPPreview();
+  }
+
+  // Очистка состояния автопоиска игр
+  rawgResults = [];
+  selectedRAWGGame = null;
+  steamGridPoster = null;
+  steamGridPosters = [];
+  const gameAutoResults = document.getElementById("gameAutoResults");
+  if (gameAutoResults) gameAutoResults.innerHTML = "";
+  const gameAutoResultsContainer = document.getElementById(
+    "gameAutoResultsContainer"
+  );
+  if (gameAutoResultsContainer) gameAutoResultsContainer.style.display = "none";
+  const gameAutoPreview = document.getElementById("gameAutoPreview");
+  if (gameAutoPreview) {
+    gameAutoPreview.innerHTML = "";
+    gameAutoPreview.style.display = "none";
+  }
+  const playedGameAutoResults = document.getElementById(
+    "playedGameAutoResults"
+  );
+  if (playedGameAutoResults) playedGameAutoResults.innerHTML = "";
+  const playedGameAutoResultsContainer = document.getElementById(
+    "playedGameAutoResultsContainer"
+  );
+  if (playedGameAutoResultsContainer)
+    playedGameAutoResultsContainer.style.display = "none";
+  const playedGameAutoPreview = document.getElementById(
+    "playedGameAutoPreview"
+  );
+  if (playedGameAutoPreview) {
+    playedGameAutoPreview.innerHTML = "";
+    playedGameAutoPreview.style.display = "none";
+  }
+  if (typeof showRAWGPreview === "function") {
+    showRAWGPreview();
+  }
+  if (typeof showPlayedGamePreview === "function") {
+    showPlayedGamePreview();
+  }
+
   setRatingStars("ratingStars", 0);
   setRatingStars("editRatingStars", 0);
   setRatingStars("editPlayedGameRatingStars", 0);
