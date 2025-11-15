@@ -113,6 +113,71 @@ function recalculateGameUserRatings(targetGames = allPlayedGames) {
   });
 }
 
+function stringHash(value) {
+  if (!value) return 0;
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash >>> 0;
+}
+
+function computeMoviesSignature(list) {
+  if (!Array.isArray(list) || list.length === 0) return 0;
+
+  let hash = list.length;
+  const firstId = Number(list[0]?.id ?? 0);
+  const lastId = Number(list[list.length - 1]?.id ?? 0);
+  hash = (hash * 31 + firstId) >>> 0;
+  hash = (hash * 31 + lastId) >>> 0;
+
+  for (let i = 0; i < list.length; i += 1) {
+    const movie = list[i];
+    const rating = Number(movie?.rating ?? 0);
+    const ratingSum = Number(movie?.ratingSum ?? 0);
+    const ratingCount = Number(movie?.ratingCount ?? 0);
+    const orderByHash = stringHash(movie?.orderBy ?? "");
+    const orderTypeHash = stringHash(movie?.orderType ?? "");
+
+    hash = (hash * 31 + Number(movie?.id ?? 0)) >>> 0;
+    hash = (hash * 31 + Math.round(rating * 10)) >>> 0;
+    hash = (hash * 31 + ratingSum) >>> 0;
+    hash = (hash * 31 + ratingCount) >>> 0;
+    hash = (hash * 31 + orderByHash) >>> 0;
+    hash = (hash * 31 + orderTypeHash) >>> 0;
+  }
+
+  return hash >>> 0;
+}
+
+function computeGamesSignature(list) {
+  if (!Array.isArray(list) || list.length === 0) return 0;
+
+  let hash = list.length;
+  const firstId = Number(list[0]?.id ?? 0);
+  const lastId = Number(list[list.length - 1]?.id ?? 0);
+  hash = (hash * 31 + firstId) >>> 0;
+  hash = (hash * 31 + lastId) >>> 0;
+
+  for (let i = 0; i < list.length; i += 1) {
+    const game = list[i];
+    const rating = Number(game?.rating ?? 0);
+    const ratingSum = Number(game?.ratingSum ?? 0);
+    const ratingCount = Number(game?.ratingCount ?? 0);
+    const orderByHash = stringHash(game?.orderBy ?? "");
+    const orderTypeHash = stringHash(game?.orderType ?? "");
+
+    hash = (hash * 31 + Number(game?.id ?? 0)) >>> 0;
+    hash = (hash * 31 + Math.round(rating * 10)) >>> 0;
+    hash = (hash * 31 + ratingSum) >>> 0;
+    hash = (hash * 31 + ratingCount) >>> 0;
+    hash = (hash * 31 + orderByHash) >>> 0;
+    hash = (hash * 31 + orderTypeHash) >>> 0;
+  }
+
+  return hash >>> 0;
+}
+
 function hasRatedGame(id) {
   return Object.prototype.hasOwnProperty.call(ratedGames, id);
 }
@@ -214,14 +279,14 @@ async function loadMoviesFromSupabase() {
       };
     });
 
-    const current = JSON.stringify(allMovies);
-    const fresh = JSON.stringify(newMovies);
+    const currentSignature = computeMoviesSignature(allMovies);
+    const freshSignature = computeMoviesSignature(newMovies);
 
-    if (current !== fresh) {
+    if (currentSignature !== freshSignature) {
       allMovies = newMovies;
       totalMovies = allMovies.length;
       recalculateMovieUserRatings(allMovies);
-      localStorage.setItem("moviesCache", fresh);
+      localStorage.setItem("moviesCache", JSON.stringify(newMovies));
     }
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
@@ -339,7 +404,7 @@ async function loadPlayedGamesFromSupabase() {
 
     if (error) throw error;
 
-    allPlayedGames = data.map((item) => {
+    const newPlayedGames = data.map((item) => {
       const ratingSum = Number(item.game_rating_sum ?? 0) || 0;
       const ratingCount = Number(item.game_rating_count ?? 0) || 0;
 
@@ -361,9 +426,15 @@ async function loadPlayedGamesFromSupabase() {
             : null,
       };
     });
-    totalGamesPlayed = allPlayedGames.length;
-    recalculateGameUserRatings(allPlayedGames);
-    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+    const currentSignature = computeGamesSignature(allPlayedGames);
+    const freshSignature = computeGamesSignature(newPlayedGames);
+
+    if (currentSignature !== freshSignature) {
+      allPlayedGames = newPlayedGames;
+      totalGamesPlayed = allPlayedGames.length;
+      recalculateGameUserRatings(allPlayedGames);
+      localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+    }
   } catch (err) {
     console.error("Error loading played games", err);
   } finally {
