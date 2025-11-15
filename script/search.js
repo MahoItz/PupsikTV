@@ -7,222 +7,175 @@ function searchMovies(query) {
 
 const debouncedSearchMovies = debounce(searchMovies, 300);
 
-function formatKinopoiskOption(film = {}) {
-  if (!film) return "";
-  const year = film.year || "";
-  const name =
-    film.nameRu ||
-    film.nameEn ||
-    film.nameOriginal ||
-    film.originalTitle ||
-    "";
-  return `${name}${year ? ` (${year})` : ""}`;
-}
-
-function formatRawgOption(game = {}) {
-  if (!game) return "";
-  const name = game.name || "";
-  const year = game.released ? game.released.split("-")[0] : "";
-  return `${name}${year ? ` (${year})` : ""}`;
-}
-
-function updateAutocompleteList(context) {
-  if (!context) return;
-  const { containerId, listId, state, label } = context;
-  const container = document.getElementById(containerId);
-  const list = document.getElementById(listId);
-  if (!container || !list) return;
-  list.innerHTML = "";
-  const getLabel = typeof label === "function" ? label : () => "";
-  state.results.forEach((item, index) => {
-    const option = document.createElement("div");
-    option.className = "autocomplete-option";
-    option.dataset.index = index;
-    option.textContent = getLabel(item) || "";
-    list.appendChild(option);
-  });
-  container.style.display = state.results.length ? "block" : "none";
-}
-
-function resetAutocompleteContext(
-  context,
-  { clearSelection = true, updatePreview = true } = {}
-) {
-  if (!context) return;
-  const { state } = context;
-  state.results = [];
-  if (clearSelection) {
-    state.selected = null;
-  }
-  if (context.type === "rawg") {
-    state.poster = null;
-    state.posters = [];
-  }
-  updateAutocompleteList(context);
-  if (updatePreview && typeof context.preview === "function") {
-    context.preview();
-  }
-}
-
-async function executeKinopoiskSearch(
-  query,
-  contextKey,
-  { autoSelect = false, showAlertOnEmpty = false } = {}
-) {
-  const context = KINO_CONTEXTS[contextKey];
-  if (!context) return [];
-
+const debouncedKPSearch = debounce(async (query) => {
   if (!query) {
-    resetAutocompleteContext(context);
-    return [];
+    const container = document.getElementById("autoResultsContainer");
+    if (container) container.style.display = "none";
+    kpResults = [];
+    selectedKPMovie = null;
+    showKPPreview();
+    return;
   }
 
   try {
-    const res = await fetch(
-      `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`,
-      {
-        headers: {
-          "X-API-KEY": KINOPOISK_API_KEY,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      query
+    )}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
     const data = await res.json();
-    const results = Array.isArray(data.films) ? data.films : [];
-
-    if (!results.length) {
-      resetAutocompleteContext(context);
-      if (showAlertOnEmpty) {
-        alert("Ничего не найдено");
-      }
-      return results;
+    kpResults = data.films || [];
+    const container = document.getElementById("autoResultsContainer");
+    const list = document.getElementById("autoResults");
+    if (!list) return;
+    list.innerHTML = "";
+    kpResults.forEach((m, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
+      div.textContent = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (kpResults.length > 0) {
+      container.style.display = "block";
+    } else {
+      container.style.display = "none";
     }
-
-    context.state.results = results;
-    updateAutocompleteList(context);
-
-    if (autoSelect) {
-      context.state.selected = results[0];
-      if (typeof context.preview === "function") {
-        context.preview();
-      }
-    }
-
-    return results;
   } catch (err) {
-    console.error(context.logLabel, err);
-    resetAutocompleteContext(context);
-    if (showAlertOnEmpty) {
-      alert("Не удалось выполнить поиск. Попробуйте снова.");
-    }
-    return [];
+    console.error("Kinopoisk autocomplete error", err);
   }
-}
+}, 100);
 
-async function executeRawgSearch(
-  query,
-  contextKey,
-  { autoSelect = false, showAlertOnEmpty = false } = {}
-) {
-  const context = RAWG_CONTEXTS[contextKey];
-  if (!context) return [];
-
+const debouncedWatchlistKPSearch = debounce(async (query) => {
   if (!query) {
-    resetAutocompleteContext(context);
-    return [];
+    const container = document.getElementById("watchAutoResultsContainer");
+    if (container) container.style.display = "none";
+    kpOrderResults = [];
+    selectedKPOrderMovie = null;
+    showWatchlistKPPreview();
+    return;
   }
 
   try {
-    const res = await fetch(
-      `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
-        query
-      )}&page_size=5`
-    );
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      query
+    )}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
     const data = await res.json();
-    const results = Array.isArray(data.results) ? data.results : [];
-
-    if (!results.length) {
-      resetAutocompleteContext(context);
-      if (showAlertOnEmpty) {
-        alert("Ничего не найдено");
-      }
-      return results;
+    kpOrderResults = data.films || [];
+    const container = document.getElementById("watchAutoResultsContainer");
+    const list = document.getElementById("watchAutoResults");
+    if (!list) return;
+    list.innerHTML = "";
+    kpOrderResults.forEach((m, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
+      div.textContent = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (kpOrderResults.length > 0) {
+      container.style.display = "block";
+    } else {
+      container.style.display = "none";
     }
-
-    context.state.results = results;
-    updateAutocompleteList(context);
-
-    if (autoSelect) {
-      context.state.selected = results[0];
-    }
-
-    return results;
   } catch (err) {
-    console.error(context.logLabel, err);
-    resetAutocompleteContext(context);
-    if (showAlertOnEmpty) {
-      alert("Не удалось выполнить поиск. Попробуйте снова.");
-    }
-    return [];
+    console.error("Kinopoisk autocomplete error", err);
   }
-}
-
-const KINO_CONTEXTS = {
-  movies: {
-    type: "kino",
-    state: searchState.kino.movies,
-    containerId: "autoResultsContainer",
-    listId: "autoResults",
-    preview: showKPPreview,
-    label: formatKinopoiskOption,
-    logLabel: "Kinopoisk autocomplete error",
-  },
-  watchlist: {
-    type: "kino",
-    state: searchState.kino.watchlist,
-    containerId: "watchAutoResultsContainer",
-    listId: "watchAutoResults",
-    preview: showWatchlistKPPreview,
-    label: formatKinopoiskOption,
-    logLabel: "Kinopoisk autocomplete error",
-  },
-};
-
-const RAWG_CONTEXTS = {
-  orders: {
-    type: "rawg",
-    state: searchState.rawg.orders,
-    containerId: "gameAutoResultsContainer",
-    listId: "gameAutoResults",
-    preview: showRAWGPreview,
-    label: formatRawgOption,
-    logLabel: "RAWG autocomplete error",
-  },
-  played: {
-    type: "rawg",
-    state: searchState.rawg.played,
-    containerId: "playedGameAutoResultsContainer",
-    listId: "playedGameAutoResults",
-    preview: showPlayedGamePreview,
-    label: formatRawgOption,
-    logLabel: "RAWG autocomplete error",
-  },
-};
-
-const debouncedKPSearch = debounce((query) => {
-  executeKinopoiskSearch(query, "movies");
 }, 100);
 
-const debouncedWatchlistKPSearch = debounce((query) => {
-  executeKinopoiskSearch(query, "watchlist");
+const debouncedRAWGSearch = debounce(async (query) => {
+  if (!query) {
+    const container = document.getElementById("gameAutoResultsContainer");
+    if (container) container.style.display = "none";
+    rawgResults = [];
+    selectedRAWGGame = null;
+    steamGridPoster = null;
+    steamGridPosters = [];
+    showRAWGPreview();
+    return;
+  }
+
+  try {
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      query
+    )}&page_size=5`;
+    const res = await fetch(url);
+    const data = await res.json();
+    rawgResults = data.results || [];
+    const container = document.getElementById("gameAutoResultsContainer");
+    const list = document.getElementById("gameAutoResults");
+    if (!list) return;
+    list.innerHTML = "";
+    rawgResults.forEach((g, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = g.released ? g.released.split("-")[0] : "";
+      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (rawgResults.length > 0) {
+      container.style.display = "block";
+    } else {
+      container.style.display = "none";
+    }
+  } catch (err) {
+    console.error("RAWG autocomplete error", err);
+  }
 }, 100);
 
-const debouncedRAWGSearch = debounce((query) => {
-  executeRawgSearch(query, "orders");
-}, 100);
+const debouncedPlayedRAWGSearch = debounce(async (query) => {
+  if (!query) {
+    const container = document.getElementById("playedGameAutoResultsContainer");
+    if (container) container.style.display = "none";
+    rawgResults = [];
+    selectedRAWGGame = null;
+    steamGridPoster = null;
+    showPlayedGamePreview();
+    return;
+  }
 
-const debouncedPlayedRAWGSearch = debounce((query) => {
-  executeRawgSearch(query, "played");
+  try {
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      query
+    )}&page_size=5`;
+    const res = await fetch(url);
+    const data = await res.json();
+    rawgResults = data.results || [];
+    const container = document.getElementById("playedGameAutoResultsContainer");
+    const list = document.getElementById("playedGameAutoResults");
+    if (!list) return;
+    list.innerHTML = "";
+    rawgResults.forEach((g, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = g.released ? g.released.split("-")[0] : "";
+      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (rawgResults.length > 0) {
+      container.style.display = "block";
+    } else {
+      container.style.display = "none";
+    }
+  } catch (err) {
+    console.error("RAWG autocomplete error", err);
+  }
 }, 100);
 
 async function handleKPSearch() {
@@ -230,22 +183,53 @@ async function handleKPSearch() {
   const loader = document.getElementById("autoSearchLoading");
   if (loader) loader.style.display = "inline-block";
   if (btn) btn.disabled = true;
-
-  try {
-    const title = document.getElementById("autoTitle").value.trim();
-    if (!title) {
-      alert("Введите название фильма");
-      return;
-    }
-
-    await executeKinopoiskSearch(title, "movies", {
-      autoSelect: true,
-      showAlertOnEmpty: true,
-    });
-  } finally {
+  const title = document.getElementById("autoTitle").value.trim();
+  if (!title) {
+    alert("Введите название фильма");
     if (loader) loader.style.display = "none";
     if (btn) btn.disabled = false;
+    return;
   }
+
+  try {
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      title
+    )}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    kpResults = data.films || [];
+    const container = document.getElementById("autoResultsContainer");
+    const list = document.getElementById("autoResults");
+    list.innerHTML = "";
+    kpResults.forEach((m, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
+      div.textContent = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (kpResults.length > 0) {
+      container.style.display = "block";
+      selectedKPMovie = kpResults[0];
+      showKPPreview();
+    } else {
+      container.style.display = "none";
+      selectedKPMovie = null;
+      showKPPreview();
+      alert("Ничего не найдено");
+    }
+  } catch (err) {
+    console.error("Kinopoisk search error", err);
+  }
+  if (loader) loader.style.display = "none";
+  if (btn) btn.disabled = false;
 }
 
 async function handleWatchlistSearch() {
@@ -253,46 +237,76 @@ async function handleWatchlistSearch() {
   const loader = document.getElementById("watchAutoSearchLoading");
   if (loader) loader.style.display = "inline-block";
   if (btn) btn.disabled = true;
-
-  try {
-    const title = document.getElementById("watchAutoTitle").value.trim();
-    if (!title) {
-      alert("Введите название фильма");
-      return;
-    }
-
-    await executeKinopoiskSearch(title, "watchlist", {
-      autoSelect: true,
-      showAlertOnEmpty: true,
-    });
-  } finally {
+  const title = document.getElementById("watchAutoTitle").value.trim();
+  if (!title) {
+    alert("Введите название фильма");
     if (loader) loader.style.display = "none";
     if (btn) btn.disabled = false;
+    return;
   }
+
+  try {
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      title
+    )}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    kpOrderResults = data.films || [];
+    const container = document.getElementById("watchAutoResultsContainer");
+    const list = document.getElementById("watchAutoResults");
+    list.innerHTML = "";
+    kpOrderResults.forEach((m, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = m.year || "";
+      const name = m.nameRu || m.nameEn || "";
+      div.textContent = `${name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (kpOrderResults.length > 0) {
+      container.style.display = "block";
+      selectedKPOrderMovie = kpOrderResults[0];
+      showWatchlistKPPreview();
+    } else {
+      container.style.display = "none";
+      selectedKPOrderMovie = null;
+      showWatchlistKPPreview();
+      alert("Ничего не найдено");
+    }
+  } catch (err) {
+    console.error("Kinopoisk search error", err);
+  }
+  if (loader) loader.style.display = "none";
+  if (btn) btn.disabled = false;
 }
 
 function showKPPreview() {
   const preview = document.getElementById("autoPreview");
   if (!preview) return;
   preview.innerHTML = "";
-  const selected = searchState.kino.movies.selected;
-  if (!selected) {
+  if (!selectedKPMovie) {
     preview.style.display = "none";
     return;
   }
   const movie = {
     id: 0,
-    title: selected.nameRu || selected.nameEn || "",
-    originalTitle: selected.nameEn || "",
-    year: selected.year || "",
+    title: selectedKPMovie.nameRu || selectedKPMovie.nameEn || "",
+    originalTitle: selectedKPMovie.nameEn || "",
+    year: selectedKPMovie.year || "",
     rating: getCurrentRating("ratingStars"),
-    kpRating: selected.rating || "-",
+    kpRating: selectedKPMovie.rating || "-",
     poster:
-      selected.posterUrlPreview ||
-      selected.posterUrl ||
+      selectedKPMovie.posterUrlPreview ||
+      selectedKPMovie.posterUrl ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     dateAdded: new Date().toISOString().split("T")[0],
-    genre: selected.genres?.map((g) => g.genre).join(", ") || "",
+    genre: selectedKPMovie.genres?.map((g) => g.genre).join(", ") || "",
   };
   preview.appendChild(createMovieCard(movie, false, false));
   preview.style.display = "block";
@@ -303,32 +317,30 @@ function showWatchlistKPPreview() {
   const preview = document.getElementById("watchAutoPreview");
   if (!preview) return;
   preview.innerHTML = "";
-  const state = searchState.kino.watchlist;
-  const selected = state.selected;
-  if (!selected) {
+  if (!selectedKPOrderMovie) {
     preview.style.display = "none";
     return;
   }
   if (
-    selected.filmLength === undefined &&
-    selected.filmId
+    selectedKPOrderMovie.filmLength === undefined &&
+    selectedKPOrderMovie.filmId
   ) {
-    fetchKPFilmLength(selected.filmId).then((len) => {
-      selected.filmLength = len;
+    fetchKPFilmLength(selectedKPOrderMovie.filmId).then((len) => {
+      selectedKPOrderMovie.filmLength = len;
       showWatchlistKPPreview();
     });
   }
   const order = {
-    title: selected.nameRu || selected.nameEn || "",
-    originalTitle: selected.nameEn || "",
-    year: selected.year || "",
-    length: selected.filmLength || null,
-    kpRating: selected.rating || "-",
+    title: selectedKPOrderMovie.nameRu || selectedKPOrderMovie.nameEn || "",
+    originalTitle: selectedKPOrderMovie.nameEn || "",
+    year: selectedKPOrderMovie.year || "",
+    length: selectedKPOrderMovie.filmLength || null,
+    kpRating: selectedKPOrderMovie.rating || "-",
     poster:
-      selected.posterUrlPreview ||
-      selected.posterUrl ||
+      selectedKPOrderMovie.posterUrlPreview ||
+      selectedKPOrderMovie.posterUrl ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
-    genres: selected.genres?.map((g) => g.genre).join(", ") || "",
+    genres: selectedKPOrderMovie.genres?.map((g) => g.genre).join(", ") || "",
     orderBy: document.getElementById("watchOrderBy").value || "",
     orderType: document.getElementById("watchOrderType").value || "",
     dateAdded: new Date().toISOString().split("T")[0],
@@ -557,54 +569,69 @@ async function handleGameSearch() {
   const loader = document.getElementById("gameAutoSearchLoading");
   if (loader) loader.style.display = "inline-block";
   if (btn) btn.disabled = true;
-
-  try {
-    const title = document.getElementById("gameAutoTitle").value.trim();
-    if (!title) {
-      alert("Введите название игры");
-      return;
-    }
-
-    const results = await executeRawgSearch(title, "orders", {
-      autoSelect: true,
-      showAlertOnEmpty: true,
-    });
-
-    if (results.length) {
-      const state = RAWG_CONTEXTS.orders.state;
-      const selected = state.selected;
-      state.poster = null;
-      state.posters = [];
-      if (selected && selected.name) {
-        await fetchSteamGridPosters(selected.name, state);
-      }
-      showRAWGPreview();
-    }
-  } finally {
+  const title = document.getElementById("gameAutoTitle").value.trim();
+  if (!title) {
+    alert("Введите название игры");
     if (loader) loader.style.display = "none";
     if (btn) btn.disabled = false;
+    return;
   }
+
+  try {
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      title
+    )}&page_size=5`;
+    const res = await fetch(url);
+    const data = await res.json();
+    rawgResults = data.results || [];
+    const container = document.getElementById("gameAutoResultsContainer");
+    const list = document.getElementById("gameAutoResults");
+    list.innerHTML = "";
+    rawgResults.forEach((g, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = g.released ? g.released.split("-")[0] : "";
+      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (rawgResults.length > 0) {
+      container.style.display = "block";
+      selectedRAWGGame = rawgResults[0];
+      await fetchSteamGridPosters(selectedRAWGGame.name);
+      showRAWGPreview();
+    } else {
+      container.style.display = "none";
+      selectedRAWGGame = null;
+      steamGridPoster = null;
+      steamGridPosters = [];
+      showRAWGPreview();
+      alert("Ничего не найдено");
+    }
+  } catch (err) {
+    console.error("RAWG search error", err);
+  }
+  if (loader) loader.style.display = "none";
+  if (btn) btn.disabled = false;
 }
 
 function showRAWGPreview() {
   const preview = document.getElementById("gameAutoPreview");
   if (!preview) return;
   preview.innerHTML = "";
-  const state = searchState.rawg.orders;
-  const selected = state.selected;
-  if (!selected) {
+  if (!selectedRAWGGame) {
     preview.style.display = "none";
     return;
   }
   const game = {
-    title: selected.name || "",
-    genres: selected.genres?.map((g) => g.name).join(", ") || "",
-    year: selected.released
-      ? selected.released.split("-")[0]
+    title: selectedRAWGGame.name || "",
+    genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
+    year: selectedRAWGGame.released
+      ? selectedRAWGGame.released.split("-")[0]
       : "",
     poster:
-      state.poster ||
-      selected.background_image ||
+      steamGridPoster ||
+      selectedRAWGGame.background_image ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     orderBy: document.getElementById("gameOrderBy").value || "",
     orderType: document.getElementById("gameOrderType").value || "",
@@ -614,9 +641,8 @@ function showRAWGPreview() {
   preview.appendChild(card);
   createPosterOverlay(
     card.querySelector(".order-poster"),
-    state.posters,
-    true,
-    state
+    steamGridPosters,
+    true
   );
   preview.style.display = "block";
 }
@@ -626,54 +652,68 @@ async function handlePlayedGameSearch() {
   const loader = document.getElementById("playedGameAutoSearchLoading");
   if (loader) loader.style.display = "inline-block";
   if (btn) btn.disabled = true;
-
-  try {
-    const title = document.getElementById("playedGameAutoTitle").value.trim();
-    if (!title) {
-      alert("Введите название игры");
-      return;
-    }
-
-    const results = await executeRawgSearch(title, "played", {
-      autoSelect: true,
-      showAlertOnEmpty: true,
-    });
-
-    if (results.length) {
-      const state = RAWG_CONTEXTS.played.state;
-      const selected = state.selected;
-      state.poster = null;
-      state.posters = [];
-      if (selected && selected.name) {
-        await fetchSteamGridPosters(selected.name, state);
-      }
-      showPlayedGamePreview();
-    }
-  } finally {
+  const title = document.getElementById("playedGameAutoTitle").value.trim();
+  if (!title) {
+    alert("Введите название игры");
     if (loader) loader.style.display = "none";
     if (btn) btn.disabled = false;
+    return;
   }
+
+  try {
+    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      title
+    )}&page_size=5`;
+    const res = await fetch(url);
+    const data = await res.json();
+    rawgResults = data.results || [];
+    const container = document.getElementById("playedGameAutoResultsContainer");
+    const list = document.getElementById("playedGameAutoResults");
+    list.innerHTML = "";
+    rawgResults.forEach((g, idx) => {
+      const div = document.createElement("div");
+      div.className = "autocomplete-option";
+      div.dataset.index = idx;
+      const year = g.released ? g.released.split("-")[0] : "";
+      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
+      list.appendChild(div);
+    });
+    if (rawgResults.length > 0) {
+      container.style.display = "block";
+      selectedRAWGGame = rawgResults[0];
+      await fetchSteamGridPosters(selectedRAWGGame.name);
+      showPlayedGamePreview();
+    } else {
+      container.style.display = "none";
+      selectedRAWGGame = null;
+      steamGridPoster = null;
+      showPlayedGamePreview();
+      alert("Ничего не найдено");
+    }
+  } catch (err) {
+    console.error("RAWG search error", err);
+  }
+  if (loader) loader.style.display = "none";
+  if (btn) btn.disabled = false;
 }
 
 function showPlayedGamePreview() {
   const preview = document.getElementById("playedGameAutoPreview");
   if (!preview) return;
   preview.innerHTML = "";
-  const state = searchState.rawg.played;
-  const selected = state.selected;
-  if (!selected) {
+  if (!selectedRAWGGame) {
     preview.style.display = "none";
     return;
   }
   const game = {
-    title: selected.name || "",
-    genres: selected.genres?.map((g) => g.name).join(", ") || "",
-    year: selected.released
-      ? selected.released.split("-")[0]
+    title: selectedRAWGGame.name || "",
+    genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
+    year: selectedRAWGGame.released
+      ? selectedRAWGGame.released.split("-")[0]
       : "",
     poster:
-      state.poster ||
-      selected.background_image ||
+      steamGridPoster ||
+      selectedRAWGGame.background_image ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     rating: getCurrentRating("playedGameRatingStars"),
     orderBy: document.getElementById("playedGameOrderBy").value || "",
@@ -684,9 +724,8 @@ function showPlayedGamePreview() {
   preview.appendChild(card);
   createPosterOverlay(
     card.querySelector(".movie-poster"),
-    state.posters,
-    true,
-    state
+    steamGridPosters,
+    true
   );
   preview.style.display = "block";
 }

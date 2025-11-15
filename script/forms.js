@@ -11,9 +11,7 @@ document
       return;
     }
 
-  const movieState = searchState.kino.movies;
-  const selectedMovie = movieState.selected;
-  let movieData;
+    let movieData;
 
     if (currentMode === "auto") {
       const title = document.getElementById("autoTitle").value;
@@ -22,26 +20,39 @@ document
         return;
       }
 
-    if (!selectedMovie) {
+      if (!selectedKPMovie) {
         showSearchReminderModal();
         return;
       }
 
-    const sel = selectedMovie;
-    movieData = {
-      title: sel.nameRu || sel.nameEn || "",
-      originalTitle: sel.nameEn || "",
-      year: sel.year || new Date().getFullYear(),
-      rating: rating,
-      kpRating: sel.rating || "-",
-      poster:
-        sel.posterUrlPreview ||
-        sel.posterUrl ||
-        "https://via.placeholder.com/300x400?text=Нет+постера",
-      dateAdded: new Date().toISOString().split("T")[0],
-      genre: sel.genres?.map((g) => g.genre).join(", ") || "",
-      description: sel.description || "",
-    };
+      if (selectedKPMovie) {
+        const sel = selectedKPMovie;
+        movieData = {
+          title: sel.nameRu || sel.nameEn || "",
+          originalTitle: sel.nameEn || "",
+          year: sel.year || new Date().getFullYear(),
+          rating: rating,
+          kpRating: sel.rating || "-",
+          poster:
+            sel.posterUrlPreview ||
+            sel.posterUrl ||
+            "https://via.placeholder.com/300x400?text=Нет+постера",
+          dateAdded: new Date().toISOString().split("T")[0],
+          genre: sel.genres?.map((g) => g.genre).join(", ") || "",
+          description: sel.description || "",
+        };
+      } else {
+        movieData = {
+          title: title,
+          year: new Date().getFullYear(),
+          rating: rating,
+          kpRating: "-",
+          poster: "https://via.placeholder.com/300x400?text=Постер",
+          dateAdded: new Date().toISOString().split("T")[0],
+          genre: "Неизвестно",
+          description: "",
+        };
+      }
     } else {
       const fileInput = document.getElementById("manualPoster");
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
@@ -84,17 +95,15 @@ document
       return;
     }
 
-    const selectedMovieName =
-      selectedMovie &&
-      (selectedMovie.nameRu || selectedMovie.nameEn || "").trim();
-
     const shouldClearRouletteWinner =
       Boolean(rouletteLastWinner) &&
       (!rouletteAutofillActive ||
         movieData.title.trim() !== rouletteLastWinner ||
         (movieData.year && String(movieData.year).trim().length > 0 &&
           String(movieData.year).trim() !== String(new Date().getFullYear())) ||
-        (selectedMovieName && selectedMovieName !== rouletteLastWinner));
+        (selectedKPMovie &&
+          (selectedKPMovie.nameRu || selectedKPMovie.nameEn || "").trim() !==
+            rouletteLastWinner));
 
     try {
       const { data, error } = await supabaseClient
@@ -156,8 +165,6 @@ document
 
     let orderData;
     let filmLength = null;
-  const watchlistState = searchState.kino.watchlist;
-  const selectedOrder = watchlistState.selected;
 
     if (currentWatchlistMode === "auto") {
       const titleInput = document.getElementById("watchAutoTitle").value;
@@ -166,30 +173,44 @@ document
         return;
       }
 
-    if (!selectedOrder) {
+      if (!selectedKPOrderMovie) {
         showSearchReminderModal();
         return;
       }
 
-    const sel = selectedOrder;
-    if (sel.filmLength === undefined && sel.filmId) {
-      sel.filmLength = await fetchKPFilmLength(sel.filmId);
-    }
-    filmLength = sel.filmLength || null;
-    orderData = {
-      title: sel.nameRu || sel.nameEn || "",
-      originalTitle: sel.nameEn || "",
-      year: sel.year || "",
-      kpRating: sel.rating || "-",
-      poster:
-        sel.posterUrlPreview ||
-        sel.posterUrl ||
-        "https://via.placeholder.com/300x400?text=Нет+постера",
-      genres: sel.genres?.map((g) => g.genre).join(", ") || "",
-      orderBy: orderBy,
-      orderType: orderType,
-      length: filmLength,
-    };
+      if (selectedKPOrderMovie) {
+        const sel = selectedKPOrderMovie;
+        if (sel.filmLength === undefined && sel.filmId) {
+          sel.filmLength = await fetchKPFilmLength(sel.filmId);
+        }
+        filmLength = sel.filmLength || null;
+        orderData = {
+          title: sel.nameRu || sel.nameEn || "",
+          originalTitle: sel.nameEn || "",
+          year: sel.year || "",
+          kpRating: sel.rating || "-",
+          poster:
+            sel.posterUrlPreview ||
+            sel.posterUrl ||
+            "https://via.placeholder.com/300x400?text=Нет+постера",
+          genres: sel.genres?.map((g) => g.genre).join(", ") || "",
+          orderBy: orderBy,
+          orderType: orderType,
+          length: filmLength,
+        };
+      } else {
+        orderData = {
+          title: titleInput,
+          originalTitle: "",
+          year: "",
+          kpRating: "-",
+          poster: "https://via.placeholder.com/300x400?text=Нет+постера",
+          genres: "",
+          orderBy: orderBy,
+          orderType: orderType,
+          length: filmLength,
+        };
+      }
     } else {
       const fileInput = document.getElementById("watchManualPoster");
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
@@ -270,8 +291,8 @@ document
 
     closeModal("addWatchlistModal", true);
     this.reset();
-  watchlistState.selected = null;
-  watchlistState.results = [];
+    selectedKPOrderMovie = null;
+    kpOrderResults = [];
     showWatchlistKPPreview();
   });
 
@@ -284,8 +305,6 @@ document
     const orderType = document.getElementById("gameOrderType").value;
 
     let gameData;
-  const rawgOrderState = searchState.rawg.orders;
-  const selectedOrderGame = rawgOrderState.selected;
 
     if (currentGameMode === "auto") {
       const titleInput = document.getElementById("gameAutoTitle").value;
@@ -294,23 +313,29 @@ document
         return;
       }
 
-    if (!selectedOrderGame) {
-      showSearchReminderModal();
-      return;
-    }
-
-    const g = selectedOrderGame;
-    gameData = {
-      title: g.name || titleInput,
-      year: g.released ? g.released.split("-")[0] : "",
-      genres: g.genres?.map((x) => x.name).join(", ") || "",
-      poster:
-        rawgOrderState.poster ||
-        g.background_image ||
-        "https://via.placeholder.com/300x400?text=Нет+постера",
-      orderBy: orderBy,
-      orderType: orderType,
-    };
+      if (selectedRAWGGame) {
+        const g = selectedRAWGGame;
+        gameData = {
+          title: g.name || titleInput,
+          year: g.released ? g.released.split("-")[0] : "",
+          genres: g.genres?.map((x) => x.name).join(", ") || "",
+          poster:
+            steamGridPoster ||
+            g.background_image ||
+            "https://via.placeholder.com/300x400?text=Нет+постера",
+          orderBy: orderBy,
+          orderType: orderType,
+        };
+      } else {
+        gameData = {
+          title: titleInput,
+          year: "",
+          genres: "",
+          poster: "https://via.placeholder.com/300x400?text=Нет+постера",
+          orderBy: orderBy,
+          orderType: orderType,
+        };
+      }
     } else {
       const fileInput = document.getElementById("gamePoster");
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
@@ -365,10 +390,10 @@ document
 
     closeModal("addGameModal", true);
     this.reset();
-  rawgOrderState.selected = null;
-  rawgOrderState.results = [];
-  rawgOrderState.poster = null;
-  rawgOrderState.posters = [];
+    selectedRAWGGame = null;
+    steamGridPoster = null;
+    steamGridPosters = [];
+    rawgResults = [];
     showRAWGPreview();
   });
 
@@ -388,9 +413,6 @@ document
 
     let gameData;
 
-    const rawgPlayedState = searchState.rawg.played;
-    const selectedPlayedGame = rawgPlayedState.selected;
-
     if (currentPlayedGameMode === "auto") {
       const titleInput = document.getElementById("playedGameAutoTitle").value;
       if (!titleInput) {
@@ -398,18 +420,18 @@ document
         return;
       }
 
-      if (!selectedPlayedGame) {
+      if (!selectedRAWGGame) {
         showSearchReminderModal();
         return;
       }
 
-      const g = selectedPlayedGame;
+      const g = selectedRAWGGame;
       gameData = {
         title: g.name || titleInput,
         year: g.released ? g.released.split("-")[0] : "",
         genres: g.genres?.map((x) => x.name).join(", ") || "",
         poster:
-          rawgPlayedState.poster ||
+          steamGridPoster ||
           g.background_image ||
           "https://via.placeholder.com/300x400?text=Нет+постера",
         rating: rating,
@@ -490,10 +512,10 @@ document
     renderPlayedGames();
     closeModal("addPlayedGameModal", true);
     this.reset();
-    rawgPlayedState.selected = null;
-    rawgPlayedState.results = [];
-    rawgPlayedState.poster = null;
-    rawgPlayedState.posters = [];
+    selectedRAWGGame = null;
+    steamGridPoster = null;
+    steamGridPosters = [];
+    rawgResults = [];
     showPlayedGamePreview();
   });
 
@@ -1028,9 +1050,8 @@ function resetForm() {
   document.getElementById("editPlayedGameForm")?.reset();
 
   // Очистка состояния автопоиска фильмов
-  const movieState = searchState.kino.movies;
-  movieState.results = [];
-  movieState.selected = null;
+  kpResults = [];
+  selectedKPMovie = null;
   const autoResults = document.getElementById("autoResults");
   if (autoResults) autoResults.innerHTML = "";
   const autoResultsContainer = document.getElementById("autoResultsContainer");
@@ -1045,9 +1066,8 @@ function resetForm() {
   }
 
   // Очистка состояния автопоиска заказанных фильмов
-  const watchlistState = searchState.kino.watchlist;
-  watchlistState.results = [];
-  watchlistState.selected = null;
+  kpOrderResults = [];
+  selectedKPOrderMovie = null;
   const watchAutoResults = document.getElementById("watchAutoResults");
   if (watchAutoResults) watchAutoResults.innerHTML = "";
   const watchAutoResultsContainer = document.getElementById(
@@ -1065,16 +1085,10 @@ function resetForm() {
   }
 
   // Очистка состояния автопоиска игр
-  const rawgOrderState = searchState.rawg.orders;
-  rawgOrderState.results = [];
-  rawgOrderState.selected = null;
-  rawgOrderState.poster = null;
-  rawgOrderState.posters = [];
-  const rawgPlayedState = searchState.rawg.played;
-  rawgPlayedState.results = [];
-  rawgPlayedState.selected = null;
-  rawgPlayedState.poster = null;
-  rawgPlayedState.posters = [];
+  rawgResults = [];
+  selectedRAWGGame = null;
+  steamGridPoster = null;
+  steamGridPosters = [];
   const gameAutoResults = document.getElementById("gameAutoResults");
   if (gameAutoResults) gameAutoResults.innerHTML = "";
   const gameAutoResultsContainer = document.getElementById(

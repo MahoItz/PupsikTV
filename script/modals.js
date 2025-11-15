@@ -233,9 +233,8 @@ function openEditGameModal(id) {
   const preview = document.getElementById("editGamePosterPreview");
   const overlay = preview.parentElement.nextElementSibling;
   if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
-  const rawgOrderState = searchState.rawg.orders;
-  rawgOrderState.poster = null;
-  rawgOrderState.posters = [];
+  steamGridPoster = null;
+  steamGridPosters = [];
   document.getElementById("editGameTitle").value = game.title;
   document.getElementById("editGameYear").value = game.year || "";
   document.getElementById("editGameGenres").value = game.genres || "";
@@ -254,9 +253,8 @@ function openEditPlayedGameModal(id) {
   const preview = document.getElementById("editPlayedGamePosterPreview");
   const overlay = preview.parentElement.nextElementSibling;
   if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
-  const rawgPlayedState = searchState.rawg.played;
-  rawgPlayedState.poster = null;
-  rawgPlayedState.posters = [];
+  steamGridPoster = null;
+  steamGridPosters = [];
   document.getElementById("editPlayedGameTitle").value = game.title;
   document.getElementById("editPlayedGameYear").value = game.year || "";
   document.getElementById("editPlayedGameGenres").value = game.genres || "";

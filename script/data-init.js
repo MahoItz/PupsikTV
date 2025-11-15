@@ -565,11 +565,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       const option = e.target.closest(".autocomplete-option");
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
-      const movieState = searchState.kino.movies;
-      movieState.selected = movieState.results[idx] || null;
-      if (movieState.selected) {
+      selectedKPMovie = kpResults[idx] || null;
+      if (selectedKPMovie) {
         titleInput.value =
-          movieState.selected.nameRu || movieState.selected.nameEn || "";
+          selectedKPMovie.nameRu || selectedKPMovie.nameEn || "";
       }
       syncRouletteAutofillState();
       showKPPreview();
@@ -636,13 +635,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       const option = e.target.closest(".autocomplete-option");
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
-      const watchlistState = searchState.kino.watchlist;
-      watchlistState.selected = watchlistState.results[idx] || null;
-      if (watchlistState.selected) {
+      selectedKPOrderMovie = kpOrderResults[idx] || null;
+      if (selectedKPOrderMovie) {
         watchTitleInput.value =
-          watchlistState.selected.nameRu ||
-          watchlistState.selected.nameEn ||
-          "";
+          selectedKPOrderMovie.nameRu || selectedKPOrderMovie.nameEn || "";
       }
       showWatchlistKPPreview();
       document.getElementById("watchAutoResultsContainer").style.display =
@@ -669,16 +665,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       const option = e.target.closest(".autocomplete-option");
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
-      const rawgOrderState = searchState.rawg.orders;
-      rawgOrderState.selected = rawgOrderState.results[idx] || null;
-      if (rawgOrderState.selected) {
-        gameTitleInput.value = rawgOrderState.selected.name || "";
-        rawgOrderState.poster = null;
-        rawgOrderState.posters = [];
-        await fetchSteamGridPosters(
-          rawgOrderState.selected.name,
-          rawgOrderState
-        );
+      selectedRAWGGame = rawgResults[idx] || null;
+      if (selectedRAWGGame) {
+        gameTitleInput.value = selectedRAWGGame.name || "";
+        await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showRAWGPreview();
       document.getElementById("gameAutoResultsContainer").style.display =
@@ -712,16 +702,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       const option = e.target.closest(".autocomplete-option");
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
-      const rawgPlayedState = searchState.rawg.played;
-      rawgPlayedState.selected = rawgPlayedState.results[idx] || null;
-      if (rawgPlayedState.selected) {
-        playedTitleInput.value = rawgPlayedState.selected.name || "";
-        rawgPlayedState.poster = null;
-        rawgPlayedState.posters = [];
-        await fetchSteamGridPosters(
-          rawgPlayedState.selected.name,
-          rawgPlayedState
-        );
+      selectedRAWGGame = rawgResults[idx] || null;
+      if (selectedRAWGGame) {
+        playedTitleInput.value = selectedRAWGGame.name || "";
+        await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showPlayedGamePreview();
       document.getElementById("playedGameAutoResultsContainer").style.display =
@@ -784,18 +768,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         alert("Введите название игры");
         return;
       }
-      const postersState = { poster: null, posters: [] };
-      await fetchSteamGridPosters(title, postersState);
-      if (!postersState.poster) {
+      await fetchSteamGridPosters(title);
+      if (!steamGridPoster) {
         alert("Постеры не найдены");
         return;
       }
       const overlay = gamePreview.parentElement.nextElementSibling;
       if (overlay && overlay.classList.contains("poster-overlay"))
         overlay.remove();
-      gamePreview.src = postersState.poster;
-      editGamePosterData = postersState.poster;
-      createPosterOverlay(gamePreview, postersState.posters, true, postersState);
+      gamePreview.src = steamGridPoster;
+      editGamePosterData = steamGridPoster;
+      createPosterOverlay(gamePreview, steamGridPosters, true);
     });
   }
 
@@ -823,23 +806,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         alert("Введите название игры");
         return;
       }
-      const postersState = { poster: null, posters: [] };
-      await fetchSteamGridPosters(title, postersState);
-      if (!postersState.poster) {
+      await fetchSteamGridPosters(title);
+      if (!steamGridPoster) {
         alert("Постеры не найдены");
         return;
       }
       const overlay = playedPreview.parentElement.nextElementSibling;
       if (overlay && overlay.classList.contains("poster-overlay"))
         overlay.remove();
-      playedPreview.src = postersState.poster;
-      editPlayedGamePosterData = postersState.poster;
-      createPosterOverlay(
-        playedPreview,
-        postersState.posters,
-        true,
-        postersState
-      );
+      playedPreview.src = steamGridPoster;
+      editPlayedGamePosterData = steamGridPoster;
+      createPosterOverlay(playedPreview, steamGridPosters, true);
     });
   }
 });
