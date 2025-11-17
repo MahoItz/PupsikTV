@@ -1,0 +1,25 @@
+{
+  "name": "pupsiktv",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "This repository contains the source code for the PupsikTV website. The project is a static site that relies on a few serverless API routes contained in the `api` directory.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MahoItz/PupsikTV.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MahoItz/PupsikTV/issues"
+  },
+  "homepage": "https://github.com/MahoItz/PupsikTV#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.81.1"
+  }
+}
