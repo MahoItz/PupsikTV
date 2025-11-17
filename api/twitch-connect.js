@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const REDIRECT_URI = "https://pupsik-tv-git-twitch-alexandrs-projects-58e1957c.vercel.app/api/twitch-connect";
+const REDIRECT_URI = "https://pupsik-tv.vercel.app/api/twitch-connect";
 
 function ensureString(value) {
   if (Array.isArray(value)) {
