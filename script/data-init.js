@@ -613,6 +613,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
       }
     });
+  const twitchConnectBtn = document.getElementById("adminTwitchConnectBtn");
+  if (twitchConnectBtn) {
+    twitchConnectBtn.addEventListener("click", startTwitchAdminConnect);
+  }
   const searchBtn = document.getElementById("autoSearchBtn");
   const resultsContainer = document.getElementById("autoResults");
   const titleInput = document.getElementById("autoTitle");

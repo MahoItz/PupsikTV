@@ -60,6 +60,9 @@ export default function handler(req, res) {
     if (process.env.RAWG_API_KEY) {
       env.RAWG_API_KEY = process.env.RAWG_API_KEY;
     }
+    if (process.env.TWITCH_CLIENT_ID) {
+      env.TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
+    }
   }
 
   res.status(200).json(env);

@@ -1,5 +1,9 @@
 ﻿// Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
+const TWITCH_REDIRECT_URI =
+  "https://pupsik-tv-git-twitch-alexandrs-projects-58e1957c.vercel.app/api/twitch-connect";
+const TWITCH_AUTH_SCOPES = ["user:read:chat", "openid"];
+let TWITCH_CLIENT_ID = null;
 let SUPABASE_KEY;
 let supabaseClient;
 let currentSupabaseKey = null;
@@ -322,10 +326,60 @@ async function loadEnv(options = {}) {
     }
     if (env.KINOPOISK_API_KEY) KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
     if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
+    if (typeof env.TWITCH_CLIENT_ID === "string") {
+      const trimmedClientId = env.TWITCH_CLIENT_ID.trim();
+      TWITCH_CLIENT_ID = trimmedClientId ? trimmedClientId : null;
+    } else if (!token) {
+      TWITCH_CLIENT_ID = null;
+    }
+    updateTwitchConnectButtonState();
     return env;
   } catch (err) {
     console.error("Failed to load environment variables", err);
     throw err;
+  }
+}
+
+function updateTwitchConnectButtonState() {
+  const btn = document.getElementById("adminTwitchConnectBtn");
+  if (!btn) return;
+  const hasClientId = Boolean(TWITCH_CLIENT_ID);
+  btn.disabled = !hasClientId;
+  if (hasClientId) {
+    btn.removeAttribute("title");
+  } else {
+    btn.title = "Настройте Twitch OAuth в переменных окружения.";
+  }
+}
+
+function startTwitchAdminConnect() {
+  if (!isAdmin || !adminToken) {
+    alert("Сначала войдите как админ с паролем.");
+    return;
+  }
+  if (!TWITCH_CLIENT_ID) {
+    alert("Не настроен Twitch Client ID.");
+    return;
+  }
+  const params = new URLSearchParams({
+    client_id: TWITCH_CLIENT_ID,
+    redirect_uri: TWITCH_REDIRECT_URI,
+    response_type: "code",
+    scope: TWITCH_AUTH_SCOPES.join(" "),
+  });
+  const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+  const popupFeatures = [
+    "width=600",
+    "height=720",
+    "menubar=no",
+    "toolbar=no",
+    "status=no",
+    "resizable=yes",
+    "scrollbars=yes",
+  ].join(",");
+  const popup = window.open(authUrl, "_blank", popupFeatures);
+  if (!popup) {
+    window.location.href = authUrl;
   }
 }
 
