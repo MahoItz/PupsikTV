@@ -2,6 +2,10 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const REDIRECT_URI = "https://pupsik-tv.vercel.app/api/twitch-connect";
+const CHAT_WEBHOOK_URL =
+  process.env.TWITCH_EVENTSUB_CALLBACK_URL ||
+  "https://pupsik-tv.vercel.app/api/twitch-chat-webhook";
+const EVENTSUB_SECRET = process.env.TWITCH_EVENTSUB_SECRET || "";
 
 function ensureString(value) {
   if (Array.isArray(value)) {
@@ -92,6 +96,47 @@ export default async function handler(req, res) {
       .json({ error: "Incomplete token response from Twitch" });
   }
 
+  let broadcasterUserId;
+
+  try {
+    const userResponse = await fetch("https://api.twitch.tv/helix/users", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Client-Id": clientId,
+      },
+    });
+
+    if (!userResponse.ok) {
+      const errorBody = await userResponse.json().catch(() => ({}));
+      console.error("Failed to fetch Twitch user data", {
+        status: userResponse.status,
+        error: errorBody,
+      });
+      return res
+        .status(502)
+        .json({ error: "Failed to fetch Twitch user information" });
+    }
+
+    const userPayload = await userResponse.json();
+    const users = Array.isArray(userPayload?.data) ? userPayload.data : [];
+    const [firstUser] = users;
+
+    if (!firstUser?.id) {
+      console.error("Unexpected Twitch user payload", userPayload);
+      return res
+        .status(502)
+        .json({ error: "Unable to determine Twitch user information" });
+    }
+
+    broadcasterUserId = firstUser.id;
+  } catch (err) {
+    console.error("Twitch user lookup failed", err);
+    return res
+      .status(502)
+      .json({ error: "Failed to fetch Twitch user information" });
+  }
+
   const supabase = createClient(SUPABASE_URL, supabaseKey, {
     auth: { persistSession: false },
   });
@@ -122,9 +167,171 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Failed to save tokens" });
   }
 
+  try {
+    await ensureChatSubscription({
+      clientId,
+      clientSecret,
+      broadcasterUserId,
+      callbackUrl: CHAT_WEBHOOK_URL,
+      secret: EVENTSUB_SECRET,
+    });
+  } catch (err) {
+    console.error("Failed to ensure Twitch chat subscription", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to ensure Twitch chat subscription" });
+  }
+
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
   return res
     .status(200)
     .send("Twitch подключён, можно закрыть эту вкладку");
+}
+
+async function ensureChatSubscription({
+  clientId,
+  clientSecret,
+  broadcasterUserId,
+  callbackUrl,
+  secret,
+}) {
+  if (!clientId || !clientSecret) {
+    throw new Error("Missing Twitch app credentials");
+  }
+
+  if (!callbackUrl) {
+    throw new Error("Missing EventSub callback URL");
+  }
+
+  if (!secret) {
+    throw new Error("Missing EventSub secret");
+  }
+
+  let appAccessToken;
+
+  try {
+    const tokenResponse = await fetch("https://id.twitch.tv/oauth2/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: "client_credentials",
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      const errorBody = await tokenResponse.json().catch(() => ({}));
+      throw new Error(
+        `App access token request failed: ${tokenResponse.status} ${JSON.stringify(
+          errorBody
+        )}`
+      );
+    }
+
+    const tokenData = await tokenResponse.json();
+    appAccessToken = tokenData?.access_token;
+
+    if (!appAccessToken) {
+      throw new Error("Missing app access token in response");
+    }
+  } catch (err) {
+    throw new Error(`Unable to fetch app access token: ${err.message}`);
+  }
+
+  const authHeaders = {
+    Authorization: `Bearer ${appAccessToken}`,
+    "Client-Id": clientId,
+  };
+
+  const query = new URLSearchParams({
+    type: "channel.chat.message",
+    broadcaster_user_id: broadcasterUserId,
+    moderator_user_id: broadcasterUserId,
+  });
+
+  try {
+    const existingResponse = await fetch(
+      `https://api.twitch.tv/helix/eventsub/subscriptions?${query}`,
+      {
+        method: "GET",
+        headers: authHeaders,
+      }
+    );
+
+    if (!existingResponse.ok) {
+      const errorBody = await existingResponse.json().catch(() => ({}));
+      throw new Error(
+        `Failed to list EventSub subscriptions: ${existingResponse.status} ${JSON.stringify(
+          errorBody
+        )}`
+      );
+    }
+
+    const existingPayload = await existingResponse.json();
+    const subscriptions = Array.isArray(existingPayload?.data)
+      ? existingPayload.data
+      : [];
+
+    const activeSubscription = subscriptions.find((subscription) => {
+      const status = subscription?.status || "";
+      const hasValidStatus =
+        status === "enabled" ||
+        status === "webhook_callback_verification_pending" ||
+        status === "verification_pending";
+      return (
+        hasValidStatus &&
+        subscription?.transport?.callback === callbackUrl &&
+        subscription?.type === "channel.chat.message" &&
+        subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
+        subscription?.condition?.moderator_user_id === broadcasterUserId
+      );
+    });
+
+    if (activeSubscription) {
+      return;
+    }
+  } catch (err) {
+    throw new Error(`Unable to verify EventSub subscriptions: ${err.message}`);
+  }
+
+  try {
+    const createResponse = await fetch(
+      "https://api.twitch.tv/helix/eventsub/subscriptions",
+      {
+        method: "POST",
+        headers: {
+          ...authHeaders,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "channel.chat.message",
+          version: "1",
+          condition: {
+            broadcaster_user_id: broadcasterUserId,
+            moderator_user_id: broadcasterUserId,
+          },
+          transport: {
+            method: "webhook",
+            callback: callbackUrl,
+            secret,
+          },
+        }),
+      }
+    );
+
+    if (!createResponse.ok) {
+      const errorBody = await createResponse.json().catch(() => ({}));
+      throw new Error(
+        `EventSub subscription creation failed: ${createResponse.status} ${JSON.stringify(
+          errorBody
+        )}`
+      );
+    }
+  } catch (err) {
+    throw new Error(`Unable to create EventSub subscription: ${err.message}`);
+  }
 }
 
