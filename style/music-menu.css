@@ -374,6 +374,16 @@
     counter-reset: rules-order;
 }
 
+.rules-panel__list .cmd {
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    background: rgba(12, 16, 32, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .rules-panel__list li {
     position: relative;
     background: rgba(12, 16, 32, 0.65);
