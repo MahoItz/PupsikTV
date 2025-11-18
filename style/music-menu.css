@@ -923,7 +923,9 @@
     position: absolute;
     top: calc(100% + 14px);
     right: 0;
-    width: min(340px, calc(100vw - 48px));
+    min-width: 320px;
+    width: fit-content;
+    max-width: min(560px, calc(100vw - 48px));
     padding: 18px 18px 16px;
     border-radius: 18px;
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1015,25 +1017,119 @@
 }
 
 .fortune-suggestions-item {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px 14px;
+    padding: 12px;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
 .fortune-suggestions-item:hover {
     border-color: rgba(0, 212, 255, 0.22);
 }
 
-.fortune-suggestions-user {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--secondary-color);
-    letter-spacing: 0.02em;
+.fortune-suggestions-item--pending {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.fortune-suggestions-card {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto;
+    gap: 16px;
+    align-items: start;
+}
+
+@media (max-width: 540px) {
+    .fortune-suggestions-card {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .fortune-suggestions-controls {
+        align-items: flex-start;
+    }
+}
+
+.fortune-suggestions-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.fortune-suggestions-controls {
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.fortune-suggestions-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fortune-suggestions-action {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.fortune-suggestions-action span {
+    pointer-events: none;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.fortune-suggestions-action:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.35);
+}
+
+.fortune-suggestions-action:disabled {
+    opacity: 0.55;
+    cursor: default;
+    transform: none;
+}
+
+.fortune-suggestions-action--approve {
+    border-color: rgba(76, 255, 172, 0.35);
+    color: rgba(198, 255, 229, 0.95);
+}
+
+.fortune-suggestions-action--approve:hover,
+.fortune-suggestions-action--approve:focus-visible {
+    background: rgba(76, 255, 172, 0.16);
+    border-color: rgba(76, 255, 172, 0.6);
+    color: #f0fff9;
+    transform: translateY(-1px);
+}
+
+.fortune-suggestions-action--reject {
+    border-color: rgba(255, 99, 132, 0.35);
+    color: rgba(255, 180, 197, 0.95);
+}
+
+.fortune-suggestions-action--reject:hover,
+.fortune-suggestions-action--reject:focus-visible {
+    background: rgba(255, 99, 132, 0.2);
+    border-color: rgba(255, 99, 132, 0.6);
+    color: #fff0f4;
+    transform: translateY(-1px);
 }
 
 .fortune-suggestions-text {
@@ -1042,6 +1138,23 @@
     line-height: 1.4;
     white-space: pre-wrap;
     word-break: break-word;
+    display: block;
+}
+
+.fortune-suggestions-links {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.fortune-suggestions-user {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    letter-spacing: 0.02em;
 }
 
 .fortune-suggestions-empty {

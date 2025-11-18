@@ -87,6 +87,7 @@ const fortuneSuggestionsState = {
   signature: null,
   supabaseWaitPromise: null,
   initialized: false,
+  pendingIds: new Set(),
 };
 let fortuneSuggestionsSupabaseErrorLogged = false;
 let fortuneWheelApi = null;
@@ -281,6 +282,49 @@ function updateFortuneSuggestionsBadge(count) {
   }
 }
 
+function computeFortuneSuggestionsSignature(list) {
+  return (Array.isArray(list) ? list : [])
+    .map((item) => {
+      const idPart = String(item?.id ?? "").trim();
+      const createdAtPart = String(item?.created_at ?? "").trim();
+      const channelPart =
+        typeof item?.twitch_channel === "string"
+          ? item.twitch_channel.trim()
+          : "";
+      const userPart =
+        typeof item?.twitch_user === "string" ? item.twitch_user.trim() : "";
+      const textPart =
+        typeof item?.raw_text === "string" ? item.raw_text.trim() : "";
+      return `${idPart}:${createdAtPart}:${channelPart}:${userPart}:${textPart}`;
+    })
+    .join("|");
+}
+
+function createFortuneSuggestionSearchLink(
+  href,
+  ariaLabel,
+  extraClass,
+  iconSrc = "images/kp_icon.webp"
+) {
+  const link = document.createElement("a");
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.className = ["fortune-items-link", extraClass]
+    .filter(Boolean)
+    .join(" ");
+  link.setAttribute("aria-label", ariaLabel);
+  link.title = ariaLabel;
+  const icon = document.createElement("img");
+  icon.src = iconSrc;
+  icon.alt = "";
+  icon.className = "fortune-items-link-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.draggable = false;
+  link.appendChild(icon);
+  return link;
+}
+
 function renderFortuneSuggestionsList() {
   if (!fortuneSuggestionsList) return;
 
@@ -322,8 +366,90 @@ function renderFortuneSuggestionsList() {
       textEl.textContent = "—";
     }
 
-    listItem.appendChild(userEl);
-    listItem.appendChild(textEl);
+    const card = document.createElement("div");
+    card.className = "fortune-suggestions-card";
+
+    const contentColumn = document.createElement("div");
+    contentColumn.className = "fortune-suggestions-content";
+    contentColumn.appendChild(userEl);
+    contentColumn.appendChild(textEl);
+
+    const controlsColumn = document.createElement("div");
+    controlsColumn.className = "fortune-suggestions-controls";
+
+    const actionsEl = document.createElement("div");
+    actionsEl.className = "fortune-suggestions-actions";
+
+    const isPending =
+      !!item?.id && fortuneSuggestionsState.pendingIds.has(item.id);
+
+    const approveBtn = document.createElement("button");
+    approveBtn.type = "button";
+    approveBtn.className =
+      "fortune-suggestions-action fortune-suggestions-action--approve";
+    const approveLabel = filmText
+      ? `Добавить «${filmText}» в рулетку`
+      : "Добавить фильм в рулетку";
+    approveBtn.setAttribute("aria-label", approveLabel);
+    approveBtn.title = "Добавить в рулетку";
+    approveBtn.innerHTML = '<span aria-hidden="true">✔</span>';
+    approveBtn.disabled = isPending;
+    approveBtn.addEventListener("click", () =>
+      handleFortuneSuggestionAccept(item)
+    );
+
+    const rejectBtn = document.createElement("button");
+    rejectBtn.type = "button";
+    rejectBtn.className =
+      "fortune-suggestions-action fortune-suggestions-action--reject";
+    const rejectLabel = filmText
+      ? `Удалить «${filmText}» из предложений`
+      : "Удалить предложение";
+    rejectBtn.setAttribute("aria-label", rejectLabel);
+    rejectBtn.title = "Удалить предложение";
+    rejectBtn.innerHTML = '<span aria-hidden="true">✕</span>';
+    rejectBtn.disabled = isPending;
+    rejectBtn.addEventListener("click", () =>
+      handleFortuneSuggestionReject(item)
+    );
+
+    actionsEl.appendChild(approveBtn);
+    actionsEl.appendChild(rejectBtn);
+
+    const searchLabel = filmText || userName;
+    if (searchLabel) {
+      controlsColumn.appendChild(actionsEl);
+      const linksRow = document.createElement("div");
+      linksRow.className = "fortune-suggestions-links";
+      const encodedLabel = encodeURIComponent(searchLabel);
+      const kpAriaLabel = `Открыть поиск Кинопоиска для «${searchLabel}»`;
+      const imdbAriaLabel = `Открыть поиск IMDb для «${searchLabel}»`;
+      const kinopoiskLink = createFortuneSuggestionSearchLink(
+        `https://www.kinopoisk.ru/index.php?kp_query=${encodedLabel}`,
+        kpAriaLabel,
+        "fortune-items-link-kinopoisk"
+      );
+      const imdbLink = createFortuneSuggestionSearchLink(
+        `https://www.imdb.com/find/?q=${encodedLabel}&s=tt`,
+        imdbAriaLabel,
+        "fortune-items-link-imdb",
+        "images/imdb_icon.webp"
+      );
+      linksRow.appendChild(kinopoiskLink);
+      linksRow.appendChild(imdbLink);
+      controlsColumn.appendChild(linksRow);
+    } else {
+      controlsColumn.appendChild(actionsEl);
+    }
+
+    card.appendChild(contentColumn);
+    card.appendChild(controlsColumn);
+    listItem.appendChild(card);
+
+    if (isPending) {
+      listItem.classList.add("fortune-suggestions-item--pending");
+    }
+
     fortuneSuggestionsList.appendChild(listItem);
   });
 }
@@ -376,25 +502,15 @@ async function fetchFortuneSuggestions(force = false) {
     }
 
     const suggestions = Array.isArray(data) ? data : [];
-    const signature = suggestions
-      .map(
-        (item) =>
-          `${item?.id ?? ""}:${item?.created_at ?? ""}:${
-            typeof item?.twitch_user === "string" ? item.twitch_user : ""
-          }:${
-            typeof item?.raw_text === "string" ? item.raw_text : ""
-          }:${
-            typeof item?.twitch_channel === "string" ? item.twitch_channel : ""
-          }`
-      )
-      .join("|");
+    const signature = computeFortuneSuggestionsSignature(suggestions);
+    const signatureChanged = fortuneSuggestionsState.signature !== signature;
 
     fortuneSuggestionsState.items = suggestions;
+    fortuneSuggestionsState.signature = signature;
     fortuneSuggestionsState.lastFetch = Date.now();
     updateFortuneSuggestionsBadge(suggestions.length);
 
-    if (fortuneSuggestionsState.signature !== signature) {
-      fortuneSuggestionsState.signature = signature;
+    if (signatureChanged) {
       renderFortuneSuggestionsList();
     }
   } catch (err) {
@@ -486,6 +602,92 @@ function handleFortuneSuggestionsKeydown(event) {
   if (fortuneSuggestionsButton) {
     fortuneSuggestionsButton.focus();
   }
+}
+
+async function mutateFortuneSuggestion(item, afterDelete) {
+  const id = item?.id;
+  if (!id || fortuneSuggestionsState.pendingIds.has(id)) {
+    return;
+  }
+
+  fortuneSuggestionsState.pendingIds.add(id);
+  renderFortuneSuggestionsList();
+
+  let client;
+  try {
+    client = await waitForSupabaseClientForSuggestions();
+  } catch (err) {
+    console.error(
+      "Supabase недоступен для удаления предложенного фильма",
+      err
+    );
+    fortuneSuggestionsState.pendingIds.delete(id);
+    renderFortuneSuggestionsList();
+    return;
+  }
+
+  try {
+    const { error } = await client
+      .from("movie_suggestions")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      throw error;
+    }
+
+    fortuneSuggestionsState.items = fortuneSuggestionsState.items.filter(
+      (existing) => existing?.id !== id
+    );
+    fortuneSuggestionsState.signature = computeFortuneSuggestionsSignature(
+      fortuneSuggestionsState.items
+    );
+    fortuneSuggestionsState.lastFetch = Date.now();
+    updateFortuneSuggestionsBadge(fortuneSuggestionsState.items.length);
+    if (typeof afterDelete === "function") {
+      try {
+        afterDelete();
+      } catch (callbackError) {
+        console.error(
+          "Ошибка при обработке предложенного фильма после удаления",
+          callbackError
+        );
+      }
+    }
+  } catch (err) {
+    console.error(
+      "Не удалось обновить список предложенных фильмов в Supabase",
+      err
+    );
+  } finally {
+    fortuneSuggestionsState.pendingIds.delete(id);
+    renderFortuneSuggestionsList();
+  }
+}
+
+function handleFortuneSuggestionAccept(item) {
+  const label =
+    typeof item?.raw_text === "string" ? item.raw_text.trim() : "";
+
+  mutateFortuneSuggestion(item, () => {
+    if (!label) {
+      console.warn(
+        "Получено пустое название фильма из предложенного списка, пропускаем добавление в рулетку."
+      );
+      return;
+    }
+    if (fortuneWheelApi && typeof fortuneWheelApi.addItem === "function") {
+      fortuneWheelApi.addItem(label);
+    } else {
+      console.error(
+        "API рулетки недоступно, не удалось добавить фильм из предложений."
+      );
+    }
+  });
+}
+
+function handleFortuneSuggestionReject(item) {
+  mutateFortuneSuggestion(item);
 }
 
 function initializeFortuneSuggestions() {
@@ -1784,6 +1986,9 @@ function initFortuneWheel() {
     handleMenuOpen() {
       drawWheel();
       setTimeout(drawWheel, 320);
+    },
+    addItem(label, options) {
+      addFortuneItem(label, options);
     },
   };
 }
