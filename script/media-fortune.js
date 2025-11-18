@@ -88,6 +88,8 @@ const fortuneSuggestionsState = {
   supabaseWaitPromise: null,
   initialized: false,
   pendingIds: new Set(),
+  highlightIds: null,
+  notifyNewItems: false,
 };
 let fortuneSuggestionsSupabaseErrorLogged = false;
 let fortuneWheelApi = null;
@@ -277,9 +279,38 @@ function updateFortuneSuggestionsBadge(count) {
 
   if (fortuneSuggestionsButton) {
     const baseLabel = "Предложенные фильмы";
-    const suffix = count > 0 ? `: ${count}` : ": нет новых";
-    fortuneSuggestionsButton.setAttribute("aria-label", `${baseLabel}${suffix}`);
+    const suffixParts = [];
+    suffixParts.push(count > 0 ? `: ${count}` : ": нет новых");
+    if (
+      fortuneSuggestionsState.notifyNewItems &&
+      !fortuneSuggestionsState.dropdownOpen
+    ) {
+      suffixParts.push("(есть новые предложения)");
+    }
+    fortuneSuggestionsButton.setAttribute(
+      "aria-label",
+      `${baseLabel}${suffixParts.join(" ")}`
+    );
   }
+}
+
+function updateFortuneSuggestionsButtonNotifyState() {
+  if (!fortuneSuggestionsButton) {
+    return;
+  }
+  const shouldNotify =
+    fortuneSuggestionsState.notifyNewItems &&
+    !fortuneSuggestionsState.dropdownOpen;
+  fortuneSuggestionsButton.classList.toggle(
+    "fortune-suggestions-button--notify",
+    Boolean(shouldNotify)
+  );
+}
+
+function getFortuneSuggestionsCount() {
+  return Array.isArray(fortuneSuggestionsState.items)
+    ? fortuneSuggestionsState.items.length
+    : 0;
 }
 
 function computeFortuneSuggestionsSignature(list) {
@@ -333,6 +364,7 @@ function renderFortuneSuggestionsList() {
   const items = Array.isArray(fortuneSuggestionsState.items)
     ? fortuneSuggestionsState.items
     : [];
+  const highlightIds = fortuneSuggestionsState.highlightIds;
 
   if (!items.length) {
     if (fortuneSuggestionsEmpty) {
@@ -346,6 +378,9 @@ function renderFortuneSuggestionsList() {
   }
 
   items.forEach((item) => {
+    const itemId = item?.id;
+    const highlightKey =
+      itemId === null || itemId === undefined ? null : String(itemId);
     const listItem = document.createElement("li");
     listItem.className = "fortune-suggestions-item";
 
@@ -381,7 +416,7 @@ function renderFortuneSuggestionsList() {
     actionsEl.className = "fortune-suggestions-actions";
 
     const isPending =
-      !!item?.id && fortuneSuggestionsState.pendingIds.has(item.id);
+      !!itemId && fortuneSuggestionsState.pendingIds.has(itemId);
 
     const approveBtn = document.createElement("button");
     approveBtn.type = "button";
@@ -450,8 +485,32 @@ function renderFortuneSuggestionsList() {
       listItem.classList.add("fortune-suggestions-item--pending");
     }
 
+    if (highlightIds && highlightKey && highlightIds.has(highlightKey)) {
+      listItem.classList.add("fortune-suggestions-item--highlight");
+      let highlightRemovalTimer = window.setTimeout(() => {
+        listItem.classList.remove("fortune-suggestions-item--highlight");
+        highlightRemovalTimer = null;
+      }, 2600);
+      const handleHighlightAnimationEnd = (event) => {
+        if (event.animationName !== "fortuneSuggestionGlow") {
+          return;
+        }
+        listItem.classList.remove("fortune-suggestions-item--highlight");
+        if (highlightRemovalTimer) {
+          clearTimeout(highlightRemovalTimer);
+          highlightRemovalTimer = null;
+        }
+        listItem.removeEventListener("animationend", handleHighlightAnimationEnd);
+      };
+      listItem.addEventListener("animationend", handleHighlightAnimationEnd);
+    }
+
     fortuneSuggestionsList.appendChild(listItem);
   });
+
+  if (fortuneSuggestionsState.highlightIds === highlightIds) {
+    fortuneSuggestionsState.highlightIds = null;
+  }
 }
 
 async function fetchFortuneSuggestions(force = false) {
@@ -504,10 +563,46 @@ async function fetchFortuneSuggestions(force = false) {
     const suggestions = Array.isArray(data) ? data : [];
     const signature = computeFortuneSuggestionsSignature(suggestions);
     const signatureChanged = fortuneSuggestionsState.signature !== signature;
+    const hasRenderedBefore = fortuneSuggestionsState.signature !== null;
+    let highlightIds = null;
+
+    if (signatureChanged && hasRenderedBefore) {
+      const previousItems = Array.isArray(fortuneSuggestionsState.items)
+        ? fortuneSuggestionsState.items
+        : [];
+      const previouslyKnownIds = new Set(
+        previousItems
+          .map((item) =>
+            item?.id === null || item?.id === undefined ? null : String(item.id)
+          )
+          .filter(Boolean)
+      );
+      const freshIds = suggestions
+        .map((item) =>
+          item?.id === null || item?.id === undefined ? null : String(item.id)
+        )
+        .filter((id) => id && !previouslyKnownIds.has(id));
+
+      if (freshIds.length) {
+        highlightIds = new Set(freshIds);
+      }
+    }
 
     fortuneSuggestionsState.items = suggestions;
     fortuneSuggestionsState.signature = signature;
     fortuneSuggestionsState.lastFetch = Date.now();
+    if (highlightIds) {
+      fortuneSuggestionsState.highlightIds = highlightIds;
+      if (!fortuneSuggestionsState.dropdownOpen) {
+        fortuneSuggestionsState.notifyNewItems = true;
+      }
+    } else if (signatureChanged && fortuneSuggestionsState.highlightIds) {
+      fortuneSuggestionsState.highlightIds = null;
+    }
+    if (fortuneSuggestionsState.dropdownOpen) {
+      fortuneSuggestionsState.notifyNewItems = false;
+    }
+    updateFortuneSuggestionsButtonNotifyState();
     updateFortuneSuggestionsBadge(suggestions.length);
 
     if (signatureChanged) {
@@ -553,6 +648,9 @@ function openFortuneSuggestionsDropdown() {
 
   fortuneSuggestionsDropdown.removeAttribute("hidden");
   fortuneSuggestionsState.dropdownOpen = true;
+  fortuneSuggestionsState.notifyNewItems = false;
+  updateFortuneSuggestionsButtonNotifyState();
+  updateFortuneSuggestionsBadge(getFortuneSuggestionsCount());
   if (fortuneSuggestionsButton) {
     fortuneSuggestionsButton.setAttribute("aria-expanded", "true");
   }
@@ -575,6 +673,8 @@ function closeFortuneSuggestionsDropdown() {
 
   fortuneSuggestionsDropdown.setAttribute("hidden", "");
   fortuneSuggestionsState.dropdownOpen = false;
+  updateFortuneSuggestionsButtonNotifyState();
+  updateFortuneSuggestionsBadge(getFortuneSuggestionsCount());
   if (fortuneSuggestionsButton) {
     fortuneSuggestionsButton.setAttribute("aria-expanded", "false");
   }
@@ -708,6 +808,7 @@ function initializeFortuneSuggestions() {
   fortuneSuggestionsState.initialized = true;
 
   updateFortuneSuggestionsBadge(0);
+  updateFortuneSuggestionsButtonNotifyState();
   if (fortuneSuggestionsEmpty) {
     fortuneSuggestionsEmpty.hidden = true;
   }

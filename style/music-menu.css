@@ -893,6 +893,51 @@
     transform: translateY(0);
 }
 
+.fortune-suggestions-button--notify {
+    border-color: rgba(0, 212, 255, 0.9);
+    color: rgba(0, 212, 255, 0.9);
+    background: rgba(12, 18, 40, 1);
+    animation: fortuneSuggestionsButtonPulse 1.7s ease-in-out infinite;
+}
+
+.fortune-suggestions-button--notify::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--primary-color);
+    box-shadow: 0 0 10px rgba(255, 108, 66, 0.8);
+    top: 6px;
+    right: 6px;
+    pointer-events: none;
+}
+
+.fortune-suggestions-button--notify .fortune-suggestions-badge {
+    background: var(--secondary-color);
+    box-shadow: 0 8px 18px rgba(0, 212, 255, 0.45);
+}
+
+.fortune-suggestions-button--notify:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.4);
+}
+
+@keyframes fortuneSuggestionsButtonPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.35), 0 0 0 0 rgba(0, 212, 255, 0.15);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 6px rgba(0, 212, 255, 0), 0 0 22px 6px rgba(0, 212, 255, 0.35);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(0, 212, 255, 0), 0 0 0 0 rgba(0, 212, 255, 0);
+    }
+}
+
 .fortune-suggestions-button i {
     font-size: 1rem;
 }
@@ -917,6 +962,12 @@
 
 .fortune-suggestions-badge--hidden {
     display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fortune-suggestions-button--notify {
+        animation: none;
+    }
 }
 
 .fortune-suggestions-dropdown {
@@ -1033,6 +1084,55 @@
 .fortune-suggestions-item--pending {
     opacity: 0.6;
     pointer-events: none;
+}
+
+@keyframes fortuneSuggestionEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+        filter: blur(2px);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(-4px) scale(1.02);
+        filter: blur(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: none;
+    }
+}
+
+@keyframes fortuneSuggestionGlow {
+    0% {
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.05);
+    }
+    45% {
+        box-shadow: 0 16px 36px rgba(0, 212, 255, 0.35);
+        border-color: rgba(0, 212, 255, 0.45);
+        background: rgba(255, 255, 255, 0.09);
+    }
+    100% {
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.05);
+    }
+}
+
+.fortune-suggestions-item--highlight {
+    animation:
+        fortuneSuggestionEnter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both,
+        fortuneSuggestionGlow 2.2s ease-in-out 0.35s forwards;
+    will-change: transform, opacity, box-shadow, border-color;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fortune-suggestions-item--highlight {
+        animation: none;
+    }
 }
 
 .fortune-suggestions-card {
