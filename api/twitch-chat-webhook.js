@@ -23,14 +23,15 @@ export default async function handler(req, res) {
 
   if (messageType === 'notification') {
     const { subscription, event } = req.body || {};
-
-    console.log('Twitch EventSub notification:', { subscription, event });
-
     const messageText =
       typeof event?.message?.text === "string" ? event.message.text : "";
     const trimmedText = messageText.trimStart();
 
     if (trimmedText.toLowerCase().startsWith(COMMAND_PREFIX)) {
+      console.log("Twitch EventSub command notification:", {
+        subscription,
+        event,
+      });
       const twitchChannel =
         typeof event?.broadcaster_user_name === "string"
           ? event.broadcaster_user_name
