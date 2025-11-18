@@ -1,7 +1,7 @@
 ﻿// Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const TWITCH_REDIRECT_URI = "https://pupsik-tv.vercel.app/api/twitch-connect"; 
-const TWITCH_AUTH_SCOPES = ["user:read:chat", "openid"];
+const TWITCH_AUTH_SCOPES = ["user:read:chat", "user:bot", "channel:bot"];
 let TWITCH_CLIENT_ID = null;
 let SUPABASE_KEY;
 let supabaseClient;
