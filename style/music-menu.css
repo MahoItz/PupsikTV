@@ -900,19 +900,6 @@
     animation: fortuneSuggestionsButtonPulse 1.7s ease-in-out infinite;
 }
 
-.fortune-suggestions-button--notify::after {
-    content: "";
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: var(--primary-color);
-    box-shadow: 0 0 10px rgba(255, 108, 66, 0.8);
-    top: 6px;
-    right: 6px;
-    pointer-events: none;
-}
-
 .fortune-suggestions-button--notify .fortune-suggestions-badge {
     background: var(--secondary-color);
     box-shadow: 0 8px 18px rgba(0, 212, 255, 0.45);
