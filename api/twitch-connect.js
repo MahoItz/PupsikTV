@@ -284,12 +284,46 @@ async function ensureChatSubscription({
         subscription?.transport?.callback === callbackUrl &&
         subscription?.type === "channel.chat.message" &&
         subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
-        subscription?.condition?.user_id === broadcasterUserId
+        !subscription?.condition?.user_id
       );
     });
 
     if (activeSubscription) {
       return;
+    }
+
+    const outdatedSubscriptions = subscriptions.filter((subscription) => {
+      const status = subscription?.status || "";
+      const hasValidStatus =
+        status === "enabled" ||
+        status === "webhook_callback_verification_pending" ||
+        status === "verification_pending";
+      return (
+        hasValidStatus &&
+        subscription?.transport?.callback === callbackUrl &&
+        subscription?.type === "channel.chat.message" &&
+        subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
+        subscription?.condition?.user_id
+      );
+    });
+
+    for (const subscription of outdatedSubscriptions) {
+      const deleteResponse = await fetch(
+        `https://api.twitch.tv/helix/eventsub/subscriptions?id=${subscription.id}`,
+        {
+          method: "DELETE",
+          headers: authHeaders,
+        }
+      );
+
+      if (!deleteResponse.ok) {
+        const errorBody = await deleteResponse.json().catch(() => ({}));
+        throw new Error(
+          `Failed to delete outdated EventSub subscription ${subscription.id}: ${deleteResponse.status} ${JSON.stringify(
+            errorBody
+          )}`
+        );
+      }
     }
   } catch (err) {
     throw new Error(`Unable to verify EventSub subscriptions: ${err.message}`);
@@ -309,7 +343,6 @@ async function ensureChatSubscription({
           version: "1",
           condition: {
             broadcaster_user_id: broadcasterUserId,
-            user_id: broadcasterUserId,
           },
           transport: {
             method: "webhook",
