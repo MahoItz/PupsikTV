@@ -262,8 +262,6 @@ async function ensureChatSubscription({
 
   const query = new URLSearchParams({
     user_id: subscriptionUserId,
-    broadcaster_id: broadcasterUserId,
-    type: "channel.chat.message",
   });
 
   try {
