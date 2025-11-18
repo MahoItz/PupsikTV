@@ -1008,9 +1008,56 @@
         <section class="fortune-section fortune-list-section">
           <div class="fortune-list-header">
             <h3 class="fortune-title">Список для рулетки</h3>
-            <span class="fortune-items-count" aria-live="polite">
-              Всего: <span id="fortuneItemsCount" class="fortune-items-count-value">0</span>
-            </span>
+            <div class="fortune-list-actions">
+              <span class="fortune-items-count" aria-live="polite">
+                Всего: <span id="fortuneItemsCount" class="fortune-items-count-value">0</span>
+              </span>
+              <div id="fortuneSuggestionsContainer" class="fortune-suggestions">
+                <button
+                  id="fortuneSuggestionsButton"
+                  class="fortune-suggestions-button"
+                  type="button"
+                  aria-label="Предложенные фильмы: нет новых"
+                  aria-controls="fortuneSuggestionsDropdown"
+                  aria-expanded="false"
+                  title="Предложенные фильмы"
+                >
+                  <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                  <span
+                    id="fortuneSuggestionsCount"
+                    class="fortune-suggestions-badge fortune-suggestions-badge--hidden"
+                  >
+                    0
+                  </span>
+                </button>
+                <div
+                  id="fortuneSuggestionsDropdown"
+                  class="fortune-suggestions-dropdown"
+                  role="region"
+                  aria-label="Предложенные фильмы"
+                  hidden
+                >
+                  <div class="fortune-suggestions-dropdown-header">
+                    <span>Предложенные фильмы</span>
+                    <button
+                      id="fortuneSuggestionsClose"
+                      class="fortune-suggestions-close"
+                      type="button"
+                      aria-label="Закрыть список предложенных фильмов"
+                      title="Закрыть"
+                    >
+                      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div class="fortune-suggestions-dropdown-body">
+                    <ul id="fortuneSuggestionsList" class="fortune-suggestions-list"></ul>
+                    <p id="fortuneSuggestionsEmpty" class="fortune-suggestions-empty" hidden>
+                      Пока нет предложенных фильмов.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="fortune-controls">
             <input

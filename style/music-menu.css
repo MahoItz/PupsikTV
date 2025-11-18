@@ -851,6 +851,209 @@
     flex-wrap: wrap;
 }
 
+.fortune-list-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.fortune-suggestions {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fortune-suggestions-button {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: rgba(10, 15, 35, 0.9);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.fortune-suggestions-button:hover,
+.fortune-suggestions-button:focus-visible {
+    border-color: var(--secondary-color);
+    color: var(--secondary-color);
+    background: rgba(12, 18, 40, 1);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.fortune-suggestions-button:active {
+    transform: translateY(0);
+}
+
+.fortune-suggestions-button i {
+    font-size: 1rem;
+}
+
+.fortune-suggestions-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(255, 108, 66, 0.35);
+}
+
+.fortune-suggestions-badge--hidden {
+    display: none;
+}
+
+.fortune-suggestions-dropdown {
+    position: absolute;
+    top: calc(100% + 14px);
+    right: 0;
+    width: min(340px, calc(100vw - 48px));
+    padding: 18px 18px 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(10, 15, 35, 0.95);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 1800;
+}
+
+.fortune-suggestions-dropdown::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    right: 22px;
+    width: 16px;
+    height: 16px;
+    background: rgba(10, 15, 35, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+    transform: rotate(45deg);
+    z-index: -1;
+}
+
+.fortune-suggestions-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.fortune-suggestions-dropdown-header span {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.fortune-suggestions-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.fortune-suggestions-close:hover,
+.fortune-suggestions-close:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    outline: none;
+}
+
+.fortune-suggestions-dropdown-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.fortune-suggestions-dropdown-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.fortune-suggestions-dropdown-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+}
+
+.fortune-suggestions-dropdown-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fortune-suggestions-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.fortune-suggestions-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+}
+
+.fortune-suggestions-item:hover {
+    border-color: rgba(0, 212, 255, 0.22);
+}
+
+.fortune-suggestions-user {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+    letter-spacing: 0.02em;
+}
+
+.fortune-suggestions-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.fortune-suggestions-empty {
+    margin: 6px 0 0;
+    padding: 24px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    text-align: center;
+}
+
 .fortune-items-count {
     font-size: 0.78rem;
     color: var(--text-secondary);

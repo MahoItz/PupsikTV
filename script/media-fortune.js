@@ -56,6 +56,39 @@ const volumeSlider = document.getElementById("volumeSlider");
 const volumeValue = document.getElementById("volumeValue");
 const fortuneTipButton = document.getElementById("fortuneTipButton");
 const fortuneTipAudio = document.getElementById("fortuneTipAudio");
+const fortuneSuggestionsContainer = document.getElementById(
+  "fortuneSuggestionsContainer"
+);
+const fortuneSuggestionsButton = document.getElementById(
+  "fortuneSuggestionsButton"
+);
+const fortuneSuggestionsBadge = document.getElementById(
+  "fortuneSuggestionsCount"
+);
+const fortuneSuggestionsDropdown = document.getElementById(
+  "fortuneSuggestionsDropdown"
+);
+const fortuneSuggestionsList = document.getElementById(
+  "fortuneSuggestionsList"
+);
+const fortuneSuggestionsEmpty = document.getElementById(
+  "fortuneSuggestionsEmpty"
+);
+const fortuneSuggestionsClose = document.getElementById(
+  "fortuneSuggestionsClose"
+);
+const FORTUNE_SUGGESTIONS_POLL_INTERVAL = 3000;
+const fortuneSuggestionsState = {
+  pollTimerId: null,
+  isFetching: false,
+  items: [],
+  lastFetch: 0,
+  dropdownOpen: false,
+  signature: null,
+  supabaseWaitPromise: null,
+  initialized: false,
+};
+let fortuneSuggestionsSupabaseErrorLogged = false;
 let fortuneWheelApi = null;
 let rulesPanelManuallyCollapsed = false;
 let rulesPanelStandaloneOpen = false;
@@ -194,6 +227,309 @@ if (collapseRulesPanel) {
   });
 }
 
+function waitForSupabaseClientForSuggestions() {
+  if (supabaseClient && typeof supabaseClient.from === "function") {
+    return Promise.resolve(supabaseClient);
+  }
+
+  if (fortuneSuggestionsState.supabaseWaitPromise) {
+    return fortuneSuggestionsState.supabaseWaitPromise;
+  }
+
+  fortuneSuggestionsState.supabaseWaitPromise = new Promise(
+    (resolve, reject) => {
+      const startedAt = Date.now();
+      const attempt = () => {
+        if (supabaseClient && typeof supabaseClient.from === "function") {
+          fortuneSuggestionsState.supabaseWaitPromise = null;
+          resolve(supabaseClient);
+          return;
+        }
+        if (Date.now() - startedAt > 10000) {
+          fortuneSuggestionsState.supabaseWaitPromise = null;
+          reject(new Error("Supabase client is not ready"));
+          return;
+        }
+        setTimeout(attempt, 150);
+      };
+      attempt();
+    }
+  );
+
+  return fortuneSuggestionsState.supabaseWaitPromise;
+}
+
+function updateFortuneSuggestionsBadge(count) {
+  if (fortuneSuggestionsBadge) {
+    if (count > 0) {
+      fortuneSuggestionsBadge.textContent = count > 99 ? "99+" : String(count);
+      fortuneSuggestionsBadge.classList.remove(
+        "fortune-suggestions-badge--hidden"
+      );
+    } else {
+      fortuneSuggestionsBadge.textContent = "0";
+      fortuneSuggestionsBadge.classList.add(
+        "fortune-suggestions-badge--hidden"
+      );
+    }
+  }
+
+  if (fortuneSuggestionsButton) {
+    const baseLabel = "Предложенные фильмы";
+    const suffix = count > 0 ? `: ${count}` : ": нет новых";
+    fortuneSuggestionsButton.setAttribute("aria-label", `${baseLabel}${suffix}`);
+  }
+}
+
+function renderFortuneSuggestionsList() {
+  if (!fortuneSuggestionsList) return;
+
+  fortuneSuggestionsList.replaceChildren();
+
+  const items = Array.isArray(fortuneSuggestionsState.items)
+    ? fortuneSuggestionsState.items
+    : [];
+
+  if (!items.length) {
+    if (fortuneSuggestionsEmpty) {
+      fortuneSuggestionsEmpty.hidden = false;
+    }
+    return;
+  }
+
+  if (fortuneSuggestionsEmpty) {
+    fortuneSuggestionsEmpty.hidden = true;
+  }
+
+  items.forEach((item) => {
+    const listItem = document.createElement("li");
+    listItem.className = "fortune-suggestions-item";
+
+    const userEl = document.createElement("span");
+    userEl.className = "fortune-suggestions-user";
+    const userName =
+      typeof item?.twitch_user === "string" ? item.twitch_user.trim() : "";
+    userEl.textContent = userName ? `${userName}` : "Неизвестно";
+
+    const textEl = document.createElement("span");
+    textEl.className = "fortune-suggestions-text";
+    const filmText =
+      typeof item?.raw_text === "string" ? item.raw_text.trim() : "";
+    if (filmText) {
+      textEl.textContent = filmText;
+      textEl.title = filmText;
+    } else {
+      textEl.textContent = "—";
+    }
+
+    listItem.appendChild(userEl);
+    listItem.appendChild(textEl);
+    fortuneSuggestionsList.appendChild(listItem);
+  });
+}
+
+async function fetchFortuneSuggestions(force = false) {
+  if (!fortuneSuggestionsContainer) {
+    return;
+  }
+
+  if (!force && fortuneSuggestionsState.isFetching) {
+    return;
+  }
+
+  if (
+    !force &&
+    fortuneSuggestionsState.lastFetch &&
+    Date.now() - fortuneSuggestionsState.lastFetch < 500
+  ) {
+    return;
+  }
+
+  let client;
+  try {
+    client = await waitForSupabaseClientForSuggestions();
+  } catch (err) {
+    if (!fortuneSuggestionsSupabaseErrorLogged) {
+      console.error(
+        "Supabase недоступен для загрузки предложенных фильмов",
+        err
+      );
+      fortuneSuggestionsSupabaseErrorLogged = true;
+    }
+    return;
+  }
+
+  if (!client) {
+    return;
+  }
+
+  fortuneSuggestionsState.isFetching = true;
+
+  try {
+    const { data, error } = await client
+      .from("movie_suggestions")
+      .select("id, created_at, twitch_channel, twitch_user, raw_text")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    const suggestions = Array.isArray(data) ? data : [];
+    const signature = suggestions
+      .map(
+        (item) =>
+          `${item?.id ?? ""}:${item?.created_at ?? ""}:${
+            typeof item?.twitch_user === "string" ? item.twitch_user : ""
+          }:${
+            typeof item?.raw_text === "string" ? item.raw_text : ""
+          }:${
+            typeof item?.twitch_channel === "string" ? item.twitch_channel : ""
+          }`
+      )
+      .join("|");
+
+    fortuneSuggestionsState.items = suggestions;
+    fortuneSuggestionsState.lastFetch = Date.now();
+    updateFortuneSuggestionsBadge(suggestions.length);
+
+    if (fortuneSuggestionsState.signature !== signature) {
+      fortuneSuggestionsState.signature = signature;
+      renderFortuneSuggestionsList();
+    }
+  } catch (err) {
+    console.error("Не удалось загрузить предложенные фильмы", err);
+  } finally {
+    fortuneSuggestionsState.isFetching = false;
+  }
+}
+
+function startFortuneSuggestionsPolling() {
+  if (fortuneSuggestionsState.pollTimerId) {
+    return;
+  }
+
+  fetchFortuneSuggestions();
+
+  fortuneSuggestionsState.pollTimerId = window.setInterval(() => {
+    if (!musicMenu || !musicMenu.classList.contains("open")) {
+      stopFortuneSuggestionsPolling();
+      return;
+    }
+    fetchFortuneSuggestions();
+  }, FORTUNE_SUGGESTIONS_POLL_INTERVAL);
+}
+
+function stopFortuneSuggestionsPolling() {
+  if (fortuneSuggestionsState.pollTimerId) {
+    clearInterval(fortuneSuggestionsState.pollTimerId);
+    fortuneSuggestionsState.pollTimerId = null;
+  }
+}
+
+function openFortuneSuggestionsDropdown() {
+  if (
+    !fortuneSuggestionsDropdown ||
+    fortuneSuggestionsState.dropdownOpen === true
+  ) {
+    return;
+  }
+
+  fortuneSuggestionsDropdown.removeAttribute("hidden");
+  fortuneSuggestionsState.dropdownOpen = true;
+  if (fortuneSuggestionsButton) {
+    fortuneSuggestionsButton.setAttribute("aria-expanded", "true");
+  }
+
+  if (
+    Date.now() - fortuneSuggestionsState.lastFetch >=
+    FORTUNE_SUGGESTIONS_POLL_INTERVAL
+  ) {
+    fetchFortuneSuggestions(true);
+  }
+}
+
+function closeFortuneSuggestionsDropdown() {
+  if (
+    !fortuneSuggestionsDropdown ||
+    fortuneSuggestionsState.dropdownOpen === false
+  ) {
+    return;
+  }
+
+  fortuneSuggestionsDropdown.setAttribute("hidden", "");
+  fortuneSuggestionsState.dropdownOpen = false;
+  if (fortuneSuggestionsButton) {
+    fortuneSuggestionsButton.setAttribute("aria-expanded", "false");
+  }
+}
+
+function toggleFortuneSuggestionsDropdown() {
+  if (fortuneSuggestionsState.dropdownOpen) {
+    closeFortuneSuggestionsDropdown();
+  } else {
+    openFortuneSuggestionsDropdown();
+  }
+}
+
+function handleFortuneSuggestionsOutsideClick(event) {
+  if (!fortuneSuggestionsState.dropdownOpen) return;
+  if (!fortuneSuggestionsContainer) return;
+  if (fortuneSuggestionsContainer.contains(event.target)) return;
+  closeFortuneSuggestionsDropdown();
+}
+
+function handleFortuneSuggestionsKeydown(event) {
+  if (!fortuneSuggestionsState.dropdownOpen) return;
+  if (event.key !== "Escape" && event.key !== "Esc") return;
+  closeFortuneSuggestionsDropdown();
+  if (fortuneSuggestionsButton) {
+    fortuneSuggestionsButton.focus();
+  }
+}
+
+function initializeFortuneSuggestions() {
+  if (fortuneSuggestionsState.initialized) {
+    return;
+  }
+
+  if (!fortuneSuggestionsContainer || !fortuneSuggestionsButton) {
+    return;
+  }
+
+  fortuneSuggestionsState.initialized = true;
+
+  updateFortuneSuggestionsBadge(0);
+  if (fortuneSuggestionsEmpty) {
+    fortuneSuggestionsEmpty.hidden = true;
+  }
+
+  fortuneSuggestionsButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    toggleFortuneSuggestionsDropdown();
+  });
+
+  if (fortuneSuggestionsClose) {
+    fortuneSuggestionsClose.addEventListener("click", () => {
+      closeFortuneSuggestionsDropdown();
+      if (fortuneSuggestionsButton) {
+        fortuneSuggestionsButton.focus();
+      }
+    });
+  }
+
+  document.addEventListener("click", handleFortuneSuggestionsOutsideClick);
+  document.addEventListener("keydown", handleFortuneSuggestionsKeydown);
+
+  fetchFortuneSuggestions(true);
+
+  if (musicMenu && musicMenu.classList.contains("open")) {
+    startFortuneSuggestionsPolling();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initializeFortuneSuggestions);
+
 if (musicMenu && musicMenuButton && closeMusicMenu) {
   const setMenuCollapsed = (shouldCollapse) => {
     musicMenu.classList.toggle("collapsed", shouldCollapse);
@@ -247,6 +583,8 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     rulesPanelManuallyCollapsed = false;
     rulesPanelStandaloneOpen = false;
     updateRulesPanelState();
+    stopFortuneSuggestionsPolling();
+    closeFortuneSuggestionsDropdown();
     if (audioPlayer) audioPlayer.pause();
     if (musicList) {
       musicList
@@ -269,6 +607,7 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     ) {
       fortuneWheelApi.handleMenuOpen();
     }
+    startFortuneSuggestionsPolling();
   });
 
   closeMusicMenu.addEventListener("click", () => {
