@@ -249,7 +249,7 @@ async function ensureChatSubscription({
   const query = new URLSearchParams({
     type: "channel.chat.message",
     broadcaster_user_id: broadcasterUserId,
-    moderator_user_id: broadcasterUserId,
+    user_id: broadcasterUserId,
   });
 
   try {
@@ -286,7 +286,7 @@ async function ensureChatSubscription({
         subscription?.transport?.callback === callbackUrl &&
         subscription?.type === "channel.chat.message" &&
         subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
-        subscription?.condition?.moderator_user_id === broadcasterUserId
+        subscription?.condition?.user_id === broadcasterUserId
       );
     });
 
@@ -311,7 +311,7 @@ async function ensureChatSubscription({
           version: "1",
           condition: {
             broadcaster_user_id: broadcasterUserId,
-            moderator_user_id: broadcasterUserId,
+            user_id: broadcasterUserId,
           },
           transport: {
             method: "webhook",
