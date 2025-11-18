@@ -247,8 +247,6 @@ async function ensureChatSubscription({
   };
 
   const query = new URLSearchParams({
-    type: "channel.chat.message",
-    broadcaster_user_id: broadcasterUserId,
     user_id: broadcasterUserId,
   });
 
