@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const COMMAND_PREFIX = "!заказ";
+const COMMAND_PREFIX = "!кино";
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
