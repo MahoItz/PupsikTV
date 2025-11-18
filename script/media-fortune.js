@@ -591,7 +591,13 @@ function toggleFortuneSuggestionsDropdown() {
 function handleFortuneSuggestionsOutsideClick(event) {
   if (!fortuneSuggestionsState.dropdownOpen) return;
   if (!fortuneSuggestionsContainer) return;
-  if (fortuneSuggestionsContainer.contains(event.target)) return;
+  const composedPath = typeof event.composedPath === "function"
+    ? event.composedPath()
+    : null;
+  const clickInside = composedPath
+    ? composedPath.includes(fortuneSuggestionsContainer)
+    : fortuneSuggestionsContainer.contains(event.target);
+  if (clickInside) return;
   closeFortuneSuggestionsDropdown();
 }
 
