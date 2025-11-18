@@ -6,6 +6,7 @@ const CHAT_WEBHOOK_URL =
   process.env.TWITCH_EVENTSUB_CALLBACK_URL ||
   "https://pupsik-tv.vercel.app/api/twitch-chat-webhook";
 const EVENTSUB_SECRET = process.env.TWITCH_EVENTSUB_SECRET || "";
+const TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
 
 function ensureString(value) {
   if (Array.isArray(value)) {
@@ -96,47 +97,6 @@ export default async function handler(req, res) {
       .json({ error: "Incomplete token response from Twitch" });
   }
 
-  let broadcasterUserId;
-
-  try {
-    const userResponse = await fetch("https://api.twitch.tv/helix/users", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Client-Id": clientId,
-      },
-    });
-
-    if (!userResponse.ok) {
-      const errorBody = await userResponse.json().catch(() => ({}));
-      console.error("Failed to fetch Twitch user data", {
-        status: userResponse.status,
-        error: errorBody,
-      });
-      return res
-        .status(502)
-        .json({ error: "Failed to fetch Twitch user information" });
-    }
-
-    const userPayload = await userResponse.json();
-    const users = Array.isArray(userPayload?.data) ? userPayload.data : [];
-    const [firstUser] = users;
-
-    if (!firstUser?.id) {
-      console.error("Unexpected Twitch user payload", userPayload);
-      return res
-        .status(502)
-        .json({ error: "Unable to determine Twitch user information" });
-    }
-
-    broadcasterUserId = firstUser.id;
-  } catch (err) {
-    console.error("Twitch user lookup failed", err);
-    return res
-      .status(502)
-      .json({ error: "Failed to fetch Twitch user information" });
-  }
-
   const supabase = createClient(SUPABASE_URL, supabaseKey, {
     auth: { persistSession: false },
   });
@@ -167,6 +127,33 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Failed to save tokens" });
   }
 
+  let broadcasterUserId;
+
+  try {
+    const userPayload = await fetchTwitchUser({
+      supabase,
+      clientId,
+      clientSecret,
+    });
+
+    const users = Array.isArray(userPayload?.data) ? userPayload.data : [];
+    const [firstUser] = users;
+
+    if (!firstUser?.id) {
+      console.error("Unexpected Twitch user payload", userPayload);
+      return res
+        .status(502)
+        .json({ error: "Unable to determine Twitch user information" });
+    }
+
+    broadcasterUserId = firstUser.id;
+  } catch (err) {
+    console.error("Twitch user lookup failed", err);
+    return res
+      .status(502)
+      .json({ error: "Failed to fetch Twitch user information" });
+  }
+
   try {
     await ensureChatSubscription({
       clientId,
@@ -186,6 +173,207 @@ export default async function handler(req, res) {
   return res
     .status(200)
     .send("Twitch подключён, можно закрыть эту вкладку");
+}
+
+async function fetchTwitchUser({ supabase, clientId, clientSecret }) {
+  const response = await makeAuthenticatedTwitchRequest({
+    supabase,
+    clientId,
+    clientSecret,
+    url: "https://api.twitch.tv/helix/users",
+    options: { method: "GET" },
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    console.error("Failed to fetch Twitch user data", {
+      status: response.status,
+      error: errorBody,
+    });
+    throw new Error("Failed to fetch Twitch user information");
+  }
+
+  return response.json();
+}
+
+async function makeAuthenticatedTwitchRequest({
+  supabase,
+  clientId,
+  clientSecret,
+  url,
+  options,
+}) {
+  if (!supabase) {
+    throw new Error("Supabase client is required for Twitch requests");
+  }
+
+  if (!clientId || !clientSecret) {
+    throw new Error("Missing Twitch OAuth configuration");
+  }
+
+  const requestOptions = options || {};
+  const { headers = {}, ...restOptions } = requestOptions;
+
+  let tokenData = await ensureFreshAccessToken({
+    supabase,
+    clientId,
+    clientSecret,
+  });
+
+  let response = await fetch(url, {
+    ...restOptions,
+    headers: {
+      ...headers,
+      Authorization: `Bearer ${tokenData.access_token}`,
+      "Client-Id": clientId,
+    },
+  });
+
+  if (response.status !== 401 && response.status !== 403) {
+    return response;
+  }
+
+  tokenData = await refreshTwitchToken({
+    supabase,
+    clientId,
+    clientSecret,
+  });
+
+  response = await fetch(url, {
+    ...restOptions,
+    headers: {
+      ...headers,
+      Authorization: `Bearer ${tokenData.access_token}`,
+      "Client-Id": clientId,
+    },
+  });
+
+  return response;
+}
+
+function shouldRefreshToken(token) {
+  const expiresInMs = Number(token?.expires_in || 0) * 1000;
+
+  if (!Number.isFinite(expiresInMs) || expiresInMs <= 0) {
+    return false;
+  }
+
+  const updatedAt = token?.updated_at ? Date.parse(token.updated_at) : NaN;
+
+  if (!Number.isFinite(updatedAt)) {
+    return false;
+  }
+
+  return Date.now() - updatedAt >= Math.max(0, expiresInMs - TOKEN_REFRESH_THRESHOLD_MS);
+}
+
+async function ensureFreshAccessToken({ supabase, clientId, clientSecret }) {
+  let tokenRow = await getStoredTwitchToken(supabase);
+
+  if (!tokenRow?.access_token) {
+    throw new Error("Missing Twitch access token in storage");
+  }
+
+  if (shouldRefreshToken(tokenRow)) {
+    tokenRow = await refreshTwitchToken({ supabase, clientId, clientSecret });
+  }
+
+  return tokenRow;
+}
+
+async function getStoredTwitchToken(supabase) {
+  const { data, error } = await supabase
+    .from("twitch_tokens")
+    .select("*")
+    .eq("id", "singleton")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to load Twitch token: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function refreshTwitchToken({ supabase, clientId, clientSecret }) {
+  if (!supabase) {
+    throw new Error("Supabase client is required for refresh");
+  }
+
+  if (!clientId || !clientSecret) {
+    throw new Error("Missing Twitch OAuth configuration");
+  }
+
+  const { data: storedToken, error: loadError } = await supabase
+    .from("twitch_tokens")
+    .select("refresh_token, scope, expires_in, token_type")
+    .eq("id", "singleton")
+    .single();
+
+  if (loadError) {
+    throw new Error(`Failed to load Twitch refresh token: ${loadError.message}`);
+  }
+
+  const refreshToken = storedToken?.refresh_token;
+
+  if (!refreshToken) {
+    throw new Error("Missing Twitch refresh token in storage");
+  }
+
+  const tokenResponse = await fetch("https://id.twitch.tv/oauth2/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    const errorBody = await tokenResponse.json().catch(() => ({}));
+    throw new Error(
+      `Twitch token refresh failed: ${tokenResponse.status} ${JSON.stringify(errorBody)}`
+    );
+  }
+
+  const refreshedPayload = await tokenResponse.json();
+  const refreshedAt = new Date().toISOString();
+  const normalizedScope = Array.isArray(refreshedPayload?.scope)
+    ? refreshedPayload.scope.join(",")
+    : typeof refreshedPayload?.scope === "string"
+    ? refreshedPayload.scope
+    : storedToken?.scope || "";
+
+  const { error: persistError } = await supabase.from("twitch_tokens").upsert(
+    {
+      id: "singleton",
+      access_token: refreshedPayload.access_token,
+      refresh_token: refreshedPayload.refresh_token || refreshToken,
+      expires_in:
+        refreshedPayload.expires_in ?? storedToken?.expires_in ?? null,
+      scope: normalizedScope,
+      token_type: refreshedPayload.token_type ?? storedToken?.token_type ?? null,
+      updated_at: refreshedAt,
+    },
+    { onConflict: "id" }
+  );
+
+  if (persistError) {
+    throw new Error(
+      `Failed to persist refreshed Twitch token: ${persistError.message}`
+    );
+  }
+
+  return {
+    ...storedToken,
+    ...refreshedPayload,
+    scope: normalizedScope,
+    updated_at: refreshedAt,
+  };
 }
 
 async function ensureChatSubscription({
