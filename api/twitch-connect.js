@@ -207,6 +207,20 @@ async function ensureChatSubscription({
     throw new Error("Missing EventSub secret");
   }
 
+  if (!broadcasterUserId) {
+    throw new Error("Missing broadcaster user ID");
+  }
+
+  const envChatUserId =
+    typeof process.env.TWITCH_CHAT_USER_ID === "string"
+      ? process.env.TWITCH_CHAT_USER_ID.trim()
+      : "";
+  const subscriptionUserId = envChatUserId || broadcasterUserId;
+
+  if (!subscriptionUserId) {
+    throw new Error("Missing user ID for chat subscription");
+  }
+
   let appAccessToken;
 
   try {
@@ -247,7 +261,9 @@ async function ensureChatSubscription({
   };
 
   const query = new URLSearchParams({
-    user_id: broadcasterUserId,
+    user_id: subscriptionUserId,
+    broadcaster_id: broadcasterUserId,
+    type: "channel.chat.message",
   });
 
   try {
@@ -284,7 +300,7 @@ async function ensureChatSubscription({
         subscription?.transport?.callback === callbackUrl &&
         subscription?.type === "channel.chat.message" &&
         subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
-        !subscription?.condition?.user_id
+        subscription?.condition?.user_id === subscriptionUserId
       );
     });
 
@@ -303,7 +319,7 @@ async function ensureChatSubscription({
         subscription?.transport?.callback === callbackUrl &&
         subscription?.type === "channel.chat.message" &&
         subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
-        subscription?.condition?.user_id
+        subscription?.condition?.user_id !== subscriptionUserId
       );
     });
 
@@ -343,6 +359,7 @@ async function ensureChatSubscription({
           version: "1",
           condition: {
             broadcaster_user_id: broadcasterUserId,
+            user_id: subscriptionUserId,
           },
           transport: {
             method: "webhook",
