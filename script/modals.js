@@ -122,7 +122,7 @@ function openEditModal(id) {
   document.getElementById("editPoster").value = "";
   editPosterData = null;
 
-  // Установка рейтинга
+  // Установка рейтинга.
   setRatingStars("editRatingStars", movie.rating);
   setupRatingStars("editRatingStars");
 
