@@ -488,17 +488,10 @@ async function ensureChatSubscription({
       return;
     }
 
-    const outdatedSubscriptions = chatSubscriptions.filter((subscription) => {
-      const status = subscription?.status || "";
-      const hasValidStatus =
-        status === "enabled" ||
-        status === "webhook_callback_verification_pending" ||
-        status === "verification_pending";
-      return (
-        hasValidStatus &&
+    const outdatedSubscriptions = chatSubscriptions.filter(
+      (subscription) =>
         subscription?.condition?.broadcaster_user_id === broadcasterUserId
-      );
-    });
+    );
 
     for (const subscription of outdatedSubscriptions) {
       const deleteResponse = await fetch(
@@ -552,6 +545,17 @@ async function ensureChatSubscription({
         `EventSub subscription creation failed: ${createResponse.status} ${JSON.stringify(
           errorBody
         )}`
+      );
+    }
+
+    const createdPayload = await createResponse.json().catch(() => ({}));
+    const createdSubscription = Array.isArray(createdPayload?.data)
+      ? createdPayload.data[0]
+      : null;
+
+    if (createdSubscription?.condition?.user_id) {
+      throw new Error(
+        "Twitch created chat subscription scoped to a specific user; expected broadcaster-wide subscription"
       );
     }
   } catch (err) {
