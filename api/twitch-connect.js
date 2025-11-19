@@ -545,7 +545,7 @@ async function ensureChatSubscription({
           version: "1",
           condition: {
             broadcaster_user_id: broadcasterUserId,
-            // user_id: subscriptionUserId,
+            user_id: subscriptionUserId,
           },
           transport: {
             method: "webhook",
