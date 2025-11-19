@@ -399,16 +399,6 @@ async function ensureChatSubscription({
     throw new Error("Missing broadcaster user ID");
   }
 
-  const envChatUserId =
-    typeof process.env.TWITCH_CHAT_USER_ID === "string"
-      ? process.env.TWITCH_CHAT_USER_ID.trim()
-      : "";
-  const subscriptionUserId = envChatUserId || broadcasterUserId;
-
-  if (!subscriptionUserId) {
-    throw new Error("Missing user ID for chat subscription");
-  }
-
   let appAccessToken;
 
   try {
@@ -449,7 +439,7 @@ async function ensureChatSubscription({
   };
 
   const query = new URLSearchParams({
-    user_id: subscriptionUserId,
+    user_id: broadcasterUserId,
   });
 
   try {
@@ -485,8 +475,7 @@ async function ensureChatSubscription({
         hasValidStatus &&
         subscription?.transport?.callback === callbackUrl &&
         subscription?.type === "channel.chat.message" &&
-        subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
-        subscription?.condition?.user_id === subscriptionUserId
+        subscription?.condition?.broadcaster_user_id === broadcasterUserId
       );
     });
 
@@ -504,8 +493,7 @@ async function ensureChatSubscription({
         hasValidStatus &&
         subscription?.transport?.callback === callbackUrl &&
         subscription?.type === "channel.chat.message" &&
-        subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
-        subscription?.condition?.user_id !== subscriptionUserId
+        subscription?.condition?.broadcaster_user_id === broadcasterUserId
       );
     });
 
@@ -545,7 +533,6 @@ async function ensureChatSubscription({
           version: "1",
           condition: {
             broadcaster_user_id: broadcasterUserId,
-            user_id: subscriptionUserId,
           },
           transport: {
             method: "webhook",
