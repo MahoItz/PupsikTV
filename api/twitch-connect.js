@@ -399,16 +399,6 @@ async function ensureChatSubscription({
     throw new Error("Missing broadcaster user ID");
   }
 
-  const envChatUserId =
-    typeof process.env.TWITCH_CHAT_USER_ID === "string"
-      ? process.env.TWITCH_CHAT_USER_ID.trim()
-      : "";
-  const subscriptionUserId = envChatUserId || broadcasterUserId;
-
-  if (!subscriptionUserId) {
-    throw new Error("Missing user ID for chat subscription");
-  }
-
   let appAccessToken;
 
   try {
@@ -449,7 +439,7 @@ async function ensureChatSubscription({
   };
 
   const query = new URLSearchParams({
-    user_id: subscriptionUserId,
+    type: "channel.chat.message",
   });
 
   try {
@@ -475,7 +465,13 @@ async function ensureChatSubscription({
       ? existingPayload.data
       : [];
 
-    const activeSubscription = subscriptions.find((subscription) => {
+    const chatSubscriptions = subscriptions.filter(
+      (subscription) =>
+        subscription?.transport?.callback === callbackUrl &&
+        subscription?.type === "channel.chat.message"
+    );
+
+    const activeSubscription = chatSubscriptions.find((subscription) => {
       const status = subscription?.status || "";
       const hasValidStatus =
         status === "enabled" ||
@@ -483,10 +479,8 @@ async function ensureChatSubscription({
         status === "verification_pending";
       return (
         hasValidStatus &&
-        subscription?.transport?.callback === callbackUrl &&
-        subscription?.type === "channel.chat.message" &&
         subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
-        subscription?.condition?.user_id === subscriptionUserId
+        !subscription?.condition?.user_id
       );
     });
 
@@ -494,7 +488,7 @@ async function ensureChatSubscription({
       return;
     }
 
-    const outdatedSubscriptions = subscriptions.filter((subscription) => {
+    const outdatedSubscriptions = chatSubscriptions.filter((subscription) => {
       const status = subscription?.status || "";
       const hasValidStatus =
         status === "enabled" ||
@@ -502,10 +496,7 @@ async function ensureChatSubscription({
         status === "verification_pending";
       return (
         hasValidStatus &&
-        subscription?.transport?.callback === callbackUrl &&
-        subscription?.type === "channel.chat.message" &&
-        subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
-        subscription?.condition?.user_id !== subscriptionUserId
+        subscription?.condition?.broadcaster_user_id === broadcasterUserId
       );
     });
 
@@ -545,7 +536,6 @@ async function ensureChatSubscription({
           version: "1",
           condition: {
             broadcaster_user_id: broadcasterUserId,
-            user_id: subscriptionUserId,
           },
           transport: {
             method: "webhook",
