@@ -154,15 +154,16 @@ export default async function handler(req, res) {
       .json({ error: "Failed to fetch Twitch user information" });
   }
 
-  try {
-    await ensureChatSubscription({
-      clientId,
-      clientSecret,
-      broadcasterUserId,
-      callbackUrl: CHAT_WEBHOOK_URL,
-      secret: EVENTSUB_SECRET,
-    });
-  } catch (err) {
+    try {
+      await ensureChatSubscription({
+        clientId,
+        clientSecret,
+        broadcasterUserId,
+        userId: broadcasterUserId,
+        callbackUrl: CHAT_WEBHOOK_URL,
+        secret: EVENTSUB_SECRET,
+      });
+    } catch (err) {
     console.error("Failed to ensure Twitch chat subscription", err);
     return res
       .status(500)
@@ -380,6 +381,7 @@ async function ensureChatSubscription({
   clientId,
   clientSecret,
   broadcasterUserId,
+  userId,
   callbackUrl,
   secret,
 }) {
@@ -397,6 +399,10 @@ async function ensureChatSubscription({
 
   if (!broadcasterUserId) {
     throw new Error("Missing broadcaster user ID");
+  }
+
+  if (!userId) {
+    throw new Error("Missing moderator user ID for chat subscription");
   }
 
   let appAccessToken;
@@ -439,7 +445,7 @@ async function ensureChatSubscription({
   };
 
   const query = new URLSearchParams({
-    user_id: broadcasterUserId,
+    user_id: userId,
   });
 
   try {
@@ -475,7 +481,8 @@ async function ensureChatSubscription({
         hasValidStatus &&
         subscription?.transport?.callback === callbackUrl &&
         subscription?.type === "channel.chat.message" &&
-        subscription?.condition?.broadcaster_user_id === broadcasterUserId
+        subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
+        subscription?.condition?.user_id === userId
       );
     });
 
@@ -493,7 +500,8 @@ async function ensureChatSubscription({
         hasValidStatus &&
         subscription?.transport?.callback === callbackUrl &&
         subscription?.type === "channel.chat.message" &&
-        subscription?.condition?.broadcaster_user_id === broadcasterUserId
+        subscription?.condition?.broadcaster_user_id === broadcasterUserId &&
+        subscription?.condition?.user_id === userId
       );
     });
 
@@ -533,6 +541,7 @@ async function ensureChatSubscription({
           version: "1",
           condition: {
             broadcaster_user_id: broadcasterUserId,
+            user_id: userId,
           },
           transport: {
             method: "webhook",
