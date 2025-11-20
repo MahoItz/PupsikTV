@@ -25,9 +25,13 @@ export default function handler(req, res) {
           expired: Boolean(result.expired),
         });
       }
+      const expiresAt =
+        result.payload && typeof result.payload.exp === "number"
+          ? new Date(result.payload.exp).toISOString()
+          : null;
       return res.status(200).json({
         ok: true,
-        expiresAt: new Date(result.payload.exp).toISOString(),
+        expiresAt,
       });
     } catch (err) {
       console.error("Admin token verification error", err);
@@ -59,10 +63,14 @@ export default function handler(req, res) {
 
     try {
       const { token, payload } = issueAdminToken();
+      const expiresAt =
+        payload && typeof payload.exp === "number"
+          ? new Date(payload.exp).toISOString()
+          : null;
       return res.status(200).json({
         ok: true,
         token,
-        expiresAt: new Date(payload.exp).toISOString(),
+        expiresAt,
       });
     } catch (err) {
       console.error("Admin token issue error", err);

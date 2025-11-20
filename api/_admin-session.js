@@ -1,7 +1,5 @@
 import crypto from "crypto";
 
-const DEFAULT_SESSION_TTL_MS = 1000 * 60 * 60 * 12; // 12 hours
-
 function base64UrlEncode(str) {
   return Buffer.from(str, "utf8")
     .toString("base64")
@@ -23,15 +21,6 @@ function getSecret() {
     throw new Error("Missing ADMIN_SESSION_SECRET");
   }
   return secret;
-}
-
-function getSessionTtlMs() {
-  const raw = process.env.ADMIN_SESSION_TTL_MS;
-  const parsed = raw ? Number(raw) : NaN;
-  if (Number.isFinite(parsed) && parsed > 0) {
-    return parsed;
-  }
-  return DEFAULT_SESSION_TTL_MS;
 }
 
 function signPayload(encodedPayload, secret) {
@@ -64,11 +53,9 @@ export function extractBearerToken(headerValue) {
 
 export function issueAdminToken() {
   const secret = getSecret();
-  const ttlMs = getSessionTtlMs();
   const now = Date.now();
   const payload = {
     iat: now,
-    exp: now + ttlMs,
     sid: crypto.randomBytes(16).toString("hex"),
   };
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
@@ -105,12 +92,13 @@ export function verifyAdminToken(token) {
     return { valid: false, error: "Invalid payload" };
   }
 
-  if (!payload || typeof payload.exp !== "number") {
+  if (
+    !payload ||
+    typeof payload.sid !== "string" ||
+    payload.sid.length === 0 ||
+    (payload.iat !== undefined && typeof payload.iat !== "number")
+  ) {
     return { valid: false, error: "Invalid payload" };
-  }
-
-  if (Date.now() > payload.exp) {
-    return { valid: false, error: "Token expired", expired: true };
   }
 
   return { valid: true, payload };
