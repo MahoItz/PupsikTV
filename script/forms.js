@@ -865,11 +865,13 @@ document
     const yearValue = parseInt(document.getElementById("editYear").value, 10);
     const genreInput = document.getElementById("editGenre").value;
     const orderByInput = document.getElementById("editMovieOrderBy").value;
+    const orderTypeInput = document.getElementById("editMovieOrderType").value;
     const updatedMovie = {
       title: titleValue,
       year: Number.isFinite(yearValue) ? yearValue : movie.year,
       genre: genreInput ? genreInput : movie.genre,
       orderBy: orderByInput ? orderByInput : movie.orderBy,
+      orderType: orderTypeInput ? orderTypeInput : movie.orderType,
       rating,
       poster: editPosterData || movie.poster,
     };
@@ -885,6 +887,7 @@ document
           rating_numeric: updatedMovie.rating,
           rating_OMDB: movie.kpRating,
           order_by: updatedMovie.orderBy,
+          order_type: updatedMovie.orderType || null,
         })
         .eq("id", editingMovieId);
 
@@ -894,6 +897,7 @@ document
       movie.year = updatedMovie.year;
       movie.genre = updatedMovie.genre;
       movie.orderBy = updatedMovie.orderBy;
+      movie.orderType = updatedMovie.orderType;
       movie.rating = updatedMovie.rating;
       movie.poster = updatedMovie.poster;
       movie.dateAdded =

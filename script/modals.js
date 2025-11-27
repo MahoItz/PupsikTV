@@ -118,6 +118,7 @@ function openEditModal(id) {
   document.getElementById("editYear").value = movie.year;
   document.getElementById("editGenre").value = movie.genre || "";
   document.getElementById("editMovieOrderBy").value = movie.orderBy || "";
+  document.getElementById("editMovieOrderType").value = movie.orderType || "";
   document.getElementById("editPosterPreview").src = movie.poster;
   document.getElementById("editPoster").value = "";
   editPosterData = null;
