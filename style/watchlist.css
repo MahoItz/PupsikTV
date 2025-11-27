@@ -179,6 +179,14 @@
     align-items: center;
 }
 
+.order-plan-date {
+    color: #00d4ff;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .order-actions {
     display: flex;
     gap: 8px;

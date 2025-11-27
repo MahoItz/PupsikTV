@@ -297,6 +297,7 @@ document
         poster: data.order_poster,
         year: data.order_year || "",
         length: data.order_length || null,
+        planDate: data.plan_date || null,
         kpRating: data.kinopoisk_rate,
         orderBy: data.order_by,
         orderType: data.order_type,
@@ -958,6 +959,41 @@ document
   });
 
 document
+  .getElementById("planDateForm")
+  ?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    if (planDateOrderId === null) return;
+
+    const order = watchlist.find((o) => o.id === planDateOrderId);
+    const planInput = document.getElementById("planDateInput");
+    const planValue = planInput?.value ? new Date(planInput.value).toISOString() : null;
+
+    try {
+      const { data, error } = await supabaseClient
+        .from("Movie_Orders")
+        .update({ plan_date: planValue })
+        .eq("id", planDateOrderId)
+        .select("plan_date")
+        .single();
+
+      if (error) throw error;
+
+      if (order) {
+        order.planDate = data?.plan_date || null;
+      }
+
+      renderWatchlist();
+      closeModal("planDateModal");
+    } catch (err) {
+      console.error("Error updating plan date", err);
+      alert("Не удалось сохранить время просмотра. Попробуйте ещё раз.");
+    } finally {
+      planDateOrderId = null;
+    }
+  });
+
+document
   .getElementById("editGameForm")
   ?.addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -1060,6 +1096,26 @@ function formatDate(dateStr) {
     month: "2-digit",
     year: "2-digit"
   });
+}
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return d.toLocaleString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatDateTimeLocal(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const tzOffset = d.getTimezoneOffset() * 60000;
+  const localISOTime = new Date(d.getTime() - tzOffset).toISOString();
+  return localISOTime.slice(0, 16);
 }
 
 // Сброс форм и рейтингов

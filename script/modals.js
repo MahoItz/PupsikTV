@@ -334,6 +334,20 @@ async function confirmDeleteGameOrder() {
   closeModal("confirmDeleteGameOrderModal");
 }
 
+function openPlanDateModal(id) {
+  planDateOrderId = id;
+  const order = watchlist.find((o) => o.id === id);
+  const titleEl = document.getElementById("planDateMovieTitle");
+  if (titleEl) {
+    titleEl.textContent = order?.title || "";
+  }
+  const inputEl = document.getElementById("planDateInput");
+  if (inputEl) {
+    inputEl.value = order?.planDate ? formatDateTimeLocal(order.planDate) : "";
+  }
+  document.getElementById("planDateModal").style.display = "block";
+}
+
 function openEditOrderModal(id) {
   editingOrderId = id;
   const order = watchlist.find((o) => o.id === id);

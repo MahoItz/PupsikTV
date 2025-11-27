@@ -514,9 +514,21 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   dateDiv.textContent = formatDate(order.dateAdded);
   row.appendChild(dateDiv);
 
+  if (order.planDate) {
+    const planDiv = document.createElement("div");
+    planDiv.className = "order-plan-date";
+    planDiv.textContent = `План: ${formatDateTime(order.planDate)}`;
+    footer.appendChild(planDiv);
+  }
+
   if (showActions) {
     const actions = document.createElement("div");
     actions.className = "order-actions";
+    const planBtn = document.createElement("button");
+    planBtn.className = "btn btn-plan btn-icon";
+    planBtn.textContent = "⏰";
+    planBtn.title = "Запланировать просмотр";
+    planBtn.onclick = () => openPlanDateModal(order.id);
     const editBtn = document.createElement("button");
     editBtn.className = "btn btn-edit btn-icon";
     editBtn.textContent = "✏️";
@@ -525,6 +537,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     delBtn.className = "btn btn-delete btn-icon";
     delBtn.textContent = "🗑️";
     delBtn.onclick = () => openConfirmDeleteOrderModal(order.id);
+    actions.appendChild(planBtn);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
     row.appendChild(actions);

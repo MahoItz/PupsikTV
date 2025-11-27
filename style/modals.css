@@ -255,6 +255,18 @@
     box-shadow: 0 0 20px rgba(255, 20, 147, 0.3);
 }
 
+.modal-subtitle {
+    margin: -6px 0 14px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.form-hint {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 4px 0 12px;
+}
+
 /* Изображения в модальных окнах */
 .modal-image {
     width: 100%;

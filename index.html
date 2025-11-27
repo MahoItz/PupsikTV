@@ -583,6 +583,22 @@
             </form>
         </div>
     </div>
+    <!-- Модальное окно планирования просмотра -->
+    <div id="planDateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('planDateModal')">&times;</span>
+            <h2>Запланировать просмотр</h2>
+            <p id="planDateMovieTitle" class="modal-subtitle"></p>
+            <form id="planDateForm">
+                <div class="form-group">
+                    <label for="planDateInput">Дата и время:</label>
+                    <input type="datetime-local" id="planDateInput">
+                </div>
+                <p class="form-hint">Оставьте поле пустым, чтобы снять запланированное время.</p>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить</button>
+            </form>
+        </div>
+    </div>
     <!-- Модальное окно добавления игры -->
     <div id="addGameModal" class="modal">
         <div class="modal-content">

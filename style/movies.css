@@ -395,6 +395,15 @@
     color: var(--text-primary);
 }
 
+.btn-plan {
+    background: rgba(0, 212, 255, 0.12);
+    color: var(--text-primary);
+}
+
+.btn-plan:hover {
+    background: rgba(0, 212, 255, 0.2);
+}
+
 .btn-delete {
     background: rgba(255, 108, 66, 0.2);
     transform: translateY(-2px);

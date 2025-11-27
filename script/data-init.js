@@ -312,7 +312,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length"
+        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length"
       )
       .order("id", { ascending: true });
 
@@ -326,6 +326,7 @@ async function loadWatchlistFromSupabase() {
       poster: item.order_poster,
       year: item.order_year || "",
       length: item.order_length || null,
+      planDate: item.plan_date || null,
       kpRating: item.kinopoisk_rate,
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
