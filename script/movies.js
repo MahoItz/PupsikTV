@@ -583,9 +583,31 @@ function renderWatchlist() {
     return;
   }
 
-  watchlist.forEach((item) => {
+  getSortedWatchlist().forEach((item) => {
     container.appendChild(createOrderCard(item));
   });
+}
+
+function getSortedWatchlist() {
+  return watchlist
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const aHasPlan = Boolean(a.item.planDate);
+      const bHasPlan = Boolean(b.item.planDate);
+
+      if (aHasPlan && !bHasPlan) return -1;
+      if (!aHasPlan && bHasPlan) return 1;
+
+      if (aHasPlan && bHasPlan) {
+        const aDate = new Date(a.item.planDate).getTime();
+        const bDate = new Date(b.item.planDate).getTime();
+
+        if (aDate !== bDate) return aDate - bDate;
+      }
+
+      return a.index - b.index;
+    })
+    .map(({ item }) => item);
 }
 
 function createGameCard(game, showActions = isAdmin) {
