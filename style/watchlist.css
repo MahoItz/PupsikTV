@@ -48,6 +48,31 @@
     margin-bottom: 12px;
 }
 
+.order-plan-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    border-radius: var(--border-radius-small);
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.14), rgba(0, 128, 255, 0.16));
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    letter-spacing: 0.01em;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.order-plan-icon {
+    font-size: 0.95rem;
+    filter: drop-shadow(0 0 4px rgba(0, 212, 255, 0.5));
+}
+
+.order-plan-text {
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
 .order-complete {
     margin-top: 0;
     width: 100%;

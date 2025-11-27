@@ -421,6 +421,22 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const wrapper = document.createElement("div");
   wrapper.className = "order-wrapper";
 
+  if (order.planDate) {
+    const planBanner = document.createElement("div");
+    planBanner.className = "order-plan-banner";
+
+    const planIcon = document.createElement("span");
+    planIcon.className = "order-plan-icon";
+    planIcon.textContent = "⏰";
+
+    const planText = document.createElement("span");
+    planText.className = "order-plan-text";
+    planText.textContent = `Запланировано: ${formatDateTime(order.planDate)}`;
+
+    planBanner.append(planIcon, planText);
+    wrapper.appendChild(planBanner);
+  }
+
   const card = document.createElement("div");
   card.className = "order-card";
 
@@ -513,13 +529,6 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   dateDiv.className = "order-date";
   dateDiv.textContent = formatDate(order.dateAdded);
   row.appendChild(dateDiv);
-
-  if (order.planDate) {
-    const planDiv = document.createElement("div");
-    planDiv.className = "order-plan-date";
-    planDiv.textContent = `План: ${formatDateTime(order.planDate)}`;
-    footer.appendChild(planDiv);
-  }
 
   if (showActions) {
     const actions = document.createElement("div");
