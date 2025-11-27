@@ -434,6 +434,17 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     planText.textContent = `Запланировано: ${formatDateTime(order.planDate)}`;
 
     planBanner.append(planIcon, planText);
+
+    if (isAdmin) {
+      const clearBtn = document.createElement("button");
+      clearBtn.type = "button";
+      clearBtn.className = "order-plan-remove btn-icon";
+      clearBtn.title = "Удалить запланированное время";
+      clearBtn.textContent = "✕";
+      clearBtn.onclick = () => clearPlanDate(order.id);
+      planBanner.appendChild(clearBtn);
+    }
+
     wrapper.appendChild(planBanner);
   }
 
@@ -608,6 +619,31 @@ function getSortedWatchlist() {
       return a.index - b.index;
     })
     .map(({ item }) => item);
+}
+
+async function clearPlanDate(orderId) {
+  const order = watchlist.find((o) => o.id === orderId);
+  if (!order) return;
+
+  const previousPlan = order.planDate;
+  order.planDate = null;
+  renderWatchlist();
+
+  try {
+    const { error } = await supabaseClient
+      .from("Movie_Orders")
+      .update({ plan_date: null })
+      .eq("id", orderId)
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw error;
+  } catch (err) {
+    console.error("Error clearing plan date", err);
+    order.planDate = previousPlan;
+    renderWatchlist();
+    alert("Не удалось удалить запланированное время. Попробуйте ещё раз.");
+  }
 }
 
 function createGameCard(game, showActions = isAdmin) {
