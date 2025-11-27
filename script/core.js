@@ -427,10 +427,12 @@ async function verifyAdminTokenRequest(token) {
   }
 }
 
+const ROULETTE_ORDER_TYPE = "Рулетка";
 const ORDER_TYPE_CLASSES = {
   Донат: "ribbon-donate",
   "Баллы канала": "ribbon-points",
   Шары: "ribbon-balls",
+  [ROULETTE_ORDER_TYPE]: "ribbon-roulette",
 };
 
 // Watchlist modal helpers
@@ -494,6 +496,8 @@ const DEFAULT_POSTER_PLACEHOLDER =
 let reyohohoPickerContext = null;
 const rouletteAutofillHint = document.getElementById("rouletteAutofillHint");
 const rouletteAutofillClearBtn = document.getElementById("rouletteAutofillClear");
+const rouletteOrderGroup = document.getElementById("rouletteOrderGroup");
+const rouletteOrderByInput = document.getElementById("rouletteOrderBy");
 
 function normalizeFortuneText(str) {
   return String(str || "")
@@ -1007,11 +1011,26 @@ function isAddMovieModalOpen() {
   return !!modal && modal.style.display === "block";
 }
 
-function toggleRouletteAutofillVisibility(visible) {
-  if (!rouletteAutofillHint) {
+function toggleRouletteOrderInput(visible) {
+  if (!rouletteOrderGroup) {
     return;
   }
-  rouletteAutofillHint.classList.toggle("is-visible", Boolean(visible));
+
+  rouletteOrderGroup.style.display = visible ? "block" : "none";
+
+  if (!visible && rouletteOrderByInput) {
+    rouletteOrderByInput.value = "";
+  }
+}
+
+function toggleRouletteAutofillVisibility(visible) {
+  const isVisible = Boolean(visible);
+
+  if (rouletteAutofillHint) {
+    rouletteAutofillHint.classList.toggle("is-visible", isVisible);
+  }
+
+  toggleRouletteOrderInput(isVisible);
 }
 
 function triggerAutoTitleSuggestions() {

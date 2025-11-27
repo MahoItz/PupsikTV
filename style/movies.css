@@ -274,6 +274,10 @@
     border-color: rgba(0, 200, 255, 0.4);
 }
 
+.ribbon-roulette {
+    border-color: rgba(0, 200, 150, 0.45);
+}
+
 .movie-rating {
     display: flex;
     flex-wrap: wrap;

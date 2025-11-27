@@ -11,6 +11,11 @@ document
       return;
     }
 
+    const rouletteOrderByValue =
+      rouletteAutofillActive && rouletteOrderByInput
+        ? rouletteOrderByInput.value.trim()
+        : "";
+
     let movieData;
 
     if (currentMode === "auto") {
@@ -40,6 +45,8 @@ document
           dateAdded: new Date().toISOString().split("T")[0],
           genre: sel.genres?.map((g) => g.genre).join(", ") || "",
           description: sel.description || "",
+          orderBy: "",
+          orderType: "",
         };
       } else {
         movieData = {
@@ -51,6 +58,8 @@ document
           dateAdded: new Date().toISOString().split("T")[0],
           genre: "Неизвестно",
           description: "",
+          orderBy: "",
+          orderType: "",
         };
       }
     } else {
@@ -74,7 +83,14 @@ document
         poster: poster,
         dateAdded: new Date().toISOString().split("T")[0],
         genre: document.getElementById("manualGenre").value || "Неизвестно",
+        orderBy: "",
+        orderType: "",
       };
+    }
+
+    if (rouletteAutofillActive && rouletteOrderByValue) {
+      movieData.orderBy = rouletteOrderByValue;
+      movieData.orderType = ROULETTE_ORDER_TYPE;
     }
 
     const duplicate =
@@ -117,6 +133,8 @@ document
           rating_numeric: movieData.rating,
           rating_OMDB: movieData.kpRating,
           date: movieData.dateAdded,
+          order_by: movieData.orderBy || null,
+          order_type: movieData.orderType || null,
           rating_sum: 0,
           rating_count: 0,
         })
