@@ -341,9 +341,13 @@ function openPlanDateModal(id) {
   if (titleEl) {
     titleEl.textContent = order?.title || "";
   }
-  const inputEl = document.getElementById("planDateInput");
-  if (inputEl) {
-    inputEl.value = order?.planDate ? formatDateTimeLocal(order.planDate) : "";
+  const dateEl = document.getElementById("planDateInput");
+  const timeEl = document.getElementById("planTimeInput");
+  if (dateEl) {
+    dateEl.value = order?.planDate ? formatDateLocal(order.planDate) : "";
+  }
+  if (timeEl) {
+    timeEl.value = order?.planDate ? formatTimeLocal(order.planDate) : "";
   }
   document.getElementById("planDateModal").style.display = "block";
 }

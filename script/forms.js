@@ -966,8 +966,27 @@ document
     if (planDateOrderId === null) return;
 
     const order = watchlist.find((o) => o.id === planDateOrderId);
-    const planInput = document.getElementById("planDateInput");
-    const planValue = planInput?.value ? new Date(planInput.value).toISOString() : null;
+    const dateInput = document.getElementById("planDateInput");
+    const timeInput = document.getElementById("planTimeInput");
+    const dateValue = dateInput?.value?.trim();
+    const timeValue = timeInput?.value?.trim();
+
+    let planValue = null;
+
+    if (dateValue || timeValue) {
+      if (!dateValue || !timeValue) {
+        alert("Укажите и дату, и время или очистите оба поля.");
+        return;
+      }
+
+      const combinedValue = new Date(`${dateValue}T${timeValue}`);
+      if (Number.isNaN(combinedValue.getTime())) {
+        alert("Некорректная дата или время. Проверьте ввод.");
+        return;
+      }
+
+      planValue = combinedValue.toISOString();
+    }
 
     try {
       const { data, error } = await supabaseClient
@@ -1116,6 +1135,22 @@ function formatDateTimeLocal(dateStr) {
   const tzOffset = d.getTimezoneOffset() * 60000;
   const localISOTime = new Date(d.getTime() - tzOffset).toISOString();
   return localISOTime.slice(0, 16);
+}
+
+function formatDateLocal(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const tzOffset = d.getTimezoneOffset() * 60000;
+  const localISOTime = new Date(d.getTime() - tzOffset).toISOString();
+  return localISOTime.slice(0, 10);
+}
+
+function formatTimeLocal(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const tzOffset = d.getTimezoneOffset() * 60000;
+  const localISOTime = new Date(d.getTime() - tzOffset).toISOString();
+  return localISOTime.slice(11, 16);
 }
 
 // Сброс форм и рейтингов

@@ -70,6 +70,54 @@
     background: rgba(0, 212, 255, 0.05);
 }
 
+.datetime-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px 18px;
+    align-items: end;
+    margin-top: 6px;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--glass-bg);
+    border: 2px solid rgba(0, 212, 255, 0.2);
+    border-radius: var(--border-radius-small);
+    padding: 10px 14px;
+    transition: var(--transition);
+    color: var(--text-secondary);
+}
+
+.input-with-icon i {
+    font-size: 1rem;
+    color: var(--secondary-color);
+    opacity: 0.9;
+}
+
+.input-with-icon input {
+    border: none;
+    background: transparent;
+    padding: 8px 0;
+    color: var(--text-primary);
+    width: 100%;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.input-with-icon input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.input-with-icon:focus-within {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 18px rgba(0, 212, 255, 0.25);
+    background: rgba(0, 212, 255, 0.04);
+}
+
 .form-group textarea {
     resize: vertical;
     min-height: 100px;
