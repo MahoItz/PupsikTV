@@ -343,13 +343,78 @@ function openPlanDateModal(id) {
   }
   const dateEl = document.getElementById("planDateInput");
   const timeEl = document.getElementById("planTimeInput");
+
+  let dateValue = "";
+  let timeValue = "";
+
+  if (order?.planDate) {
+    dateValue = formatDateLocal(order.planDate);
+    timeValue = formatTimeLocal(order.planDate);
+  } else {
+    // Auto-calculate from last scheduled movie
+    const scheduled = watchlist.filter((o) => o.planDate && o.id !== id);
+    if (scheduled.length > 0) {
+      // Find max date+time
+      const last = scheduled.reduce((prev, current) => {
+        return new Date(prev.planDate) > new Date(current.planDate)
+          ? prev
+          : current;
+      });
+
+      if (last && last.length) {
+        const lastDate = new Date(last.planDate);
+        const duration = parseDuration(last.length);
+
+        // Add duration and 10 min break
+        const targetTime = new Date(
+          lastDate.getTime() + (duration + 10) * 60000
+        );
+
+        // Round up to nearest 5 min
+        const m = targetTime.getMinutes();
+        const r = m % 5;
+        if (r !== 0) {
+          targetTime.setMinutes(m + (5 - r));
+          targetTime.setSeconds(0);
+          targetTime.setMilliseconds(0);
+        }
+
+        // Set date to last movie's date (per instructions)
+        dateValue = formatDateLocal(last.planDate);
+
+        // Set time to calculated time
+        const hh = String(targetTime.getHours()).padStart(2, "0");
+        const mm = String(targetTime.getMinutes()).padStart(2, "0");
+        timeValue = `${hh}:${mm}`;
+      }
+    }
+  }
+
   if (dateEl) {
-    dateEl.value = order?.planDate ? formatDateLocal(order.planDate) : "";
+    dateEl.value = dateValue;
   }
   if (timeEl) {
-    timeEl.value = order?.planDate ? formatTimeLocal(order.planDate) : "";
+    timeEl.value = timeValue;
   }
   document.getElementById("planDateModal").style.display = "block";
+}
+
+function parseDuration(durationStr) {
+  if (!durationStr) return 0;
+  const str = String(durationStr).trim();
+  
+  // Try H:MM format
+  if (str.includes(":")) {
+    const parts = str.split(":");
+    if (parts.length === 2) {
+      const h = parseInt(parts[0], 10) || 0;
+      const m = parseInt(parts[1], 10) || 0;
+      return h * 60 + m;
+    }
+  }
+  
+  // Try plain number (minutes)
+  return parseInt(str, 10) || 0;
 }
 
 function openEditOrderModal(id) {
