@@ -1452,7 +1452,7 @@ function initFortuneWheel() {
   let startRotation = 0;
   let targetRotation = 0;
   let spinStartTime = 0;
-  let spinDurationMs = 7000;
+  let spinDurationMs = 15000;
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
   function setInputValuePreservingState(value) {
