@@ -32,15 +32,9 @@
         <button id="musicMenuButton" class="music-menu-button" aria-label="Музыка">
             <img src="images/wheel_icon.webp" alt="wheel icon">
         </button>
-        <button
-          id="rulesPanelToggleButton"
-          class="rules-panel-toggle"
-          type="button"
-          aria-label="Показать правила"
-          aria-pressed="false"
-          title="Показать правила"
-        >
-          <i class="fa-solid fa-scroll" aria-hidden="true"></i>
+        <button id="rulesPanelToggleButton" class="rules-panel-toggle" type="button" aria-label="Показать правила"
+            aria-pressed="false" title="Показать правила">
+            <i class="fa-solid fa-scroll" aria-hidden="true"></i>
         </button>
         <header id="headerLogo">
             <video muted playsinline preload="none" class="rats-video" src="Video/Rat_1.webm"></video>
@@ -50,11 +44,17 @@
             <img src="images/Pupsik_TV_Header.webp" alt="PupsikTV Header">
             <h1>PupsikTV</h1>
             <nav class="social-links">
-                <a href="https://www.twitch.tv/pupsik_ow" target="_blank" rel="noopener noreferrer" aria-label="Twitch" class="social-link"><i class="fab fa-twitch"></i></a>
-                <a href="https://www.youtube.com/channel/UChjW8oKmm60rE9STWFWjx_A" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="social-link"><i class="fab fa-youtube"></i></a>
-                <a href="https://boosty.to/papsik" target="_blank" rel="noopener noreferrer" aria-label="Boosty" class="social-link"><i class="fa-solid fa-circle-dollar-to-slot"></i></a>
-                <a href="https://t.me/pupsik_ow" target="_blank" rel="noopener noreferrer" aria-label="Telegram" class="social-link"><i class="fab fa-telegram"></i></a>
-                <a href="https://discord.com/invite/AQsPUuAGDV" target="_blank" rel="noopener noreferrer" aria-label="Discord" class="social-link"><i class="fab fa-discord"></i></a>
+                <a href="https://www.twitch.tv/pupsik_ow" target="_blank" rel="noopener noreferrer" aria-label="Twitch"
+                    class="social-link"><i class="fab fa-twitch"></i></a>
+                <a href="https://www.youtube.com/channel/UChjW8oKmm60rE9STWFWjx_A" target="_blank"
+                    rel="noopener noreferrer" aria-label="YouTube" class="social-link"><i
+                        class="fab fa-youtube"></i></a>
+                <a href="https://boosty.to/papsik" target="_blank" rel="noopener noreferrer" aria-label="Boosty"
+                    class="social-link"><i class="fa-solid fa-circle-dollar-to-slot"></i></a>
+                <a href="https://t.me/pupsik_ow" target="_blank" rel="noopener noreferrer" aria-label="Telegram"
+                    class="social-link"><i class="fab fa-telegram"></i></a>
+                <a href="https://discord.com/invite/AQsPUuAGDV" target="_blank" rel="noopener noreferrer"
+                    aria-label="Discord" class="social-link"><i class="fab fa-discord"></i></a>
             </nav>
         </header>
 
@@ -67,7 +67,8 @@
 
                 <div id="moviesSection" class="list-content">
                     <div class="search-controls">
-                        <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..." onkeyup="debouncedSearchMovies(this.value)">
+                        <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..."
+                            onkeyup="debouncedSearchMovies(this.value)">
                     </div>
                     <div class="sort-row">
                         <div class="sort-controls">
@@ -95,7 +96,8 @@
 
                 <div id="gamesListSection" class="list-content" style="display:none;">
                     <div class="search-controls">
-                        <input type="text" class="search-input" placeholder="🔍 Поиск игр..." onkeyup="debouncedSearchPlayedGames(this.value)">
+                        <input type="text" class="search-input" placeholder="🔍 Поиск игр..."
+                            onkeyup="debouncedSearchPlayedGames(this.value)">
                     </div>
                     <div class="sort-row">
                         <div class="sort-controls">
@@ -108,7 +110,8 @@
                                 <option value="year">По году</option>
                                 <option value="rating">По оценке</option>
                             </select>
-                            <button id="gameSortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleGameSortOrder()">
+                            <button id="gameSortOrderBtn" class="btn btn-icon btn-sort-toggle"
+                                onclick="toggleGameSortOrder()">
                                 <img src="images/down-arrow.webp" alt="arrow" class="sort-arrow">
                             </button>
                         </div>
@@ -126,7 +129,8 @@
                     <div class="watchlist-section">
                         <div class="watchlist-header">
                             <h3>Заказанные фильмы</h3>
-                            <button class="btn btn-secondary btn-icon admin-only" onclick="openAddToWatchlistModal()">+</button>
+                            <button class="btn btn-secondary btn-icon admin-only"
+                                onclick="openAddToWatchlistModal()">+</button>
                         </div>
                         <div id="watchlistContainer">
                             <!-- Список заказанных фильмов-->
@@ -137,7 +141,8 @@
                     <div class="watchlist-section">
                         <div class="watchlist-header">
                             <h3>Заказанные игры</h3>
-                            <button class="btn btn-secondary btn-icon admin-only" onclick="openAddGameModal()">+</button>
+                            <button class="btn btn-secondary btn-icon admin-only"
+                                onclick="openAddGameModal()">+</button>
                         </div>
                         <div id="gamesContainer">
                             <!-- Список заказанных игр -->
@@ -165,11 +170,13 @@
                         <label for="autoTitle">Название фильма:</label>
                         <div class="input-with-btn">
                             <input type="text" id="autoTitle" placeholder="Введите название для поиска">
-                            <button id="autoSearchBtn" type="button" class="search-btn"><i class="fas fa-search"></i></button>
+                            <button id="autoSearchBtn" type="button" class="search-btn"><i
+                                    class="fas fa-search"></i></button>
                         </div>
                         <div class="roulette-autofill-hint" id="rouletteAutofillHint" role="status" aria-live="polite">
                             <span id="rouletteAutofillText">Победивший фильм в рулетке</span>
-                            <button type="button" id="rouletteAutofillClear" class="roulette-autofill-clear" aria-label="Очистить выбранный фильм из рулетки">
+                            <button type="button" id="rouletteAutofillClear" class="roulette-autofill-clear"
+                                aria-label="Очистить выбранный фильм из рулетки">
                                 <span aria-hidden="true">×</span>
                             </button>
                         </div>
@@ -212,7 +219,9 @@
                             <button type="button" class="file-remove" title="Удалить файл">×</button>
                         </div>
                         <div class="file-name" style="display: none;"></div>
-                        <img id="manualPosterPreview" class="poster-preview" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Предпросмотр" style="display:none;" loading="lazy">
+                        <img id="manualPosterPreview" class="poster-preview"
+                            src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Предпросмотр"
+                            style="display:none;" loading="lazy">
                     </div>
                     <div class="form-group">
                         <label for="manualGenre">Жанр:</label>
@@ -237,7 +246,8 @@
                         <span class="rating-star rating-label" data-rating="11">best</span>
                     </div>
                     <div class="rating-input-wrapper">
-                        <input id="ratingInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                        <input id="ratingInput" type="number" min="0" max="11" step="0.1" class="rating-input"
+                            placeholder="0">
                         <span class="rating-max">/10</span>
                     </div>
                 </div>
@@ -264,7 +274,8 @@
                         <label for="watchAutoTitle">Название фильма:</label>
                         <div class="input-with-btn">
                             <input type="text" id="watchAutoTitle" placeholder="Введите название для поиска">
-                            <button id="watchAutoSearchBtn" type="button" class="search-btn"><i class="fas fa-search"></i></button>
+                            <button id="watchAutoSearchBtn" type="button" class="search-btn"><i
+                                    class="fas fa-search"></i></button>
                         </div>
                     </div>
                     <div class="form-group" id="watchAutoResultsContainer" style="display:none; margin-top:10px;">
@@ -301,7 +312,9 @@
                             <button type="button" class="file-remove" title="Удалить файл">×</button>
                         </div>
                         <div class="file-name" style="display: none;"></div>
-                        <img id="watchManualPosterPreview" class="poster-preview" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Предпросмотр" style="display:none;" loading="lazy">
+                        <img id="watchManualPosterPreview" class="poster-preview"
+                            src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Предпросмотр"
+                            style="display:none;" loading="lazy">
                     </div>
                     <div class="form-group">
                         <label for="watchManualGenre">Жанр:</label>
@@ -339,7 +352,8 @@
                 <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image" loading="lazy">
             </div>
             <div class="rate-poster">
-                <img id="rateMoviePoster" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
+                <img id="rateMoviePoster" class="movie-poster"
+                    src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                 <p id="rateMovieTitle"></p>
             </div>
             <div class="form-group">
@@ -359,7 +373,8 @@
                     <span class="rating-star rating-label" data-rating="11">best</span>
                 </div>
                 <div class="rating-input-wrapper">
-                    <input id="rateMovieInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                    <input id="rateMovieInput" type="number" min="0" max="11" step="0.1" class="rating-input"
+                        placeholder="0">
                     <span class="rating-max">/10</span>
                 </div>
             </div>
@@ -375,7 +390,8 @@
                 <h2>Оценить игру</h2>
             </div>
             <div class="rate-poster">
-                <img id="rateGamePoster" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
+                <img id="rateGamePoster" class="movie-poster"
+                    src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                 <p id="rateGameTitle"></p>
             </div>
             <div class="form-group">
@@ -397,11 +413,13 @@
                     <span class="rating-star rating-label" data-rating="11">best</span>
                 </div>
                 <div class="rating-input-wrapper">
-                    <input id="rateGameInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                    <input id="rateGameInput" type="number" min="0" max="11" step="0.1" class="rating-input"
+                        placeholder="0">
                     <span class="rating-max">/10</span>
                 </div>
             </div>
-            <button onclick="submitGameRating()" class="btn btn-primary" style="width:100%;">Оценить и переместить</button>
+            <button onclick="submitGameRating()" class="btn btn-primary" style="width:100%;">Оценить и
+                переместить</button>
         </div>
     </div>
 
@@ -414,7 +432,8 @@
                 <img src="images/Kiriko_Node.webp" alt="Kiriko Rate" class="modal-image rate-image" loading="lazy">
             </div>
             <div class="rate-poster">
-                <img id="userRateMoviePoster" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
+                <img id="userRateMoviePoster" class="movie-poster"
+                    src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                 <p id="userRateMovieTitle"></p>
             </div>
             <div class="form-group">
@@ -434,7 +453,8 @@
                     <span class="rating-star rating-label" data-rating="11">best</span>
                 </div>
                 <div class="rating-input-wrapper">
-                    <input id="userRateInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                    <input id="userRateInput" type="number" min="0" max="11" step="0.1" class="rating-input"
+                        placeholder="0">
                     <span class="rating-max">/10</span>
                 </div>
             </div>
@@ -450,7 +470,8 @@
                 <h2>Ваша оценка игры</h2>
             </div>
             <div class="rate-poster">
-                <img id="userRateGamePoster" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
+                <img id="userRateGamePoster" class="movie-poster"
+                    src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                 <p id="userRateGameTitle"></p>
             </div>
             <div class="form-group">
@@ -470,7 +491,8 @@
                     <span class="rating-star rating-label" data-rating="11">best</span>
                 </div>
                 <div class="rating-input-wrapper">
-                    <input id="userRateGameInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                    <input id="userRateGameInput" type="number" min="0" max="11" step="0.1" class="rating-input"
+                        placeholder="0">
                     <span class="rating-max">/10</span>
                 </div>
             </div>
@@ -485,7 +507,8 @@
             <h2>Редактировать фильм</h2>
             <form id="editMovieForm">
                 <div class="poster-upload">
-                    <img id="editPosterPreview" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
+                    <img id="editPosterPreview" class="movie-poster"
+                        src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                     <input type="file" id="editPoster" accept="image/*" style="display:none">
                 </div>
                 <div class="form-group">
@@ -531,11 +554,13 @@
                         <span class="rating-star rating-label" data-rating="11">best</span>
                     </div>
                     <div class="rating-input-wrapper">
-                        <input id="editRatingInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                        <input id="editRatingInput" type="number" min="0" max="11" step="0.1" class="rating-input"
+                            placeholder="0">
                         <span class="rating-max">/10</span>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить</button>
+                <button type="button" id="deleteMovieBtn" class="btn-text-delete">Удалить фильм</button>
             </form>
         </div>
     </div>
@@ -546,7 +571,8 @@
             <h2>Редактировать заказ</h2>
             <form id="editOrderForm">
                 <div class="poster-upload">
-                    <img id="editOrderPosterPreview" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
+                    <img id="editOrderPosterPreview" class="movie-poster"
+                        src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                     <input type="file" id="editOrderPoster" accept="image/*" style="display:none">
                 </div>
                 <div class="form-group">
@@ -580,6 +606,7 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить</button>
+                <button type="button" id="deleteOrderBtn" class="btn-text-delete">Удалить заказ</button>
             </form>
         </div>
     </div>
@@ -626,7 +653,8 @@
                         <label for="gameAutoTitle">Название игры:</label>
                         <div class="input-with-btn">
                             <input type="text" id="gameAutoTitle" placeholder="Введите название для поиска">
-                            <button id="gameAutoSearchBtn" type="button" class="search-btn"><i class="fas fa-search"></i></button>
+                            <button id="gameAutoSearchBtn" type="button" class="search-btn"><i
+                                    class="fas fa-search"></i></button>
                         </div>
                     </div>
                     <div class="form-group" id="gameAutoResultsContainer" style="display:none; margin-top:10px;">
@@ -659,7 +687,9 @@
                             <button type="button" class="file-remove" title="Удалить файл">×</button>
                         </div>
                         <div class="file-name" style="display:none;"></div>
-                        <img id="gamePosterPreview" class="poster-preview" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Предпросмотр" style="display:none;" loading="lazy">
+                        <img id="gamePosterPreview" class="poster-preview"
+                            src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Предпросмотр"
+                            style="display:none;" loading="lazy">
                     </div>
                     <div class="form-group">
                         <label for="gameGenres">Жанр:</label>
@@ -701,7 +731,8 @@
                         <label for="playedGameAutoTitle">Название игры:</label>
                         <div class="input-with-btn">
                             <input type="text" id="playedGameAutoTitle" placeholder="Введите название для поиска">
-                            <button id="playedGameAutoSearchBtn" type="button" class="search-btn"><i class="fas fa-search"></i></button>
+                            <button id="playedGameAutoSearchBtn" type="button" class="search-btn"><i
+                                    class="fas fa-search"></i></button>
                         </div>
                     </div>
                     <div class="form-group" id="playedGameAutoResultsContainer" style="display:none; margin-top:10px;">
@@ -734,7 +765,9 @@
                             <button type="button" class="file-remove" title="Удалить файл">×</button>
                         </div>
                         <div class="file-name" style="display:none;"></div>
-                        <img id="playedGamePosterPreview" class="poster-preview" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Предпросмотр" style="display:none;" loading="lazy">
+                        <img id="playedGamePosterPreview" class="poster-preview"
+                            src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Предпросмотр"
+                            style="display:none;" loading="lazy">
                     </div>
                     <div class="form-group">
                         <label for="playedGameGenres">Жанр:</label>
@@ -759,7 +792,8 @@
                         <span class="rating-star rating-label" data-rating="11">best</span>
                     </div>
                     <div class="rating-input-wrapper">
-                        <input id="playedGameRatingInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                        <input id="playedGameRatingInput" type="number" min="0" max="11" step="0.1" class="rating-input"
+                            placeholder="0">
                         <span class="rating-max">/10</span>
                     </div>
                 </div>
@@ -790,8 +824,10 @@
             <h2>Редактировать игру</h2>
             <form id="editGameForm">
                 <div class="poster-upload">
-                    <button type="button" id="editGamePosterBtn" class="btn btn-secondary" style="width:100%; margin-bottom:10px;">Редактировать постер</button>
-                    <img id="editGamePosterPreview" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
+                    <button type="button" id="editGamePosterBtn" class="btn btn-secondary"
+                        style="width:100%; margin-bottom:10px;">Редактировать постер</button>
+                    <img id="editGamePosterPreview" class="movie-poster"
+                        src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                     <input type="file" id="editGamePoster" accept="image/*" style="display:none">
                 </div>
                 <div class="form-group">
@@ -821,6 +857,7 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
+                <button type="button" id="deleteGameBtn" class="btn-text-delete">Удалить игру</button>
             </form>
         </div>
     </div>
@@ -832,8 +869,10 @@
             <h2>Редактировать игру</h2>
             <form id="editPlayedGameForm">
                 <div class="poster-upload">
-                    <button type="button" id="editPlayedGamePosterBtn" class="btn btn-secondary" style="width:100%; margin-bottom:10px;">Заменить постер</button>
-                    <img id="editPlayedGamePosterPreview" class="movie-poster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
+                    <button type="button" id="editPlayedGamePosterBtn" class="btn btn-secondary"
+                        style="width:100%; margin-bottom:10px;">Заменить постер</button>
+                    <img id="editPlayedGamePosterPreview" class="movie-poster"
+                        src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                     <input type="file" id="editPlayedGamePoster" accept="image/*" style="display:none">
                 </div>
                 <div class="form-group">
@@ -865,7 +904,8 @@
                         <span class="rating-star rating-label" data-rating="11">best</span>
                     </div>
                     <div class="rating-input-wrapper">
-                        <input id="editPlayedGameRatingInput" type="number" min="0" max="11" step="0.1" class="rating-input" placeholder="0">
+                        <input id="editPlayedGameRatingInput" type="number" min="0" max="11" step="0.1"
+                            class="rating-input" placeholder="0">
                         <span class="rating-max">/10</span>
                     </div>
                 </div>
@@ -884,6 +924,7 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
+                <button type="button" id="deletePlayedGameBtn" class="btn-text-delete">Удалить игру</button>
             </form>
         </div>
     </div>
@@ -899,13 +940,9 @@
                 </div>
                 <button id="adminLoginBtn" type="submit" class="btn btn-primary" style="width:100%;">Войти</button>
             </form>
-            <button
-              id="adminTwitchConnectBtn"
-              type="button"
-              class="btn btn-secondary admin-only"
-              style="width:100%; margin-top:12px;"
-            >
-              Войти через Twitch
+            <button id="adminTwitchConnectBtn" type="button" class="btn btn-secondary admin-only"
+                style="width:100%; margin-top:12px;">
+                Войти через Twitch
             </button>
         </div>
     </div>
@@ -915,7 +952,8 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('duplicateModal')">&times;</span>
             <h2>Ошибка</h2>
-            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.webp" alt="Duplicate" loading="lazy">
+            <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.webp" alt="Duplicate"
+                loading="lazy">
             <p>Такой фильм уже есть в списке.</p>
         </div>
     </div>
@@ -925,7 +963,8 @@
         <div class="modal-content">
             <span id="fortuneDuplicateClose" class="close">&times;</span>
             <h2>Фильм уже просмотрен</h2>
-            <p id="fortuneDuplicateMessage" class="fortune-duplicate-message">Этот фильм уже есть в списке просмотренных.</p>
+            <p id="fortuneDuplicateMessage" class="fortune-duplicate-message">Этот фильм уже есть в списке
+                просмотренных.</p>
             <p id="fortuneDuplicateDetails" class="fortune-duplicate-details"></p>
             <div class="modal-buttons">
                 <button id="fortuneDuplicateCancel" type="button" class="btn btn-secondary">Отменить</button>
@@ -1026,211 +1065,173 @@
             </div>
         </div>
     </div>
-<div id="musicMenu" class="music-menu">
+    <div id="musicMenu" class="music-menu">
 
-  <div class="music-menu-content">
+        <div class="music-menu-content">
 
-    <div class="fortune-body">
-      <div class="fortune-side" data-menu-collapse-inert>
-        <section class="music-section">
-          <ul id="musicList" class="music-track-list">
-            <li><button data-src="Music/The_Field_of_Wonders.mp3">Барабан</button></li>
-            <li><button data-src="Music/Supergame.mp3">Суперигра</button></li>
-            <li><button data-src="Music/60_seconds.mp3">60 секунд</button></li>
-          </ul>
-          <audio id="audioPlayer" class="audio-player" loop></audio>
-          <div class="audio-controls">
-            <button id="playPauseBtn" class="audio-btn" aria-label="Воспроизвести/Пауза">
-              <i class="fa-solid fa-play"></i>
-            </button>
-            <button id="loopBtn" class="audio-btn active" aria-label="Зациклить">
-              <i class="fa-solid fa-repeat"></i>
-            </button>
-            <input type="range" id="volumeSlider" class="volume-slider"
-                   min="0" max="1" step="0.01" value="0.3" aria-label="Громкость">
-            <span id="volumeValue">30%</span>
-          </div>
-        </section>
+            <div class="fortune-body">
+                <div class="fortune-side" data-menu-collapse-inert>
+                    <section class="music-section">
+                        <ul id="musicList" class="music-track-list">
+                            <li><button data-src="Music/The_Field_of_Wonders.mp3">Барабан</button></li>
+                            <li><button data-src="Music/Supergame.mp3">Суперигра</button></li>
+                            <li><button data-src="Music/60_seconds.mp3">60 секунд</button></li>
+                        </ul>
+                        <audio id="audioPlayer" class="audio-player" loop></audio>
+                        <div class="audio-controls">
+                            <button id="playPauseBtn" class="audio-btn" aria-label="Воспроизвести/Пауза">
+                                <i class="fa-solid fa-play"></i>
+                            </button>
+                            <button id="loopBtn" class="audio-btn active" aria-label="Зациклить">
+                                <i class="fa-solid fa-repeat"></i>
+                            </button>
+                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01"
+                                value="0.3" aria-label="Громкость">
+                            <span id="volumeValue">30%</span>
+                        </div>
+                    </section>
 
-        <section class="fortune-section fortune-list-section">
-          <div class="fortune-list-header">
-            <h3 class="fortune-title">Список для рулетки</h3>
-            <div class="fortune-list-actions">
-              <span class="fortune-items-count" aria-live="polite">
-                Всего: <span id="fortuneItemsCount" class="fortune-items-count-value">0</span>
-              </span>
-              <div
-                id="fortuneSuggestionsContainer"
-                class="fortune-suggestions admin-only"
-              >
-                <button
-                  id="fortuneSuggestionsButton"
-                  class="fortune-suggestions-button"
-                  type="button"
-                  aria-label="Предложенные фильмы: нет новых"
-                  aria-controls="fortuneSuggestionsDropdown"
-                  aria-expanded="false"
-                  title="Предложенные фильмы"
-                >
-                  <i class="fa-solid fa-bell" aria-hidden="true"></i>
-                  <span
-                    id="fortuneSuggestionsCount"
-                    class="fortune-suggestions-badge fortune-suggestions-badge--hidden"
-                  >
-                    0
-                  </span>
-                </button>
-                <div
-                  id="fortuneSuggestionsDropdown"
-                  class="fortune-suggestions-dropdown"
-                  role="region"
-                  aria-label="Предложенные фильмы"
-                  hidden
-                >
-                  <div class="fortune-suggestions-dropdown-header">
-                    <span>Предложенные фильмы</span>
-                    <button
-                      id="fortuneSuggestionsClose"
-                      class="fortune-suggestions-close"
-                      type="button"
-                      aria-label="Закрыть список предложенных фильмов"
-                      title="Закрыть"
-                    >
-                      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                  <div class="fortune-suggestions-dropdown-body">
-                    <ul id="fortuneSuggestionsList" class="fortune-suggestions-list"></ul>
-                    <p id="fortuneSuggestionsEmpty" class="fortune-suggestions-empty" hidden>
-                      Пока нет предложенных фильмов.
-                    </p>
-                  </div>
+                    <section class="fortune-section fortune-list-section">
+                        <div class="fortune-list-header">
+                            <h3 class="fortune-title">Список для рулетки</h3>
+                            <div class="fortune-list-actions">
+                                <span class="fortune-items-count" aria-live="polite">
+                                    Всего: <span id="fortuneItemsCount" class="fortune-items-count-value">0</span>
+                                </span>
+                                <div id="fortuneSuggestionsContainer" class="fortune-suggestions admin-only">
+                                    <button id="fortuneSuggestionsButton" class="fortune-suggestions-button"
+                                        type="button" aria-label="Предложенные фильмы: нет новых"
+                                        aria-controls="fortuneSuggestionsDropdown" aria-expanded="false"
+                                        title="Предложенные фильмы">
+                                        <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                                        <span id="fortuneSuggestionsCount"
+                                            class="fortune-suggestions-badge fortune-suggestions-badge--hidden">
+                                            0
+                                        </span>
+                                    </button>
+                                    <div id="fortuneSuggestionsDropdown" class="fortune-suggestions-dropdown"
+                                        role="region" aria-label="Предложенные фильмы" hidden>
+                                        <div class="fortune-suggestions-dropdown-header">
+                                            <span>Предложенные фильмы</span>
+                                            <button id="fortuneSuggestionsClose" class="fortune-suggestions-close"
+                                                type="button" aria-label="Закрыть список предложенных фильмов"
+                                                title="Закрыть">
+                                                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                        <div class="fortune-suggestions-dropdown-body">
+                                            <ul id="fortuneSuggestionsList" class="fortune-suggestions-list"></ul>
+                                            <p id="fortuneSuggestionsEmpty" class="fortune-suggestions-empty" hidden>
+                                                Пока нет предложенных фильмов.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fortune-controls">
+                            <input id="fortuneItemInput" class="fortune-item-input" type="text"
+                                placeholder="Введите фильм и нажмите Enter" autocomplete="off" />
+                            <div class="fortune-items-wrapper">
+                                <ul id="fortuneItemsList" class="fortune-items-list" aria-live="polite"
+                                    aria-label="Фильмы, добавленные в рулетку"></ul>
+                            </div>
+                            <textarea id="itemsInput" class="fortune-textarea" hidden aria-hidden="true"
+                                tabindex="-1"></textarea>
+
+                            <div class="fortune-row">
+                                <div class="fortune-buttons">
+                                    <button id="clearBtn" class="fortune-button fortune-button-ghost">Очистить</button>
+                                </div>
+                                <div class="fortune-buttons fortune-buttons-right">
+                                    <button id="resetBtn" class="fortune-button fortune-button-ghost"
+                                        title="Восстановить все зачёркнутые элементы">Сбросить</button>
+                                    <button id="shuffleBtn" class="fortune-button fortune-button-ghost"
+                                        title="Перемешать порядок">Перемешать</button>
+                                </div>
+                            </div>
+
+                            <div class="fortune-note-wrapper">
+                                <p class="fortune-note">
+                                    Какая-то кнопка →
+                                </p>
+                                <button id="fortuneTipButton" class="fortune-tip-audio-button" type="button"
+                                    aria-label="Проиграть подсказку" data-audio-src="Music/Kazino.mp3">
+                                    😈
+                                </button>
+                            </div>
+                            <audio id="fortuneTipAudio" preload="none"></audio>
+                        </div>
+                    </section>
                 </div>
-              </div>
-            </div>
-          </div>
-          <div class="fortune-controls">
-            <input
-              id="fortuneItemInput"
-              class="fortune-item-input"
-              type="text"
-              placeholder="Введите фильм и нажмите Enter"
-              autocomplete="off"
-            />
-            <div class="fortune-items-wrapper">
-              <ul
-                id="fortuneItemsList"
-                class="fortune-items-list"
-                aria-live="polite"
-                aria-label="Фильмы, добавленные в рулетку"
-              ></ul>
-            </div>
-            <textarea
-              id="itemsInput"
-              class="fortune-textarea"
-              hidden
-              aria-hidden="true"
-              tabindex="-1"
-            ></textarea>
 
-            <div class="fortune-row">
-              <div class="fortune-buttons">
-                <button id="clearBtn" class="fortune-button fortune-button-ghost">Очистить</button>
-              </div>
-              <div class="fortune-buttons fortune-buttons-right">
-                <button id="resetBtn" class="fortune-button fortune-button-ghost"
-                        title="Восстановить все зачёркнутые элементы">Сбросить</button>
-                <button id="shuffleBtn" class="fortune-button fortune-button-ghost"
-                        title="Перемешать порядок">Перемешать</button>
-              </div>
+                <div class="fortune-wheel-card">
+                    <div class="fortune-wheel-card__content" data-menu-collapse-inert>
+                        <div class="fortune-wheel-card__header">
+                            <div class="fortune-spin-settings">
+                                <label class="fortune-spin-label" for="spinDurationInput">
+                                    Время вращения
+                                </label>
+                                <div class="fortune-spin-input-wrapper">
+                                    <input type="number" id="spinDurationInput" class="fortune-spin-input" min="1"
+                                        step="1" value="7" inputmode="numeric"
+                                        aria-label="Настройка времени вращения колеса в секундах">
+                                    <span class="fortune-spin-unit">СЕК</span>
+                                </div>
+                            </div>
+                            <div class="fortune-wheel-card__actions">
+                                <button id="collapseMusicMenu" class="collapse-music-menu" aria-label="Свернуть панель">
+                                    <i class="fa-solid fa-angle-left" aria-hidden="true"></i>
+                                    <span class="collapse-music-menu-label">Свернуть</span>
+                                </button>
+                                <button id="closeMusicMenu" class="close-music-menu"
+                                    aria-label="Закрыть">&times;</button>
+                            </div>
+                        </div>
+                        <div class="fortune-wheel-wrap">
+                            <div class="fortune-pointer" aria-hidden="true"></div>
+                            <canvas id="wheelCanvas" width="800" height="800" aria-label="Колесо фортуны"
+                                role="img"></canvas>
+                            <div class="fortune-wheel-center" aria-hidden="true">
+                                <img src="images/tomkruz.webp" alt="Эмблема колеса фортуны">
+                            </div>
+                            <div class="fortune-result-overlay" id="fortuneResultOverlay" aria-hidden="true">
+                                <div class="fortune-result-message" role="alert">
+                                    <strong id="fortuneResultName"></strong>
+                                    <span class="fortune-result-suffix"> выбывает</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fortune-status" id="status">
+                            Нажмите на колесо, чтобы запустить вращение.
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="fortune-note-wrapper">
-              <p class="fortune-note">
-                Какая-то кнопка →
-              </p>
-              <button id="fortuneTipButton" class="fortune-tip-audio-button" type="button"
-                      aria-label="Проиграть подсказку" data-audio-src="Music/Kazino.mp3">
-                😈
-              </button>
-            </div>
-            <audio id="fortuneTipAudio" preload="none"></audio>
-          </div>
-        </section>
-      </div>
-
-      <div class="fortune-wheel-card">
-        <div class="fortune-wheel-card__content" data-menu-collapse-inert>
-          <div class="fortune-wheel-card__header">
-            <div class="fortune-spin-settings">
-              <label class="fortune-spin-label" for="spinDurationInput">
-                Время вращения
-              </label>
-              <div class="fortune-spin-input-wrapper">
-                <input
-                  type="number"
-                  id="spinDurationInput"
-                  class="fortune-spin-input"
-                  min="1"
-                  step="1"
-                  value="7"
-                  inputmode="numeric"
-                  aria-label="Настройка времени вращения колеса в секундах"
-                >
-                <span class="fortune-spin-unit">СЕК</span>
-              </div>
-            </div>
-            <div class="fortune-wheel-card__actions">
-              <button id="collapseMusicMenu" class="collapse-music-menu" aria-label="Свернуть панель">
-                <i class="fa-solid fa-angle-left" aria-hidden="true"></i>
-                <span class="collapse-music-menu-label">Свернуть</span>
-              </button>
-              <button id="closeMusicMenu" class="close-music-menu" aria-label="Закрыть">&times;</button>
-            </div>
-          </div>
-          <div class="fortune-wheel-wrap">
-            <div class="fortune-pointer" aria-hidden="true"></div>
-            <canvas id="wheelCanvas" width="800" height="800"
-                    aria-label="Колесо фортуны" role="img"></canvas>
-            <div class="fortune-wheel-center" aria-hidden="true">
-              <img src="images/tomkruz.webp" alt="Эмблема колеса фортуны">
-            </div>
-            <div class="fortune-result-overlay" id="fortuneResultOverlay" aria-hidden="true">
-              <div class="fortune-result-message" role="alert">
-                <strong id="fortuneResultName"></strong>
-                <span class="fortune-result-suffix"> выбывает</span>
-              </div>
-            </div>
-          </div>
-          <div class="fortune-status" id="status">
-            Нажмите на колесо, чтобы запустить вращение.
-          </div>
         </div>
-      </div>
     </div>
-  </div>
-</div>
 
-<aside id="rulesPanel" class="rules-panel" aria-hidden="true">
-  <div class="rules-panel__content">
-    <button id="collapseRulesPanel" class="rules-panel__close" aria-label="Скрыть правила">
-      <i class="fa-solid fa-angle-right" aria-hidden="true"></i>
-    </button>
-    <h2 class="rules-panel__title">Правила заказа</h2>
-    <ol class="rules-panel__list">
-      <li>Заказать фильм можно с помощью доната, за баллы канала или во время рулетки. <span class="cmd">@pupsik_ow</span></span></li>
-      <li>Без наготы, банвордов и других моментов, которые нарушают правила твича и законы РФ.</li>
-      <li>Нельзя новые фильмы (2024 года и новее).</li>
-      <li>Киностудии Netflix, Warner Bros, Disney Company по согласованию со стримером!</li>
-      <li>Фильмы, запрещенные для просмотра на Twitch, мы смотрим в Discord (по согласованию).</li>
-      <li>Правила выше распространяются и на рулетку. </li>
-      <li>Каждый участник рулетки может добавить только один фильм. </li>
-      <li>Фильмы в рулетке не повторяются.</li>
-      <li>Попытка подставить стримера может привести к блокировке на канале!</li>
-    </ol>
-    <p class="rules-panel__note">Следите за правилами воизбежании бана.</p>
-  </div>
-</aside>
+    <aside id="rulesPanel" class="rules-panel" aria-hidden="true">
+        <div class="rules-panel__content">
+            <button id="collapseRulesPanel" class="rules-panel__close" aria-label="Скрыть правила">
+                <i class="fa-solid fa-angle-right" aria-hidden="true"></i>
+            </button>
+            <h2 class="rules-panel__title">Правила заказа</h2>
+            <ol class="rules-panel__list">
+                <li>Заказать фильм можно с помощью доната, за баллы канала или во время рулетки. <span
+                        class="cmd">@pupsik_ow</span></span></li>
+                <li>Без наготы, банвордов и других моментов, которые нарушают правила твича и законы РФ.</li>
+                <li>Нельзя новые фильмы (2024 года и новее).</li>
+                <li>Киностудии Netflix, Warner Bros, Disney Company по согласованию со стримером!</li>
+                <li>Фильмы, запрещенные для просмотра на Twitch, мы смотрим в Discord (по согласованию).</li>
+                <li>Правила выше распространяются и на рулетку. </li>
+                <li>Каждый участник рулетки может добавить только один фильм. </li>
+                <li>Фильмы в рулетке не повторяются.</li>
+                <li>Попытка подставить стримера может привести к блокировке на канале!</li>
+            </ol>
+            <p class="rules-panel__note">Следите за правилами воизбежании бана.</p>
+        </div>
+    </aside>
 
     <nav class="mobile-tabs" id="mobileTabs">
         <button data-tab="movies" class="active">Фильмы</button>

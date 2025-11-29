@@ -396,12 +396,7 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
     editBtn.className = "btn btn-edit btn-icon";
     editBtn.textContent = "✏️";
     editBtn.onclick = () => openEditModal(movie.id);
-    const delBtn = document.createElement("button");
-    delBtn.className = "btn btn-delete btn-icon";
-    delBtn.textContent = "🗑️";
-    delBtn.onclick = () => openConfirmDeleteMovieModal(movie.id);
     actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
   }
 
   footer.appendChild(actions);
@@ -553,13 +548,8 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     editBtn.className = "btn btn-edit btn-icon";
     editBtn.textContent = "✏️";
     editBtn.onclick = () => openEditOrderModal(order.id);
-    const delBtn = document.createElement("button");
-    delBtn.className = "btn btn-delete btn-icon";
-    delBtn.textContent = "🗑️";
-    delBtn.onclick = () => openConfirmDeleteOrderModal(order.id);
     actions.appendChild(planBtn);
     actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
     row.appendChild(actions);
   }
 
@@ -712,12 +702,7 @@ function createGameCard(game, showActions = isAdmin) {
     editBtn.className = "btn btn-edit btn-icon";
     editBtn.textContent = "✏️";
     editBtn.onclick = () => openEditGameModal(game.id);
-    const delBtn = document.createElement("button");
-    delBtn.className = "btn btn-delete btn-icon";
-    delBtn.textContent = "🗑️";
-    delBtn.onclick = () => openConfirmDeleteGameOrderModal(game.id);
     actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
     row.appendChild(actions);
   }
 
@@ -929,11 +914,7 @@ function createPlayedGameCard(
     editBtn.textContent = "✏️";
     editBtn.onclick = () => openEditPlayedGameModal(game.id);
     actions.appendChild(editBtn);
-    const delBtn = document.createElement("button");
-    delBtn.className = "btn btn-delete btn-icon";
-    delBtn.textContent = "🗑️";
-    delBtn.onclick = () => openConfirmDeletePlayedGameModal(game.id);
-    actions.appendChild(delBtn);
+    actions.appendChild(editBtn);
   }
   if (actions.childElementCount > 0) footer.appendChild(actions);
   info.appendChild(footer);

@@ -127,6 +127,13 @@ function openEditModal(id) {
   setRatingStars("editRatingStars", movie.rating);
   setupRatingStars("editRatingStars");
 
+  const delBtn = document.getElementById("deleteMovieBtn");
+  if (delBtn) {
+    delBtn.onclick = () => {
+      closeModal("editMovieModal");
+      openConfirmDeleteMovieModal(id);
+    };
+  }
   document.getElementById("editMovieModal").style.display = "block";
 }
 
@@ -244,6 +251,13 @@ function openEditGameModal(id) {
   preview.src = game.poster;
   document.getElementById("editGamePoster").value = "";
   editGamePosterData = null;
+  const delBtn = document.getElementById("deleteGameBtn");
+  if (delBtn) {
+    delBtn.onclick = () => {
+      closeModal("editGameModal");
+      openConfirmDeleteGameOrderModal(id);
+    };
+  }
   document.getElementById("editGameModal").style.display = "block";
 }
 
@@ -267,6 +281,13 @@ function openEditPlayedGameModal(id) {
   setRatingStars("editPlayedGameRatingStars", game.rating);
   setupRatingStars("editPlayedGameRatingStars");
   editPlayedGamePosterData = null;
+  const delBtn = document.getElementById("deletePlayedGameBtn");
+  if (delBtn) {
+    delBtn.onclick = () => {
+      closeModal("editPlayedGameModal");
+      openConfirmDeletePlayedGameModal(id);
+    };
+  }
   document.getElementById("editPlayedGameModal").style.display = "block";
 }
 
@@ -431,6 +452,13 @@ function openEditOrderModal(id) {
   document.getElementById("editOrderPosterPreview").src = order.poster;
   document.getElementById("editOrderPoster").value = "";
   editOrderPosterData = null;
+  const delBtn = document.getElementById("deleteOrderBtn");
+  if (delBtn) {
+    delBtn.onclick = () => {
+      closeModal("editOrderModal");
+      openConfirmDeleteOrderModal(id);
+    };
+  }
   document.getElementById("editOrderModal").style.display = "block";
 }
 
