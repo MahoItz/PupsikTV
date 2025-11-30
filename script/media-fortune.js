@@ -95,6 +95,18 @@ let fortuneSuggestionsSupabaseErrorLogged = false;
 let fortuneWheelApi = null;
 let rulesPanelManuallyCollapsed = false;
 let rulesPanelStandaloneOpen = false;
+const fortuneAutoResultsContainer = document.getElementById(
+  "fortuneAutoResultsContainer"
+);
+const fortuneAutoResults = document.getElementById("fortuneAutoResults");
+const fortuneMovieModal = document.getElementById("fortuneMovieModal");
+const fortuneMovieClose = document.getElementById("fortuneMovieClose");
+const fortuneMoviePreview = document.getElementById("fortuneMoviePreview");
+const fortuneMovieCancel = document.getElementById("fortuneMovieCancel");
+const fortuneMovieAdd = document.getElementById("fortuneMovieAdd");
+const fortuneItemInput = document.getElementById("fortuneItemInput");
+let fortuneKpResults = [];
+let selectedFortuneKPMovie = null;
 
 if (audioPlayer) {
   audioPlayer.loop = true;
@@ -1000,6 +1012,182 @@ if (fortuneTipButton && fortuneTipAudio) {
 
   fortuneTipAudio.addEventListener("ended", resetTipButtonState);
   fortuneTipAudio.addEventListener("error", resetTipButtonState);
+}
+
+function resetFortuneAutocomplete() {
+  fortuneKpResults = [];
+  selectedFortuneKPMovie = null;
+  if (fortuneAutoResults) {
+    fortuneAutoResults.innerHTML = "";
+  }
+  if (fortuneAutoResultsContainer) {
+    fortuneAutoResultsContainer.style.display = "none";
+  }
+}
+
+function getFortuneMovieLabel(movie) {
+  const baseTitle =
+    (movie?.nameRu || movie?.nameEn || movie?.nameOriginal || "").trim();
+  if (!baseTitle) {
+    return "";
+  }
+  const yearValue = (movie?.year || "").toString().trim();
+  return yearValue ? `${baseTitle} (${yearValue})` : baseTitle;
+}
+
+function mapFortuneFilmToMovieCard(movie) {
+  return {
+    id: 0,
+    title: movie?.nameRu || movie?.nameEn || movie?.nameOriginal || "",
+    originalTitle: movie?.nameEn || movie?.nameOriginal || "",
+    year: movie?.year || "",
+    rating: 0,
+    kpRating: movie?.rating ?? "-",
+    poster:
+      movie?.posterUrlPreview ||
+      movie?.posterUrl ||
+      "https://via.placeholder.com/300x400?text=Нет+постера",
+    dateAdded: new Date().toISOString().split("T")[0],
+    genre: movie?.genres?.map((g) => g.genre).join(", ") || "",
+    orderBy: "",
+    orderType: "",
+  };
+}
+
+function openFortuneMovieModal(movie) {
+  if (!fortuneMovieModal || !fortuneMoviePreview) {
+    return;
+  }
+
+  const label = getFortuneMovieLabel(movie);
+  if (fortuneItemInput && label) {
+    fortuneItemInput.value = label;
+  }
+
+  fortuneMoviePreview.innerHTML = "";
+  if (typeof createMovieCard === "function") {
+    const card = createMovieCard(mapFortuneFilmToMovieCard(movie), false, false);
+    fortuneMoviePreview.appendChild(card);
+  }
+
+  fortuneMovieModal.style.display = "block";
+  if (fortuneMovieAdd) {
+    setTimeout(() => fortuneMovieAdd.focus(), 0);
+  }
+}
+
+function closeFortuneMovieModal() {
+  if (fortuneMovieModal) {
+    fortuneMovieModal.style.display = "none";
+  }
+  selectedFortuneKPMovie = null;
+  if (fortuneItemInput) {
+    fortuneItemInput.focus();
+  }
+}
+
+const debouncedFortuneKPSearch = debounce(async (query) => {
+  if (!fortuneAutoResults || !fortuneAutoResultsContainer) {
+    return;
+  }
+
+  const trimmed = (query || "").trim();
+  if (!trimmed || !KINOPOISK_API_KEY) {
+    resetFortuneAutocomplete();
+    return;
+  }
+
+  showSearchLoading("fortuneAutoResultsContainer", "fortuneAutoResults");
+
+  try {
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      trimmed
+    )}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+    fortuneKpResults = data.films || [];
+
+    fortuneAutoResults.innerHTML = "";
+    fortuneKpResults.forEach((film, idx) => {
+      const option = document.createElement("div");
+      option.className = "autocomplete-option";
+      option.dataset.index = idx;
+      const label = getFortuneMovieLabel(film);
+      option.textContent = label || "Без названия";
+      fortuneAutoResults.appendChild(option);
+    });
+
+    fortuneAutoResultsContainer.style.display = fortuneKpResults.length
+      ? "block"
+      : "none";
+  } catch (err) {
+    console.error("Kinopoisk autocomplete error for fortune", err);
+    resetFortuneAutocomplete();
+  }
+}, 120);
+
+if (fortuneAutoResults) {
+  fortuneAutoResults.addEventListener("click", (event) => {
+    const option = event.target.closest(".autocomplete-option");
+    if (!option) {
+      return;
+    }
+
+    const idx = Number(option.dataset.index);
+    selectedFortuneKPMovie = fortuneKpResults[idx] || null;
+    if (!selectedFortuneKPMovie) {
+      return;
+    }
+
+    fortuneAutoResultsContainer.style.display = "none";
+    openFortuneMovieModal(selectedFortuneKPMovie);
+  });
+}
+
+if (fortuneMovieClose) {
+  fortuneMovieClose.addEventListener("click", closeFortuneMovieModal);
+}
+
+if (fortuneMovieCancel) {
+  fortuneMovieCancel.addEventListener("click", closeFortuneMovieModal);
+}
+
+if (fortuneMovieModal) {
+  fortuneMovieModal.addEventListener("click", (event) => {
+    if (event.target === fortuneMovieModal) {
+      closeFortuneMovieModal();
+    }
+  });
+}
+
+if (fortuneMovieAdd) {
+  fortuneMovieAdd.addEventListener("click", () => {
+    if (!selectedFortuneKPMovie || !fortuneWheelApi) {
+      return;
+    }
+
+    const label = getFortuneMovieLabel(selectedFortuneKPMovie);
+    if (label) {
+      fortuneWheelApi.addItem(label);
+      resetFortuneAutocomplete();
+      if (fortuneItemInput) {
+        fortuneItemInput.value = "";
+      }
+    }
+    closeFortuneMovieModal();
+  });
+}
+
+if (fortuneItemInput) {
+  fortuneItemInput.addEventListener("input", (event) => {
+    debouncedFortuneKPSearch(event.target.value || "");
+  });
 }
 
 fortuneWheelApi = initFortuneWheel();
