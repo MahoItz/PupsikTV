@@ -39,7 +39,7 @@ function copyScheduledMoviesToClipboard() {
     }
     
     // Формируем строку для каждого фильма
-    formattedList += `${num}) ${title} ${year} год, заказ ${orderBy}\n`;
+    formattedList += `${num}) "${title}" ${year} год, заказ ${orderBy}\n`;
     if (endTime) {
       formattedList += `С ${startTime} - ${endTime} по Мск\n`;
     } else {
