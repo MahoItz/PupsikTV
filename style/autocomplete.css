@@ -1,3 +1,24 @@
+.fortune-autocomplete {
+    position: relative;
+    width: 100%;
+    margin-top: 8px;
+    z-index: 20;
+}
+
+.fortune-autocomplete .autocomplete-list {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+}
+
+.fortune-autocomplete--open .autocomplete-loading {
+    padding: 10px 0;
+}
+
 /* Autocomplete list */
 .autocomplete-list {
     width: 100%;

@@ -108,6 +108,20 @@ const fortuneItemInput = document.getElementById("fortuneItemInput");
 let fortuneKpResults = [];
 let selectedFortuneKPMovie = null;
 
+function setFortuneAutocompleteVisible(isOpen) {
+  if (!fortuneAutoResultsContainer) return;
+
+  fortuneAutoResultsContainer.style.display = isOpen ? "block" : "none";
+  fortuneAutoResultsContainer.classList.toggle(
+    "fortune-autocomplete--open",
+    Boolean(isOpen)
+  );
+  fortuneAutoResultsContainer.setAttribute(
+    "aria-expanded",
+    isOpen ? "true" : "false"
+  );
+}
+
 if (audioPlayer) {
   audioPlayer.loop = true;
 }
@@ -1020,9 +1034,8 @@ function resetFortuneAutocomplete() {
   if (fortuneAutoResults) {
     fortuneAutoResults.innerHTML = "";
   }
-  if (fortuneAutoResultsContainer) {
-    fortuneAutoResultsContainer.style.display = "none";
-  }
+
+  setFortuneAutocompleteVisible(false);
 }
 
 function getFortuneMovieLabel(movie) {
@@ -1097,6 +1110,7 @@ const debouncedFortuneKPSearch = debounce(async (query) => {
     return;
   }
 
+  setFortuneAutocompleteVisible(true);
   showSearchLoading("fortuneAutoResultsContainer", "fortuneAutoResults");
 
   try {
@@ -1123,9 +1137,7 @@ const debouncedFortuneKPSearch = debounce(async (query) => {
       fortuneAutoResults.appendChild(option);
     });
 
-    fortuneAutoResultsContainer.style.display = fortuneKpResults.length
-      ? "block"
-      : "none";
+    setFortuneAutocompleteVisible(Boolean(fortuneKpResults.length));
   } catch (err) {
     console.error("Kinopoisk autocomplete error for fortune", err);
     resetFortuneAutocomplete();
@@ -1145,7 +1157,7 @@ if (fortuneAutoResults) {
       return;
     }
 
-    fortuneAutoResultsContainer.style.display = "none";
+    setFortuneAutocompleteVisible(false);
     openFortuneMovieModal(selectedFortuneKPMovie);
   });
 }
