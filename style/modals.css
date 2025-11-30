@@ -325,6 +325,67 @@
     margin-top: 24px;
 }
 
+#fortuneMovieModal .modal-content {
+    max-width: 940px;
+    width: 95%;
+    padding: 36px 40px 32px;
+}
+
+#fortuneMovieModal .fortune-movie-preview {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+#fortuneMovieModal .fortune-movie-preview .movie-card {
+    width: 100%;
+    max-width: 860px;
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+#fortuneMovieModal .fortune-movie-preview .movie-poster,
+#fortuneMovieModal .fortune-movie-preview .movie-poster-placeholder {
+    width: 170px;
+    min-height: 240px;
+}
+
+#fortuneMovieModal .fortune-movie-preview .movie-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#fortuneMovieModal .fortune-movie-preview .movie-rating {
+    margin-top: 4px;
+}
+
+#fortuneMovieModal .fortune-movie-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+@media (max-width: 720px) {
+    #fortuneMovieModal .fortune-movie-preview .movie-card {
+        grid-template-columns: 1fr;
+    }
+
+    #fortuneMovieModal .fortune-movie-preview .movie-poster,
+    #fortuneMovieModal .fortune-movie-preview .movie-poster-placeholder {
+        width: 100%;
+        min-height: 280px;
+    }
+
+    #fortuneMovieModal .fortune-movie-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
 /* Специальное оформление модального окна напоминания */
 #searchReminderModal .modal-content {
     text-align: center;

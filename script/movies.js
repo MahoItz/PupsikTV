@@ -219,7 +219,13 @@ function renderPagination() {
 }
 
 // Создание карточки фильма
-function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
+function createMovieCard(
+  movie,
+  showActions = isAdmin,
+  showRateButton = true,
+  options = {}
+) {
+  const { showRatings = true, showDate = true } = options;
   const card = document.createElement("div");
   card.dataset.id = movie.id;
   let cardClass = "movie-card";
@@ -280,100 +286,104 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
   year.textContent = movie.year;
   info.appendChild(year);
 
-  const rating = document.createElement("div");
-  rating.className = "movie-rating";
+  if (showRatings) {
+    const rating = document.createElement("div");
+    rating.className = "movie-rating";
 
-  const ratingItem1 = document.createElement("div");
-  ratingItem1.className = "rating-item";
-  const icon1 = document.createElement("img");
-  icon1.src = "images/Pupsik_TV_Icon.webp";
-  icon1.alt = "Pupsik Rate";
-  const span1 = document.createElement("span");
-  span1.textContent = `${movie.rating}`;
-  ratingItem1.appendChild(icon1);
-  ratingItem1.appendChild(span1);
-  ratingItem1.addEventListener("mouseenter", (e) => {
-    if (!ratingTooltip) return;
-    ratingTooltip.textContent = `Оценка Pupsik_ow`;
-    ratingTooltip.style.display = "block";
-    ratingTooltip.style.left = e.pageX + 10 + "px";
-    ratingTooltip.style.top = e.pageY + 10 + "px";
-  });
-  ratingItem1.addEventListener("mousemove", (e) => {
-    if (!ratingTooltip) return;
-    ratingTooltip.style.left = e.pageX + 10 + "px";
-    ratingTooltip.style.top = e.pageY + 10 + "px";
-  });
-  ratingItem1.addEventListener("mouseleave", () => {
-    if (!ratingTooltip) return;
-    ratingTooltip.style.display = "none";
-  });
-  rating.appendChild(ratingItem1);
+    const ratingItem1 = document.createElement("div");
+    ratingItem1.className = "rating-item";
+    const icon1 = document.createElement("img");
+    icon1.src = "images/Pupsik_TV_Icon.webp";
+    icon1.alt = "Pupsik Rate";
+    const span1 = document.createElement("span");
+    span1.textContent = `${movie.rating}`;
+    ratingItem1.appendChild(icon1);
+    ratingItem1.appendChild(span1);
+    ratingItem1.addEventListener("mouseenter", (e) => {
+      if (!ratingTooltip) return;
+      ratingTooltip.textContent = `Оценка Pupsik_ow`;
+      ratingTooltip.style.display = "block";
+      ratingTooltip.style.left = e.pageX + 10 + "px";
+      ratingTooltip.style.top = e.pageY + 10 + "px";
+    });
+    ratingItem1.addEventListener("mousemove", (e) => {
+      if (!ratingTooltip) return;
+      ratingTooltip.style.left = e.pageX + 10 + "px";
+      ratingTooltip.style.top = e.pageY + 10 + "px";
+    });
+    ratingItem1.addEventListener("mouseleave", () => {
+      if (!ratingTooltip) return;
+      ratingTooltip.style.display = "none";
+    });
+    rating.appendChild(ratingItem1);
 
-  const ratingItem2 = document.createElement("div");
-  ratingItem2.className = "rating-item kp-rating-item";
-  const icon2 = document.createElement("img");
-  icon2.src = "images/kp_icon.webp";
-  icon2.alt = "KP Rate";
-  const span2 = document.createElement("span");
-  span2.textContent = movie.kpRating ?? "-";
-  ratingItem2.appendChild(icon2);
-  ratingItem2.appendChild(span2);
-  ratingItem2.addEventListener("click", () =>
-    openKinopoiskPage(movie.title, movie.year, movie.originalTitle)
-  );
-  ratingItem2.addEventListener("mouseenter", (e) => {
-    if (!ratingTooltip) return;
-    ratingTooltip.textContent = `Перейти на Кинопоиск`;
-    ratingTooltip.style.display = "block";
-    ratingTooltip.style.left = e.pageX + 10 + "px";
-    ratingTooltip.style.top = e.pageY + 10 + "px";
-  });
-  ratingItem2.addEventListener("mousemove", (e) => {
-    if (!ratingTooltip) return;
-    ratingTooltip.style.left = e.pageX + 10 + "px";
-    ratingTooltip.style.top = e.pageY + 10 + "px";
-  });
-  ratingItem2.addEventListener("mouseleave", () => {
-    if (!ratingTooltip) return;
-    ratingTooltip.style.display = "none";
-  });
-  rating.appendChild(ratingItem2);
+    const ratingItem2 = document.createElement("div");
+    ratingItem2.className = "rating-item kp-rating-item";
+    const icon2 = document.createElement("img");
+    icon2.src = "images/kp_icon.webp";
+    icon2.alt = "KP Rate";
+    const span2 = document.createElement("span");
+    span2.textContent = movie.kpRating ?? "-";
+    ratingItem2.appendChild(icon2);
+    ratingItem2.appendChild(span2);
+    ratingItem2.addEventListener("click", () =>
+      openKinopoiskPage(movie.title, movie.year, movie.originalTitle)
+    );
+    ratingItem2.addEventListener("mouseenter", (e) => {
+      if (!ratingTooltip) return;
+      ratingTooltip.textContent = `Перейти на Кинопоиск`;
+      ratingTooltip.style.display = "block";
+      ratingTooltip.style.left = e.pageX + 10 + "px";
+      ratingTooltip.style.top = e.pageY + 10 + "px";
+    });
+    ratingItem2.addEventListener("mousemove", (e) => {
+      if (!ratingTooltip) return;
+      ratingTooltip.style.left = e.pageX + 10 + "px";
+      ratingTooltip.style.top = e.pageY + 10 + "px";
+    });
+    ratingItem2.addEventListener("mouseleave", () => {
+      if (!ratingTooltip) return;
+      ratingTooltip.style.display = "none";
+    });
+    rating.appendChild(ratingItem2);
 
-  const ratingItem3 = document.createElement("div");
-  ratingItem3.className = "rating-item rating-user";
-  const icon3 = document.createElement("i");
-  icon3.className = "fa-solid fa-star";
-  const span3 = document.createElement("span");
-  span3.textContent = movie.userRating ?? "-";
-  ratingItem3.appendChild(icon3);
-  ratingItem3.appendChild(span3);
-  const votes = Math.round(movie.ratingCount ?? 0);
-  ratingItem3.addEventListener("mouseenter", (e) => {
-    if (!ratingTooltip) return;
-    ratingTooltip.textContent = `Оценок: ${votes}`;
-    ratingTooltip.style.display = "block";
-    ratingTooltip.style.left = e.pageX + 10 + "px";
-    ratingTooltip.style.top = e.pageY + 10 + "px";
-  });
-  ratingItem3.addEventListener("mousemove", (e) => {
-    if (!ratingTooltip) return;
-    ratingTooltip.style.left = e.pageX + 10 + "px";
-    ratingTooltip.style.top = e.pageY + 10 + "px";
-  });
-  ratingItem3.addEventListener("mouseleave", () => {
-    if (!ratingTooltip) return;
-    ratingTooltip.style.display = "none";
-  });
-  rating.appendChild(ratingItem3);
-  info.appendChild(rating);
+    const ratingItem3 = document.createElement("div");
+    ratingItem3.className = "rating-item rating-user";
+    const icon3 = document.createElement("i");
+    icon3.className = "fa-solid fa-star";
+    const span3 = document.createElement("span");
+    span3.textContent = movie.userRating ?? "-";
+    ratingItem3.appendChild(icon3);
+    ratingItem3.appendChild(span3);
+    const votes = Math.round(movie.ratingCount ?? 0);
+    ratingItem3.addEventListener("mouseenter", (e) => {
+      if (!ratingTooltip) return;
+      ratingTooltip.textContent = `Оценок: ${votes}`;
+      ratingTooltip.style.display = "block";
+      ratingTooltip.style.left = e.pageX + 10 + "px";
+      ratingTooltip.style.top = e.pageY + 10 + "px";
+    });
+    ratingItem3.addEventListener("mousemove", (e) => {
+      if (!ratingTooltip) return;
+      ratingTooltip.style.left = e.pageX + 10 + "px";
+      ratingTooltip.style.top = e.pageY + 10 + "px";
+    });
+    ratingItem3.addEventListener("mouseleave", () => {
+      if (!ratingTooltip) return;
+      ratingTooltip.style.display = "none";
+    });
+    rating.appendChild(ratingItem3);
+    info.appendChild(rating);
+  }
 
   const footer = document.createElement("div");
   footer.className = "movie-footer";
-  const dateDiv = document.createElement("div");
-  dateDiv.className = "movie-date";
-  dateDiv.textContent = `${formatDate(movie.dateAdded)}`;
-  footer.appendChild(dateDiv);
+  if (showDate) {
+    const dateDiv = document.createElement("div");
+    dateDiv.className = "movie-date";
+    dateDiv.textContent = `${formatDate(movie.dateAdded)}`;
+    footer.appendChild(dateDiv);
+  }
 
   const actions = document.createElement("div");
   actions.className = "movie-actions";

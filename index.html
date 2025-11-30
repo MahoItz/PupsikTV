@@ -975,6 +975,17 @@
         </div>
     </div>
 
+    <div id="fortuneMovieModal" class="modal">
+        <div class="modal-content fortune-movie-modal">
+            <span id="fortuneMovieClose" class="close">&times;</span>
+            <div id="fortuneMoviePreview" class="fortune-movie-preview"></div>
+            <div class="fortune-movie-actions">
+                <button id="fortuneMovieCancel" type="button" class="btn btn-secondary">Отменить</button>
+                <button id="fortuneMovieAdd" type="button" class="btn btn-primary">Добавить фильм в рулетку</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Модальное окно напоминания о поиске -->
     <div id="searchReminderModal" class="modal">
         <div class="modal-content">
@@ -1134,6 +1145,9 @@
                         <div class="fortune-controls">
                             <input id="fortuneItemInput" class="fortune-item-input" type="text"
                                 placeholder="Введите фильм и нажмите Enter" autocomplete="off" />
+                            <div id="fortuneAutoResultsContainer" class="fortune-autocomplete" style="display:none">
+                                <div id="fortuneAutoResults" class="autocomplete-list"></div>
+                            </div>
                             <div class="fortune-items-wrapper">
                                 <ul id="fortuneItemsList" class="fortune-items-list" aria-live="polite"
                                     aria-label="Фильмы, добавленные в рулетку"></ul>
