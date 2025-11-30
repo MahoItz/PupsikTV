@@ -63,6 +63,18 @@
     box-shadow: 0 0 30px rgba(0, 212, 255, 0.6), 0 8px 25px rgba(0, 212, 255, 0.3);
 }
 
+.btn-tertiary {
+    background: linear-gradient(135deg, #7c4dff, #b388ff);
+    color: white;
+    box-shadow: 0 0 18px rgba(124, 77, 255, 0.35);
+    border-color: #7c4dff;
+}
+
+.btn-tertiary:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 26px rgba(124, 77, 255, 0.55), 0 8px 22px rgba(124, 77, 255, 0.25);
+}
+
 .btn-small {
     padding: 10px 12px;
 }
