@@ -1079,7 +1079,15 @@ function openFortuneMovieModal(movie) {
 
   fortuneMoviePreview.innerHTML = "";
   if (typeof createMovieCard === "function") {
-    const card = createMovieCard(mapFortuneFilmToMovieCard(movie), false, false);
+    const card = createMovieCard(
+      mapFortuneFilmToMovieCard(movie),
+      false,
+      false,
+      {
+        showRatings: false,
+        showDate: false,
+      }
+    );
     fortuneMoviePreview.appendChild(card);
   }
 
