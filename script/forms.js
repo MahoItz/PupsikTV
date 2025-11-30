@@ -206,6 +206,7 @@ document
           title: sel.nameRu || sel.nameEn || "",
           originalTitle: sel.nameEn || "",
           year: sel.year || "",
+          kinopoiskId: extractKinopoiskIdFromValue(sel.filmId),
           kpRating: sel.rating || "-",
           poster:
             sel.posterUrlPreview ||
@@ -243,6 +244,9 @@ document
         title: document.getElementById("watchManualTitle").value,
         originalTitle: document.getElementById("watchManualOriginTitle").value,
         year: document.getElementById("watchManualYear").value || "",
+        kinopoiskId: extractKinopoiskIdFromValue(
+          document.getElementById("watchManualTitle").value
+        ),
         kpRating: "-",
         poster: poster,
         genres: document.getElementById("watchManualGenre").value || "",
@@ -299,6 +303,7 @@ document
         length: data.order_length || null,
         planDate: data.plan_date || null,
         kpRating: data.kinopoisk_rate,
+        kinopoiskId: orderData.kinopoiskId,
         orderBy: data.order_by,
         orderType: data.order_type,
         dateAdded: data.created_at,
