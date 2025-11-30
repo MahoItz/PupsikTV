@@ -144,8 +144,8 @@ body {
 
 .toast-notification {
     position: relative;
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.12), rgba(255, 108, 66, 0.12));
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.52), rgba(255, 108, 66, 0.52));
+    border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 24px rgba(0, 212, 255, 0.35);
     color: var(--text-primary);
     padding: 14px 18px;
