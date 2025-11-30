@@ -4,7 +4,7 @@ function copyScheduledMoviesToClipboard() {
   const scheduledMovies = getSortedWatchlist().filter(item => item.planDate);
   
   if (scheduledMovies.length === 0) {
-    alert("Нет запланированных фильмов для копирования");
+    showToastNotification("Нет запланированных фильмов для копирования", "warning");
     return;
   }
   
@@ -55,11 +55,11 @@ function copyScheduledMoviesToClipboard() {
   // Копируем в буфер обмена
   navigator.clipboard.writeText(formattedList)
     .then(() => {
-      alert(`Список из ${scheduledMovies.length} запланированных фильмов скопирован в буфер обмена`);
+      showToastNotification(`Список из ${scheduledMovies.length} запланированных фильмов скопирован в буфер обмена`, "success");
     })
     .catch(err => {
       console.error("Ошибка при копировании в буфер обмена:", err);
-      alert("Не удалось скопировать список в буфер обмена");
+      showToastNotification("Не удалось скопировать список в буфер обмена", "error");
     });
 }
 
@@ -87,4 +87,36 @@ function formatTime(date) {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
+}
+
+function showToastNotification(message, type = "success") {
+  const normalizedType = ["success", "warning", "error"].includes(type) ? type : "success";
+  let container = document.getElementById("toastContainer");
+
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast-container";
+    container.setAttribute("aria-live", "polite");
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.className = `toast-notification toast-${normalizedType}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add("visible");
+  });
+
+  setTimeout(() => {
+    toast.classList.remove("visible");
+    setTimeout(() => {
+      toast.remove();
+      if (!container.hasChildNodes()) {
+        container.remove();
+      }
+    }, 280);
+  }, 2600);
 }

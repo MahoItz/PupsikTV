@@ -32,6 +32,10 @@
 
 .watchlist-header .btn-icon {
     margin-left: 0;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    font-size: 1.1rem;
 }
 
 .order-card {

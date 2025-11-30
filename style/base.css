@@ -129,3 +129,64 @@ body {
     }
 }
 
+.toast-container {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 5000;
+    pointer-events: none;
+    width: min(520px, 90vw);
+}
+
+.toast-notification {
+    position: relative;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.12), rgba(255, 108, 66, 0.12));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 24px rgba(0, 212, 255, 0.35);
+    color: var(--text-primary);
+    padding: 14px 18px;
+    border-radius: var(--border-radius-small);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    transition: var(--transition);
+}
+
+.toast-notification::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary-color), #26c6da);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.7);
+}
+
+.toast-notification.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.toast-notification.toast-success {
+    border-color: rgba(0, 212, 255, 0.35);
+}
+
+.toast-notification.toast-warning {
+    border-color: rgba(255, 214, 102, 0.35);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 24px rgba(255, 214, 102, 0.35);
+}
+
+.toast-notification.toast-error {
+    border-color: rgba(255, 108, 66, 0.5);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 24px rgba(255, 108, 66, 0.45);
+}
+
