@@ -328,6 +328,7 @@ async function loadWatchlistFromSupabase() {
       length: item.order_length || null,
       planDate: item.plan_date || null,
       kpRating: item.kinopoisk_rate,
+      kinopoiskId: extractKinopoiskIdFromValue(item.order_poster),
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
       dateAdded: item.created_at,

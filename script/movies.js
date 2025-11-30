@@ -412,6 +412,27 @@ function createMovieCard(movie, showActions = isAdmin, showRateButton = true) {
 }
 
 // Отображение списка к просмотру
+function deriveKinopoiskIdFromOrder(order) {
+  if (!order) return null;
+
+  return (
+    getKinopoiskIdFromMovie(order) || extractKinopoiskIdFromValue(order.poster)
+  );
+}
+
+function buildReyohohoUrlForOrder(order) {
+  const kpId = deriveKinopoiskIdFromOrder(order);
+  return kpId ? `${REYOHOHO_BASE_URL}#${kpId}` : REYOHOHO_BASE_URL;
+}
+
+function openOrderOnReyohoho(order) {
+  const targetUrl = buildReyohohoUrlForOrder(order);
+  const newWindow = window.open(targetUrl, "_blank");
+  if (!newWindow) {
+    console.warn("ReYohoho window was blocked by the browser");
+  }
+}
+
 function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const wrapper = document.createElement("div");
   wrapper.className = "order-wrapper";
@@ -454,6 +475,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   poster.onerror = () => {
     poster.style.display = "none";
   };
+  poster.addEventListener("click", () => openOrderOnReyohoho(order));
   card.appendChild(poster);
 
   const info = document.createElement("div");
