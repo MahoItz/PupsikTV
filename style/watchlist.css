@@ -24,8 +24,14 @@
     margin-bottom: 0;
 }
 
-.watchlist-header .btn-icon {
+.watchlist-header-buttons {
+    display: flex;
+    gap: 8px;
     margin-left: auto;
+}
+
+.watchlist-header .btn-icon {
+    margin-left: 0;
 }
 
 .order-card {
@@ -237,4 +243,3 @@
     display: flex;
     gap: 8px;
 }
-
