@@ -1158,7 +1158,9 @@ function renderFortuneParentGuide(data) {
     if (fortuneParentGuideContent) {
       fortuneParentGuideContent.style.display = "none";
     }
-    setFortuneParentGuideStatus("Для этого фильма нет данных руководства.");
+    setFortuneParentGuideStatus(
+      "Нет данных в разделах Sex & Nudity, Violence & Gore, Profanity."
+    );
     return;
   }
 
