@@ -1132,7 +1132,10 @@ function renderFortuneParentGuideList(listEl, items) {
 }
 
 function renderFortuneParentGuide(data) {
-  const translated = data?.translated || {};
+  const translated =
+    data?.translated?.sections && typeof data.translated.sections === "object"
+      ? data.translated.sections
+      : data?.translated || {};
   const original = data?.original || {};
 
   const sections = {
@@ -1171,7 +1174,7 @@ function renderFortuneParentGuide(data) {
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "grid";
   }
-  setFortuneParentGuideStatus("Перевод разделов");
+  setFortuneParentGuideStatus("Переведённые разделы загружены");
 }
 
 function setFortuneParentGuideError(message) {
@@ -1221,7 +1224,7 @@ async function fetchFortuneParentGuide(imdbId) {
   }
 
   const requestId = ++fortuneParentGuideRequestId;
-  setFortuneParentGuideStatus("Загружаем руководство IMDb...");
+  setFortuneParentGuideStatus("Загружаем информацию из IMDb...");
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "none";
   }
@@ -1245,6 +1248,7 @@ async function fetchFortuneParentGuide(imdbId) {
     if (requestId !== fortuneParentGuideRequestId) {
       return;
     }
+    setFortuneParentGuideStatus("Переводим на русский язык...");
     renderFortuneParentGuide(data);
   } catch (err) {
     if (requestId !== fortuneParentGuideRequestId) {
