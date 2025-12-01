@@ -107,6 +107,52 @@ async function translateSections(sections, apiKey) {
   }
 }
 
+function normalizeSections(original, translated) {
+  const source =
+    translated && typeof translated === "object" && !Array.isArray(translated)
+      ? translated.sections && typeof translated.sections === "object"
+        ? translated.sections
+        : translated
+      : {};
+
+  const ensureArray = (value) =>
+    Array.isArray(value)
+      ? value
+      : typeof value === "string" && value.trim()
+        ? [value]
+        : [];
+
+  return Object.fromEntries(
+    Object.keys(SECTION_MARKERS).map((key) => {
+      const translatedItems = ensureArray(source[key])
+        .map((item) => String(item).trim())
+        .filter(Boolean);
+      const originalItems = ensureArray(original[key])
+        .map((item) => String(item).trim())
+        .filter(Boolean);
+
+      return [key, translatedItems.length ? translatedItems : originalItems];
+    })
+  );
+}
+
+async function translateSectionsWithRetry(sections, apiKey, attempts = 2) {
+  let lastError = null;
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      const translated = await translateSections(sections, apiKey);
+      return normalizeSections(sections, translated);
+    } catch (err) {
+      lastError = err;
+      console.error("[imdb-parent-guide] translation attempt failed", {
+        attempt: i + 1,
+        message: err.message,
+      });
+    }
+  }
+  throw lastError || new Error("Translation failed");
+}
+
 export default async function handler(req, res) {
   const { id } = req.query || {};
   if (!id) {
@@ -153,9 +199,21 @@ export default async function handler(req, res) {
       profanity: sections.profanity,
     });
 
-    const translation = await translateSections(sections, apiKey);
+    let translatedSections = {};
+    try {
+      translatedSections = await translateSectionsWithRetry(sections, apiKey);
+    } catch (err) {
+      console.error("[imdb-parent-guide] translation failed, using originals", err);
+      translatedSections = {};
+    }
 
-    res.status(200).json({ original: sections, translated: translation });
+    res.status(200).json({
+      original: sections,
+      translated: translatedSections,
+      translationStatus: translatedSections && Object.keys(translatedSections).length
+        ? "translated"
+        : "original",
+    });
   } catch (err) {
     res.status(500).json({ error: "Server error", message: err.message });
   }
