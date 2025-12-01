@@ -62,7 +62,7 @@ function extractSection(html, markers = []) {
 
 async function translateSections(sections, apiKey) {
   const body = {
-    model: "openai/gpt-oss-20b:free",
+    model: "qwen/qwen3-235b-a22b:free",
     messages: [
       {
         role: "system",
