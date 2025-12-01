@@ -62,7 +62,7 @@ function extractSection(html, markers = []) {
 
 async function translateSections(sections, apiKey) {
   const body = {
-    model: "qwen/qwen3-235b-a22b:free",
+    model: "meta-llama/llama-3.3-70b-instruct:free",
     messages: [
       {
         role: "system",
