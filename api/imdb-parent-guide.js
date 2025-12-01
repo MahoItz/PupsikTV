@@ -8,21 +8,23 @@ const SECTION_IDS = {
 
 function extractSection(html, sectionId) {
   const safeId = String(sectionId || '').replace(/[^a-zA-Z0-9_-]/g, '');
-  let sectionHtml = '';
 
-  try {
-    const pattern = new RegExp(
-      String.raw`<section[^>]*\bid="${safeId}"[\s\S]*?<\/section>`,
-      'i'
-    );
-    const sectionMatch = html.match(pattern);
-    if (!sectionMatch) return [];
-    sectionHtml = sectionMatch[0];
-  } catch (err) {
-    return [];
-  }
+  if (!safeId) return [];
+
+  const idIndex = html.indexOf(`id="${safeId}"`);
+  if (idIndex === -1) return [];
+
+  const sectionStart = html.lastIndexOf('<section', idIndex);
+  if (sectionStart === -1) return [];
+
+  const sectionEnd = html.indexOf('</section>', idIndex);
+  if (sectionEnd === -1) return [];
+
+  const sectionHtml = html.slice(sectionStart, sectionEnd + '</section>'.length);
+
   const items = sectionHtml.split(/<li[^>]*>/i).slice(1);
   const cleanText = (text) => text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
   const results = items
     .map((item) => {
       const listItem = item.split(/<\\/li>/i)[0] || '';
@@ -34,6 +36,7 @@ function extractSection(html, sectionId) {
       return combined.trim();
     })
     .filter(Boolean);
+
   return results;
 }
 
