@@ -372,9 +372,10 @@
 #fortuneMovieModal .fortune-parent-guide {
     margin-top: 20px;
     padding: 16px 18px;
-    background: #f7f8fb;
+    background: linear-gradient(180deg, #f7f8fb 0%, #f2f5fb 100%);
     border: 1px solid #e3e6ed;
-    border-radius: 12px;
+    border-radius: 14px;
+    box-shadow: 0 6px 14px rgba(29, 37, 68, 0.08);
 }
 
 #fortuneMovieModal .fortune-parent-guide__header {
@@ -389,21 +390,49 @@
     color: #4a4f63;
 }
 
+#fortuneMovieModal .fortune-parent-guide__hint {
+    margin-top: 6px;
+    color: #6a6f85;
+    font-size: 14px;
+}
+
 #fortuneMovieModal .fortune-parent-guide__content {
     margin-top: 14px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 12px;
 }
 
+#fortuneMovieModal .fortune-parent-guide__category {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #e2e5ef;
+    box-shadow: 0 2px 6px rgba(10, 15, 35, 0.06);
+    position: relative;
+}
+
+#fortuneMovieModal .fortune-parent-guide__category::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 12px;
+    bottom: 12px;
+    width: 4px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #7b8cfe 0%, #98c9ff 100%);
+}
+
 #fortuneMovieModal .fortune-parent-guide__category h4 {
-    margin-bottom: 8px;
+    margin: 0 0 8px 10px;
     font-size: 16px;
+    color: #1f2430;
 }
 
 #fortuneMovieModal .fortune-parent-guide__list {
     list-style: disc;
-    padding-left: 18px;
+    padding-left: 24px;
     color: #2f3241;
     display: flex;
     flex-direction: column;
