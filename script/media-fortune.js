@@ -1171,7 +1171,7 @@ function renderFortuneParentGuide(data) {
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "grid";
   }
-  setFortuneParentGuideStatus("Перевод разделов с IMDb");
+  setFortuneParentGuideStatus("Перевод разделов");
 }
 
 function setFortuneParentGuideError(message) {
