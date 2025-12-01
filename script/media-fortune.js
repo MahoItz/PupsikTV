@@ -1048,6 +1048,15 @@ function getFortuneMovieLabel(movie) {
   return yearValue ? `${baseTitle} (${yearValue})` : baseTitle;
 }
 
+function mapFortuneFilmResult(movie) {
+  const imdbId = movie?.imdbId || movie?.imdbID || null;
+  return {
+    ...movie,
+    imdbId,
+    fortuneLabel: getFortuneMovieLabel(movie),
+  };
+}
+
 function mapFortuneFilmToMovieCard(movie) {
   return {
     id: 0,
@@ -1072,7 +1081,7 @@ function openFortuneMovieModal(movie) {
     return;
   }
 
-  const label = getFortuneMovieLabel(movie);
+  const label = movie?.fortuneLabel || getFortuneMovieLabel(movie);
   if (fortuneItemInput && label) {
     fortuneItemInput.value = label;
   }
@@ -1133,14 +1142,14 @@ const debouncedFortuneKPSearch = debounce(async (query) => {
     });
 
     const data = await res.json();
-    fortuneKpResults = data.films || [];
+    fortuneKpResults = (data.films || []).map(mapFortuneFilmResult);
 
     fortuneAutoResults.innerHTML = "";
     fortuneKpResults.forEach((film, idx) => {
       const option = document.createElement("div");
       option.className = "autocomplete-option";
       option.dataset.index = idx;
-      const label = getFortuneMovieLabel(film);
+      const label = film?.fortuneLabel || getFortuneMovieLabel(film);
       option.textContent = label || "Без названия";
       fortuneAutoResults.appendChild(option);
     });
@@ -1192,9 +1201,13 @@ if (fortuneMovieAdd) {
       return;
     }
 
-    const label = getFortuneMovieLabel(selectedFortuneKPMovie);
+    const label =
+      selectedFortuneKPMovie?.fortuneLabel ||
+      getFortuneMovieLabel(selectedFortuneKPMovie);
     if (label) {
-      fortuneWheelApi.addItem(label);
+      fortuneWheelApi.addItem(label, {
+        imdbId: selectedFortuneKPMovie?.imdbId || null,
+      });
       resetFortuneAutocomplete();
       if (fortuneItemInput) {
         fortuneItemInput.value = "";
@@ -1318,6 +1331,26 @@ function initFortuneWheel() {
   let eliminatedOrder = [];
   let lastEliminatedLabel = null;
   let pendingFortuneItemLabel = null;
+  let pendingFortuneItemOptions = null;
+  const fortuneItemMetadata = new Map();
+
+  function setFortuneItemMetadata(label, metadata = {}) {
+    const normalizedLabel = (label || "").trim();
+    if (!normalizedLabel) {
+      return;
+    }
+
+    const normalizedMetadata = {};
+    if (metadata?.imdbId) {
+      normalizedMetadata.imdbId = metadata.imdbId;
+    }
+
+    if (Object.keys(normalizedMetadata).length > 0) {
+      fortuneItemMetadata.set(normalizedLabel, normalizedMetadata);
+    } else {
+      fortuneItemMetadata.delete(normalizedLabel);
+    }
+  }
 
   function registerElimination(label) {
     if (!label) {
@@ -1351,14 +1384,15 @@ function initFortuneWheel() {
 
   function resetFortuneDuplicateState() {
     pendingFortuneItemLabel = null;
+    pendingFortuneItemOptions = null;
     if (fortuneDuplicateDetails) {
       fortuneDuplicateDetails.textContent = "";
     }
   }
 
-  function showFortuneDuplicateNotice(match, label) {
+  function showFortuneDuplicateNotice(match, label, options = {}) {
     if (!fortuneDuplicateModal || !fortuneDuplicateMessage) {
-      commitFortuneItem(label);
+      commitFortuneItem(label, options);
       resetFortuneDuplicateState();
       return;
     }
@@ -1406,7 +1440,7 @@ function initFortuneWheel() {
     }
   }
 
-  function commitFortuneItem(label) {
+  function commitFortuneItem(label, options = {}) {
     const value = (label || "").trim();
     if (!value) {
       if (fortuneItemInput) {
@@ -1425,6 +1459,7 @@ function initFortuneWheel() {
     }
 
     activeItems.push(value);
+    setFortuneItemMetadata(value, { imdbId: options.imdbId });
     input.value = activeItems.join("\n");
     if (fortuneItemInput) {
       fortuneItemInput.value = "";
@@ -1434,7 +1469,7 @@ function initFortuneWheel() {
   }
 
   function addFortuneItem(label, options = {}) {
-    const { skipDuplicateCheck = false } = options;
+    const { skipDuplicateCheck = false, imdbId = null } = options;
     const value = (label || "").trim();
     if (!value) {
       if (fortuneItemInput) {
@@ -1457,12 +1492,13 @@ function initFortuneWheel() {
       const match = findFortuneMovieMatch(parsed, allMovies);
       if (match) {
         pendingFortuneItemLabel = value;
-        showFortuneDuplicateNotice(match, value);
+        pendingFortuneItemOptions = { imdbId };
+        showFortuneDuplicateNotice(match, value, { imdbId });
         return;
       }
     }
 
-    commitFortuneItem(value);
+    commitFortuneItem(value, { imdbId });
     resetFortuneDuplicateState();
   }
 
@@ -1489,10 +1525,14 @@ function initFortuneWheel() {
   if (fortuneDuplicateConfirm) {
     fortuneDuplicateConfirm.addEventListener("click", () => {
       const pendingLabel = pendingFortuneItemLabel;
+      const pendingOptions = pendingFortuneItemOptions;
       closeModal("fortuneDuplicateModal");
       resetFortuneDuplicateState();
       if (pendingLabel) {
-        addFortuneItem(pendingLabel, { skipDuplicateCheck: true });
+        addFortuneItem(pendingLabel, {
+          ...pendingOptions,
+          skipDuplicateCheck: true,
+        });
       }
     });
   }
@@ -2185,6 +2225,12 @@ function initFortuneWheel() {
       lastEliminatedLabel = null;
     }
 
+    fortuneItemMetadata.forEach((_, label) => {
+      if (!items.includes(label)) {
+        fortuneItemMetadata.delete(label);
+      }
+    });
+
     if (items.length === 0) {
       startIdleAnimation();
     } else {
@@ -2213,6 +2259,7 @@ function initFortuneWheel() {
     input.value = "";
     items = [];
     eliminatedItems.clear();
+    fortuneItemMetadata.clear();
     clearEliminatedHistory();
     lastEliminatedLabel = null;
     hideResultOverlay();
