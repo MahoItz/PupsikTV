@@ -104,6 +104,18 @@ const fortuneMovieClose = document.getElementById("fortuneMovieClose");
 const fortuneMoviePreview = document.getElementById("fortuneMoviePreview");
 const fortuneMovieCancel = document.getElementById("fortuneMovieCancel");
 const fortuneMovieAdd = document.getElementById("fortuneMovieAdd");
+const fortuneParentGuideStatus = document.getElementById(
+  "fortuneParentGuideStatus"
+);
+const fortuneParentGuideContent = document.getElementById(
+  "fortuneParentGuideContent"
+);
+const fortuneParentGuideLists = {
+  sexAndNudity: document.getElementById("fortuneParentGuideSex"),
+  violenceAndGore: document.getElementById("fortuneParentGuideViolence"),
+  profanity: document.getElementById("fortuneParentGuideProfanity"),
+};
+let fortuneParentGuideRequestId = 0;
 const fortuneItemInput = document.getElementById("fortuneItemInput");
 let fortuneKpResults = [];
 let selectedFortuneKPMovie = null;
@@ -1076,6 +1088,141 @@ function mapFortuneFilmToMovieCard(movie) {
   };
 }
 
+function setFortuneParentGuideStatus(message) {
+  if (fortuneParentGuideStatus) {
+    fortuneParentGuideStatus.textContent = message;
+  }
+}
+
+function resetFortuneParentGuide(message = "Выберите фильм, чтобы увидеть содержание руководства") {
+  setFortuneParentGuideStatus(message);
+  if (fortuneParentGuideContent) {
+    fortuneParentGuideContent.style.display = "none";
+  }
+  Object.values(fortuneParentGuideLists).forEach((list) => {
+    if (list) {
+      list.innerHTML = "";
+    }
+  });
+}
+
+function renderFortuneParentGuideList(listEl, items) {
+  if (!listEl) {
+    return;
+  }
+
+  listEl.innerHTML = "";
+  if (!items || items.length === 0) {
+    const emptyItem = document.createElement("li");
+    emptyItem.textContent = "Нет данных";
+    emptyItem.className = "fortune-parent-guide__empty";
+    listEl.appendChild(emptyItem);
+    return;
+  }
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.textContent = item;
+    listEl.appendChild(li);
+  });
+}
+
+function renderFortuneParentGuide(data) {
+  const translated = data?.translated || {};
+  const original = data?.original || {};
+
+  const sections = {
+    sexAndNudity:
+      translated.sexAndNudity?.length > 0
+        ? translated.sexAndNudity
+        : original.sexAndNudity || [],
+    violenceAndGore:
+      translated.violenceAndGore?.length > 0
+        ? translated.violenceAndGore
+        : original.violenceAndGore || [],
+    profanity:
+      translated.profanity?.length > 0
+        ? translated.profanity
+        : original.profanity || [],
+  };
+
+  const hasAny = Object.values(sections).some(
+    (items) => Array.isArray(items) && items.length > 0
+  );
+
+  if (!hasAny) {
+    if (fortuneParentGuideContent) {
+      fortuneParentGuideContent.style.display = "none";
+    }
+    setFortuneParentGuideStatus("Для этого фильма нет данных руководства.");
+    return;
+  }
+
+  Object.entries(sections).forEach(([key, items]) => {
+    renderFortuneParentGuideList(fortuneParentGuideLists[key], items);
+  });
+
+  if (fortuneParentGuideContent) {
+    fortuneParentGuideContent.style.display = "grid";
+  }
+  setFortuneParentGuideStatus("Перевод разделов с IMDb");
+}
+
+function setFortuneParentGuideError(message) {
+  if (fortuneParentGuideContent) {
+    fortuneParentGuideContent.style.display = "none";
+  }
+  Object.values(fortuneParentGuideLists).forEach((list) => {
+    if (list) {
+      list.innerHTML = "";
+    }
+  });
+  setFortuneParentGuideStatus(message);
+}
+
+async function fetchFortuneParentGuide(imdbId) {
+  if (!imdbId) {
+    setFortuneParentGuideError("Для выбранного фильма нет IMDb ID.");
+    return;
+  }
+
+  const requestId = ++fortuneParentGuideRequestId;
+  setFortuneParentGuideStatus("Загружаем руководство IMDb...");
+  if (fortuneParentGuideContent) {
+    fortuneParentGuideContent.style.display = "none";
+  }
+  Object.values(fortuneParentGuideLists).forEach((list) => {
+    if (list) {
+      list.innerHTML = "";
+    }
+  });
+
+  try {
+    const response = await fetch(
+      `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}`
+    );
+    if (requestId !== fortuneParentGuideRequestId) {
+      return;
+    }
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status}`);
+    }
+    const data = await response.json();
+    if (requestId !== fortuneParentGuideRequestId) {
+      return;
+    }
+    renderFortuneParentGuide(data);
+  } catch (err) {
+    if (requestId !== fortuneParentGuideRequestId) {
+      return;
+    }
+    console.error("Failed to load parental guide", err);
+    setFortuneParentGuideError(
+      "Не удалось загрузить родительский гайд. Попробуйте позже."
+    );
+  }
+}
+
 function openFortuneMovieModal(movie) {
   if (!fortuneMovieModal || !fortuneMoviePreview) {
     return;
@@ -1087,6 +1234,7 @@ function openFortuneMovieModal(movie) {
   }
 
   fortuneMoviePreview.innerHTML = "";
+  resetFortuneParentGuide();
   if (typeof createMovieCard === "function") {
     const card = createMovieCard(
       mapFortuneFilmToMovieCard(movie),
@@ -1098,6 +1246,13 @@ function openFortuneMovieModal(movie) {
       }
     );
     fortuneMoviePreview.appendChild(card);
+  }
+
+  const imdbId = movie?.imdbId || null;
+  if (imdbId) {
+    fetchFortuneParentGuide(imdbId);
+  } else {
+    setFortuneParentGuideError("Для выбранного фильма нет IMDb ID.");
   }
 
   fortuneMovieModal.style.display = "block";
