@@ -78,6 +78,8 @@ const fortuneSuggestionsClose = document.getElementById(
   "fortuneSuggestionsClose"
 );
 const FORTUNE_SUGGESTIONS_POLL_INTERVAL = 3000;
+const KINOPOISK_FILM_URL =
+  "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 const fortuneSuggestionsState = {
   pollTimerId: null,
   isFetching: false,
@@ -1062,9 +1064,11 @@ function getFortuneMovieLabel(movie) {
 
 function mapFortuneFilmResult(movie) {
   const imdbId = movie?.imdbId || movie?.imdbID || null;
+  const kinopoiskId = movie?.kinopoiskId || movie?.filmId || movie?.id || null;
   return {
     ...movie,
     imdbId,
+    kinopoiskId,
     fortuneLabel: getFortuneMovieLabel(movie),
   };
 }
@@ -1180,6 +1184,34 @@ function setFortuneParentGuideError(message) {
   setFortuneParentGuideStatus(message);
 }
 
+async function fetchFortuneImdbId(kinopoiskId) {
+  if (!kinopoiskId || !KINOPOISK_API_KEY) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `${KINOPOISK_FILM_URL}/${encodeURIComponent(kinopoiskId)}`,
+      {
+        headers: {
+          "X-API-KEY": KINOPOISK_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Kinopoisk film request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data?.imdbId || null;
+  } catch (err) {
+    console.error("Failed to fetch IMDb ID from Kinopoisk", err);
+    return null;
+  }
+}
+
 async function fetchFortuneParentGuide(imdbId) {
   if (!imdbId) {
     setFortuneParentGuideError("Для выбранного фильма нет IMDb ID.");
@@ -1223,7 +1255,7 @@ async function fetchFortuneParentGuide(imdbId) {
   }
 }
 
-function openFortuneMovieModal(movie) {
+async function openFortuneMovieModal(movie) {
   if (!fortuneMovieModal || !fortuneMoviePreview) {
     return;
   }
@@ -1248,7 +1280,17 @@ function openFortuneMovieModal(movie) {
     fortuneMoviePreview.appendChild(card);
   }
 
-  const imdbId = movie?.imdbId || null;
+  let imdbId = movie?.imdbId || null;
+  const kinopoiskId = movie?.kinopoiskId || movie?.filmId || movie?.id || null;
+
+  if (!imdbId && kinopoiskId) {
+    setFortuneParentGuideStatus("Ищем IMDb ID на Кинопоиске...");
+    imdbId = await fetchFortuneImdbId(kinopoiskId);
+    if (imdbId) {
+      selectedFortuneKPMovie = { ...movie, imdbId, kinopoiskId };
+    }
+  }
+
   if (imdbId) {
     fetchFortuneParentGuide(imdbId);
   } else {
@@ -1317,7 +1359,7 @@ const debouncedFortuneKPSearch = debounce(async (query) => {
 }, 120);
 
 if (fortuneAutoResults) {
-  fortuneAutoResults.addEventListener("click", (event) => {
+  fortuneAutoResults.addEventListener("click", async (event) => {
     const option = event.target.closest(".autocomplete-option");
     if (!option) {
       return;
@@ -1330,7 +1372,7 @@ if (fortuneAutoResults) {
     }
 
     setFortuneAutocompleteVisible(false);
-    openFortuneMovieModal(selectedFortuneKPMovie);
+    await openFortuneMovieModal(selectedFortuneKPMovie);
   });
 }
 
