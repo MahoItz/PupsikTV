@@ -78,7 +78,7 @@ const fortuneSuggestionsClose = document.getElementById(
   "fortuneSuggestionsClose"
 );
 const FORTUNE_SUGGESTIONS_POLL_INTERVAL = 3000;
-const KINOPOISK_FILM_URL =
+const FORTUNE_KINOPOISK_FILM_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 const fortuneSuggestionsState = {
   pollTimerId: null,
@@ -1191,7 +1191,7 @@ async function fetchFortuneImdbId(kinopoiskId) {
 
   try {
     const response = await fetch(
-      `${KINOPOISK_FILM_URL}/${encodeURIComponent(kinopoiskId)}`,
+      `${FORTUNE_KINOPOISK_FILM_URL}/${encodeURIComponent(kinopoiskId)}`,
       {
         headers: {
           "X-API-KEY": KINOPOISK_API_KEY,
@@ -1281,16 +1281,6 @@ async function openFortuneMovieModal(movie) {
   }
 
   let imdbId = movie?.imdbId || null;
-  const kinopoiskId = movie?.kinopoiskId || movie?.filmId || movie?.id || null;
-
-  if (!imdbId && kinopoiskId) {
-    setFortuneParentGuideStatus("Ищем IMDb ID на Кинопоиске...");
-    imdbId = await fetchFortuneImdbId(kinopoiskId);
-    if (imdbId) {
-      selectedFortuneKPMovie = { ...movie, imdbId, kinopoiskId };
-    }
-  }
-
   if (imdbId) {
     fetchFortuneParentGuide(imdbId);
   } else {
@@ -1366,12 +1356,23 @@ if (fortuneAutoResults) {
     }
 
     const idx = Number(option.dataset.index);
-    selectedFortuneKPMovie = fortuneKpResults[idx] || null;
-    if (!selectedFortuneKPMovie) {
+    const chosenMovie = fortuneKpResults[idx] || null;
+    if (!chosenMovie) {
       return;
     }
 
     setFortuneAutocompleteVisible(false);
+
+    const kinopoiskId =
+      chosenMovie?.kinopoiskId || chosenMovie?.filmId || chosenMovie?.id || null;
+    let imdbId = chosenMovie?.imdbId || null;
+
+    if (!imdbId && kinopoiskId) {
+      setFortuneParentGuideStatus("Ищем IMDb ID на Кинопоиске...");
+      imdbId = await fetchFortuneImdbId(kinopoiskId);
+    }
+
+    selectedFortuneKPMovie = { ...chosenMovie, imdbId, kinopoiskId };
     await openFortuneMovieModal(selectedFortuneKPMovie);
   });
 }
