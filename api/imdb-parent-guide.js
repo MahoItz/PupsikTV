@@ -27,9 +27,9 @@ function extractSection(html, sectionId) {
 
   const results = items
     .map((item) => {
-      const listItem = item.split(/<\\/li>/i)[0] || '';
-      const severityMatch = listItem.match(/data-testid="advisory-severity-vote"[^>]*>(.*?)<\\/span>/i);
-      const contentMatch = listItem.match(/<p[^>]*>([\\s\\S]*?)<\\/p>/i) || listItem.match(/([\\s\\S]*)/);
+      const listItem = item.split(/<\/li>/i)[0] || '';
+      const severityMatch = listItem.match(/data-testid="advisory-severity-vote"[^>]*>(.*?)<\/span>/i);
+      const contentMatch = listItem.match(/<p[^>]*>([\s\S]*?)<\/p>/i) || listItem.match(/([\s\S]*)/);
       const content = cleanText(contentMatch ? contentMatch[1] : '');
       const severity = severityMatch ? cleanText(severityMatch[1]) : '';
       const combined = severity ? `${severity}: ${content}` : content;
