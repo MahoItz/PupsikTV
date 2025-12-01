@@ -372,9 +372,12 @@
 #fortuneMovieModal .fortune-parent-guide {
     margin-top: 20px;
     padding: 16px 18px;
-    background: #f7f8fb;
-    border: 1px solid #e3e6ed;
-    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(20, 25, 40, 0.95), rgba(10, 10, 20, 0.95));
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    border-radius: 14px;
+    box-shadow:
+        0 6px 14px rgba(0, 0, 0, 0.55),
+        0 0 24px rgba(0, 212, 255, 0.16);
 }
 
 #fortuneMovieModal .fortune-parent-guide__header {
@@ -386,25 +389,55 @@
 
 #fortuneMovieModal .fortune-parent-guide__status {
     font-size: 14px;
-    color: #4a4f63;
+    color: var(--text-secondary);
+}
+
+#fortuneMovieModal .fortune-parent-guide__hint {
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 14px;
 }
 
 #fortuneMovieModal .fortune-parent-guide__content {
     margin-top: 14px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 12px;
 }
 
+#fortuneMovieModal .fortune-parent-guide__category {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(0, 212, 255, 0.14);
+    box-shadow:
+        0 2px 12px rgba(0, 0, 0, 0.35),
+        0 8px 24px rgba(0, 212, 255, 0.08);
+    position: relative;
+}
+
+#fortuneMovieModal .fortune-parent-guide__category::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 12px;
+    bottom: 12px;
+    width: 4px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+}
+
 #fortuneMovieModal .fortune-parent-guide__category h4 {
-    margin-bottom: 8px;
+    margin: 0 0 8px 10px;
     font-size: 16px;
+    color: var(--text-primary);
 }
 
 #fortuneMovieModal .fortune-parent-guide__list {
     list-style: disc;
-    padding-left: 18px;
-    color: #2f3241;
+    padding-left: 24px;
+    color: var(--text-secondary);
     display: flex;
     flex-direction: column;
     gap: 6px;
