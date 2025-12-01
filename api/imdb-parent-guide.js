@@ -7,9 +7,20 @@ const SECTION_IDS = {
 };
 
 function extractSection(html, sectionId) {
-  const sectionMatch = html.match(new RegExp(`<section[^>]*id="${sectionId}"[\\s\\S]*?<\\/section>`, 'i'));
-  if (!sectionMatch) return [];
-  const sectionHtml = sectionMatch[0];
+  const safeId = String(sectionId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+  let sectionHtml = '';
+
+  try {
+    const pattern = new RegExp(
+      String.raw`<section[^>]*\bid="${safeId}"[\s\S]*?<\/section>`,
+      'i'
+    );
+    const sectionMatch = html.match(pattern);
+    if (!sectionMatch) return [];
+    sectionHtml = sectionMatch[0];
+  } catch (err) {
+    return [];
+  }
   const items = sectionHtml.split(/<li[^>]*>/i).slice(1);
   const cleanText = (text) => text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const results = items
