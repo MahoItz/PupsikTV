@@ -637,7 +637,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       debouncedKPSearch(q);
     });
   if (resultsContainer)
-    resultsContainer.addEventListener("click", function (e) {
+    resultsContainer.addEventListener("click", async function (e) {
       const option = e.target.closest(".autocomplete-option");
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
@@ -645,6 +645,11 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (selectedKPMovie) {
         titleInput.value =
           selectedKPMovie.nameRu || selectedKPMovie.nameEn || "";
+        if (selectedKPMovie.filmId && !selectedKPMovie.imdbId) {
+          selectedKPMovie.imdbId = await fetchKPImdbId(
+            selectedKPMovie.filmId
+          );
+        }
       }
       syncRouletteAutofillState();
       showKPPreview();

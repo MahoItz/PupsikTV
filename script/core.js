@@ -1718,6 +1718,23 @@ async function fetchKPFilmLength(filmId) {
   }
 }
 
+async function fetchKPImdbId(filmId) {
+  if (!filmId) return null;
+  try {
+    const res = await fetch(`${KINOPOISK_FILM_URL}/${filmId}`, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await res.json();
+    return data.imdbId || null;
+  } catch (err) {
+    console.error("Failed to fetch film IMDb id", err);
+    return null;
+  }
+}
+
 async function fetchSteamGridPosters(title) {
   steamGridPoster = null;
   steamGridPosters = [];

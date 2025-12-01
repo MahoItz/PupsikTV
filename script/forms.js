@@ -38,6 +38,7 @@ document
           year: sel.year || new Date().getFullYear(),
           rating: rating,
           kpRating: sel.rating || "-",
+          imdbId: sel.imdbId || null,
           poster:
             sel.posterUrlPreview ||
             sel.posterUrl ||
@@ -54,6 +55,7 @@ document
           year: new Date().getFullYear(),
           rating: rating,
           kpRating: "-",
+          imdbId: null,
           poster: "https://via.placeholder.com/300x400?text=Постер",
           dateAdded: new Date().toISOString().split("T")[0],
           genre: "Неизвестно",
@@ -80,6 +82,7 @@ document
           new Date().getFullYear(),
         rating: rating,
         kpRating: "-",
+        imdbId: null,
         poster: poster,
         dateAdded: new Date().toISOString().split("T")[0],
         genre: document.getElementById("manualGenre").value || "Неизвестно",
