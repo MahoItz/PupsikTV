@@ -1235,16 +1235,7 @@ async function fetchFortuneParentGuide(imdbId) {
   });
 
   try {
-    const response = await fetch(
-      `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}`
-    );
-    if (requestId !== fortuneParentGuideRequestId) {
-      return;
-    }
-    if (!response.ok) {
-      throw new Error(`Request failed: ${response.status}`);
-    }
-    const data = await response.json();
+    const data = await loadFortuneParentGuideData(imdbId);
     if (requestId !== fortuneParentGuideRequestId) {
       return;
     }
@@ -1261,14 +1252,42 @@ async function fetchFortuneParentGuide(imdbId) {
   }
 }
 
-async function openFortuneMovieModal(movie) {
+function showFortuneParentGuideFromMetadata(label) {
+  const metadata = fortuneItemMetadata.get(label) || {};
+  if (metadata.parentGuide && metadata.parentGuideStatus === "ready") {
+    renderFortuneParentGuide(metadata.parentGuide);
+    return true;
+  }
+
+  if (metadata.parentGuideStatus === "error") {
+    setFortuneParentGuideError(
+      metadata.parentGuideError ||
+        "Не удалось загрузить родительский гайд. Попробуйте позже."
+    );
+    return true;
+  }
+
+  return false;
+}
+
+async function openFortuneMovieModal(movie, options = {}) {
   if (!fortuneMovieModal || !fortuneMoviePreview) {
     return;
   }
 
-  const label = movie?.fortuneLabel || getFortuneMovieLabel(movie);
-  if (fortuneItemInput && label) {
-    fortuneItemInput.value = label;
+  const { label = null, disableAdd = false, useCachedParentGuide = false } =
+    options;
+  const displayLabel = label || movie?.fortuneLabel || getFortuneMovieLabel(movie);
+  if (fortuneItemInput && displayLabel) {
+    fortuneItemInput.value = displayLabel;
+  }
+
+  selectedFortuneKPMovie = movie || null;
+  if (fortuneMovieAdd) {
+    fortuneMovieAdd.disabled = disableAdd;
+    fortuneMovieAdd.textContent = disableAdd
+      ? "Уже в рулетке"
+      : "Добавить фильм в рулетку";
   }
 
   fortuneMoviePreview.innerHTML = "";
@@ -1287,16 +1306,44 @@ async function openFortuneMovieModal(movie) {
   }
 
   let imdbId = movie?.imdbId || null;
-  if (imdbId) {
-    fetchFortuneParentGuide(imdbId);
-  } else {
-    setFortuneParentGuideError("Для выбранного фильма нет IMDb ID.");
+  const handledFromCache =
+    useCachedParentGuide && displayLabel
+      ? showFortuneParentGuideFromMetadata(displayLabel)
+      : false;
+
+  if (!handledFromCache) {
+    if (imdbId) {
+      fetchFortuneParentGuide(imdbId);
+    } else {
+      setFortuneParentGuideError("Для выбранного фильма нет IMDb ID.");
+    }
   }
 
   fortuneMovieModal.style.display = "block";
   if (fortuneMovieAdd) {
     setTimeout(() => fortuneMovieAdd.focus(), 0);
   }
+}
+
+function openFortuneMovieModalForLabel(label) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel) {
+    return;
+  }
+
+  const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
+  const movie = {
+    ...(metadata.movie || {}),
+    fortuneLabel: normalizedLabel,
+    imdbId: metadata.imdbId || (metadata.movie?.imdbId ?? null),
+    kinopoiskId: metadata.kinopoiskId || (metadata.movie?.kinopoiskId ?? null),
+  };
+
+  openFortuneMovieModal(movie, {
+    label: normalizedLabel,
+    disableAdd: true,
+    useCachedParentGuide: true,
+  });
 }
 
 function closeFortuneMovieModal() {
@@ -1379,7 +1426,26 @@ if (fortuneAutoResults) {
     }
 
     selectedFortuneKPMovie = { ...chosenMovie, imdbId, kinopoiskId };
-    await openFortuneMovieModal(selectedFortuneKPMovie);
+    const label =
+      selectedFortuneKPMovie?.fortuneLabel ||
+      getFortuneMovieLabel(selectedFortuneKPMovie);
+
+    if (fortuneWheelApi && label) {
+      fortuneWheelApi.addItem(label, {
+        imdbId,
+        kinopoiskId,
+        movie: selectedFortuneKPMovie,
+        parentGuideStatus: imdbId ? "loading" : null,
+      });
+      if (imdbId) {
+        preloadFortuneParentGuide(label);
+      }
+    }
+
+    resetFortuneAutocomplete();
+    if (fortuneItemInput) {
+      fortuneItemInput.value = "";
+    }
   });
 }
 
@@ -1537,6 +1603,7 @@ function initFortuneWheel() {
   let pendingFortuneItemLabel = null;
   let pendingFortuneItemOptions = null;
   const fortuneItemMetadata = new Map();
+  const fortuneParentGuideLoads = new Map();
 
   function setFortuneItemMetadata(label, metadata = {}) {
     const normalizedLabel = (label || "").trim();
@@ -1544,16 +1611,89 @@ function initFortuneWheel() {
       return;
     }
 
-    const normalizedMetadata = {};
-    if (metadata?.imdbId) {
-      normalizedMetadata.imdbId = metadata.imdbId;
-    }
+    const previous = fortuneItemMetadata.get(normalizedLabel) || {};
+    const normalizedMetadata = { ...previous };
 
-    if (Object.keys(normalizedMetadata).length > 0) {
+    [
+      "imdbId",
+      "kinopoiskId",
+      "movie",
+      "parentGuide",
+      "parentGuideStatus",
+      "parentGuideError",
+    ].forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(metadata, key)) {
+        normalizedMetadata[key] = metadata[key];
+      }
+    });
+
+    const hasData = Object.values(normalizedMetadata).some(
+      (value) => value !== undefined && value !== null && value !== ""
+    );
+
+    if (hasData) {
       fortuneItemMetadata.set(normalizedLabel, normalizedMetadata);
     } else {
       fortuneItemMetadata.delete(normalizedLabel);
     }
+  }
+
+  async function loadFortuneParentGuideData(imdbId) {
+    if (!imdbId) {
+      throw new Error("Missing IMDb ID for parent guide request");
+    }
+
+    const response = await fetch(
+      `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async function preloadFortuneParentGuide(label) {
+    const normalizedLabel = (label || "").trim();
+    if (!normalizedLabel || fortuneParentGuideLoads.has(normalizedLabel)) {
+      return;
+    }
+
+    const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
+    if (!metadata.imdbId || metadata.parentGuideStatus === "ready") {
+      return;
+    }
+
+    setFortuneItemMetadata(normalizedLabel, {
+      parentGuideStatus: "loading",
+      parentGuideError: null,
+    });
+    renderFortuneItemsList();
+
+    const loadPromise = loadFortuneParentGuideData(metadata.imdbId)
+      .then((data) => {
+        setFortuneItemMetadata(normalizedLabel, {
+          parentGuideStatus: "ready",
+          parentGuide: data,
+          parentGuideError: null,
+        });
+        renderFortuneItemsList();
+        fortuneParentGuideLoads.delete(normalizedLabel);
+      })
+      .catch((err) => {
+        console.error("Failed to preload parent guide", err);
+        setFortuneItemMetadata(normalizedLabel, {
+          parentGuideStatus: "error",
+          parentGuideError:
+            "Не удалось загрузить родительский гайд. Попробуйте позже.",
+        });
+        renderFortuneItemsList();
+        fortuneParentGuideLoads.delete(normalizedLabel);
+      });
+
+    fortuneParentGuideLoads.set(normalizedLabel, loadPromise);
+    return loadPromise;
   }
 
   function registerElimination(label) {
@@ -1663,17 +1803,31 @@ function initFortuneWheel() {
     }
 
     activeItems.push(value);
-    setFortuneItemMetadata(value, { imdbId: options.imdbId });
+    setFortuneItemMetadata(value, {
+      imdbId: options.imdbId,
+      kinopoiskId: options.kinopoiskId,
+      movie: options.movie,
+      parentGuideStatus: options.parentGuideStatus,
+    });
     input.value = activeItems.join("\n");
     if (fortuneItemInput) {
       fortuneItemInput.value = "";
     }
     hideResultOverlay();
     updateFromInput();
+    if (options.parentGuideStatus === "loading") {
+      preloadFortuneParentGuide(value);
+    }
   }
 
   function addFortuneItem(label, options = {}) {
-    const { skipDuplicateCheck = false, imdbId = null } = options;
+    const {
+      skipDuplicateCheck = false,
+      imdbId = null,
+      kinopoiskId = null,
+      movie = null,
+      parentGuideStatus = null,
+    } = options;
     const value = (label || "").trim();
     if (!value) {
       if (fortuneItemInput) {
@@ -1702,7 +1856,12 @@ function initFortuneWheel() {
       }
     }
 
-    commitFortuneItem(value, { imdbId });
+    commitFortuneItem(value, {
+      imdbId,
+      kinopoiskId,
+      movie,
+      parentGuideStatus,
+    });
     resetFortuneDuplicateState();
   }
 
@@ -1843,6 +2002,57 @@ function initFortuneWheel() {
       );
       actionsEl.appendChild(kinopoiskLink);
       actionsEl.appendChild(imdbLink);
+
+      const metadata = fortuneItemMetadata.get(label) || {};
+      const parentGuideStatus = metadata.parentGuideStatus;
+      const parentGuideAction = document.createElement("div");
+      parentGuideAction.className = "fortune-items-parent-guide";
+
+      if (parentGuideStatus === "loading") {
+        const loader = document.createElement("span");
+        loader.className =
+          "fortune-parent-guide-indicator fortune-parent-guide-indicator--loading";
+        loader.title = "Загружаем данные из IMDb...";
+        loader.innerHTML = '<span class="fortune-parent-guide-spinner"></span>';
+        parentGuideAction.appendChild(loader);
+      } else {
+        const parentGuideBtn = document.createElement("button");
+        parentGuideBtn.type = "button";
+        parentGuideBtn.className = "fortune-parent-guide-indicator";
+        parentGuideBtn.textContent = "PG";
+        parentGuideBtn.disabled = !metadata.imdbId;
+
+        if (parentGuideStatus === "ready") {
+          parentGuideBtn.classList.add(
+            "fortune-parent-guide-indicator--ready"
+          );
+          parentGuideBtn.title = "Открыть родительский гайд";
+        } else if (parentGuideStatus === "error") {
+          parentGuideBtn.classList.add(
+            "fortune-parent-guide-indicator--error"
+          );
+          parentGuideBtn.title =
+            metadata.parentGuideError ||
+            "Не удалось загрузить родительский гайд";
+        } else if (metadata.imdbId) {
+          parentGuideBtn.title = "Загрузить родительский гайд";
+        }
+
+        parentGuideBtn.addEventListener("click", () => {
+          if (!metadata.imdbId) {
+            return;
+          }
+
+          if (metadata.parentGuideStatus === "ready") {
+            openFortuneMovieModalForLabel(label);
+            return;
+          }
+
+          preloadFortuneParentGuide(label);
+        });
+
+        parentGuideAction.appendChild(parentGuideBtn);
+      }
 
       if (!isEliminated) {
         const removeBtn = document.createElement("button");
@@ -2432,6 +2642,7 @@ function initFortuneWheel() {
     fortuneItemMetadata.forEach((_, label) => {
       if (!items.includes(label)) {
         fortuneItemMetadata.delete(label);
+        fortuneParentGuideLoads.delete(label);
       }
     });
 

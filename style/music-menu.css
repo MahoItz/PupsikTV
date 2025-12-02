@@ -1780,6 +1780,80 @@
     gap: 6px;
 }
 
+.fortune-items-parent-guide {
+    display: flex;
+    align-items: center;
+}
+
+.fortune-parent-guide-indicator {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    transition: all 0.2s ease;
+}
+
+.fortune-parent-guide-indicator:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.fortune-parent-guide-indicator--ready {
+    background: linear-gradient(135deg, rgba(86, 255, 196, 0.18), rgba(86, 196, 255, 0.16));
+    border-color: rgba(86, 255, 196, 0.35);
+    box-shadow:
+        0 0 0 1px rgba(86, 255, 196, 0.15),
+        0 6px 14px rgba(86, 196, 255, 0.22);
+}
+
+.fortune-parent-guide-indicator--error {
+    background: linear-gradient(135deg, rgba(255, 145, 115, 0.2), rgba(255, 97, 97, 0.16));
+    border-color: rgba(255, 138, 138, 0.32);
+    color: #ffd7d7;
+    box-shadow:
+        0 0 0 1px rgba(255, 97, 97, 0.15),
+        0 6px 14px rgba(255, 120, 120, 0.2);
+}
+
+.fortune-parent-guide-indicator--loading {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.fortune-parent-guide-spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    border-top-color: var(--primary-color);
+    animation: fortuneParentGuideSpin 0.9s linear infinite;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes fortuneParentGuideSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .fortune-items-link {
     appearance: none;
     border: 1px solid rgba(255, 255, 255, 0.2);
