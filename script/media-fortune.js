@@ -123,6 +123,19 @@ let fortuneKpResults = [];
 let selectedFortuneKPMovie = null;
 const fortuneItemMetadata = new Map();
 const fortuneParentGuideLoads = new Map();
+let activeFortuneModalLabel = null;
+
+function normalizeFortuneParentGuidePayload(data = {}) {
+  return {
+    original: data?.original || {},
+    translated: data?.translated || null,
+    translationError: data?.translationError || null,
+  };
+}
+
+function hasFortuneTranslatedSections(data) {
+  return Boolean(data && typeof data === "object");
+}
 
 function setFortuneAutocompleteVisible(isOpen) {
   if (!fortuneAutoResultsContainer) return;
@@ -1133,7 +1146,9 @@ function renderFortuneParentGuideList(listEl, items) {
   });
 }
 
-function renderFortuneParentGuide(data) {
+function renderFortuneParentGuide(data, options = {}) {
+  const { statusMessage = "Переведённые разделы загружены" } = options;
+
   const translated =
     data?.translated?.sections && typeof data.translated.sections === "object"
       ? data.translated.sections
@@ -1176,7 +1191,7 @@ function renderFortuneParentGuide(data) {
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "grid";
   }
-  setFortuneParentGuideStatus("Переведённые разделы загружены");
+  setFortuneParentGuideStatus(statusMessage);
 }
 
 function setFortuneParentGuideError(message) {
@@ -1237,12 +1252,34 @@ async function fetchFortuneParentGuide(imdbId) {
   });
 
   try {
-    const data = await loadFortuneParentGuideDataWithRetry(imdbId);
+    const data = await loadFortuneParentGuideDataWithRetry(imdbId, {
+      onOriginal: (originalData) => {
+        if (requestId !== fortuneParentGuideRequestId) {
+          return;
+        }
+
+        renderFortuneParentGuide(originalData, {
+          statusMessage: hasFortuneTranslatedSections(originalData.translated)
+            ? "Переведённые разделы загружены"
+            : "Данные IMDb загружены. Переводим на русский язык...",
+        });
+      },
+    });
+
     if (requestId !== fortuneParentGuideRequestId) {
       return;
     }
-    setFortuneParentGuideStatus("Переводим на русский язык...");
-    renderFortuneParentGuide(data);
+
+    const translationReady = hasFortuneTranslatedSections(data.translated);
+    const statusMessage = translationReady
+      ? "Переведённые разделы загружены"
+      : data.translationError
+        ? "Не удалось перевести. Показана оригинальная версия."
+        : "Данные IMDb загружены.";
+
+    renderFortuneParentGuide(data, {
+      statusMessage,
+    });
   } catch (err) {
     if (requestId !== fortuneParentGuideRequestId) {
       return;
@@ -1254,13 +1291,13 @@ async function fetchFortuneParentGuide(imdbId) {
   }
 }
 
-async function loadFortuneParentGuideData(imdbId) {
+async function loadFortuneParentGuideOriginal(imdbId) {
   if (!imdbId) {
     throw new Error("Missing IMDb ID for parent guide request");
   }
 
   const response = await fetch(
-    `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}`
+    `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}&translate=false`
   );
 
   if (!response.ok) {
@@ -1270,14 +1307,110 @@ async function loadFortuneParentGuideData(imdbId) {
   return response.json();
 }
 
-async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
+async function translateFortuneParentGuideSections(sections) {
+  const response = await fetch(`/api/imdb-parent-guide-translate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ sections }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Translation request failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data?.translated || null;
+}
+
+async function loadFortuneParentGuideData(imdbId, options = {}) {
+  const { onOriginal } = options;
+
+  const baseData = normalizeFortuneParentGuidePayload(
+    await loadFortuneParentGuideOriginal(imdbId)
+  );
+
+  const hasTranslation = hasFortuneTranslatedSections(baseData.translated);
+  onOriginal?.(baseData);
+
+  if (hasTranslation) {
+    return baseData;
+  }
+
+  let translated = null;
+  let translationError = null;
+
+  try {
+    translated = await translateFortuneParentGuideSectionsWithRetry(
+      baseData.original
+    );
+  } catch (err) {
+    translationError = err;
+  }
+
+  return {
+    ...baseData,
+    translated,
+    translationError: translationError?.message || null,
+  };
+}
+
+async function translateFortuneParentGuideSectionsWithRetry(sections, options = {}) {
   const { attempts = 3, baseDelayMs = 800 } = options;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await translateFortuneParentGuideSections(sections);
+    } catch (err) {
+      lastError = err;
+      if (attempt >= attempts) {
+        break;
+      }
+
+      const backoffMs = baseDelayMs * attempt;
+      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+    }
+  }
+
+  throw lastError || new Error("Unknown translation error");
+}
+
+async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
+  const { attempts = 3, baseDelayMs = 800, onOriginal = null } = options;
 
   let lastError = null;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      return await loadFortuneParentGuideData(imdbId);
+      const baseData = await loadFortuneParentGuideOriginal(imdbId);
+      const normalized = normalizeFortuneParentGuidePayload(baseData);
+      const hasTranslation = hasFortuneTranslatedSections(normalized.translated);
+
+      onOriginal?.(normalized);
+
+      if (hasTranslation) {
+        return normalized;
+      }
+
+      let translated = null;
+      let translationError = null;
+
+      try {
+        translated = await translateFortuneParentGuideSectionsWithRetry(
+          normalized.original,
+          { attempts, baseDelayMs }
+        );
+      } catch (err) {
+        translationError = err;
+      }
+
+      return {
+        ...normalized,
+        translated,
+        translationError: translationError?.message || null,
+      };
     } catch (err) {
       lastError = err;
       if (attempt >= attempts) {
@@ -1294,8 +1427,24 @@ async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
 
 function showFortuneParentGuideFromMetadata(label) {
   const metadata = fortuneItemMetadata.get(label) || {};
-  if (metadata.parentGuide && metadata.parentGuideStatus === "ready") {
-    renderFortuneParentGuide(metadata.parentGuide);
+  if (
+    metadata.parentGuide &&
+    (metadata.parentGuideStatus === "ready" ||
+      metadata.parentGuideStatus === "translating")
+  ) {
+    const hasTranslation = hasFortuneTranslatedSections(
+      metadata.parentGuide.translated
+    );
+    const statusMessage =
+      metadata.parentGuideStatus === "translating"
+        ? "Данные IMDb загружены. Переводим на русский язык..."
+        : hasTranslation
+          ? "Переведённые разделы загружены"
+          : metadata.parentGuide.translationError
+            ? "Не удалось перевести. Показана оригинальная версия."
+            : "Данные IMDb загружены.";
+
+    renderFortuneParentGuide(metadata.parentGuide, { statusMessage });
     return true;
   }
 
@@ -1318,6 +1467,7 @@ async function openFortuneMovieModal(movie, options = {}) {
   const { label = null, disableAdd = false, useCachedParentGuide = false } =
     options;
   const displayLabel = label || movie?.fortuneLabel || getFortuneMovieLabel(movie);
+  activeFortuneModalLabel = displayLabel || null;
   if (fortuneItemInput && displayLabel) {
     fortuneItemInput.value = displayLabel;
   }
@@ -1346,12 +1496,53 @@ async function openFortuneMovieModal(movie, options = {}) {
   }
 
   let imdbId = movie?.imdbId || null;
+  const cachedMetadata = displayLabel
+    ? fortuneItemMetadata.get(displayLabel) || {}
+    : {};
   const handledFromCache =
     useCachedParentGuide && displayLabel
       ? showFortuneParentGuideFromMetadata(displayLabel)
       : false;
 
   if (!handledFromCache) {
+    const pendingLoad = displayLabel
+      ? fortuneParentGuideLoads.get(displayLabel)
+      : null;
+
+    if (
+      cachedMetadata.parentGuideStatus === "loading" ||
+      cachedMetadata.parentGuideStatus === "translating"
+    ) {
+      if (cachedMetadata.parentGuide) {
+        renderFortuneParentGuide(cachedMetadata.parentGuide, {
+          statusMessage:
+            cachedMetadata.parentGuideStatus === "translating"
+              ? "Данные IMDb загружены. Переводим на русский язык..."
+              : "Загружаем информацию из IMDb...",
+        });
+      } else {
+        setFortuneParentGuideStatus("Загружаем информацию из IMDb...");
+      }
+
+      if (pendingLoad) {
+        pendingLoad
+          .then((data) => {
+            if (activeFortuneModalLabel !== displayLabel) {
+              return;
+            }
+            renderFortuneParentGuide(normalizeFortuneParentGuidePayload(data), {
+              statusMessage: "Переведённые разделы загружены",
+            });
+          })
+          .catch(() => {});
+        fortuneMovieModal.style.display = "block";
+        if (fortuneMovieAdd) {
+          setTimeout(() => fortuneMovieAdd.focus(), 0);
+        }
+        return;
+      }
+    }
+
     if (imdbId) {
       fetchFortuneParentGuide(imdbId);
     } else {
@@ -1391,6 +1582,7 @@ function closeFortuneMovieModal() {
     fortuneMovieModal.style.display = "none";
   }
   selectedFortuneKPMovie = null;
+  activeFortuneModalLabel = null;
   if (fortuneItemInput) {
     fortuneItemInput.focus();
   }
@@ -1514,6 +1706,7 @@ if (fortuneMovieAdd) {
     if (label) {
       fortuneWheelApi.addItem(label, {
         imdbId: selectedFortuneKPMovie?.imdbId || null,
+        parentGuideStatus: selectedFortuneKPMovie?.imdbId ? "loading" : null,
       });
       resetFortuneAutocomplete();
       if (fortuneItemInput) {
@@ -1679,7 +1872,11 @@ function initFortuneWheel() {
     }
 
     const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
-    if (!metadata.imdbId || metadata.parentGuideStatus === "ready") {
+    if (
+      !metadata.imdbId ||
+      metadata.parentGuideStatus === "ready" ||
+      metadata.parentGuideStatus === "translating"
+    ) {
       return;
     }
 
@@ -1689,14 +1886,53 @@ function initFortuneWheel() {
     });
     renderFortuneItemsList();
 
-    const loadPromise = loadFortuneParentGuideDataWithRetry(metadata.imdbId)
-      .then((data) => {
+    const loadPromise = loadFortuneParentGuideDataWithRetry(metadata.imdbId, {
+      onOriginal: (data) => {
+        const normalizedData = normalizeFortuneParentGuidePayload(data);
+        const translationReady = hasFortuneTranslatedSections(
+          normalizedData.translated
+        );
+
         setFortuneItemMetadata(normalizedLabel, {
-          parentGuideStatus: "ready",
-          parentGuide: data,
+          parentGuideStatus: translationReady ? "ready" : "translating",
+          parentGuide: normalizedData,
           parentGuideError: null,
         });
         renderFortuneItemsList();
+
+        if (activeFortuneModalLabel === normalizedLabel) {
+          renderFortuneParentGuide(normalizedData, {
+            statusMessage: translationReady
+              ? "Переведённые разделы загружены"
+              : "Данные IMDb загружены. Переводим на русский язык...",
+          });
+        }
+      },
+    })
+      .then((data) => {
+        const normalizedData = normalizeFortuneParentGuidePayload(data);
+        const translationReady = hasFortuneTranslatedSections(
+          normalizedData.translated
+        );
+        const statusMessage = translationReady
+          ? "Переведённые разделы загружены"
+          : normalizedData.translationError
+            ? "Не удалось перевести. Показана оригинальная версия."
+            : "Данные IMDb загружены.";
+
+        setFortuneItemMetadata(normalizedLabel, {
+          parentGuideStatus: "ready",
+          parentGuide: normalizedData,
+          parentGuideError: null,
+        });
+        renderFortuneItemsList();
+
+        if (activeFortuneModalLabel === normalizedLabel) {
+          renderFortuneParentGuide(normalizedData, {
+            statusMessage,
+          });
+        }
+
         fortuneParentGuideLoads.delete(normalizedLabel);
       })
       .catch((err) => {
@@ -1707,6 +1943,13 @@ function initFortuneWheel() {
             "Не удалось загрузить родительский гайд. Попробуйте позже.",
         });
         renderFortuneItemsList();
+
+        if (activeFortuneModalLabel === normalizedLabel) {
+          setFortuneParentGuideError(
+            "Не удалось загрузить родительский гайд. Попробуйте позже."
+          );
+        }
+
         fortuneParentGuideLoads.delete(normalizedLabel);
       });
 
@@ -2026,19 +2269,24 @@ function initFortuneWheel() {
       const parentGuideAction = document.createElement("div");
       parentGuideAction.className = "fortune-items-parent-guide";
 
-      if (parentGuideStatus === "loading") {
-        const loader = document.createElement("span");
-        loader.className =
-          "fortune-parent-guide-indicator fortune-parent-guide-indicator--loading";
-        loader.title = "Загружаем данные из IMDb...";
-        loader.innerHTML = '<span class="fortune-parent-guide-spinner"></span>';
-        parentGuideAction.appendChild(loader);
+      const parentGuideBtn = document.createElement("button");
+      parentGuideBtn.type = "button";
+      parentGuideBtn.className = "fortune-parent-guide-indicator";
+      parentGuideBtn.disabled = !metadata.imdbId;
+
+      if (
+        parentGuideStatus === "loading" ||
+        parentGuideStatus === "translating"
+      ) {
+        parentGuideBtn.classList.add("fortune-parent-guide-indicator--loading");
+        parentGuideBtn.title =
+          parentGuideStatus === "translating"
+            ? "Переводим на русский язык..."
+            : "Загружаем данные из IMDb...";
+        parentGuideBtn.innerHTML =
+          '<span class="fortune-parent-guide-spinner"></span>';
       } else {
-        const parentGuideBtn = document.createElement("button");
-        parentGuideBtn.type = "button";
-        parentGuideBtn.className = "fortune-parent-guide-indicator";
         parentGuideBtn.textContent = "PG";
-        parentGuideBtn.disabled = !metadata.imdbId;
 
         if (parentGuideStatus === "ready") {
           parentGuideBtn.classList.add(
@@ -2057,22 +2305,21 @@ function initFortuneWheel() {
         } else {
           parentGuideBtn.title = "IMDb ID не найден";
         }
-
-        parentGuideBtn.addEventListener("click", () => {
-          if (!metadata.imdbId) {
-            return;
-          }
-
-          if (metadata.parentGuideStatus === "ready") {
-            openFortuneMovieModalForLabel(label);
-            return;
-          }
-
-          preloadFortuneParentGuide(label);
-        });
-
-        parentGuideAction.appendChild(parentGuideBtn);
       }
+
+      parentGuideBtn.addEventListener("click", () => {
+        if (!metadata.imdbId) {
+          return;
+        }
+
+        openFortuneMovieModalForLabel(label);
+
+        if (metadata.parentGuideStatus !== "ready") {
+          preloadFortuneParentGuide(label);
+        }
+      });
+
+      parentGuideAction.appendChild(parentGuideBtn);
 
       actionsEl.appendChild(parentGuideAction);
 
