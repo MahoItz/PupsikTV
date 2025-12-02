@@ -1237,7 +1237,7 @@ async function fetchFortuneParentGuide(imdbId) {
   });
 
   try {
-    const data = await loadFortuneParentGuideData(imdbId);
+    const data = await loadFortuneParentGuideDataWithRetry(imdbId);
     if (requestId !== fortuneParentGuideRequestId) {
       return;
     }
@@ -1268,6 +1268,28 @@ async function loadFortuneParentGuideData(imdbId) {
   }
 
   return response.json();
+}
+
+async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
+  const { attempts = 3, baseDelayMs = 800 } = options;
+
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await loadFortuneParentGuideData(imdbId);
+    } catch (err) {
+      lastError = err;
+      if (attempt >= attempts) {
+        break;
+      }
+
+      const backoffMs = baseDelayMs * attempt;
+      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+    }
+  }
+
+  throw lastError || new Error("Unknown parent guide load error");
 }
 
 function showFortuneParentGuideFromMetadata(label) {
@@ -1667,7 +1689,7 @@ function initFortuneWheel() {
     });
     renderFortuneItemsList();
 
-    const loadPromise = loadFortuneParentGuideData(metadata.imdbId)
+    const loadPromise = loadFortuneParentGuideDataWithRetry(metadata.imdbId)
       .then((data) => {
         setFortuneItemMetadata(normalizedLabel, {
           parentGuideStatus: "ready",
