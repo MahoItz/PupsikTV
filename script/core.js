@@ -17,6 +17,10 @@ let rouletteLastWinnerHasPendingSync = false;
 let settingsPanel;
 let settingsToggleButton;
 let settingsPanelCloseButton;
+let aiModelSelect;
+let aiModelStatus;
+let aiModelOptions = [];
+let selectedAiModelValue = null;
 
 function getGuestId() {
   if (cachedGuestId) return cachedGuestId;
@@ -107,6 +111,146 @@ function toggleSettingsPanel(forceState) {
 
 function closeSettingsPanel() {
   toggleSettingsPanel(false);
+}
+
+function setAiModelStatus(message) {
+  if (!aiModelStatus) {
+    aiModelStatus = document.getElementById("aiModelStatus");
+  }
+  if (aiModelStatus) {
+    aiModelStatus.textContent = message;
+  }
+}
+
+function renderAiModelOptions(options = [], selectedValue = null) {
+  if (!aiModelSelect) {
+    aiModelSelect = document.getElementById("aiModelSelect");
+  }
+  if (!aiModelSelect) return;
+
+  const validOptions = Array.isArray(options)
+    ? options.filter(
+        (option) => option?.ai_model && option?.ai_model_name
+      )
+    : [];
+
+  aiModelOptions = validOptions;
+
+  aiModelSelect.innerHTML = "";
+
+  if (!validOptions.length) {
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Модели не найдены";
+    aiModelSelect.appendChild(placeholder);
+    aiModelSelect.disabled = true;
+    setAiModelStatus("Не удалось загрузить модели OpenRouter.");
+    return;
+  }
+
+  validOptions.forEach((option) => {
+    const el = document.createElement("option");
+    el.value = option.ai_model;
+    el.textContent = option.ai_model_name;
+    aiModelSelect.appendChild(el);
+  });
+
+  const preferredValue =
+    selectedValue || selectedAiModelValue || validOptions[0].ai_model;
+
+  aiModelSelect.value = preferredValue;
+  if (!aiModelSelect.value && validOptions.length > 0) {
+    aiModelSelect.value = validOptions[0].ai_model;
+  }
+  selectedAiModelValue = aiModelSelect.value || null;
+  aiModelSelect.disabled = false;
+
+  const selectedOption = validOptions.find(
+    (option) => option.ai_model === aiModelSelect.value
+  );
+  if (selectedOption) {
+    setAiModelStatus(
+      `Текущая модель: ${selectedOption.ai_model_name || selectedOption.ai_model}`
+    );
+  }
+}
+
+async function persistAiModelSelection(modelValue, modelName) {
+  if (!supabaseClient) {
+    throw new Error("Supabase client is not initialized");
+  }
+
+  const payload = {
+    ai_model: modelValue || null,
+    ai_model_name: modelName || null,
+  };
+
+  if (settingsRowId) {
+    const { error } = await supabaseClient
+      .from("settings")
+      .update(payload)
+      .eq("id", settingsRowId);
+    if (error) throw error;
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("settings")
+    .select("id")
+    .order("id", { ascending: true })
+    .limit(1);
+
+  if (error) throw error;
+
+  const existing = Array.isArray(data) && data.length > 0 ? data[0] : null;
+
+  if (existing) {
+    settingsRowId = existing.id ?? settingsRowId;
+    const { error: updateError } = await supabaseClient
+      .from("settings")
+      .update(payload)
+      .eq("id", settingsRowId);
+    if (updateError) throw updateError;
+    return;
+  }
+
+  const { data: inserted, error: insertError } = await supabaseClient
+    .from("settings")
+    .insert(payload)
+    .select("id")
+    .single();
+
+  if (insertError) throw insertError;
+
+  settingsRowId = inserted?.id ?? settingsRowId;
+}
+
+async function handleAiModelChange(event) {
+  const selectEl = event?.target;
+  if (!selectEl) return;
+
+  const modelValue = selectEl.value || null;
+  const option = aiModelOptions.find((item) => item.ai_model === modelValue);
+  const modelName = option?.ai_model_name || modelValue;
+
+  selectedAiModelValue = modelValue;
+
+  selectEl.disabled = true;
+  setAiModelStatus("Сохраняем выбранную модель...");
+
+  try {
+    await persistAiModelSelection(modelValue, modelName || null);
+    if (modelName) {
+      setAiModelStatus(`Текущая модель: ${modelName}`);
+    } else {
+      setAiModelStatus("Модель обновлена.");
+    }
+  } catch (err) {
+    console.error("Failed to save OpenRouter model", err);
+    setAiModelStatus("Не удалось сохранить модель. Попробуйте ещё раз.");
+  } finally {
+    selectEl.disabled = false;
+  }
 }
 
 function showSearchLoading(containerId, listId) {

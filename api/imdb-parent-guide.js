@@ -1,4 +1,8 @@
+import { createClient } from "@supabase/supabase-js";
+
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
+const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
 
 const SECTION_MARKERS = {
   sexAndNudity: [
@@ -61,8 +65,9 @@ function extractSection(html, markers = []) {
 }
 
 async function translateSections(sections, apiKey) {
+  const selectedModel = (await loadSelectedOpenRouterModel()) || DEFAULT_OPENROUTER_MODEL;
   const body = {
-    model: "meta-llama/llama-3.3-70b-instruct:free",
+    model: selectedModel,
     messages: [
       {
         role: "system",
@@ -104,6 +109,36 @@ async function translateSections(sections, apiKey) {
     return JSON.parse(normalized);
   } catch (err) {
     throw new Error("Failed to parse translation response");
+  }
+}
+
+async function loadSelectedOpenRouterModel() {
+  const supabaseKey = process.env.SUPABASE_KEY;
+
+  if (!supabaseKey) {
+    return null;
+  }
+
+  try {
+    const supabase = createClient(SUPABASE_URL, supabaseKey, {
+      auth: { persistSession: false },
+    });
+
+    const { data, error } = await supabase
+      .from("settings")
+      .select("ai_model")
+      .order("id", { ascending: true })
+      .limit(1);
+
+    if (error) throw error;
+
+    const row = Array.isArray(data) && data.length > 0 ? data[0] : null;
+    const model = typeof row?.ai_model === "string" ? row.ai_model.trim() : null;
+
+    return model || null;
+  } catch (err) {
+    console.error("[imdb-parent-guide] failed to load ai_model", err);
+    return null;
   }
 }
 

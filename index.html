@@ -1262,7 +1262,19 @@
             </button>
         </div>
         <div class="settings-panel__content">
-            <p class="settings-panel__placeholder">Раздел настроек скоро будет доступен.</p>
+            <div class="settings-panel__section">
+                <div class="settings-panel__section-header">
+                    <h3 class="settings-panel__section-title">OpenRouter LLM</h3>
+                    <p class="settings-panel__section-hint">Выберите модель для перевода описаний</p>
+                </div>
+                <label for="aiModelSelect" class="settings-panel__label">Модель</label>
+                <div class="settings-panel__field">
+                    <select id="aiModelSelect" class="settings-panel__select" disabled>
+                        <option value="">Загружаем модели...</option>
+                    </select>
+                </div>
+                <p id="aiModelStatus" class="settings-panel__note">Настройки сохраняются автоматически.</p>
+            </div>
         </div>
     </aside>
 

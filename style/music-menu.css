@@ -410,9 +410,67 @@
     flex: 1;
 }
 
-.settings-panel__placeholder {
+.settings-panel__section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-panel__section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.settings-panel__section-title {
+    margin: 0;
+    font-size: clamp(1rem, 2vh, 1.2rem);
+}
+
+.settings-panel__section-hint {
     margin: 0;
     color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.settings-panel__label {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.settings-panel__field {
+    position: relative;
+}
+
+.settings-panel__select {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+    padding: 12px 14px;
+    font-size: 0.98rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    appearance: none;
+    cursor: pointer;
+}
+
+.settings-panel__select:focus {
+    outline: none;
+    border-color: rgba(123, 97, 255, 0.6);
+    box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.settings-panel__select:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.settings-panel__note {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
 .rules-panel__content {

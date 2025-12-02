@@ -190,15 +190,18 @@ async function loadSettingsFromSupabase() {
   try {
     const { data, error } = await supabaseClient
       .from("settings")
-      .select("id, roulette_last_winner")
-      .limit(1);
+      .select("id, roulette_last_winner, ai_model_name, ai_model")
+      .order("id", { ascending: true });
 
     if (error) throw error;
 
-    const row = Array.isArray(data) && data.length > 0 ? data[0] : null;
+    const rows = Array.isArray(data) ? data : [];
+    const row = rows.length > 0 ? rows[0] : null;
 
     settingsRowId = row?.id ?? settingsRowId;
     const remoteValue = (row?.roulette_last_winner || "").trim();
+
+    renderAiModelOptions(rows, row?.ai_model || null);
 
     if (rouletteLastWinnerHasPendingSync) {
       const pending = rouletteLastWinnerPendingValue;
@@ -498,6 +501,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   settingsPanel = document.getElementById("settingsPanel");
   settingsToggleButton = document.getElementById("settingsToggleButton");
   settingsPanelCloseButton = document.getElementById("settingsPanelCloseButton");
+  aiModelSelect = document.getElementById("aiModelSelect");
+  aiModelStatus = document.getElementById("aiModelStatus");
 
   if (settingsToggleButton && settingsPanel) {
     settingsToggleButton.addEventListener("click", () => toggleSettingsPanel());
@@ -505,6 +510,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
   if (settingsPanelCloseButton) {
     settingsPanelCloseButton.addEventListener("click", closeSettingsPanel);
+  }
+  if (aiModelSelect) {
+    aiModelSelect.addEventListener("change", handleAiModelChange);
   }
 
   adminElements = Array.from(document.querySelectorAll(".admin-only"));
