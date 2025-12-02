@@ -2032,6 +2032,8 @@ function initFortuneWheel() {
             "Не удалось загрузить родительский гайд";
         } else if (metadata.imdbId) {
           parentGuideBtn.title = "Загрузить родительский гайд";
+        } else {
+          parentGuideBtn.title = "IMDb ID не найден";
         }
 
         parentGuideBtn.addEventListener("click", () => {
@@ -2049,6 +2051,8 @@ function initFortuneWheel() {
 
         parentGuideAction.appendChild(parentGuideBtn);
       }
+
+      actionsEl.appendChild(parentGuideAction);
 
       if (!isEliminated) {
         const removeBtn = document.createElement("button");
