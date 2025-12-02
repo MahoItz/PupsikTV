@@ -14,6 +14,9 @@ let rouletteLastWinner = "";
 let rouletteAutofillActive = false;
 let rouletteLastWinnerPendingValue = null;
 let rouletteLastWinnerHasPendingSync = false;
+let settingsPanel;
+let settingsToggleButton;
+let settingsPanelCloseButton;
 
 function getGuestId() {
   if (cachedGuestId) return cachedGuestId;
@@ -82,6 +85,28 @@ function debounce(func, delay) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(this, args), delay);
   };
+}
+
+function toggleSettingsPanel(forceState) {
+  if (!settingsPanel) return;
+
+  const isOpen = settingsPanel.classList.contains("open");
+  const nextState =
+    typeof forceState === "boolean" ? forceState : !isOpen;
+
+  settingsPanel.classList.toggle("open", nextState);
+  settingsPanel.setAttribute("aria-hidden", nextState ? "false" : "true");
+  if (settingsToggleButton) {
+    settingsToggleButton.classList.toggle("is-active", nextState);
+    settingsToggleButton.setAttribute(
+      "aria-expanded",
+      nextState ? "true" : "false"
+    );
+  }
+}
+
+function closeSettingsPanel() {
+  toggleSettingsPanel(false);
 }
 
 function showSearchLoading(containerId, listId) {

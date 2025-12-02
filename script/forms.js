@@ -1292,6 +1292,7 @@ function hideAdminControls(skipRender = false) {
   if (btn) btn.textContent = "Войти";
   if (group) group.style.display = "";
   if (input) input.required = true;
+  closeSettingsPanel();
   if (!skipRender) {
     renderMovies();
     renderWatchlist();

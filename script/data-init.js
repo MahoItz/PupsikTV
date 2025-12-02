@@ -495,6 +495,18 @@ document.addEventListener("DOMContentLoaded", async function () {
   ratingTooltip.className = "rating-tooltip";
   document.body.appendChild(ratingTooltip);
 
+  settingsPanel = document.getElementById("settingsPanel");
+  settingsToggleButton = document.getElementById("settingsToggleButton");
+  settingsPanelCloseButton = document.getElementById("settingsPanelCloseButton");
+
+  if (settingsToggleButton && settingsPanel) {
+    settingsToggleButton.addEventListener("click", () => toggleSettingsPanel());
+    settingsToggleButton.setAttribute("aria-expanded", "false");
+  }
+  if (settingsPanelCloseButton) {
+    settingsPanelCloseButton.addEventListener("click", closeSettingsPanel);
+  }
+
   adminElements = Array.from(document.querySelectorAll(".admin-only"));
   hideAdminControls(true);
 

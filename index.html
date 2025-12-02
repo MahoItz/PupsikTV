@@ -32,6 +32,10 @@
         <button id="musicMenuButton" class="music-menu-button" aria-label="Музыка">
             <img src="images/wheel_icon.webp" alt="wheel icon">
         </button>
+        <button id="settingsToggleButton" class="settings-button admin-only" type="button"
+            aria-label="Открыть настройки" aria-expanded="false">
+            <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        </button>
         <button id="rulesPanelToggleButton" class="rules-panel-toggle" type="button" aria-label="Показать правила"
             aria-pressed="false" title="Показать правила">
             <i class="fa-solid fa-scroll" aria-hidden="true"></i>
@@ -1248,6 +1252,19 @@
             </div>
         </div>
     </div>
+
+    <aside id="settingsPanel" class="settings-panel admin-only" aria-hidden="true">
+        <div class="settings-panel__header">
+            <h2>Настройки сайта</h2>
+            <button id="settingsPanelCloseButton" class="settings-panel__close" type="button"
+                aria-label="Скрыть настройки">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="settings-panel__content">
+            <p class="settings-panel__placeholder">Раздел настроек скоро будет доступен.</p>
+        </div>
+    </aside>
 
     <aside id="rulesPanel" class="rules-panel" aria-hidden="true">
         <div class="rules-panel__content">
