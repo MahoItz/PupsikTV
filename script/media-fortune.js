@@ -121,6 +121,8 @@ let fortuneParentGuideRequestId = 0;
 const fortuneItemInput = document.getElementById("fortuneItemInput");
 let fortuneKpResults = [];
 let selectedFortuneKPMovie = null;
+const fortuneItemMetadata = new Map();
+const fortuneParentGuideLoads = new Map();
 
 function setFortuneAutocompleteVisible(isOpen) {
   if (!fortuneAutoResultsContainer) return;
@@ -1252,6 +1254,22 @@ async function fetchFortuneParentGuide(imdbId) {
   }
 }
 
+async function loadFortuneParentGuideData(imdbId) {
+  if (!imdbId) {
+    throw new Error("Missing IMDb ID for parent guide request");
+  }
+
+  const response = await fetch(
+    `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 function showFortuneParentGuideFromMetadata(label) {
   const metadata = fortuneItemMetadata.get(label) || {};
   if (metadata.parentGuide && metadata.parentGuideStatus === "ready") {
@@ -1437,9 +1455,6 @@ if (fortuneAutoResults) {
         movie: selectedFortuneKPMovie,
         parentGuideStatus: imdbId ? "loading" : null,
       });
-      if (imdbId) {
-        preloadFortuneParentGuide(label);
-      }
     }
 
     resetFortuneAutocomplete();
@@ -1602,9 +1617,6 @@ function initFortuneWheel() {
   let lastEliminatedLabel = null;
   let pendingFortuneItemLabel = null;
   let pendingFortuneItemOptions = null;
-  const fortuneItemMetadata = new Map();
-  const fortuneParentGuideLoads = new Map();
-
   function setFortuneItemMetadata(label, metadata = {}) {
     const normalizedLabel = (label || "").trim();
     if (!normalizedLabel) {
@@ -1636,22 +1648,6 @@ function initFortuneWheel() {
     } else {
       fortuneItemMetadata.delete(normalizedLabel);
     }
-  }
-
-  async function loadFortuneParentGuideData(imdbId) {
-    if (!imdbId) {
-      throw new Error("Missing IMDb ID for parent guide request");
-    }
-
-    const response = await fetch(
-      `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`Request failed: ${response.status}`);
-    }
-
-    return response.json();
   }
 
   async function preloadFortuneParentGuide(label) {
