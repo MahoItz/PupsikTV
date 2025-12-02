@@ -181,8 +181,8 @@ async function persistAiModelSelection(modelValue, modelName) {
   }
 
   const payload = {
-    ai_model: modelValue || null,
-    ai_model_name: modelName || null,
+    selected_ai_model: modelValue || null,
+    selected_ai_model_name: modelName || null,
   };
 
   if (settingsRowId) {

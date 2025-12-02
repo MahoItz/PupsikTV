@@ -126,14 +126,19 @@ async function loadSelectedOpenRouterModel() {
 
     const { data, error } = await supabase
       .from("settings")
-      .select("ai_model")
-      .order("id", { ascending: true })
-      .limit(1);
+      .select("selected_ai_model, ai_model")
+      .order("id", { ascending: true });
 
     if (error) throw error;
 
-    const row = Array.isArray(data) && data.length > 0 ? data[0] : null;
-    const model = typeof row?.ai_model === "string" ? row.ai_model.trim() : null;
+    const rows = Array.isArray(data) ? data : [];
+    const settingsRow = rows.find((item) => item?.selected_ai_model) || rows[0] || null;
+    const model =
+      typeof settingsRow?.selected_ai_model === "string"
+        ? settingsRow.selected_ai_model.trim()
+        : typeof settingsRow?.ai_model === "string"
+          ? settingsRow.ai_model.trim()
+          : null;
 
     return model || null;
   } catch (err) {
