@@ -450,6 +450,65 @@
     font-style: italic;
 }
 
+/* Collapsible spoiler sections */
+#fortuneMovieModal .fortune-parent-guide__spoiler {
+    width: 100%;
+}
+
+#fortuneMovieModal .fortune-parent-guide__spoiler-summary {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    list-style: none;
+    transition: opacity 0.2s ease;
+}
+
+#fortuneMovieModal .fortune-parent-guide__spoiler-summary:hover {
+    opacity: 0.8;
+}
+
+#fortuneMovieModal .fortune-parent-guide__spoiler-summary::-webkit-details-marker {
+    display: none;
+}
+
+#fortuneMovieModal .fortune-parent-guide__spoiler-summary h4 {
+    margin: 0;
+    flex: 1;
+}
+
+#fortuneMovieModal .fortune-parent-guide__spoiler-summary::after {
+    content: "▼";
+    font-size: 0.8em;
+    transition: transform 0.2s ease;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+#fortuneMovieModal .fortune-parent-guide__spoiler[open] .fortune-parent-guide__spoiler-summary::after {
+    transform: rotate(180deg);
+}
+
+#fortuneMovieModal .fortune-parent-guide__spoiler .fortune-parent-guide__list {
+    margin-top: 8px;
+    animation: spoilerExpand 0.2s ease-out;
+}
+
+@keyframes spoilerExpand {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @media (max-width: 720px) {
     #fortuneMovieModal .fortune-movie-preview .movie-card {
         grid-template-columns: 1fr;
@@ -522,4 +581,3 @@
     gap: 20px;
     margin-top: 20px;
 }
-

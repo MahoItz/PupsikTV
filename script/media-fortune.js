@@ -1237,12 +1237,31 @@ async function fetchFortuneParentGuide(imdbId) {
   });
 
   try {
-    const data = await loadFortuneParentGuideDataWithRetry(imdbId);
+    // Step 1: Fast load with original English data
+    const fastData = await loadFortuneParentGuideDataWithRetry(imdbId, {
+      skipTranslation: true,
+    });
+    
     if (requestId !== fortuneParentGuideRequestId) {
       return;
     }
+
+    // Show English data immediately
+    renderFortuneParentGuide(fastData);
     setFortuneParentGuideStatus("Переводим на русский язык...");
-    renderFortuneParentGuide(data);
+
+    // Step 2: Load with translation in background
+    const fullData = await loadFortuneParentGuideDataWithRetry(imdbId);
+    
+    if (requestId !== fortuneParentGuideRequestId) {
+      return;
+    }
+
+    // Update to Russian if translation is available
+    if (fullData?.translated) {
+      renderFortuneParentGuide(fullData);
+      setFortuneParentGuideStatus("Переведённые разделы загружены");
+    }
   } catch (err) {
     if (requestId !== fortuneParentGuideRequestId) {
       return;
@@ -1254,13 +1273,15 @@ async function fetchFortuneParentGuide(imdbId) {
   }
 }
 
-async function loadFortuneParentGuideData(imdbId) {
+async function loadFortuneParentGuideData(imdbId, options = {}) {
   if (!imdbId) {
     throw new Error("Missing IMDb ID for parent guide request");
   }
 
+  const { skipTranslation = false } = options;
+  const queryParams = skipTranslation ? "?skipTranslation=true" : "";
   const response = await fetch(
-    `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}`
+    `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}${queryParams}`
   );
 
   if (!response.ok) {
@@ -1271,13 +1292,13 @@ async function loadFortuneParentGuideData(imdbId) {
 }
 
 async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
-  const { attempts = 3, baseDelayMs = 800 } = options;
+  const { attempts = 3, baseDelayMs = 800, skipTranslation = false } = options;
 
   let lastError = null;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      return await loadFortuneParentGuideData(imdbId);
+      return await loadFortuneParentGuideData(imdbId, { skipTranslation });
     } catch (err) {
       lastError = err;
       if (attempt >= attempts) {
@@ -1689,17 +1710,31 @@ function initFortuneWheel() {
     });
     renderFortuneItemsList();
 
-    const loadPromise = loadFortuneParentGuideDataWithRetry(metadata.imdbId)
-      .then((data) => {
+    const loadPromise = (async () => {
+      try {
+        // Step 1: Load English data fast
+        const fastData = await loadFortuneParentGuideDataWithRetry(
+          metadata.imdbId,
+          { skipTranslation: true }
+        );
+        setFortuneItemMetadata(normalizedLabel, {
+          parentGuide: fastData,
+          parentGuideError: null,
+        });
+        renderFortuneItemsList();
+
+        // Step 2: Load translated data
+        const fullData = await loadFortuneParentGuideDataWithRetry(
+          metadata.imdbId
+        );
         setFortuneItemMetadata(normalizedLabel, {
           parentGuideStatus: "ready",
-          parentGuide: data,
+          parentGuide: fullData,
           parentGuideError: null,
         });
         renderFortuneItemsList();
         fortuneParentGuideLoads.delete(normalizedLabel);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Failed to preload parent guide", err);
         setFortuneItemMetadata(normalizedLabel, {
           parentGuideStatus: "error",
@@ -1708,7 +1743,8 @@ function initFortuneWheel() {
         });
         renderFortuneItemsList();
         fortuneParentGuideLoads.delete(normalizedLabel);
-      });
+      }
+    })();
 
     fortuneParentGuideLoads.set(normalizedLabel, loadPromise);
     return loadPromise;
@@ -2027,11 +2063,15 @@ function initFortuneWheel() {
       parentGuideAction.className = "fortune-items-parent-guide";
 
       if (parentGuideStatus === "loading") {
-        const loader = document.createElement("span");
+        const loader = document.createElement("button");
+        loader.type = "button";
         loader.className =
           "fortune-parent-guide-indicator fortune-parent-guide-indicator--loading";
-        loader.title = "Загружаем данные из IMDb...";
+        loader.title = "Открыть модальное окно (загрузка...)";
         loader.innerHTML = '<span class="fortune-parent-guide-spinner"></span>';
+        loader.addEventListener("click", () => {
+          openFortuneMovieModalForLabel(label);
+        });
         parentGuideAction.appendChild(loader);
       } else {
         const parentGuideBtn = document.createElement("button");

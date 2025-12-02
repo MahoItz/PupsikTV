@@ -148,17 +148,14 @@ async function loadSelectedOpenRouterModel() {
 }
 
 export default async function handler(req, res) {
-  const { id } = req.query || {};
+  const { id, skipTranslation } = req.query || {};
   if (!id) {
     res.status(400).json({ error: "Missing IMDb title id" });
     return;
   }
 
   const apiKey = process.env.OPENROUTER_API;
-  if (!apiKey) {
-    res.status(500).json({ error: "Missing OpenRouter API key" });
-    return;
-  }
+  const shouldSkipTranslation = skipTranslation === "true";
 
   try {
     const url = `https://www.imdb.com/title/${encodeURIComponent(
@@ -192,6 +189,20 @@ export default async function handler(req, res) {
       violenceAndGore: sections.violenceAndGore,
       profanity: sections.profanity,
     });
+
+    // If skipTranslation is enabled, return immediately with original data
+    if (shouldSkipTranslation) {
+      console.log("[imdb-parent-guide] skipping translation (fast mode)");
+      res.status(200).json({ original: sections, translated: null });
+      return;
+    }
+
+    // Otherwise, proceed with translation
+    if (!apiKey) {
+      console.warn("[imdb-parent-guide] Missing OpenRouter API key, returning original only");
+      res.status(200).json({ original: sections, translated: null });
+      return;
+    }
 
     const translation = await translateSections(sections, apiKey);
 
