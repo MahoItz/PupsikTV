@@ -1279,7 +1279,7 @@ async function loadFortuneParentGuideData(imdbId, options = {}) {
   }
 
   const { skipTranslation = false } = options;
-  const queryParams = skipTranslation ? "?skipTranslation=true" : "";
+  const queryParams = skipTranslation ? "&skipTranslation=true" : "";
   const response = await fetch(
     `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}${queryParams}`
   );
