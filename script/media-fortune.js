@@ -105,7 +105,7 @@ const fortuneMovieModal = document.getElementById("fortuneMovieModal");
 const fortuneMovieClose = document.getElementById("fortuneMovieClose");
 const fortuneMoviePreview = document.getElementById("fortuneMoviePreview");
 const fortuneMovieCancel = document.getElementById("fortuneMovieCancel");
-const fortuneMovieAdd = document.getElementById("fortuneMovieAdd");
+const fortuneMovieDelete = document.getElementById("fortuneMovieDelete");
 const fortuneParentGuideStatus = document.getElementById(
   "fortuneParentGuideStatus"
 );
@@ -121,6 +121,7 @@ let fortuneParentGuideRequestId = 0;
 const fortuneItemInput = document.getElementById("fortuneItemInput");
 let fortuneKpResults = [];
 let selectedFortuneKPMovie = null;
+let selectedFortuneLabel = null;
 const fortuneItemMetadata = new Map();
 const fortuneParentGuideLoads = new Map();
 
@@ -1351,19 +1352,22 @@ async function openFortuneMovieModal(movie, options = {}) {
     return;
   }
 
-  const { label = null, disableAdd = false, useCachedParentGuide = false } =
-    options;
+  const { label = null, useCachedParentGuide = false } = options;
   const displayLabel = label || movie?.fortuneLabel || getFortuneMovieLabel(movie);
   if (fortuneItemInput && displayLabel) {
     fortuneItemInput.value = displayLabel;
   }
 
   selectedFortuneKPMovie = movie || null;
-  if (fortuneMovieAdd) {
-    fortuneMovieAdd.disabled = disableAdd;
-    fortuneMovieAdd.textContent = disableAdd
-      ? "Уже в рулетке"
-      : "Добавить фильм в рулетку";
+  selectedFortuneLabel = displayLabel || null;
+
+  const canRemoveFromWheel = Boolean(
+    fortuneWheelApi?.hasItem &&
+      selectedFortuneLabel &&
+      fortuneWheelApi.hasItem(selectedFortuneLabel)
+  );
+  if (fortuneMovieDelete) {
+    fortuneMovieDelete.disabled = !canRemoveFromWheel;
   }
 
   fortuneMoviePreview.innerHTML = "";
@@ -1396,8 +1400,8 @@ async function openFortuneMovieModal(movie, options = {}) {
   }
 
   fortuneMovieModal.style.display = "block";
-  if (fortuneMovieAdd) {
-    setTimeout(() => fortuneMovieAdd.focus(), 0);
+  if (fortuneMovieDelete && canRemoveFromWheel) {
+    setTimeout(() => fortuneMovieDelete.focus(), 0);
   }
 }
 
@@ -1417,7 +1421,6 @@ function openFortuneMovieModalForLabel(label) {
 
   openFortuneMovieModal(movie, {
     label: normalizedLabel,
-    disableAdd: true,
     useCachedParentGuide: true,
   });
 }
@@ -1427,6 +1430,7 @@ function closeFortuneMovieModal() {
     fortuneMovieModal.style.display = "none";
   }
   selectedFortuneKPMovie = null;
+  selectedFortuneLabel = null;
   if (fortuneItemInput) {
     fortuneItemInput.focus();
   }
@@ -1538,25 +1542,16 @@ if (fortuneMovieModal) {
   });
 }
 
-if (fortuneMovieAdd) {
-  fortuneMovieAdd.addEventListener("click", () => {
-    if (!selectedFortuneKPMovie || !fortuneWheelApi) {
+if (fortuneMovieDelete) {
+  fortuneMovieDelete.addEventListener("click", () => {
+    if (!fortuneWheelApi || !selectedFortuneLabel) {
       return;
     }
 
-    const label =
-      selectedFortuneKPMovie?.fortuneLabel ||
-      getFortuneMovieLabel(selectedFortuneKPMovie);
-    if (label) {
-      fortuneWheelApi.addItem(label, {
-        imdbId: selectedFortuneKPMovie?.imdbId || null,
-      });
-      resetFortuneAutocomplete();
-      if (fortuneItemInput) {
-        fortuneItemInput.value = "";
-      }
+    const removed = fortuneWheelApi.removeItem(selectedFortuneLabel);
+    if (removed) {
+      closeFortuneMovieModal();
     }
-    closeFortuneMovieModal();
   });
 }
 
@@ -1942,6 +1937,35 @@ function initFortuneWheel() {
     resetFortuneDuplicateState();
   }
 
+  function hasFortuneItem(label) {
+    const normalizedLabel = (label || "").trim();
+    if (!normalizedLabel) {
+      return false;
+    }
+
+    return getActiveItems().includes(normalizedLabel);
+  }
+
+  function removeFortuneItem(label) {
+    const normalizedLabel = (label || "").trim();
+    if (!normalizedLabel || spinning) {
+      return false;
+    }
+
+    const currentActive = getActiveItems();
+    const removeIndex = currentActive.indexOf(normalizedLabel);
+    if (removeIndex === -1) {
+      return false;
+    }
+
+    currentActive.splice(removeIndex, 1);
+    fortuneParentGuideLoads.delete(normalizedLabel);
+    fortuneItemMetadata.delete(normalizedLabel);
+    input.value = currentActive.join("\n");
+    updateFromInput();
+    return true;
+  }
+
   if (fortuneDuplicateCancel) {
     fortuneDuplicateCancel.addEventListener("click", () => {
       closeModal("fortuneDuplicateModal");
@@ -2147,19 +2171,7 @@ function initFortuneWheel() {
         removeBtn.title = "Удалить";
         removeBtn.innerHTML = '<span aria-hidden="true">✕</span>';
         removeBtn.addEventListener("click", () => {
-          if (spinning) {
-            return;
-          }
-
-          const currentActive = getActiveItems();
-          const removeIndex = currentActive.indexOf(label);
-          if (removeIndex === -1) {
-            return;
-          }
-
-          currentActive.splice(removeIndex, 1);
-          input.value = currentActive.join("\n");
-          updateFromInput();
+          removeFortuneItem(label);
         });
 
         actionsEl.appendChild(removeBtn);
@@ -2851,6 +2863,12 @@ function initFortuneWheel() {
     },
     addItem(label, options) {
       addFortuneItem(label, options);
+    },
+    removeItem(label) {
+      return removeFortuneItem(label);
+    },
+    hasItem(label) {
+      return hasFortuneItem(label);
     },
   };
 }
