@@ -1200,33 +1200,31 @@ async function openFortuneGuideInGoogleTranslate() {
     setFortuneParentGuideStatus("Не удалось скопировать данные в буфер обмена.");
   }
 
-  const helperWindow = window.open("", "_blank", "noopener,noreferrer");
-  if (!helperWindow) {
+  const buildTranslateUrl = (textValue) =>
+    textValue
+      ? `https://translate.google.com/?sl=auto&tl=ru&text=${encodeURIComponent(
+          textValue
+        )}&op=translate`
+      : "https://translate.google.com/?sl=auto&tl=ru";
+
+  const initialUrl = buildTranslateUrl(guideText);
+  const translateWindow = window.open(
+    initialUrl,
+    "_blank",
+    "noopener,noreferrer"
+  );
+  if (!translateWindow) {
     setFortuneParentGuideStatus("Разрешите всплывающие окна для Google Translate.");
     return;
   }
 
-  helperWindow.document.write(
-    "<!doctype html><html><head><title>Google Translate</title></head><body><p>Открываем Google Translate...</p></body></html>"
-  );
-  helperWindow.document.close();
-
-  const redirectWithText = (textValue) => {
-    const targetText = textValue || guideText;
-    const targetUrl = targetText
-      ? `https://translate.google.com/?sl=auto&tl=ru&text=${encodeURIComponent(
-          targetText
-        )}&op=translate`
-      : "https://translate.google.com/?sl=auto&tl=ru";
-    helperWindow.location.href = targetUrl;
-  };
-
   try {
     const clipboardText = await navigator.clipboard.readText();
-    redirectWithText(clipboardText);
+    if (clipboardText && clipboardText !== guideText) {
+      translateWindow.location.href = buildTranslateUrl(clipboardText);
+    }
   } catch (readError) {
     console.error("Failed to read clipboard after copy", readError);
-    redirectWithText(guideText);
   }
 }
 
