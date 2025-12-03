@@ -22,12 +22,39 @@ const SECTION_MARKERS = {
   ],
 };
 
+const NAMED_ENTITIES = {
+  "&quot;": "\"",
+  "&apos;": "'",
+  "&#39;": "'",
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&nbsp;": " ",
+};
+
+function decodeHtmlEntities(text) {
+  if (typeof text !== "string" || text.length === 0) return "";
+
+  return text
+    .replace(/&#x([0-9a-fA-F]+);?/g, (_, hex) => {
+      const codePoint = parseInt(hex, 16);
+      return Number.isNaN(codePoint) ? _ : String.fromCharCode(codePoint);
+    })
+    .replace(/&#(\d+);?/g, (_, num) => {
+      const codePoint = parseInt(num, 10);
+      return Number.isNaN(codePoint) ? _ : String.fromCharCode(codePoint);
+    })
+    .replace(/&[a-zA-Z#0-9]+;?/g, (entity) => NAMED_ENTITIES[entity] ?? entity);
+}
+
 function extractSection(html, markers = []) {
   const cleanText = (text) =>
-    text
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+    decodeHtmlEntities(
+      text
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+    );
 
   for (const marker of markers) {
     const markerIndex = html.indexOf(marker);
