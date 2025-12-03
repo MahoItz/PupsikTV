@@ -1141,7 +1141,7 @@ function setCurrentFortuneParentGuideData(data) {
   updateFortuneTranslateButton(Boolean(data));
 }
 
-function buildFortuneParentGuideClipboard(data, label = null) {
+function buildFortuneParentGuideText(data, label = null) {
   if (!data) {
     return "";
   }
@@ -1186,21 +1186,14 @@ async function openFortuneGuideInGoogleTranslate() {
     (selectedFortuneLabel
       ? fortuneItemMetadata.get(selectedFortuneLabel)?.parentGuide || null
       : null);
-  const guideText = buildFortuneParentGuideClipboard(
+  const guideText = buildFortuneParentGuideText(
     activeGuideData,
     selectedFortuneLabel
   );
 
   if (!guideText) {
-    setFortuneParentGuideStatus("Нет данных из IMDb для копирования.");
+    setFortuneParentGuideStatus("Нет данных из IMDb для перевода.");
     return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(guideText);
-  } catch (err) {
-    console.error("Failed to copy parent guide to clipboard", err);
-    setFortuneParentGuideStatus("Не удалось скопировать данные в буфер обмена.");
   }
 
   const buildTranslateUrl = (textValue) =>
@@ -1211,20 +1204,8 @@ async function openFortuneGuideInGoogleTranslate() {
       : "https://translate.google.com/?sl=auto&tl=ru";
 
   const initialUrl = buildTranslateUrl(guideText);
-  const translateWindow = window.open(
-    initialUrl,
-    "_blank",
-    "noopener,noreferrer"
-  );
 
-  try {
-    const clipboardText = await navigator.clipboard.readText();
-    if (clipboardText && clipboardText !== guideText) {
-      translateWindow.location.href = buildTranslateUrl(clipboardText);
-    }
-  } catch (readError) {
-    console.error("Failed to read clipboard after copy", readError);
-  }
+  window.open(initialUrl, "_blank", "noopener,noreferrer");
 }
 
 function resetFortuneParentGuideSections() {
