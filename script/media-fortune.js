@@ -1489,11 +1489,27 @@ async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
 
 function showFortuneParentGuideFromMetadata(label) {
   const metadata = fortuneItemMetadata.get(label) || {};
+  
+  // Handle ready state - show the data
   if (metadata.parentGuide && metadata.parentGuideStatus === "ready") {
     renderFortuneParentGuide(metadata.parentGuide);
     return true;
   }
 
+  // Handle loading state - show loading message
+  if (metadata.parentGuideStatus === "loading") {
+    if (metadata.parentGuide) {
+      // Show partial data if available (English version during translation)
+      renderFortuneParentGuide(metadata.parentGuide);
+      setFortuneParentGuideStatus("Переводим на русский язык...");
+    } else {
+      // Still waiting for initial data
+      setFortuneParentGuideStatus("Загружаем parent guide...");
+    }
+    return true;
+  }
+
+  // Handle error state - show error message
   if (metadata.parentGuideStatus === "error") {
     setFortuneParentGuideError(
       metadata.parentGuideError ||
@@ -1554,6 +1570,24 @@ async function openFortuneMovieModal(movie, options = {}) {
       fetchFortuneParentGuide(imdbId);
     } else {
       setFortuneParentGuideError("Для выбранного фильма нет IMDb ID.");
+    }
+  } else if (displayLabel && fortuneParentGuideLoads.has(displayLabel)) {
+    // If metadata shows "loading" and there's an active load promise, wait for it
+    const loadPromise = fortuneParentGuideLoads.get(displayLabel);
+    if (loadPromise) {
+      loadPromise.then(() => {
+        // Only update if this modal is still showing the same movie
+        if (selectedFortuneLabel === displayLabel && fortuneMovieModal.style.display === "block") {
+          showFortuneParentGuideFromMetadata(displayLabel);
+        }
+      }).catch((err) => {
+        console.error("Parent guide load failed", err);
+        // Error is already handled by preloadFortuneParentGuide
+        // Just refresh the UI to show the error state
+        if (selectedFortuneLabel === displayLabel && fortuneMovieModal.style.display === "block") {
+          showFortuneParentGuideFromMetadata(displayLabel);
+        }
+      });
     }
   }
 
