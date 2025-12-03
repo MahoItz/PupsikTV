@@ -1251,16 +1251,31 @@ async function fetchFortuneParentGuide(imdbId) {
     setFortuneParentGuideStatus("Переводим на русский язык...");
 
     // Step 2: Load with translation in background
-    const fullData = await loadFortuneParentGuideDataWithRetry(imdbId);
-    
-    if (requestId !== fortuneParentGuideRequestId) {
-      return;
-    }
+    try {
+      const fullData = await loadFortuneParentGuideDataWithRetry(imdbId);
 
-    // Update to Russian if translation is available
-    if (fullData?.translated) {
-      renderFortuneParentGuide(fullData);
-      setFortuneParentGuideStatus("Переведённые разделы загружены");
+      if (requestId !== fortuneParentGuideRequestId) {
+        return;
+      }
+
+      // Update to Russian if translation is available
+      if (fullData?.translated) {
+        renderFortuneParentGuide(fullData);
+        setFortuneParentGuideStatus("Переведённые разделы загружены");
+      } else {
+        setFortuneParentGuideStatus(
+          "Перевод недоступен, показываем оригинал на английском"
+        );
+      }
+    } catch (translateError) {
+      if (requestId !== fortuneParentGuideRequestId) {
+        return;
+      }
+
+      console.error("Failed to translate parental guide", translateError);
+      setFortuneParentGuideStatus(
+        "Не удалось перевести. Показываем оригинал на английском"
+      );
     }
   } catch (err) {
     if (requestId !== fortuneParentGuideRequestId) {
@@ -1724,14 +1739,22 @@ function initFortuneWheel() {
         renderFortuneItemsList();
 
         // Step 2: Load translated data
-        const fullData = await loadFortuneParentGuideDataWithRetry(
-          metadata.imdbId
-        );
-        setFortuneItemMetadata(normalizedLabel, {
-          parentGuideStatus: "ready",
-          parentGuide: fullData,
-          parentGuideError: null,
-        });
+        try {
+          const fullData = await loadFortuneParentGuideDataWithRetry(
+            metadata.imdbId
+          );
+          setFortuneItemMetadata(normalizedLabel, {
+            parentGuideStatus: "ready",
+            parentGuide: fullData,
+            parentGuideError: null,
+          });
+        } catch (translateError) {
+          console.error("Failed to translate parent guide", translateError);
+          setFortuneItemMetadata(normalizedLabel, {
+            parentGuideStatus: "ready",
+            parentGuideError: null,
+          });
+        }
         renderFortuneItemsList();
         fortuneParentGuideLoads.delete(normalizedLabel);
       } catch (err) {
