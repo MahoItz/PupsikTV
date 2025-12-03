@@ -1226,7 +1226,7 @@ async function fetchFortuneParentGuide(imdbId) {
   }
 
   const requestId = ++fortuneParentGuideRequestId;
-  setFortuneParentGuideStatus("Загружаем информацию из IMDb...");
+  setFortuneParentGuideStatus("Загружаем parent guide...");
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "none";
   }

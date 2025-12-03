@@ -22,12 +22,39 @@ const SECTION_MARKERS = {
   ],
 };
 
+const NAMED_ENTITIES = {
+  "&quot;": '"',
+  "&apos;": "'",
+  "&#39;": "'",
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&nbsp;": " ",
+};
+
+function decodeHtmlEntities(text) {
+  if (typeof text !== "string" || text.length === 0) return "";
+
+  return text
+    .replace(/&#x([0-9a-fA-F]+);?/g, (_, hex) => {
+      const codePoint = parseInt(hex, 16);
+      return Number.isNaN(codePoint) ? _ : String.fromCharCode(codePoint);
+    })
+    .replace(/&#(\d+);?/g, (_, num) => {
+      const codePoint = parseInt(num, 10);
+      return Number.isNaN(codePoint) ? _ : String.fromCharCode(codePoint);
+    })
+    .replace(/&[a-zA-Z#0-9]+;?/g, (entity) => NAMED_ENTITIES[entity] ?? entity);
+}
+
 function extractSection(html, markers = []) {
   const cleanText = (text) =>
-    text
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+    decodeHtmlEntities(
+      text
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+    );
 
   for (const marker of markers) {
     const markerIndex = html.indexOf(marker);
@@ -65,25 +92,26 @@ function extractSection(html, markers = []) {
 }
 
 async function translateSections(sections, apiKey) {
-  const selectedModel = (await loadSelectedOpenRouterModel()) || DEFAULT_OPENROUTER_MODEL;
+  const selectedModel =
+    (await loadSelectedOpenRouterModel()) || DEFAULT_OPENROUTER_MODEL;
   const body = {
     model: selectedModel,
     messages: [
       {
         role: "system",
         content:
-          'Ты — профессиональный переводчик с английского на русский язык. Твоя задача — переводить содержание разделов IMDb "Parents Guide" на естественный, грамотный русский язык. Всегда отвечай строго в виде корректного JSON. Структура JSON должна полностью соответствовать структуре входных данных: те же ключи, те же массивы, та же длина массивов и тот же порядок элементов. Ничего не добавляй и не удаляй. Все строки должны быть переведены исключительно на русский язык. Не используй английский язык в ответе, кроме случаев имён собственных.',
+          'Ты переводчик. Переводи с английского на русский. Отвечай строго валидным JSON, без Markdown и пояснений. Не используй английский язык в ответе, кроме случаев имён собственных.',
       },
       {
         role: "user",
         content: JSON.stringify({
           instruction:
-            'Переведи каждую строку в объекте "sections" на русский язык. Сохрани структуру JSON без изменений: те же ключи, массивы и порядок элементов. Каждый элемент массива должен быть грамотным, естественным русским предложением или фразой. Ответ должен быть строго корректным JSON без каких-либо дополнительных комментариев или текста.',
+            'Переведи ВСЕ строки в "sections" на русский язык. Не меняй структуру. Верни JSON-объект с тем же полем "sections".',
           sections,
         }),
       },
     ],
-    temperature: 0.3,
+    temperature: 0.2,
   };
 
   const response = await fetch(OPENROUTER_URL, {
@@ -132,13 +160,14 @@ async function loadSelectedOpenRouterModel() {
     if (error) throw error;
 
     const rows = Array.isArray(data) ? data : [];
-    const settingsRow = rows.find((item) => item?.selected_ai_model) || rows[0] || null;
+    const settingsRow =
+      rows.find((item) => item?.selected_ai_model) || rows[0] || null;
     const model =
       typeof settingsRow?.selected_ai_model === "string"
         ? settingsRow.selected_ai_model.trim()
         : typeof settingsRow?.ai_model === "string"
-          ? settingsRow.ai_model.trim()
-          : null;
+        ? settingsRow.ai_model.trim()
+        : null;
 
     return model || null;
   } catch (err) {
@@ -199,7 +228,9 @@ export default async function handler(req, res) {
 
     // Otherwise, proceed with translation
     if (!apiKey) {
-      console.warn("[imdb-parent-guide] Missing OpenRouter API key, returning original only");
+      console.warn(
+        "[imdb-parent-guide] Missing OpenRouter API key, returning original only"
+      );
       res.status(200).json({ original: sections, translated: null });
       return;
     }
