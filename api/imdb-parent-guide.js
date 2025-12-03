@@ -91,11 +91,10 @@ function extractSection(html, markers = []) {
   return [];
 }
 
-async function translateSections(sections, apiKey) {
-  const selectedModel =
-    (await loadSelectedOpenRouterModel()) || DEFAULT_OPENROUTER_MODEL;
+async function translateSections(sections, apiKey, selectedModel) {
+  const modelToUse = selectedModel || DEFAULT_OPENROUTER_MODEL;
   const body = {
-    model: selectedModel,
+    model: modelToUse,
     messages: [
       {
         role: "system",
@@ -187,24 +186,28 @@ export default async function handler(req, res) {
   const shouldSkipTranslation = skipTranslation === "true";
 
   try {
-    const url = `https://www.imdb.com/title/${encodeURIComponent(
-      id
-    )}/parentalguide/`;
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
-      },
-    });
+    // Parallelize fetching IMDb data and loading AI model settings
+    const imdbUrl = `https://www.imdb.com/title/${encodeURIComponent(id)}/parentalguide/`;
+    
+    const [imdbResponse, selectedModel] = await Promise.all([
+      fetch(imdbUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
+        },
+      }),
+      // Only load model if we might need it (i.e., we have an API key and aren't skipping translation)
+      (!shouldSkipTranslation && apiKey) ? loadSelectedOpenRouterModel() : Promise.resolve(null)
+    ]);
 
-    if (!response.ok) {
+    if (!imdbResponse.ok) {
       res
-        .status(response.status)
+        .status(imdbResponse.status)
         .json({ error: "Failed to fetch parental guide" });
       return;
     }
 
-    const html = await response.text();
-    console.log(`[imdb-parent-guide] fetched html length: ${html.length}`);
+    const html = await imdbResponse.text();
+    // console.log(`[imdb-parent-guide] fetched html length: ${html.length}`);
 
     const sections = Object.fromEntries(
       Object.entries(SECTION_MARKERS).map(([key, markers]) => [
@@ -213,16 +216,19 @@ export default async function handler(req, res) {
       ])
     );
 
-    console.log("[imdb-parent-guide] parsed sections", {
-      sexAndNudity: sections.sexAndNudity,
-      violenceAndGore: sections.violenceAndGore,
-      profanity: sections.profanity,
-    });
+    // console.log("[imdb-parent-guide] parsed sections", {
+    //   sexAndNudity: sections.sexAndNudity,
+    //   violenceAndGore: sections.violenceAndGore,
+    //   profanity: sections.profanity,
+    // });
 
-    // If skipTranslation is enabled, return immediately with original data
+    // Prepare content object
+    let content = { original: sections, translated: null };
+
+    // If skipTranslation is enabled, return immediately
     if (shouldSkipTranslation) {
-      console.log("[imdb-parent-guide] skipping translation (fast mode)");
-      res.status(200).json({ original: sections, translated: null });
+      // console.log("[imdb-parent-guide] skipping translation (fast mode)");
+      res.status(200).json(content);
       return;
     }
 
@@ -231,14 +237,16 @@ export default async function handler(req, res) {
       console.warn(
         "[imdb-parent-guide] Missing OpenRouter API key, returning original only"
       );
-      res.status(200).json({ original: sections, translated: null });
+      res.status(200).json(content);
       return;
     }
 
-    const translation = await translateSections(sections, apiKey);
+    const translation = await translateSections(sections, apiKey, selectedModel);
+    content.translated = translation;
 
-    res.status(200).json({ original: sections, translated: translation });
+    res.status(200).json(content);
   } catch (err) {
+    console.error("[imdb-parent-guide] error", err);
     res.status(500).json({ error: "Server error", message: err.message });
   }
 }
