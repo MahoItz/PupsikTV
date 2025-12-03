@@ -1216,10 +1216,6 @@ async function openFortuneGuideInGoogleTranslate() {
     "_blank",
     "noopener,noreferrer"
   );
-  if (!translateWindow) {
-    setFortuneParentGuideStatus("Не удалось открыть Google Translate.");
-    return;
-  }
 
   try {
     const clipboardText = await navigator.clipboard.readText();
@@ -1306,7 +1302,7 @@ function renderFortuneParentGuide(data) {
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "grid";
   }
-  setFortuneParentGuideStatus("Данные IMDb загружены (EN)");
+  setFortuneParentGuideStatus("Данные загружены");
 }
 
 function setFortuneParentGuideError(message) {
