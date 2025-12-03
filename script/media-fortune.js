@@ -1138,7 +1138,6 @@ function buildFortuneParentGuideClipboard(data, label = null) {
   if (label) {
     lines.push(`Фильм: ${label}`);
   }
-  lines.push("Источник: IMDb Parent Guide", "");
 
   Object.entries(sectionTitles).forEach(([key, title]) => {
     const originalItems = Array.isArray(originalSections[key])
@@ -1151,7 +1150,6 @@ function buildFortuneParentGuideClipboard(data, label = null) {
 
     lines.push(`== ${title} ==`);
     if (originalItems.length > 0) {
-      lines.push("Текст (EN):");
       originalItems.forEach((item) => {
         lines.push(`- ${item}`);
       });
@@ -1268,7 +1266,7 @@ function renderFortuneParentGuide(data) {
       fortuneParentGuideContent.style.display = "none";
     }
     setFortuneParentGuideStatus(
-      "Нет данных в разделах Sex & Nudity, Violence & Gore, Profanity."
+      "Нет данных в разделах Parent Guide."
     );
     return;
   }
