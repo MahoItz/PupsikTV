@@ -115,6 +115,11 @@ const fortuneParentGuideTranslate = document.getElementById(
 const fortuneParentGuideContent = document.getElementById(
   "fortuneParentGuideContent"
 );
+const fortuneParentGuideSections = {
+  sexAndNudity: document.getElementById("fortuneParentGuideSexSection"),
+  violenceAndGore: document.getElementById("fortuneParentGuideViolenceSection"),
+  profanity: document.getElementById("fortuneParentGuideProfanitySection"),
+};
 const fortuneParentGuideLists = {
   sexAndNudity: document.getElementById("fortuneParentGuideSex"),
   violenceAndGore: document.getElementById("fortuneParentGuideViolence"),
@@ -1198,7 +1203,7 @@ async function openFortuneGuideInGoogleTranslate() {
     "noopener,noreferrer"
   );
   if (!translateWindow) {
-    setFortuneParentGuideStatus("Разрешите всплывающие окна для Google Translate.");
+    setFortuneParentGuideStatus("Не удалось открыть Google Translate.");
     return;
   }
 
@@ -1212,11 +1217,20 @@ async function openFortuneGuideInGoogleTranslate() {
   }
 }
 
+function resetFortuneParentGuideSections() {
+  Object.entries(fortuneParentGuideSections).forEach(([key, section]) => {
+    if (!section) return;
+
+    section.open = key === "sexAndNudity";
+  });
+}
+
 function resetFortuneParentGuide(message = "Выберите фильм, чтобы увидеть содержание руководства") {
   setFortuneParentGuideStatus(message);
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "none";
   }
+  resetFortuneParentGuideSections();
   Object.values(fortuneParentGuideLists).forEach((list) => {
     if (list) {
       list.innerHTML = "";
@@ -1285,6 +1299,7 @@ function setFortuneParentGuideError(message) {
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "none";
   }
+  resetFortuneParentGuideSections();
   Object.values(fortuneParentGuideLists).forEach((list) => {
     if (list) {
       list.innerHTML = "";
