@@ -80,6 +80,8 @@ const fortuneSuggestionsClose = document.getElementById(
 const FORTUNE_SUGGESTIONS_POLL_INTERVAL = 3000;
 const FORTUNE_KINOPOISK_FILM_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.2/films";
+const FORTUNE_SUGGESTIONS_ENABLED = false;
+
 const fortuneSuggestionsState = {
   pollTimerId: null,
   isFetching: false,
@@ -561,6 +563,10 @@ function renderFortuneSuggestionsList() {
 }
 
 async function fetchFortuneSuggestions(force = false) {
+  if (!FORTUNE_SUGGESTIONS_ENABLED) {
+    return;
+  }
+
   if (!fortuneSuggestionsContainer) {
     return;
   }
@@ -663,6 +669,10 @@ async function fetchFortuneSuggestions(force = false) {
 }
 
 function startFortuneSuggestionsPolling() {
+  if (!FORTUNE_SUGGESTIONS_ENABLED) {
+    return;
+  }
+
   if (fortuneSuggestionsState.pollTimerId) {
     return;
   }
@@ -844,6 +854,10 @@ function handleFortuneSuggestionReject(item) {
 }
 
 function initializeFortuneSuggestions() {
+  if (!FORTUNE_SUGGESTIONS_ENABLED) {
+    return;
+  }
+
   if (fortuneSuggestionsState.initialized) {
     return;
   }
@@ -1441,9 +1455,13 @@ async function openFortuneMovieModal(movie, options = {}) {
     return;
   }
 
-  const { label = null, useCachedParentGuide = false } = options;
+  const {
+    label = null,
+    useCachedParentGuide = false,
+    updateInputField = true,
+  } = options;
   const displayLabel = label || movie?.fortuneLabel || getFortuneMovieLabel(movie);
-  if (fortuneItemInput && displayLabel) {
+  if (fortuneItemInput && displayLabel && updateInputField) {
     fortuneItemInput.value = displayLabel;
   }
 
@@ -1529,6 +1547,7 @@ function openFortuneMovieModalForLabel(label) {
   openFortuneMovieModal(movie, {
     label: normalizedLabel,
     useCachedParentGuide: true,
+    updateInputField: false,
   });
 }
 
