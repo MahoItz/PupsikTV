@@ -1512,6 +1512,9 @@ async function openFortuneMovieModal(movie, options = {}) {
 
   const { label = null, useCachedParentGuide = false } = options;
   const displayLabel = label || movie?.fortuneLabel || getFortuneMovieLabel(movie);
+  const labelMetadata = displayLabel
+    ? fortuneItemMetadata.get(displayLabel) || {}
+    : {};
   if (fortuneItemInput && displayLabel) {
     fortuneItemInput.value = displayLabel;
   }
@@ -1543,7 +1546,12 @@ async function openFortuneMovieModal(movie, options = {}) {
     fortuneMoviePreview.appendChild(card);
   }
 
-  let imdbId = movie?.imdbId || null;
+  const parentGuideStatus = labelMetadata.parentGuideStatus || null;
+  if (parentGuideStatus === "loading") {
+    setFortuneParentGuideStatus("Загружаем информацию из IMDb...");
+  }
+
+  let imdbId = movie?.imdbId || labelMetadata.imdbId || null;
   const handledFromCache =
     useCachedParentGuide && displayLabel
       ? showFortuneParentGuideFromMetadata(displayLabel)
@@ -1552,6 +1560,8 @@ async function openFortuneMovieModal(movie, options = {}) {
   if (!handledFromCache) {
     if (imdbId) {
       fetchFortuneParentGuide(imdbId);
+    } else if (parentGuideStatus === "loading") {
+      setFortuneParentGuideStatus("Загружаем информацию из IMDb...");
     } else {
       setFortuneParentGuideError("Для выбранного фильма нет IMDb ID.");
     }
