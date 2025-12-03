@@ -248,6 +248,12 @@
     border: 2px solid transparent;
 }
 
+#fortuneMovieModal .close {
+    z-index: 5;
+    background: rgba(0, 0, 0, 0.35);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
 .close:hover {
     color: var(--neon-pink);
     background: rgba(255, 20, 147, 0.1);
