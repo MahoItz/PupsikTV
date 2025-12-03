@@ -1,9 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
-
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
-
 const SECTION_MARKERS = {
   sexAndNudity: [
     'data-testid="sub-section-nudity"',
@@ -91,113 +85,21 @@ function extractSection(html, markers = []) {
   return [];
 }
 
-async function translateSections(sections, apiKey, selectedModel) {
-  const modelToUse = selectedModel || DEFAULT_OPENROUTER_MODEL;
-  const body = {
-    model: modelToUse,
-    messages: [
-      {
-        role: "system",
-        content:
-          'Ты переводчик. Переводи с английского на русский. Отвечай строго валидным JSON, без Markdown и пояснений. Не используй английский язык в ответе, кроме случаев имён собственных.',
-      },
-      {
-        role: "user",
-        content: JSON.stringify({
-          instruction:
-            'Переведи ВСЕ строки в "sections" на русский язык. Не меняй структуру. Верни JSON-объект с тем же полем "sections".',
-          sections,
-        }),
-      },
-    ],
-    temperature: 0.2,
-  };
-
-  const response = await fetch(OPENROUTER_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenRouter request failed: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content || "";
-  const normalized = content
-    .replace(/^```json/gi, "")
-    .replace(/```$/g, "")
-    .trim();
-  try {
-    return JSON.parse(normalized);
-  } catch (err) {
-    throw new Error("Failed to parse translation response");
-  }
-}
-
-async function loadSelectedOpenRouterModel() {
-  const supabaseKey = process.env.SUPABASE_KEY;
-
-  if (!supabaseKey) {
-    return null;
-  }
-
-  try {
-    const supabase = createClient(SUPABASE_URL, supabaseKey, {
-      auth: { persistSession: false },
-    });
-
-    const { data, error } = await supabase
-      .from("settings")
-      .select("selected_ai_model, ai_model")
-      .order("id", { ascending: true });
-
-    if (error) throw error;
-
-    const rows = Array.isArray(data) ? data : [];
-    const settingsRow =
-      rows.find((item) => item?.selected_ai_model) || rows[0] || null;
-    const model =
-      typeof settingsRow?.selected_ai_model === "string"
-        ? settingsRow.selected_ai_model.trim()
-        : typeof settingsRow?.ai_model === "string"
-        ? settingsRow.ai_model.trim()
-        : null;
-
-    return model || null;
-  } catch (err) {
-    console.error("[imdb-parent-guide] failed to load ai_model", err);
-    return null;
-  }
-}
-
 export default async function handler(req, res) {
-  const { id, skipTranslation } = req.query || {};
+  const { id } = req.query || {};
   if (!id) {
     res.status(400).json({ error: "Missing IMDb title id" });
     return;
   }
 
-  const apiKey = process.env.OPENROUTER_API;
-  const shouldSkipTranslation = skipTranslation === "true";
-
   try {
-    // Parallelize fetching IMDb data and loading AI model settings
     const imdbUrl = `https://www.imdb.com/title/${encodeURIComponent(id)}/parentalguide/`;
-    
-    const [imdbResponse, selectedModel] = await Promise.all([
-      fetch(imdbUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
-        },
-      }),
-      // Only load model if we might need it (i.e., we have an API key and aren't skipping translation)
-      (!shouldSkipTranslation && apiKey) ? loadSelectedOpenRouterModel() : Promise.resolve(null)
-    ]);
+
+    const imdbResponse = await fetch(imdbUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
+      },
+    });
 
     if (!imdbResponse.ok) {
       res
@@ -207,7 +109,6 @@ export default async function handler(req, res) {
     }
 
     const html = await imdbResponse.text();
-    // console.log(`[imdb-parent-guide] fetched html length: ${html.length}`);
 
     const sections = Object.fromEntries(
       Object.entries(SECTION_MARKERS).map(([key, markers]) => [
@@ -216,35 +117,7 @@ export default async function handler(req, res) {
       ])
     );
 
-    // console.log("[imdb-parent-guide] parsed sections", {
-    //   sexAndNudity: sections.sexAndNudity,
-    //   violenceAndGore: sections.violenceAndGore,
-    //   profanity: sections.profanity,
-    // });
-
-    // Prepare content object
-    let content = { original: sections, translated: null };
-
-    // If skipTranslation is enabled, return immediately
-    if (shouldSkipTranslation) {
-      // console.log("[imdb-parent-guide] skipping translation (fast mode)");
-      res.status(200).json(content);
-      return;
-    }
-
-    // Otherwise, proceed with translation
-    if (!apiKey) {
-      console.warn(
-        "[imdb-parent-guide] Missing OpenRouter API key, returning original only"
-      );
-      res.status(200).json(content);
-      return;
-    }
-
-    const translation = await translateSections(sections, apiKey, selectedModel);
-    content.translated = translation;
-
-    res.status(200).json(content);
+    res.status(200).json({ original: sections });
   } catch (err) {
     console.error("[imdb-parent-guide] error", err);
     res.status(500).json({ error: "Server error", message: err.message });
