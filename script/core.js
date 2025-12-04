@@ -1388,7 +1388,98 @@ function syncRouletteAutofillState() {
   }
 }
 
-function applyRouletteAutofill(options = {}) {
+async function fetchKPMovieDetails(filmId) {
+  const resolvedId = extractKinopoiskIdFromValue(filmId);
+
+  if (!resolvedId || !KINOPOISK_API_KEY) {
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${KINOPOISK_FILM_URL}/${resolvedId}`, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      return null;
+    }
+
+    const data = await res.json();
+
+    return {
+      ...data,
+      filmId: extractKinopoiskIdFromValue(
+        data.kinopoiskId || data.filmId || resolvedId,
+      ),
+      kinopoiskId: extractKinopoiskIdFromValue(
+        data.kinopoiskId || data.filmId || resolvedId,
+      ),
+      nameRu:
+        data.nameRu || data.nameOriginal || data.nameEn || data.nameRu || "",
+      nameEn: data.nameOriginal || data.nameEn || "",
+      rating:
+        data.ratingKinopoisk ||
+        data.ratingImdb ||
+        data.rating ||
+        data.ratingAwait ||
+        "-",
+      posterUrlPreview: data.posterUrlPreview || data.posterUrl || "",
+      posterUrl: data.posterUrl || data.posterUrlPreview || "",
+    };
+  } catch (err) {
+    console.error("Failed to fetch Kinopoisk movie by id", err);
+    return null;
+  }
+}
+
+async function trySelectRouletteWinnerMovie() {
+  if (!rouletteLastWinner) {
+    return;
+  }
+
+  const metadata = getFortuneWinnerMetadata(rouletteLastWinner);
+  const rouletteMovie = metadata?.movie || null;
+  const kinopoiskId =
+    metadata?.kinopoiskId ||
+    getKinopoiskIdFromMovie(rouletteMovie) ||
+    extractKinopoiskIdFromValue(rouletteLastWinner);
+
+  let resolvedMovie = rouletteMovie ? { ...rouletteMovie } : null;
+
+  if (!resolvedMovie && kinopoiskId) {
+    resolvedMovie = await fetchKPMovieDetails(kinopoiskId);
+  }
+
+  if (!resolvedMovie) {
+    return;
+  }
+
+  const resolvedId =
+    kinopoiskId ||
+    extractKinopoiskIdFromValue(
+      resolvedMovie.kinopoiskId || resolvedMovie.filmId || resolvedMovie.id,
+    );
+
+  if (resolvedId) {
+    resolvedMovie.filmId = resolvedId;
+    resolvedMovie.kinopoiskId = resolvedId;
+  }
+
+  kpResults = [resolvedMovie];
+  selectedKPMovie = resolvedMovie;
+  showKPPreview();
+
+  const resultsContainer = document.getElementById("autoResultsContainer");
+  if (resultsContainer) {
+    resultsContainer.style.display = "none";
+  }
+}
+
+async function applyRouletteAutofill(options = {}) {
   const { force = false, triggerSuggestions = false } = options;
   const input = getAutoTitleInput();
   const winner = rouletteLastWinner;
@@ -1413,6 +1504,10 @@ function applyRouletteAutofill(options = {}) {
   }
 
   syncRouletteAutofillState();
+
+  if (rouletteAutofillActive && isAddMovieModalOpen()) {
+    await trySelectRouletteWinnerMovie();
+  }
 
   if (triggerSuggestions && rouletteAutofillActive && isAddMovieModalOpen()) {
     triggerAutoTitleSuggestions();
