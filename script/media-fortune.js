@@ -1791,7 +1791,13 @@ async function openFortuneMovieModal(movie, options = {}) {
 
   fortuneMovieModal.style.display = "block";
   fortuneMovieModal.scrollTop = 0;
+  fortuneMovieModal.scrollTo({ top: 0 });
   fortuneMovieContent?.scrollTo({ top: 0 });
+  requestAnimationFrame(() => {
+    fortuneMovieModal.scrollTop = 0;
+    fortuneMovieModal.scrollTo({ top: 0 });
+    fortuneMovieContent?.scrollTo({ top: 0 });
+  });
   if (fortuneMovieDelete && canRemoveFromWheel) {
     setTimeout(() => fortuneMovieDelete.focus(), 0);
   }
