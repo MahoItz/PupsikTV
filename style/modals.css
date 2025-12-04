@@ -97,7 +97,11 @@
 }
 
 #fortuneWinnerModal .fortune-winner-content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
     padding: 28px;
+    min-height: 420px;
 }
 
 #fortuneWinnerModal .fortune-winner-body {
@@ -105,7 +109,8 @@
     gap: 24px;
     align-items: stretch;
     flex-wrap: wrap;
-    margin-top: 12px;
+    margin-top: 4px;
+    flex: 1;
 }
 
 #fortuneWinnerModal .fortune-winner-poster {
@@ -209,10 +214,13 @@
 }
 
 #fortuneWinnerModal .fortune-winner-actions {
-    margin-top: 8px;
+    margin-top: auto;
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .close {
