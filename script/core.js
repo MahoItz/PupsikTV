@@ -75,11 +75,9 @@ const KINOPOISK_FILM_URL = "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 let kpResults = [];
 let selectedKPMovie = null;
 
-function notifyKinopoiskQuotaExceeded(detailsMessage = "") {
-  const baseMessage = "Превышен дневной лимит запросов к Кинопоиску.";
-  const fullMessage = detailsMessage
-    ? `${baseMessage} ${detailsMessage}`
-    : `${baseMessage} Попробуйте позже.`;
+function notifyKinopoiskQuotaExceeded() {
+  const fullMessage =
+    "Превышен дневной лимит запросов к Кинопоиску 500 в день.";
 
   if (typeof showToastNotification === "function") {
     showToastNotification(fullMessage, "error");
@@ -95,15 +93,7 @@ async function handleKinopoiskErrorResponse(response) {
   }
 
   if (response.status === 402) {
-    let details = "";
-    try {
-      const payload = await response.clone().json();
-      details = payload?.message || "";
-    } catch (err) {
-      console.error("Failed to parse Kinopoisk error response", err);
-    }
-
-    notifyKinopoiskQuotaExceeded(details);
+    notifyKinopoiskQuotaExceeded();
     return true;
   }
 
