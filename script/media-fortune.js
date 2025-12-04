@@ -2611,7 +2611,6 @@ function initFortuneWheel() {
         parentGuideBtn.type = "button";
         parentGuideBtn.className = "fortune-parent-guide-indicator";
         parentGuideBtn.textContent = "PG";
-        parentGuideBtn.disabled = !metadata.imdbId;
 
         if (parentGuideStatus === "ready") {
           parentGuideBtn.classList.add(
@@ -2626,22 +2625,22 @@ function initFortuneWheel() {
             metadata.parentGuideError ||
             "Не удалось загрузить родительский гайд";
         } else if (metadata.imdbId) {
-          parentGuideBtn.title = "Загрузить родительский гайд";
+          parentGuideBtn.title = "Открыть модальное окно и загрузить гайд";
         } else {
-          parentGuideBtn.title = "IMDb ID не найден";
+          parentGuideBtn.title = "Открыть модальное окно (IMDb ID не найден)";
         }
 
         parentGuideBtn.addEventListener("click", () => {
-          if (!metadata.imdbId) {
-            return;
+          const latestMetadata = fortuneItemMetadata.get(label) || metadata;
+
+          if (
+            latestMetadata.imdbId &&
+            latestMetadata.parentGuideStatus !== "ready"
+          ) {
+            preloadFortuneParentGuide(label);
           }
 
-          if (metadata.parentGuideStatus === "ready") {
-            openFortuneMovieModalForLabel(label);
-            return;
-          }
-
-          preloadFortuneParentGuide(label);
+          openFortuneMovieModalForLabel(label);
         });
 
         parentGuideAction.appendChild(parentGuideBtn);
