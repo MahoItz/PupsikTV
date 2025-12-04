@@ -517,6 +517,12 @@
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+#fortuneMovieModal .fortune-timings__raw {
+    white-space: pre-line;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
 #fortuneMovieModal .fortune-timings__range {
     display: block;
     font-weight: 600;

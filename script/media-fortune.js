@@ -1176,15 +1176,15 @@ function resetFortuneTimings(
   }
 }
 
-function renderFortuneTimingsList(items) {
+function renderFortuneTimingsList(text = "") {
   if (!fortuneTimingsList) {
     return;
   }
 
   fortuneTimingsList.innerHTML = "";
-  const timings = Array.isArray(items) ? items : [];
+  const content = typeof text === "string" ? text.trim() : "";
 
-  if (timings.length === 0) {
+  if (!content) {
     const emptyItem = document.createElement("li");
     emptyItem.className = "fortune-timings__empty";
     emptyItem.textContent = "Тайминги отсутствуют.";
@@ -1192,33 +1192,23 @@ function renderFortuneTimingsList(items) {
     return;
   }
 
-  timings.forEach((item) => {
-    const listItem = document.createElement("li");
-    listItem.className = "fortune-timings__item";
+  const listItem = document.createElement("li");
+  listItem.className = "fortune-timings__item";
 
-    if (item?.range) {
-      const rangeEl = document.createElement("span");
-      rangeEl.className = "fortune-timings__range";
-      rangeEl.textContent = item.range;
-      listItem.appendChild(rangeEl);
-    }
+  const textEl = document.createElement("p");
+  textEl.className = "fortune-timings__raw";
+  textEl.textContent = content;
 
-    if (item?.description) {
-      const descriptionEl = document.createElement("p");
-      descriptionEl.className = "fortune-timings__description";
-      descriptionEl.textContent = item.description;
-      listItem.appendChild(descriptionEl);
-    }
-
-    fortuneTimingsList.appendChild(listItem);
-  });
+  listItem.appendChild(textEl);
+  fortuneTimingsList.appendChild(listItem);
 }
 
 function renderFortuneTimings(metadata = {}) {
-  const timings = Array.isArray(metadata.timings) ? metadata.timings : [];
-  const hasTimings = timings.length > 0;
+  const timingsText =
+    typeof metadata.timingsText === "string" ? metadata.timingsText : "";
+  const hasTimings = timingsText.trim().length > 0;
 
-  renderFortuneTimingsList(timings);
+  renderFortuneTimingsList(timingsText);
   setFortuneTimingsAuthor(metadata.timingsAuthor || null);
   setFortuneTimingsStatus(
     hasTimings ? "Тайминги загружены" : "Тайминги не найдены"
@@ -1226,75 +1216,12 @@ function renderFortuneTimings(metadata = {}) {
 }
 
 function setFortuneTimingsError(message) {
-  renderFortuneTimingsList([]);
+  renderFortuneTimingsList("");
   setFortuneTimingsAuthor(null);
   setFortuneTimingsStatus(message);
 }
 
 const FORTUNE_TIMINGS_PARSER_SELF_TEST = false;
-
-function parseFortuneTimingsText(text) {
-  if (typeof text !== "string" || !text.trim()) {
-    return [];
-  }
-
-  const normalized = text
-    .replace(/\r\n/g, "\n")
-    .replace(/\t+/g, " ")
-    .replace(/ {2,}/g, " ")
-    .trim();
-
-  const entryRegex =
-    /(\d{2}:\d{2}:\d{2})(?:\s*-\s*(\d{2}:\d{2}:\d{2}))?(?:\s*-\s*([^\n\r]+?))?(?=(?:\s+\d{2}:\d{2}:\d{2}\b)|$)/g;
-
-  const timings = [];
-  let match;
-  while ((match = entryRegex.exec(normalized)) !== null) {
-    const [, startTime, endTime, rawDescription] = match;
-    const description = (rawDescription || "").replace(/\s+/g, " ").trim();
-    const range = endTime ? `${startTime} - ${endTime}` : startTime;
-
-    timings.push({
-      range,
-      description: description || null,
-    });
-  }
-
-  if (timings.length === 0) {
-    const fallbackTimes = normalized.match(/\d{2}:\d{2}:\d{2}/g) || [];
-    return fallbackTimes.map((time) => ({ range: time, description: null }));
-  }
-
-  return timings;
-}
-
-function runFortuneTimingsParserSelfTest() {
-  const samples = [
-    {
-      text: "00:05:56 - 00:06:00 - идет зомби в разрезанном сзади костюме\t в пол экрана жопа\t01:01:45 - 01:01:51 - идет к дому полностью голая",
-      expected: 2,
-    },
-    {
-      text: "00:37:33 - 00:42:27  00:53:26",
-      expected: 2,
-    },
-    {
-      text: "00:10:00 - короткая вставка без конца",
-      expected: 1,
-    },
-  ];
-
-  samples.forEach((sample) => {
-    const parsed = parseFortuneTimingsText(sample.text);
-    if (parsed.length < sample.expected) {
-      console.warn("Timings parser: expected entries not found", sample.text, parsed);
-    }
-  });
-}
-
-if (FORTUNE_TIMINGS_PARSER_SELF_TEST) {
-  runFortuneTimingsParserSelfTest();
-}
 
 function showFortuneTimingsFromMetadata(label) {
   const normalizedLabel = (label || "").trim();
@@ -1312,7 +1239,7 @@ function showFortuneTimingsFromMetadata(label) {
 
   if (timingsStatus === "empty") {
     setFortuneTimingsAuthor(metadata.timingsAuthor || null);
-    renderFortuneTimingsList([]);
+    renderFortuneTimingsList("");
     setFortuneTimingsStatus("Тайминги не найдены");
     return true;
   }
@@ -1320,7 +1247,7 @@ function showFortuneTimingsFromMetadata(label) {
   if (timingsStatus === "loading") {
     setFortuneTimingsStatus("Загружаем тайминги...");
     setFortuneTimingsAuthor(null);
-    renderFortuneTimingsList([]);
+    renderFortuneTimingsList("");
     return true;
   }
 
@@ -1622,14 +1549,21 @@ async function loadFortuneTimingsData(kinopoiskId) {
     return null;
   }
 
-  const timings = data.flatMap((row) =>
-    parseFortuneTimingsText(row?.timing_text || "")
-  );
+  const timings = data.map((row) => (row?.timing_text || "").trim());
   const username =
     data.find((row) => row?.username)?.username || data[0]?.username || null;
 
+  const timingsText = timings
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+
+  if (!timingsText) {
+    return { timingsText: "", username };
+  }
+
   return {
-    timings,
+    timingsText,
     username,
   };
 }
@@ -2071,7 +2005,7 @@ function initFortuneWheel() {
       "parentGuide",
       "parentGuideStatus",
       "parentGuideError",
-      "timings",
+      "timingsText",
       "timingsStatus",
       "timingsError",
       "timingsAuthor",
@@ -2163,17 +2097,17 @@ function initFortuneWheel() {
     const loadPromise = (async () => {
       try {
         const timingsData = await loadFortuneTimingsData(kinopoiskId);
-        if (timingsData?.timings?.length) {
+        if (timingsData?.timingsText?.trim()) {
           setFortuneItemMetadata(normalizedLabel, {
             timingsStatus: "ready",
-            timings: timingsData.timings,
+            timingsText: timingsData.timingsText,
             timingsAuthor: timingsData.username || null,
             timingsError: null,
           });
         } else {
           setFortuneItemMetadata(normalizedLabel, {
             timingsStatus: "empty",
-            timings: [],
+            timingsText: "",
             timingsAuthor: timingsData?.username || null,
             timingsError: null,
           });
