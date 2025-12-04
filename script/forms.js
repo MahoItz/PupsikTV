@@ -166,6 +166,26 @@ document
       }
     } catch (err) {
       console.error("Error adding movie to Supabase", err);
+
+      const quotaExceeded =
+        err?.status === 402 ||
+        err?.code === "402" ||
+        (typeof err?.message === "string" &&
+          err.message.toLowerCase().includes("exceeded the quota"));
+
+      if (quotaExceeded) {
+        showToastNotification(
+          "Превышен лимит запросов на добавление фильмов за сутки. Попробуйте позже.",
+          "error"
+        );
+      } else {
+        showToastNotification(
+          "Не удалось добавить фильм. Попробуйте ещё раз чуть позже.",
+          "error"
+        );
+      }
+
+      return;
     }
 
     currentPage = 1;
