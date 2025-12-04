@@ -104,6 +104,9 @@ const fortuneAutoResultsContainer = document.getElementById(
 );
 const fortuneAutoResults = document.getElementById("fortuneAutoResults");
 const fortuneMovieModal = document.getElementById("fortuneMovieModal");
+const fortuneMovieContent = fortuneMovieModal?.querySelector(
+  ".fortune-movie-modal"
+);
 const fortuneMovieClose = document.getElementById("fortuneMovieClose");
 const fortuneMoviePreview = document.getElementById("fortuneMoviePreview");
 const fortuneMovieCancel = document.getElementById("fortuneMovieCancel");
@@ -1787,6 +1790,8 @@ async function openFortuneMovieModal(movie, options = {}) {
   }
 
   fortuneMovieModal.style.display = "block";
+  fortuneMovieModal.scrollTop = 0;
+  fortuneMovieContent?.scrollTo({ top: 0 });
   if (fortuneMovieDelete && canRemoveFromWheel) {
     setTimeout(() => fortuneMovieDelete.focus(), 0);
   }
