@@ -1575,6 +1575,12 @@ function showFortuneWinnerModal(label) {
     }
   }
 
+  const modalAudioPlayer = document.getElementById("audioPlayer");
+  if (modalAudioPlayer && !modalAudioPlayer.paused) {
+    modalAudioPlayer.pause();
+    modalAudioPlayer.currentTime = 0;
+  }
+
   fortuneWinnerModal.style.display = "block";
 }
 
