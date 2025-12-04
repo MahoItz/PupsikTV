@@ -1182,9 +1182,14 @@ function renderFortuneTimingsList(text = "") {
   }
 
   fortuneTimingsList.innerHTML = "";
-  const content = typeof text === "string" ? text.trim() : "";
 
-  if (!content) {
+  const rawText = typeof text === "string" ? text : "";
+  const normalizedText = rawText
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/[\t]+/g, "\n");
+
+  if (!normalizedText.trim()) {
     const emptyItem = document.createElement("li");
     emptyItem.className = "fortune-timings__empty";
     emptyItem.textContent = "Тайминги отсутствуют.";
@@ -1197,7 +1202,7 @@ function renderFortuneTimingsList(text = "") {
 
   const textEl = document.createElement("p");
   textEl.className = "fortune-timings__raw";
-  textEl.textContent = content;
+  textEl.textContent = normalizedText;
 
   listItem.appendChild(textEl);
   fortuneTimingsList.appendChild(listItem);
