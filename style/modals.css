@@ -468,6 +468,73 @@
     font-style: italic;
 }
 
+#fortuneMovieModal .fortune-timings {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(18, 24, 38, 0.95), rgba(10, 12, 22, 0.95));
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+
+#fortuneMovieModal .fortune-timings__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+#fortuneMovieModal .fortune-timings__meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#fortuneMovieModal .fortune-timings__author {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+#fortuneMovieModal .fortune-timings__status {
+    font-size: 14px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+#fortuneMovieModal .fortune-timings__list {
+    margin-top: 10px;
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#fortuneMovieModal .fortune-timings__item {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#fortuneMovieModal .fortune-timings__range {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+#fortuneMovieModal .fortune-timings__description {
+    margin-top: 4px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+#fortuneMovieModal .fortune-timings__empty {
+    padding: 8px 0;
+    color: #6a6f85;
+    font-style: italic;
+}
+
 /* Collapsible spoiler sections */
 #fortuneMovieModal .fortune-parent-guide__spoiler {
     width: 100%;

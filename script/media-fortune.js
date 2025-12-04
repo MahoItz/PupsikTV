@@ -135,6 +135,11 @@ let selectedFortuneKPMovie = null;
 let selectedFortuneLabel = null;
 const fortuneItemMetadata = new Map();
 const fortuneParentGuideLoads = new Map();
+const fortuneTimings = document.getElementById("fortuneTimings");
+const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
+const fortuneTimingsList = document.getElementById("fortuneTimingsList");
+const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
+const fortuneTimingsLoads = new Map();
 
 function setFortuneAutocompleteVisible(isOpen) {
   if (!fortuneAutoResultsContainer) return;
@@ -1141,6 +1146,155 @@ function setCurrentFortuneParentGuideData(data) {
   updateFortuneTranslateButton(Boolean(data));
 }
 
+function setFortuneTimingsStatus(message) {
+  if (fortuneTimingsStatus) {
+    fortuneTimingsStatus.textContent = message;
+  }
+}
+
+function setFortuneTimingsAuthor(author) {
+  if (!fortuneTimingsAuthor) {
+    return;
+  }
+
+  if (author) {
+    fortuneTimingsAuthor.textContent = `Автор: ${author}`;
+    fortuneTimingsAuthor.style.display = "inline";
+  } else {
+    fortuneTimingsAuthor.textContent = "";
+    fortuneTimingsAuthor.style.display = "none";
+  }
+}
+
+function resetFortuneTimings(
+  message = "Выберите фильм, чтобы увидеть тайминги"
+) {
+  setFortuneTimingsStatus(message);
+  setFortuneTimingsAuthor(null);
+  if (fortuneTimingsList) {
+    fortuneTimingsList.innerHTML = "";
+  }
+}
+
+function renderFortuneTimingsList(items) {
+  if (!fortuneTimingsList) {
+    return;
+  }
+
+  fortuneTimingsList.innerHTML = "";
+  const timings = Array.isArray(items) ? items : [];
+
+  if (timings.length === 0) {
+    const emptyItem = document.createElement("li");
+    emptyItem.className = "fortune-timings__empty";
+    emptyItem.textContent = "Тайминги отсутствуют.";
+    fortuneTimingsList.appendChild(emptyItem);
+    return;
+  }
+
+  timings.forEach((item) => {
+    const listItem = document.createElement("li");
+    listItem.className = "fortune-timings__item";
+
+    if (item?.range) {
+      const rangeEl = document.createElement("span");
+      rangeEl.className = "fortune-timings__range";
+      rangeEl.textContent = item.range;
+      listItem.appendChild(rangeEl);
+    }
+
+    if (item?.description) {
+      const descriptionEl = document.createElement("p");
+      descriptionEl.className = "fortune-timings__description";
+      descriptionEl.textContent = item.description;
+      listItem.appendChild(descriptionEl);
+    }
+
+    fortuneTimingsList.appendChild(listItem);
+  });
+}
+
+function renderFortuneTimings(metadata = {}) {
+  const timings = Array.isArray(metadata.timings) ? metadata.timings : [];
+  const hasTimings = timings.length > 0;
+
+  renderFortuneTimingsList(timings);
+  setFortuneTimingsAuthor(metadata.timingsAuthor || null);
+  setFortuneTimingsStatus(
+    hasTimings ? "Тайминги загружены" : "Тайминги не найдены"
+  );
+}
+
+function setFortuneTimingsError(message) {
+  renderFortuneTimingsList([]);
+  setFortuneTimingsAuthor(null);
+  setFortuneTimingsStatus(message);
+}
+
+function parseFortuneTimingsText(text) {
+  if (typeof text !== "string" || !text.trim()) {
+    return [];
+  }
+
+  const normalized = text.replace(/\r\n/g, "\n");
+  const regex =
+    /(\d{2}:\d{2}:\d{2})\s*-\s*(\d{2}:\d{2}:\d{2})\s*-(.*?)(?=(\d{2}:\d{2}:\d{2})\s*-\s*(\d{2}:\d{2}:\d{2})\s*-|$)/gs;
+
+  const timings = [];
+  let match;
+  while ((match = regex.exec(normalized)) !== null) {
+    const description = (match[3] || "").replace(/\s+/g, " ").trim();
+    timings.push({
+      range: `${match[1]} - ${match[2]}`,
+      description,
+    });
+  }
+
+  if (timings.length === 0) {
+    return [];
+  }
+
+  return timings;
+}
+
+function showFortuneTimingsFromMetadata(label) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel) {
+    return false;
+  }
+
+  const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
+  const { timingsStatus } = metadata;
+
+  if (timingsStatus === "ready") {
+    renderFortuneTimings(metadata);
+    return true;
+  }
+
+  if (timingsStatus === "empty") {
+    setFortuneTimingsAuthor(metadata.timingsAuthor || null);
+    renderFortuneTimingsList([]);
+    setFortuneTimingsStatus("Тайминги не найдены");
+    return true;
+  }
+
+  if (timingsStatus === "loading") {
+    setFortuneTimingsStatus("Загружаем тайминги...");
+    setFortuneTimingsAuthor(null);
+    renderFortuneTimingsList([]);
+    return true;
+  }
+
+  if (timingsStatus === "error") {
+    setFortuneTimingsError(
+      metadata.timingsError || "Не удалось загрузить тайминги."
+    );
+    return true;
+  }
+
+  return false;
+}
+
 function buildFortuneParentGuideText(data, label = null) {
   if (!data) {
     return "";
@@ -1410,6 +1564,32 @@ async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
   throw lastError || new Error("Unknown parent guide load error");
 }
 
+async function loadFortuneTimingsData(kinopoiskId) {
+  if (!kinopoiskId) {
+    return null;
+  }
+
+  const client = await waitForSupabaseClientForSuggestions();
+  const { data, error } = await client
+    .from("timings")
+    .select("timing_text, username")
+    .eq("kp_id", String(kinopoiskId))
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    timings: parseFortuneTimingsText(data.timing_text || ""),
+    username: data.username || null,
+  };
+}
+
 function showFortuneParentGuideFromMetadata(label) {
   const metadata = fortuneItemMetadata.get(label) || {};
   
@@ -1471,6 +1651,7 @@ async function openFortuneMovieModal(movie, options = {}) {
 
   fortuneMoviePreview.innerHTML = "";
   resetFortuneParentGuide();
+  resetFortuneTimings();
   if (typeof createMovieCard === "function") {
     const card = createMovieCard(
       mapFortuneFilmToMovieCard(movie),
@@ -1485,6 +1666,7 @@ async function openFortuneMovieModal(movie, options = {}) {
   }
 
   let imdbId = movie?.imdbId || null;
+  const kinopoiskId = movie?.kinopoiskId || movie?.filmId || movie?.id || null;
   const handledFromCache =
     useCachedParentGuide && displayLabel
       ? showFortuneParentGuideFromMetadata(displayLabel)
@@ -1513,6 +1695,40 @@ async function openFortuneMovieModal(movie, options = {}) {
           showFortuneParentGuideFromMetadata(displayLabel);
         }
       });
+    }
+  }
+
+  const handledTimingsFromCache = displayLabel
+    ? showFortuneTimingsFromMetadata(displayLabel)
+    : false;
+
+  if (!handledTimingsFromCache) {
+    if (kinopoiskId) {
+      setFortuneTimingsStatus("Загружаем тайминги...");
+    } else {
+      setFortuneTimingsError("Для выбранного фильма нет ID Кинопоиска.");
+    }
+  } else if (displayLabel && fortuneTimingsLoads.has(displayLabel)) {
+    const timingsPromise = fortuneTimingsLoads.get(displayLabel);
+    if (timingsPromise) {
+      timingsPromise
+        .then(() => {
+          if (
+            selectedFortuneLabel === displayLabel &&
+            fortuneMovieModal.style.display === "block"
+          ) {
+            showFortuneTimingsFromMetadata(displayLabel);
+          }
+        })
+        .catch((err) => {
+          console.error("Timings load failed", err);
+          if (
+            selectedFortuneLabel === displayLabel &&
+            fortuneMovieModal.style.display === "block"
+          ) {
+            showFortuneTimingsFromMetadata(displayLabel);
+          }
+        });
     }
   }
 
@@ -1811,6 +2027,10 @@ function initFortuneWheel() {
       "parentGuide",
       "parentGuideStatus",
       "parentGuideError",
+      "timings",
+      "timingsStatus",
+      "timingsError",
+      "timingsAuthor",
     ].forEach((key) => {
       if (Object.prototype.hasOwnProperty.call(metadata, key)) {
         normalizedMetadata[key] = metadata[key];
@@ -1870,6 +2090,76 @@ function initFortuneWheel() {
     })();
 
     fortuneParentGuideLoads.set(normalizedLabel, loadPromise);
+    return loadPromise;
+  }
+
+  async function preloadFortuneTimings(label) {
+    const normalizedLabel = (label || "").trim();
+    if (!normalizedLabel || fortuneTimingsLoads.has(normalizedLabel)) {
+      return;
+    }
+
+    const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
+    const kinopoiskId =
+      metadata.kinopoiskId ||
+      metadata.movie?.kinopoiskId ||
+      metadata.movie?.filmId ||
+      metadata.movie?.id ||
+      null;
+
+    if (!kinopoiskId || metadata.timingsStatus === "ready") {
+      return;
+    }
+
+    setFortuneItemMetadata(normalizedLabel, {
+      timingsStatus: "loading",
+      timingsError: null,
+    });
+
+    const loadPromise = (async () => {
+      try {
+        const timingsData = await loadFortuneTimingsData(kinopoiskId);
+        if (timingsData?.timings?.length) {
+          setFortuneItemMetadata(normalizedLabel, {
+            timingsStatus: "ready",
+            timings: timingsData.timings,
+            timingsAuthor: timingsData.username || null,
+            timingsError: null,
+          });
+        } else {
+          setFortuneItemMetadata(normalizedLabel, {
+            timingsStatus: "empty",
+            timings: [],
+            timingsAuthor: timingsData?.username || null,
+            timingsError: null,
+          });
+        }
+
+        if (
+          selectedFortuneLabel === normalizedLabel &&
+          fortuneMovieModal?.style.display === "block"
+        ) {
+          showFortuneTimingsFromMetadata(normalizedLabel);
+        }
+      } catch (err) {
+        console.error("Failed to preload timings", err);
+        setFortuneItemMetadata(normalizedLabel, {
+          timingsStatus: "error",
+          timingsError: "Не удалось загрузить тайминги. Попробуйте позже.",
+        });
+
+        if (
+          selectedFortuneLabel === normalizedLabel &&
+          fortuneMovieModal?.style.display === "block"
+        ) {
+          showFortuneTimingsFromMetadata(normalizedLabel);
+        }
+      } finally {
+        fortuneTimingsLoads.delete(normalizedLabel);
+      }
+    })();
+
+    fortuneTimingsLoads.set(normalizedLabel, loadPromise);
     return loadPromise;
   }
 
@@ -1995,6 +2285,9 @@ function initFortuneWheel() {
     if (options.parentGuideStatus === "loading") {
       preloadFortuneParentGuide(value);
     }
+    if (options.kinopoiskId) {
+      preloadFortuneTimings(value);
+    }
   }
 
   function addFortuneItem(label, options = {}) {
@@ -2065,6 +2358,7 @@ function initFortuneWheel() {
 
     currentActive.splice(removeIndex, 1);
     fortuneParentGuideLoads.delete(normalizedLabel);
+    fortuneTimingsLoads.delete(normalizedLabel);
     fortuneItemMetadata.delete(normalizedLabel);
     input.value = currentActive.join("\n");
     updateFromInput();
