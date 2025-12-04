@@ -135,11 +135,49 @@ let selectedFortuneKPMovie = null;
 let selectedFortuneLabel = null;
 const fortuneItemMetadata = new Map();
 const fortuneParentGuideLoads = new Map();
+const fortuneTimingsLoads = new Map();
 const fortuneTimingsContainer = document.getElementById("fortuneTimings");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 let fortuneTimingsRequestId = 0;
+
+function setFortuneItemMetadata(label, metadata = {}) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel) {
+    return;
+  }
+
+  const previous = fortuneItemMetadata.get(normalizedLabel) || {};
+  const normalizedMetadata = { ...previous };
+
+  [
+    "imdbId",
+    "kinopoiskId",
+    "movie",
+    "parentGuide",
+    "parentGuideStatus",
+    "parentGuideError",
+    "timings",
+    "timingsAuthor",
+    "timingsStatus",
+    "timingsError",
+  ].forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(metadata, key)) {
+      normalizedMetadata[key] = metadata[key];
+    }
+  });
+
+  const hasData = Object.values(normalizedMetadata).some(
+    (value) => value !== undefined && value !== null && value !== ""
+  );
+
+  if (hasData) {
+    fortuneItemMetadata.set(normalizedLabel, normalizedMetadata);
+  } else {
+    fortuneItemMetadata.delete(normalizedLabel);
+  }
+}
 
 function setFortuneAutocompleteVisible(isOpen) {
   if (!fortuneAutoResultsContainer) return;
@@ -1445,15 +1483,28 @@ function showFortuneTimingsFromMetadata(label) {
   return false;
 }
 
-async function loadFortuneTimings(kinopoiskId, label = null) {
+async function loadFortuneTimings(kinopoiskId, label = null, options = {}) {
+  const { silent = false } = options;
   const normalizedLabel = (label || "").trim();
+  const shouldUpdateUi =
+    !silent && !!fortuneTimingsStatus && !!fortuneTimingsContainer;
+  const shouldSyncOpenModal =
+    normalizedLabel &&
+    normalizedLabel === selectedFortuneLabel &&
+    fortuneMovieModal &&
+    fortuneMovieModal.style.display === "block";
+
   if (!kinopoiskId) {
-    setFortuneTimingsStatus("Для выбранного фильма нет ID Кинопоиска.");
+    if (shouldUpdateUi || shouldSyncOpenModal) {
+      setFortuneTimingsStatus("Для выбранного фильма нет ID Кинопоиска.");
+    }
     return;
   }
 
   const requestId = ++fortuneTimingsRequestId;
-  setFortuneTimingsStatus("Загружаем тайминги...");
+  if (shouldUpdateUi || shouldSyncOpenModal) {
+    setFortuneTimingsStatus("Загружаем тайминги...");
+  }
 
   if (normalizedLabel) {
     setFortuneItemMetadata(normalizedLabel, {
@@ -1492,17 +1543,21 @@ async function loadFortuneTimings(kinopoiskId, label = null) {
       });
     }
 
-    renderFortuneTimings(parsedTimings, timingRow?.username || "");
+    if (shouldUpdateUi || shouldSyncOpenModal) {
+      renderFortuneTimings(parsedTimings, timingRow?.username || "");
+    }
   } catch (err) {
     console.error("Failed to load timings", err);
     if (requestId !== fortuneTimingsRequestId) {
       return;
     }
 
-    setFortuneTimingsStatus(
-      "Не удалось загрузить тайминги. Попробуйте позже.",
-      { state: "error" }
-    );
+    if (shouldUpdateUi || shouldSyncOpenModal) {
+      setFortuneTimingsStatus(
+        "Не удалось загрузить тайминги. Попробуйте позже.",
+        { state: "error" }
+      );
+    }
 
     if (normalizedLabel) {
       setFortuneItemMetadata(normalizedLabel, {
@@ -1511,6 +1566,43 @@ async function loadFortuneTimings(kinopoiskId, label = null) {
       });
     }
   }
+}
+
+function preloadFortuneTimings(label) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel || fortuneTimingsLoads.has(normalizedLabel)) {
+    return;
+  }
+
+  const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
+  if (
+    !metadata.kinopoiskId ||
+    metadata.timingsStatus === "ready" ||
+    metadata.timingsStatus === "empty" ||
+    metadata.timingsStatus === "loading"
+  ) {
+    return;
+  }
+
+  setFortuneItemMetadata(normalizedLabel, {
+    timingsStatus: "loading",
+    timingsError: null,
+  });
+
+  const loadPromise = (async () => {
+    await loadFortuneTimings(metadata.kinopoiskId, normalizedLabel, {
+      silent: true,
+    });
+  })()
+    .catch((err) => {
+      console.error("Failed to preload timings", err);
+    })
+    .finally(() => {
+      fortuneTimingsLoads.delete(normalizedLabel);
+    });
+
+  fortuneTimingsLoads.set(normalizedLabel, loadPromise);
+  return loadPromise;
 }
 
 async function fetchFortuneImdbId(kinopoiskId) {
@@ -2022,43 +2114,6 @@ function initFortuneWheel() {
   let lastEliminatedLabel = null;
   let pendingFortuneItemLabel = null;
   let pendingFortuneItemOptions = null;
-  function setFortuneItemMetadata(label, metadata = {}) {
-    const normalizedLabel = (label || "").trim();
-    if (!normalizedLabel) {
-      return;
-    }
-
-    const previous = fortuneItemMetadata.get(normalizedLabel) || {};
-    const normalizedMetadata = { ...previous };
-
-    [
-      "imdbId",
-      "kinopoiskId",
-      "movie",
-      "parentGuide",
-      "parentGuideStatus",
-      "parentGuideError",
-      "timings",
-      "timingsAuthor",
-      "timingsStatus",
-      "timingsError",
-    ].forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(metadata, key)) {
-        normalizedMetadata[key] = metadata[key];
-      }
-    });
-
-    const hasData = Object.values(normalizedMetadata).some(
-      (value) => value !== undefined && value !== null && value !== ""
-    );
-
-    if (hasData) {
-      fortuneItemMetadata.set(normalizedLabel, normalizedMetadata);
-    } else {
-      fortuneItemMetadata.delete(normalizedLabel);
-    }
-  }
-
   async function preloadFortuneParentGuide(label) {
     const normalizedLabel = (label || "").trim();
     if (!normalizedLabel || fortuneParentGuideLoads.has(normalizedLabel)) {
@@ -2075,6 +2130,7 @@ function initFortuneWheel() {
       parentGuideError: null,
     });
     renderFortuneItemsList();
+    preloadFortuneTimings(normalizedLabel);
 
     const loadPromise = (async () => {
       try {
@@ -2226,6 +2282,9 @@ function initFortuneWheel() {
     if (options.parentGuideStatus === "loading") {
       preloadFortuneParentGuide(value);
     }
+    if (options.kinopoiskId) {
+      preloadFortuneTimings(value);
+    }
   }
 
   function addFortuneItem(label, options = {}) {
@@ -2296,6 +2355,7 @@ function initFortuneWheel() {
 
     currentActive.splice(removeIndex, 1);
     fortuneParentGuideLoads.delete(normalizedLabel);
+    fortuneTimingsLoads.delete(normalizedLabel);
     fortuneItemMetadata.delete(normalizedLabel);
     input.value = currentActive.join("\n");
     updateFromInput();
