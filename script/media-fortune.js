@@ -1231,30 +1231,69 @@ function setFortuneTimingsError(message) {
   setFortuneTimingsStatus(message);
 }
 
+const FORTUNE_TIMINGS_PARSER_SELF_TEST = false;
+
 function parseFortuneTimingsText(text) {
   if (typeof text !== "string" || !text.trim()) {
     return [];
   }
 
-  const normalized = text.replace(/\r\n/g, "\n");
-  const regex =
-    /(\d{2}:\d{2}:\d{2})\s*-\s*(\d{2}:\d{2}:\d{2})\s*-(.*?)(?=(\d{2}:\d{2}:\d{2})\s*-\s*(\d{2}:\d{2}:\d{2})\s*-|$)/gs;
+  const normalized = text
+    .replace(/\r\n/g, "\n")
+    .replace(/\t+/g, " ")
+    .replace(/ {2,}/g, " ")
+    .trim();
+
+  const entryRegex =
+    /(\d{2}:\d{2}:\d{2})(?:\s*-\s*(\d{2}:\d{2}:\d{2}))?(?:\s*-\s*([^\n\r]+?))?(?=(?:\s+\d{2}:\d{2}:\d{2}\b)|$)/g;
 
   const timings = [];
   let match;
-  while ((match = regex.exec(normalized)) !== null) {
-    const description = (match[3] || "").replace(/\s+/g, " ").trim();
+  while ((match = entryRegex.exec(normalized)) !== null) {
+    const [, startTime, endTime, rawDescription] = match;
+    const description = (rawDescription || "").replace(/\s+/g, " ").trim();
+    const range = endTime ? `${startTime} - ${endTime}` : startTime;
+
     timings.push({
-      range: `${match[1]} - ${match[2]}`,
-      description,
+      range,
+      description: description || null,
     });
   }
 
   if (timings.length === 0) {
-    return [];
+    const fallbackTimes = normalized.match(/\d{2}:\d{2}:\d{2}/g) || [];
+    return fallbackTimes.map((time) => ({ range: time, description: null }));
   }
 
   return timings;
+}
+
+function runFortuneTimingsParserSelfTest() {
+  const samples = [
+    {
+      text: "00:05:56 - 00:06:00 - идет зомби в разрезанном сзади костюме\t в пол экрана жопа\t01:01:45 - 01:01:51 - идет к дому полностью голая",
+      expected: 2,
+    },
+    {
+      text: "00:37:33 - 00:42:27  00:53:26",
+      expected: 2,
+    },
+    {
+      text: "00:10:00 - короткая вставка без конца",
+      expected: 1,
+    },
+  ];
+
+  samples.forEach((sample) => {
+    const parsed = parseFortuneTimingsText(sample.text);
+    if (parsed.length < sample.expected) {
+      console.warn("Timings parser: expected entries not found", sample.text, parsed);
+    }
+  });
+}
+
+if (FORTUNE_TIMINGS_PARSER_SELF_TEST) {
+  runFortuneTimingsParserSelfTest();
 }
 
 function showFortuneTimingsFromMetadata(label) {
