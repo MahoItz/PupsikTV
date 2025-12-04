@@ -1495,11 +1495,10 @@ async function fetchFortuneImdbId(kinopoiskId) {
   }
 
   try {
-    const response = await fetch(
+    const response = await fetchKinopoiskWithRetry(
       `${FORTUNE_KINOPOISK_FILM_URL}/${encodeURIComponent(kinopoiskId)}`,
       {
         headers: {
-          "X-API-KEY": KINOPOISK_API_KEY,
           "Content-Type": "application/json",
         },
       }
@@ -1859,12 +1858,16 @@ const debouncedFortuneKPSearch = debounce(async (query) => {
     const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
       trimmed
     )}&page=1`;
-    const res = await fetch(url, {
+    const res = await fetchKinopoiskWithRetry(url, {
       headers: {
-        "X-API-KEY": KINOPOISK_API_KEY,
         "Content-Type": "application/json",
       },
     });
+
+    if (!res.ok) {
+      resetFortuneAutocomplete();
+      return;
+    }
 
     const data = await res.json();
     fortuneKpResults = (data.films || []).map(mapFortuneFilmResult);

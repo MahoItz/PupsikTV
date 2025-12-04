@@ -475,7 +475,13 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   const kpStored = localStorage.getItem("KINOPOISK_API_KEY");
-  if (kpStored) KINOPOISK_API_KEY = kpStored;
+  const kpStored2 = localStorage.getItem("KINOPOISK_API_KEY2");
+  if (kpStored || kpStored2) {
+    applyKinopoiskKeys({
+      primaryKey: kpStored || null,
+      secondaryKey: kpStored2 || null,
+    });
+  }
   const rawgStored = localStorage.getItem("RAWG_API_KEY");
   if (rawgStored) RAWG_API_KEY = rawgStored;
   const cached = localStorage.getItem("moviesCache");
@@ -535,6 +541,9 @@ document.addEventListener("DOMContentLoaded", async function () {
           showAdminControls(true);
           if (env.KINOPOISK_API_KEY) {
             localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
+          }
+          if (env.KINOPOISK_API_KEY2) {
+            localStorage.setItem("KINOPOISK_API_KEY2", env.KINOPOISK_API_KEY2);
           }
           if (env.RAWG_API_KEY) {
             localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
@@ -616,6 +625,12 @@ document.addEventListener("DOMContentLoaded", async function () {
                 localStorage.setItem(
                   "KINOPOISK_API_KEY",
                   env.KINOPOISK_API_KEY
+                );
+              }
+              if (env.KINOPOISK_API_KEY2) {
+                localStorage.setItem(
+                  "KINOPOISK_API_KEY2",
+                  env.KINOPOISK_API_KEY2
                 );
               }
               if (env.RAWG_API_KEY) {

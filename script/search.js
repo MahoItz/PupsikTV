@@ -21,16 +21,22 @@ const debouncedKPSearch = debounce(async (query) => {
     const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
       query
     )}&page=1`;
-    const res = await fetch(url, {
+    const res = await fetchKinopoiskWithRetry(url, {
       headers: {
-        "X-API-KEY": KINOPOISK_API_KEY,
         "Content-Type": "application/json",
       },
     });
-    const data = await res.json();
-    kpResults = data.films || [];
     const container = document.getElementById("autoResultsContainer");
     const list = document.getElementById("autoResults");
+    if (!res.ok) {
+      kpResults = [];
+      selectedKPMovie = null;
+      if (list) list.innerHTML = "";
+      if (container) container.style.display = "none";
+      return;
+    }
+    const data = await res.json();
+    kpResults = data.films || [];
     if (!list) return;
     list.innerHTML = "";
     kpResults.forEach((m, idx) => {
@@ -66,16 +72,22 @@ const debouncedWatchlistKPSearch = debounce(async (query) => {
     const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
       query
     )}&page=1`;
-    const res = await fetch(url, {
+    const res = await fetchKinopoiskWithRetry(url, {
       headers: {
-        "X-API-KEY": KINOPOISK_API_KEY,
         "Content-Type": "application/json",
       },
     });
-    const data = await res.json();
-    kpOrderResults = data.films || [];
     const container = document.getElementById("watchAutoResultsContainer");
     const list = document.getElementById("watchAutoResults");
+    if (!res.ok) {
+      kpOrderResults = [];
+      selectedKPOrderMovie = null;
+      if (list) list.innerHTML = "";
+      if (container) container.style.display = "none";
+      return;
+    }
+    const data = await res.json();
+    kpOrderResults = data.films || [];
     if (!list) return;
     list.innerHTML = "";
     kpOrderResults.forEach((m, idx) => {
@@ -195,16 +207,22 @@ async function handleKPSearch() {
     const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
       title
     )}&page=1`;
-    const res = await fetch(url, {
+    const res = await fetchKinopoiskWithRetry(url, {
       headers: {
-        "X-API-KEY": KINOPOISK_API_KEY,
         "Content-Type": "application/json",
       },
     });
-    const data = await res.json();
-    kpResults = data.films || [];
     const container = document.getElementById("autoResultsContainer");
     const list = document.getElementById("autoResults");
+    if (!res.ok) {
+      kpResults = [];
+      selectedKPMovie = null;
+      if (list) list.innerHTML = "";
+      if (container) container.style.display = "none";
+      return;
+    }
+    const data = await res.json();
+    kpResults = data.films || [];
     list.innerHTML = "";
     kpResults.forEach((m, idx) => {
       const div = document.createElement("div");
@@ -249,16 +267,22 @@ async function handleWatchlistSearch() {
     const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
       title
     )}&page=1`;
-    const res = await fetch(url, {
+    const res = await fetchKinopoiskWithRetry(url, {
       headers: {
-        "X-API-KEY": KINOPOISK_API_KEY,
         "Content-Type": "application/json",
       },
     });
-    const data = await res.json();
-    kpOrderResults = data.films || [];
     const container = document.getElementById("watchAutoResultsContainer");
     const list = document.getElementById("watchAutoResults");
+    if (!res.ok) {
+      kpOrderResults = [];
+      selectedKPOrderMovie = null;
+      if (list) list.innerHTML = "";
+      if (container) container.style.display = "none";
+      return;
+    }
+    const data = await res.json();
+    kpOrderResults = data.films || [];
     list.innerHTML = "";
     kpOrderResults.forEach((m, idx) => {
       const div = document.createElement("div");
@@ -370,13 +394,12 @@ async function fetchKinopoiskFilmOptions(movie, limit = 9) {
   }
 
   try {
-    const response = await fetch(
+    const response = await fetchKinopoiskWithRetry(
       `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
         querySource
       )}&page=1`,
       {
         headers: {
-          "X-API-KEY": KINOPOISK_API_KEY,
           "Content-Type": "application/json",
         },
       }
@@ -495,11 +518,10 @@ async function fetchKinopoiskFilm(title, year, originalTitle = "") {
     return null;
   }
   try {
-    const res = await fetch(
+    const res = await fetchKinopoiskWithRetry(
       `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`,
       {
         headers: {
-          "X-API-KEY": KINOPOISK_API_KEY,
           "Content-Type": "application/json",
         },
       }

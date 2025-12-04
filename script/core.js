@@ -61,19 +61,125 @@ function clearAdminSession() {
   updateAdminSession(null, null);
   isAdmin = false;
   localStorage.removeItem("KINOPOISK_API_KEY");
+  localStorage.removeItem("KINOPOISK_API_KEY2");
   localStorage.removeItem("RAWG_API_KEY");
   KINOPOISK_API_KEY = undefined;
+  KINOPOISK_PRIMARY_API_KEY = null;
+  KINOPOISK_API_KEY2 = null;
+  activeKinopoiskApiKeyName = null;
   RAWG_API_KEY = undefined;
   if (typeof hideAdminControls === "function") {
     hideAdminControls(true);
   }
 }
 let KINOPOISK_API_KEY;
+let KINOPOISK_PRIMARY_API_KEY = null;
+let KINOPOISK_API_KEY2 = null;
+let activeKinopoiskApiKeyName = null;
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 const KINOPOISK_FILM_URL = "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 let kpResults = [];
 let selectedKPMovie = null;
+
+function notifyKinopoiskQuotaExceeded() {
+  const fullMessage =
+    "Превышен дневной лимит запросов к Кинопоиску 500 в день.";
+
+  if (typeof showToastNotification === "function") {
+    showToastNotification(fullMessage, "error");
+    return;
+  }
+
+  alert(fullMessage);
+}
+
+function applyKinopoiskKeys({ primaryKey, secondaryKey } = {}) {
+  if (primaryKey !== undefined) {
+    KINOPOISK_PRIMARY_API_KEY = primaryKey || null;
+  }
+
+  if (secondaryKey !== undefined) {
+    KINOPOISK_API_KEY2 = secondaryKey || null;
+  }
+
+  if (activeKinopoiskApiKeyName === "secondary" && KINOPOISK_API_KEY2) {
+    KINOPOISK_API_KEY = KINOPOISK_API_KEY2;
+    return;
+  }
+
+  if (KINOPOISK_PRIMARY_API_KEY) {
+    KINOPOISK_API_KEY = KINOPOISK_PRIMARY_API_KEY;
+    activeKinopoiskApiKeyName = "primary";
+  } else if (KINOPOISK_API_KEY2) {
+    KINOPOISK_API_KEY = KINOPOISK_API_KEY2;
+    activeKinopoiskApiKeyName = "secondary";
+  } else {
+    KINOPOISK_API_KEY = null;
+    activeKinopoiskApiKeyName = null;
+  }
+}
+
+function switchKinopoiskApiKey() {
+  if (activeKinopoiskApiKeyName === "primary" && KINOPOISK_API_KEY2) {
+    activeKinopoiskApiKeyName = "secondary";
+    KINOPOISK_API_KEY = KINOPOISK_API_KEY2;
+    return true;
+  }
+
+  if (activeKinopoiskApiKeyName === "secondary" && KINOPOISK_PRIMARY_API_KEY) {
+    activeKinopoiskApiKeyName = "primary";
+    KINOPOISK_API_KEY = KINOPOISK_PRIMARY_API_KEY;
+    return true;
+  }
+
+  return false;
+}
+
+async function handleKinopoiskErrorResponse(response) {
+  if (!response || response.ok) {
+    return { handled: false, retryWithAlternateKey: false };
+  }
+
+  if (response.status === 402) {
+    notifyKinopoiskQuotaExceeded();
+    const switched = switchKinopoiskApiKey();
+    return { handled: true, retryWithAlternateKey: switched };
+  }
+
+  return { handled: true, retryWithAlternateKey: false };
+}
+
+async function fetchKinopoiskWithRetry(url, options = {}) {
+  const baseOptions = { ...options };
+  let attempts = 0;
+  let response;
+
+  while (attempts < 2) {
+    const headers = {
+      ...(baseOptions.headers || {}),
+      "X-API-KEY": KINOPOISK_API_KEY,
+    };
+
+    response = await fetch(url, {
+      ...baseOptions,
+      headers,
+    });
+
+    if (response.ok) {
+      return response;
+    }
+
+    const result = await handleKinopoiskErrorResponse(response);
+    if (!result.retryWithAlternateKey || attempts === 1) {
+      return response;
+    }
+
+    attempts += 1;
+  }
+
+  return response;
+}
 
 // RAWG
 let RAWG_API_KEY;
@@ -492,7 +598,12 @@ async function loadEnv(options = {}) {
     } else {
       SUPABASE_KEY = key;
     }
-    if (env.KINOPOISK_API_KEY) KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
+    if (env.KINOPOISK_API_KEY || env.KINOPOISK_API_KEY2) {
+      applyKinopoiskKeys({
+        primaryKey: env.KINOPOISK_API_KEY,
+        secondaryKey: env.KINOPOISK_API_KEY2,
+      });
+    }
     if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
     if (typeof env.TWITCH_CLIENT_ID === "string") {
       const trimmedClientId = env.TWITCH_CLIENT_ID.trim();
@@ -1873,12 +1984,17 @@ function renderEmptyState(container, message) {
 async function fetchKPFilmLength(filmId) {
   if (!filmId) return null;
   try {
-    const res = await fetch(`${KINOPOISK_FILM_URL}/${filmId}`, {
-      headers: {
-        "X-API-KEY": KINOPOISK_API_KEY,
-        "Content-Type": "application/json",
-      },
-    });
+    const res = await fetchKinopoiskWithRetry(
+      `${KINOPOISK_FILM_URL}/${filmId}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!res.ok) {
+      return null;
+    }
     const data = await res.json();
     return data.filmLength || null;
   } catch (err) {
