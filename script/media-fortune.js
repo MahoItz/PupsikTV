@@ -1152,13 +1152,13 @@ function setFortuneTimingsStatus(message) {
   }
 }
 
-function setFortuneTimingsAuthor(author = null) {
+function setFortuneTimingsAuthor(author) {
   if (!fortuneTimingsAuthor) {
     return;
   }
 
   if (author) {
-    fortuneTimingsAuthor.textContent = author;
+    fortuneTimingsAuthor.textContent = `Автор: ${author}`;
     fortuneTimingsAuthor.style.display = "inline";
   } else {
     fortuneTimingsAuthor.textContent = "";
@@ -1176,26 +1176,20 @@ function resetFortuneTimings(
   }
 }
 
-function normalizeFortuneTimingsText(text = "") {
-  const rawText = typeof text === "string" ? text : "";
-  return rawText
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .replace(/[\t]+/g, "\n");
-}
-
-function renderFortuneTimingsList(groups = []) {
+function renderFortuneTimingsList(text = "") {
   if (!fortuneTimingsList) {
     return;
   }
 
   fortuneTimingsList.innerHTML = "";
 
-  const normalizedGroups = Array.isArray(groups)
-    ? groups.filter((group) => normalizeFortuneTimingsText(group?.text).trim())
-    : [];
+  const rawText = typeof text === "string" ? text : "";
+  const normalizedText = rawText
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/[\t]+/g, "\n");
 
-  if (normalizedGroups.length === 0) {
+  if (!normalizedText.trim()) {
     const emptyItem = document.createElement("li");
     emptyItem.className = "fortune-timings__empty";
     emptyItem.textContent = "Тайминги отсутствуют.";
@@ -1203,119 +1197,64 @@ function renderFortuneTimingsList(groups = []) {
     return;
   }
 
-  normalizedGroups.forEach((group) => {
-    const listItem = document.createElement("li");
-    listItem.className = "fortune-timings__item";
+  const listItem = document.createElement("li");
+  listItem.className = "fortune-timings__item";
 
-    const author = (group?.author || "").trim() || "Автор не указан";
-    const authorEl = document.createElement("span");
-    authorEl.className = "fortune-timings__item-author";
-    authorEl.textContent = author;
+  const textEl = document.createElement("p");
+  textEl.className = "fortune-timings__raw";
+  textEl.textContent = normalizedText;
 
-    const textEl = document.createElement("p");
-    textEl.className = "fortune-timings__raw";
-    textEl.textContent = normalizeFortuneTimingsText(group?.text || "");
-
-    listItem.appendChild(authorEl);
-    listItem.appendChild(textEl);
-    fortuneTimingsList.appendChild(listItem);
-  });
-}
-
-function getFortuneTimingsGroups(metadata = {}) {
-  if (Array.isArray(metadata.timingsGroups)) {
-    return metadata.timingsGroups;
-  }
-
-  const legacyText =
-    typeof metadata.timingsText === "string" ? metadata.timingsText : "";
-  const legacyAuthor = metadata.timingsAuthor || null;
-
-  if (legacyText.trim()) {
-    return [
-      {
-        author: legacyAuthor,
-        text: legacyText,
-      },
-    ];
-  }
-
-  return [];
+  listItem.appendChild(textEl);
+  fortuneTimingsList.appendChild(listItem);
 }
 
 function renderFortuneTimings(metadata = {}) {
-  const groups = getFortuneTimingsGroups(metadata);
-  const hasTimings = groups.length > 0;
-  const uniqueAuthors = Array.from(
-    new Set(
-      groups
-        .map((group) => (group?.author || "").trim())
-        .filter((name) => Boolean(name))
-    )
-  );
+  const timingsText =
+    typeof metadata.timingsText === "string" ? metadata.timingsText : "";
+  const hasTimings = timingsText.trim().length > 0;
 
-  renderFortuneTimingsList(groups);
-  setFortuneTimingsAuthor(
-    uniqueAuthors.length === 1
-      ? `Автор: ${uniqueAuthors[0]}`
-      : uniqueAuthors.length > 1
-        ? `Авторы: ${uniqueAuthors.join(", ")}`
-        : null
-  );
+  renderFortuneTimingsList(timingsText);
+  setFortuneTimingsAuthor(metadata.timingsAuthor || null);
   setFortuneTimingsStatus(
     hasTimings ? "Тайминги загружены" : "Тайминги не найдены"
   );
 }
 
 function setFortuneTimingsError(message) {
-  renderFortuneTimingsList([]);
+  renderFortuneTimingsList("");
   setFortuneTimingsAuthor(null);
   setFortuneTimingsStatus(message);
 }
 
 const FORTUNE_TIMINGS_PARSER_SELF_TEST = false;
 
-  function showFortuneTimingsFromMetadata(label) {
-    const normalizedLabel = (label || "").trim();
-    if (!normalizedLabel) {
-      return false;
-    }
+function showFortuneTimingsFromMetadata(label) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel) {
+    return false;
+  }
 
-    const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
-    const { timingsStatus } = metadata;
+  const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
+  const { timingsStatus } = metadata;
 
-    if (timingsStatus === "ready") {
-      renderFortuneTimings(metadata);
-      return true;
-    }
+  if (timingsStatus === "ready") {
+    renderFortuneTimings(metadata);
+    return true;
+  }
 
-    if (timingsStatus === "empty") {
-      const groups = getFortuneTimingsGroups(metadata);
-      const authors = Array.from(
-        new Set(
-          groups
-            .map((group) => (group?.author || "").trim())
-            .filter(Boolean)
-        )
-      );
-      setFortuneTimingsAuthor(
-        authors.length === 1
-          ? `Автор: ${authors[0]}`
-          : authors.length > 1
-            ? `Авторы: ${authors.join(", ")}`
-            : null
-      );
-      renderFortuneTimingsList([]);
-      setFortuneTimingsStatus("Тайминги не найдены");
-      return true;
-    }
+  if (timingsStatus === "empty") {
+    setFortuneTimingsAuthor(metadata.timingsAuthor || null);
+    renderFortuneTimingsList("");
+    setFortuneTimingsStatus("Тайминги не найдены");
+    return true;
+  }
 
-    if (timingsStatus === "loading") {
-      setFortuneTimingsStatus("Загружаем тайминги...");
-      setFortuneTimingsAuthor(null);
-      renderFortuneTimingsList([]);
-      return true;
-    }
+  if (timingsStatus === "loading") {
+    setFortuneTimingsStatus("Загружаем тайминги...");
+    setFortuneTimingsAuthor(null);
+    renderFortuneTimingsList("");
+    return true;
+  }
 
   if (timingsStatus === "error") {
     setFortuneTimingsError(
@@ -1615,33 +1554,23 @@ async function loadFortuneTimingsData(kinopoiskId) {
     return null;
   }
 
-  const groupsMap = new Map();
+  const timings = data.map((row) => (row?.timing_text || "").trim());
+  const username =
+    data.find((row) => row?.username)?.username || data[0]?.username || null;
 
-  data.forEach((row) => {
-    const author = (row?.username || "").trim() || "Автор не указан";
-    const text = typeof row?.timing_text === "string" ? row.timing_text : "";
+  const timingsText = timings
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
 
-    if (!text.trim()) {
-      return;
-    }
-
-    const existing = groupsMap.get(author) || [];
-    existing.push(text);
-    groupsMap.set(author, existing);
-  });
-
-  const timingsGroups = Array.from(groupsMap.entries())
-    .map(([author, texts]) => ({
-      author,
-      text: texts.join("\n\n"),
-    }))
-    .filter((group) => Boolean((group?.text || "").trim()));
-
-  if (timingsGroups.length === 0) {
-    return { timingsGroups: [] };
+  if (!timingsText) {
+    return { timingsText: "", username };
   }
 
-  return { timingsGroups };
+  return {
+    timingsText,
+    username,
+  };
 }
 
 function showFortuneParentGuideFromMetadata(label) {
@@ -2082,7 +2011,6 @@ function initFortuneWheel() {
       "parentGuideStatus",
       "parentGuideError",
       "timingsText",
-      "timingsGroups",
       "timingsStatus",
       "timingsError",
       "timingsAuthor",
@@ -2174,23 +2102,18 @@ function initFortuneWheel() {
     const loadPromise = (async () => {
       try {
         const timingsData = await loadFortuneTimingsData(kinopoiskId);
-        if (
-          Array.isArray(timingsData?.timingsGroups) &&
-          timingsData.timingsGroups.length > 0
-        ) {
+        if (timingsData?.timingsText?.trim()) {
           setFortuneItemMetadata(normalizedLabel, {
             timingsStatus: "ready",
-            timingsGroups: timingsData.timingsGroups,
-            timingsText: "",
-            timingsAuthor: null,
+            timingsText: timingsData.timingsText,
+            timingsAuthor: timingsData.username || null,
             timingsError: null,
           });
         } else {
           setFortuneItemMetadata(normalizedLabel, {
             timingsStatus: "empty",
-            timingsGroups: [],
             timingsText: "",
-            timingsAuthor: null,
+            timingsAuthor: timingsData?.username || null,
             timingsError: null,
           });
         }
