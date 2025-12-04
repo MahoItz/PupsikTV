@@ -1706,6 +1706,8 @@ async function openFortuneMovieModal(movie, options = {}) {
   fortuneMoviePreview.innerHTML = "";
   resetFortuneParentGuide();
   resetFortuneTimings();
+  fortuneMovieModal.scrollTop = 0;
+  fortuneMoviePreview.scrollTop = 0;
   if (typeof createMovieCard === "function") {
     const card = createMovieCard(
       mapFortuneFilmToMovieCard(movie),
