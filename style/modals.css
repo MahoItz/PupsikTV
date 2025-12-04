@@ -514,6 +514,88 @@
     animation: spoilerExpand 0.2s ease-out;
 }
 
+.fortune-timings {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: linear-gradient(145deg, rgba(22, 24, 38, 0.95), rgba(12, 12, 22, 0.95));
+    border: 1px solid rgba(255, 149, 0, 0.18);
+    border-radius: 14px;
+    box-shadow:
+        0 6px 14px rgba(0, 0, 0, 0.55),
+        0 0 24px rgba(255, 149, 0, 0.14);
+}
+
+.fortune-timings__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.fortune-timings__author {
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-align: right;
+    min-height: 20px;
+}
+
+.fortune-timings__status {
+    margin-top: 10px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.fortune-timings__list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.fortune-timings__item {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 149, 0, 0.18);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.fortune-timings__time {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    font-weight: 600;
+    color: #ffb347;
+}
+
+.fortune-timings__time span {
+    font-family: "Roboto Mono", Consolas, monospace;
+    background: rgba(255, 149, 0, 0.12);
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+.fortune-timings__description {
+    margin-top: 8px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.fortune-timings--ready .fortune-timings__status,
+.fortune-timings--error .fortune-timings__status {
+    margin-bottom: 8px;
+}
+
+.fortune-timings--ready .fortune-timings__status {
+    color: var(--text-secondary);
+}
+
+.fortune-timings--error .fortune-timings__status {
+    color: #ff7b7b;
+}
+
 @keyframes spoilerExpand {
     from {
         opacity: 0;
