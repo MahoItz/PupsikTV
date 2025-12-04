@@ -27,10 +27,18 @@ const debouncedKPSearch = debounce(async (query) => {
         "Content-Type": "application/json",
       },
     });
-    const data = await res.json();
-    kpResults = data.films || [];
     const container = document.getElementById("autoResultsContainer");
     const list = document.getElementById("autoResults");
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      kpResults = [];
+      selectedKPMovie = null;
+      if (list) list.innerHTML = "";
+      if (container) container.style.display = "none";
+      return;
+    }
+    const data = await res.json();
+    kpResults = data.films || [];
     if (!list) return;
     list.innerHTML = "";
     kpResults.forEach((m, idx) => {
@@ -72,10 +80,18 @@ const debouncedWatchlistKPSearch = debounce(async (query) => {
         "Content-Type": "application/json",
       },
     });
-    const data = await res.json();
-    kpOrderResults = data.films || [];
     const container = document.getElementById("watchAutoResultsContainer");
     const list = document.getElementById("watchAutoResults");
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      kpOrderResults = [];
+      selectedKPOrderMovie = null;
+      if (list) list.innerHTML = "";
+      if (container) container.style.display = "none";
+      return;
+    }
+    const data = await res.json();
+    kpOrderResults = data.films || [];
     if (!list) return;
     list.innerHTML = "";
     kpOrderResults.forEach((m, idx) => {
@@ -201,10 +217,18 @@ async function handleKPSearch() {
         "Content-Type": "application/json",
       },
     });
-    const data = await res.json();
-    kpResults = data.films || [];
     const container = document.getElementById("autoResultsContainer");
     const list = document.getElementById("autoResults");
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      kpResults = [];
+      selectedKPMovie = null;
+      if (list) list.innerHTML = "";
+      if (container) container.style.display = "none";
+      return;
+    }
+    const data = await res.json();
+    kpResults = data.films || [];
     list.innerHTML = "";
     kpResults.forEach((m, idx) => {
       const div = document.createElement("div");
@@ -255,10 +279,18 @@ async function handleWatchlistSearch() {
         "Content-Type": "application/json",
       },
     });
-    const data = await res.json();
-    kpOrderResults = data.films || [];
     const container = document.getElementById("watchAutoResultsContainer");
     const list = document.getElementById("watchAutoResults");
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      kpOrderResults = [];
+      selectedKPOrderMovie = null;
+      if (list) list.innerHTML = "";
+      if (container) container.style.display = "none";
+      return;
+    }
+    const data = await res.json();
+    kpOrderResults = data.films || [];
     list.innerHTML = "";
     kpOrderResults.forEach((m, idx) => {
       const div = document.createElement("div");
@@ -383,11 +415,14 @@ async function fetchKinopoiskFilmOptions(movie, limit = 9) {
     );
 
     if (!response.ok) {
-      console.error(
-        "Kinopoisk search error for ReYohoho options",
-        response.status,
-        response.statusText
-      );
+      const handled = await handleKinopoiskErrorResponse(response);
+      if (!handled) {
+        console.error(
+          "Kinopoisk search error for ReYohoho options",
+          response.status,
+          response.statusText
+        );
+      }
       return [];
     }
 
@@ -505,7 +540,10 @@ async function fetchKinopoiskFilm(title, year, originalTitle = "") {
       }
     );
     if (!res.ok) {
-      console.error("Kinopoisk search error", res.status, res.statusText);
+      const handled = await handleKinopoiskErrorResponse(res);
+      if (!handled) {
+        console.error("Kinopoisk search error", res.status, res.statusText);
+      }
       return null;
     }
     const data = await res.json();

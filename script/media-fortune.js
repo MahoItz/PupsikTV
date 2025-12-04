@@ -1506,7 +1506,11 @@ async function fetchFortuneImdbId(kinopoiskId) {
     );
 
     if (!response.ok) {
-      throw new Error(`Kinopoisk film request failed: ${response.status}`);
+      const handled = await handleKinopoiskErrorResponse(response);
+      if (!handled) {
+        throw new Error(`Kinopoisk film request failed: ${response.status}`);
+      }
+      return null;
     }
 
     const data = await response.json();
@@ -1865,6 +1869,12 @@ const debouncedFortuneKPSearch = debounce(async (query) => {
         "Content-Type": "application/json",
       },
     });
+
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      resetFortuneAutocomplete();
+      return;
+    }
 
     const data = await res.json();
     fortuneKpResults = (data.films || []).map(mapFortuneFilmResult);
