@@ -1573,20 +1573,25 @@ async function loadFortuneTimingsData(kinopoiskId) {
   const { data, error } = await client
     .from("timings")
     .select("timing_text, username")
-    .eq("kp_id", String(kinopoiskId))
-    .maybeSingle();
+    .eq("kp_id", String(kinopoiskId));
 
   if (error) {
     throw error;
   }
 
-  if (!data) {
+  if (!Array.isArray(data) || data.length === 0) {
     return null;
   }
 
+  const timings = data.flatMap((row) =>
+    parseFortuneTimingsText(row?.timing_text || "")
+  );
+  const username =
+    data.find((row) => row?.username)?.username || data[0]?.username || null;
+
   return {
-    timings: parseFortuneTimingsText(data.timing_text || ""),
-    username: data.username || null,
+    timings,
+    username,
   };
 }
 
