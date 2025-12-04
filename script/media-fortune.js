@@ -104,6 +104,9 @@ const fortuneAutoResultsContainer = document.getElementById(
 );
 const fortuneAutoResults = document.getElementById("fortuneAutoResults");
 const fortuneMovieModal = document.getElementById("fortuneMovieModal");
+const fortuneMovieModalContent = fortuneMovieModal
+  ? fortuneMovieModal.querySelector(".fortune-movie-modal")
+  : null;
 const fortuneMovieClose = document.getElementById("fortuneMovieClose");
 const fortuneMoviePreview = document.getElementById("fortuneMoviePreview");
 const fortuneMovieCancel = document.getElementById("fortuneMovieCancel");
@@ -1706,8 +1709,7 @@ async function openFortuneMovieModal(movie, options = {}) {
   fortuneMoviePreview.innerHTML = "";
   resetFortuneParentGuide();
   resetFortuneTimings();
-  fortuneMovieModal.scrollTop = 0;
-  fortuneMoviePreview.scrollTop = 0;
+  resetFortuneMovieModalScroll();
   if (typeof createMovieCard === "function") {
     const card = createMovieCard(
       mapFortuneFilmToMovieCard(movie),
@@ -1789,8 +1791,23 @@ async function openFortuneMovieModal(movie, options = {}) {
   }
 
   fortuneMovieModal.style.display = "block";
+  requestAnimationFrame(() => {
+    resetFortuneMovieModalScroll();
+  });
   if (fortuneMovieDelete && canRemoveFromWheel) {
     setTimeout(() => fortuneMovieDelete.focus(), 0);
+  }
+}
+
+function resetFortuneMovieModalScroll() {
+  if (fortuneMovieModal) {
+    fortuneMovieModal.scrollTop = 0;
+  }
+  if (fortuneMovieModalContent) {
+    fortuneMovieModalContent.scrollTop = 0;
+  }
+  if (fortuneMoviePreview) {
+    fortuneMoviePreview.scrollTop = 0;
   }
 }
 
