@@ -1169,8 +1169,8 @@ function buildFortuneParentGuideText(data, label = null) {
 
     lines.push(`== ${title} ==`);
     if (originalItems.length > 0) {
-      originalItems.forEach((item) => {
-        lines.push(`- ${item}`);
+      originalItems.forEach((item, index) => {
+        lines.push(`${index + 1}. ${item}`);
       });
     }
 
