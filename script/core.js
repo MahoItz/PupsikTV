@@ -75,6 +75,41 @@ const KINOPOISK_FILM_URL = "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 let kpResults = [];
 let selectedKPMovie = null;
 
+function notifyKinopoiskQuotaExceeded(detailsMessage = "") {
+  const baseMessage = "Превышен дневной лимит запросов к Кинопоиску.";
+  const fullMessage = detailsMessage
+    ? `${baseMessage} ${detailsMessage}`
+    : `${baseMessage} Попробуйте позже.`;
+
+  if (typeof showToastNotification === "function") {
+    showToastNotification(fullMessage, "error");
+    return;
+  }
+
+  alert(fullMessage);
+}
+
+async function handleKinopoiskErrorResponse(response) {
+  if (!response || response.ok) {
+    return false;
+  }
+
+  if (response.status === 402) {
+    let details = "";
+    try {
+      const payload = await response.clone().json();
+      details = payload?.message || "";
+    } catch (err) {
+      console.error("Failed to parse Kinopoisk error response", err);
+    }
+
+    notifyKinopoiskQuotaExceeded(details);
+    return true;
+  }
+
+  return false;
+}
+
 // RAWG
 let RAWG_API_KEY;
 const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
@@ -1879,6 +1914,10 @@ async function fetchKPFilmLength(filmId) {
         "Content-Type": "application/json",
       },
     });
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      return null;
+    }
     const data = await res.json();
     return data.filmLength || null;
   } catch (err) {
