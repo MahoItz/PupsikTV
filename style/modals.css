@@ -88,19 +88,131 @@
 }
 
 #fortuneWinnerModal .modal-content {
-    text-align: center;
+    text-align: left;
+    max-width: 780px;
+}
+
+#fortuneWinnerModal .modal-content h2 {
+    margin-bottom: 12px;
+}
+
+#fortuneWinnerModal .fortune-winner-content {
+    padding: 28px;
+}
+
+#fortuneWinnerModal .fortune-winner-body {
+    display: flex;
+    gap: 24px;
+    align-items: stretch;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+#fortuneWinnerModal .fortune-winner-poster {
+    position: relative;
+    flex: 0 0 200px;
+    max-width: 220px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+#fortuneWinnerModal .fortune-winner-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+#fortuneWinnerModal .fortune-winner-chip {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.65);
+    color: var(--text-primary);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3);
+}
+
+#fortuneWinnerModal .fortune-winner-chip::before {
+    content: "\f521";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: var(--primary-color);
+}
+
+#fortuneWinnerModal .fortune-winner-details {
+    flex: 1 1 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+#fortuneWinnerModal .modal-film-name {
+    width: 100%;
+    text-align: left;
+    margin: 0;
+}
+
+#fortuneWinnerModal .fortune-winner-original {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+#fortuneWinnerModal .fortune-winner-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#fortuneWinnerModal .fortune-winner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+#fortuneWinnerModal .fortune-winner-badge::before {
+    content: "\f005";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: var(--accent-color);
+}
+
+#fortuneWinnerModal .badge-soft {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+}
+
+#fortuneWinnerModal .badge-soft::before {
+    content: "\f0e7";
+    color: var(--primary-color);
+}
+
+#fortuneWinnerModal .fortune-winner-note {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.4;
 }
 
 #fortuneWinnerModal .fortune-winner-actions {
-    margin-top: 32px;
+    margin-top: 8px;
     display: flex;
-    justify-content: center;
-}
-
-#fortuneWinnerModal .modal-buttons {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .close {

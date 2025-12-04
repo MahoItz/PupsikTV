@@ -746,6 +746,11 @@ const fortuneWinnerModal = document.getElementById("fortuneWinnerModal");
 const fortuneWinnerFilmNameEl = document.getElementById(
   "fortuneWinnerFilmName"
 );
+const fortuneWinnerPosterEl = document.getElementById("fortuneWinnerPoster");
+const fortuneWinnerOriginalTitleEl = document.getElementById(
+  "fortuneWinnerOriginalTitle"
+);
+const fortuneWinnerYearEl = document.getElementById("fortuneWinnerYear");
 const fortuneWinnerWatchBtn = document.getElementById("fortuneWinnerWatch");
 const fortuneWinnerCancelBtn = document.getElementById("fortuneWinnerCancel");
 let fortuneWinnerMovie = null;
@@ -1218,6 +1223,48 @@ function buildFortuneWinnerMovie(label) {
   };
 }
 
+function getFortuneWinnerMetadata(label) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel || typeof fortuneItemMetadata === "undefined") {
+    return {};
+  }
+
+  return fortuneItemMetadata.get(normalizedLabel) || {};
+}
+
+function getFortuneWinnerPosterSource(candidate) {
+  if (!candidate) {
+    return null;
+  }
+
+  return (
+    candidate.poster ||
+    candidate.posterUrlPreview ||
+    candidate.posterUrl ||
+    candidate.coverUrl ||
+    candidate.cover ||
+    candidate.img ||
+    candidate.image ||
+    candidate.preview ||
+    null
+  );
+}
+
+function resolveFortuneWinnerPoster(movie) {
+  if (!movie) {
+    return DEFAULT_POSTER_PLACEHOLDER;
+  }
+
+  const metadata = getFortuneWinnerMetadata(movie.label);
+  const sources = [metadata.movie, movie.match, movie];
+
+  const poster = sources
+    .map((candidate) => getFortuneWinnerPosterSource(candidate))
+    .find(Boolean);
+
+  return poster || DEFAULT_POSTER_PLACEHOLDER;
+}
+
 function getStoredFortuneKinopoiskId(label) {
   const normalizedLabel = (label || "").trim();
   if (!normalizedLabel || typeof fortuneItemMetadata === "undefined") {
@@ -1490,6 +1537,44 @@ function showFortuneWinnerModal(label) {
     }
   }
 
+  if (fortuneWinnerPosterEl) {
+    fortuneWinnerPosterEl.src = resolveFortuneWinnerPoster(fortuneWinnerMovie);
+    fortuneWinnerPosterEl.alt = fortuneWinnerMovie.displayText
+      ? `Постер: ${fortuneWinnerMovie.displayText}`
+      : "Постер выигравшего фильма";
+  }
+
+  const normalizedTitle = normalizeFortuneText(fortuneWinnerMovie.title);
+  const normalizedOriginal = normalizeFortuneText(
+    fortuneWinnerMovie.originalTitle,
+  );
+
+  const shouldShowOriginalTitle =
+    fortuneWinnerMovie.originalTitle &&
+    normalizedOriginal &&
+    normalizedOriginal !== normalizedTitle;
+
+  if (fortuneWinnerOriginalTitleEl) {
+    if (shouldShowOriginalTitle) {
+      fortuneWinnerOriginalTitleEl.textContent =
+        fortuneWinnerMovie.originalTitle;
+      fortuneWinnerOriginalTitleEl.style.display = "block";
+    } else {
+      fortuneWinnerOriginalTitleEl.textContent = "";
+      fortuneWinnerOriginalTitleEl.style.display = "none";
+    }
+  }
+
+  if (fortuneWinnerYearEl) {
+    if (fortuneWinnerMovie.year) {
+      fortuneWinnerYearEl.textContent = fortuneWinnerMovie.year;
+      fortuneWinnerYearEl.style.display = "inline-flex";
+    } else {
+      fortuneWinnerYearEl.textContent = "";
+      fortuneWinnerYearEl.style.display = "none";
+    }
+  }
+
   fortuneWinnerModal.style.display = "block";
 }
 
@@ -1498,6 +1583,18 @@ function closeFortuneWinnerModal() {
   if (fortuneWinnerFilmNameEl) {
     fortuneWinnerFilmNameEl.textContent = "";
     fortuneWinnerFilmNameEl.style.display = "";
+  }
+  if (fortuneWinnerOriginalTitleEl) {
+    fortuneWinnerOriginalTitleEl.textContent = "";
+    fortuneWinnerOriginalTitleEl.style.display = "";
+  }
+  if (fortuneWinnerYearEl) {
+    fortuneWinnerYearEl.textContent = "";
+    fortuneWinnerYearEl.style.display = "";
+  }
+  if (fortuneWinnerPosterEl) {
+    fortuneWinnerPosterEl.src = DEFAULT_POSTER_PLACEHOLDER;
+    fortuneWinnerPosterEl.alt = "Постер выигравшего фильма";
   }
   closeModal("fortuneWinnerModal");
 }

@@ -1094,15 +1094,28 @@
         </div>
     </div>
     <div id="fortuneWinnerModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content fortune-winner-content">
             <span class="close" onclick="closeFortuneWinnerModal()">&times;</span>
             <h2>Выигравший фильм</h2>
-            <p id="fortuneWinnerFilmName" class="modal-film-name"></p>
-            <div class="fortune-winner-actions">
-                <button id="fortuneWinnerWatch" class="btn btn-primary">Смотреть</button>
-            </div>
-            <div class="modal-buttons">
-                <button id="fortuneWinnerCancel" class="btn btn-secondary">Закрыть</button>
+            <div class="fortune-winner-body">
+                <div class="fortune-winner-poster">
+                    <img id="fortuneWinnerPoster" src="https://via.placeholder.com/300x450?text=Нет+постера"
+                        alt="Постер выигравшего фильма" loading="lazy">
+                    <span class="fortune-winner-chip">Победитель рулетки</span>
+                </div>
+                <div class="fortune-winner-details">
+                    <p id="fortuneWinnerFilmName" class="modal-film-name"></p>
+                    <p id="fortuneWinnerOriginalTitle" class="fortune-winner-original"></p>
+                    <div class="fortune-winner-meta">
+                        <span id="fortuneWinnerYear" class="fortune-winner-badge"></span>
+                        <span class="fortune-winner-badge badge-soft">Случайный выбор</span>
+                    </div>
+                    <p class="fortune-winner-note">Нажми «Смотреть», чтобы сразу открыть фильм в новом окне.</p>
+                    <div class="fortune-winner-actions">
+                        <button id="fortuneWinnerWatch" class="btn btn-primary">Смотреть</button>
+                        <button id="fortuneWinnerCancel" class="btn btn-secondary">Закрыть</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
