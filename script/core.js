@@ -21,6 +21,11 @@ let aiModelSelect;
 let aiModelStatus;
 let aiModelOptions = [];
 let selectedAiModelValue = null;
+let kpApiSelect;
+let kpApiStatus;
+let selectedKpApiValue = "API 1";
+let kpApiPrimaryKey = null;
+let kpApiSecondaryKey = null;
 
 function getGuestId() {
   if (cachedGuestId) return cachedGuestId;
@@ -61,9 +66,13 @@ function clearAdminSession() {
   updateAdminSession(null, null);
   isAdmin = false;
   localStorage.removeItem("KINOPOISK_API_KEY");
+  localStorage.removeItem("KINOPOISK_API_KEY2");
   localStorage.removeItem("RAWG_API_KEY");
+  kpApiPrimaryKey = null;
+  kpApiSecondaryKey = null;
   KINOPOISK_API_KEY = undefined;
   RAWG_API_KEY = undefined;
+  applyKpApiSelection(selectedKpApiValue);
   if (typeof hideAdminControls === "function") {
     hideAdminControls(true);
   }
@@ -200,15 +209,10 @@ function renderAiModelOptions(options = [], selectedValue = null) {
   }
 }
 
-async function persistAiModelSelection(modelValue, modelName) {
+async function persistSettingsPayload(payload) {
   if (!supabaseClient) {
     throw new Error("Supabase client is not initialized");
   }
-
-  const payload = {
-    selected_ai_model: modelValue || null,
-    selected_ai_model_name: modelName || null,
-  };
 
   if (settingsRowId) {
     const { error } = await supabaseClient
@@ -250,6 +254,19 @@ async function persistAiModelSelection(modelValue, modelName) {
   settingsRowId = inserted?.id ?? settingsRowId;
 }
 
+async function persistAiModelSelection(modelValue, modelName) {
+  if (!supabaseClient) {
+    throw new Error("Supabase client is not initialized");
+  }
+
+  const payload = {
+    selected_ai_model: modelValue || null,
+    selected_ai_model_name: modelName || null,
+  };
+
+  await persistSettingsPayload(payload);
+}
+
 async function handleAiModelChange(event) {
   const selectEl = event?.target;
   if (!selectEl) return;
@@ -273,6 +290,60 @@ async function handleAiModelChange(event) {
   } catch (err) {
     console.error("Failed to save OpenRouter model", err);
     setAiModelStatus("Не удалось сохранить модель. Попробуйте ещё раз.");
+  } finally {
+    selectEl.disabled = false;
+  }
+}
+
+function normalizeKpApiValue(value) {
+  return value === "API 2" ? "API 2" : "API 1";
+}
+
+function setKpApiStatus(message) {
+  if (kpApiStatus) {
+    kpApiStatus.textContent = message || "";
+  }
+}
+
+function applyKpApiSelection(value) {
+  selectedKpApiValue = normalizeKpApiValue(value);
+
+  if (kpApiSelect) {
+    kpApiSelect.value = selectedKpApiValue;
+    kpApiSelect.disabled = false;
+  }
+
+  const activeKey =
+    selectedKpApiValue === "API 2" ? kpApiSecondaryKey : kpApiPrimaryKey;
+
+  KINOPOISK_API_KEY = activeKey || undefined;
+
+  const statusMessage = activeKey
+    ? `Используется ${selectedKpApiValue}.`
+    : `Используется ${selectedKpApiValue}, ключ не найден.`;
+  setKpApiStatus(statusMessage);
+}
+
+async function persistKpApiSelection(value) {
+  const normalizedValue = normalizeKpApiValue(value);
+  await persistSettingsPayload({ kp_api: normalizedValue });
+}
+
+async function handleKpApiChange(event) {
+  const selectEl = event?.target;
+  if (!selectEl) return;
+
+  const normalizedValue = normalizeKpApiValue(selectEl.value || "API 1");
+
+  selectEl.disabled = true;
+  setKpApiStatus("Сохраняем выбранный API...");
+
+  try {
+    await persistKpApiSelection(normalizedValue);
+    applyKpApiSelection(normalizedValue);
+  } catch (err) {
+    console.error("Failed to save Kinopoisk API selection", err);
+    setKpApiStatus("Не удалось сохранить API. Попробуйте ещё раз.");
   } finally {
     selectEl.disabled = false;
   }
@@ -517,7 +588,15 @@ async function loadEnv(options = {}) {
     } else {
       SUPABASE_KEY = key;
     }
-    if (env.KINOPOISK_API_KEY) KINOPOISK_API_KEY = env.KINOPOISK_API_KEY;
+    if (env.KINOPOISK_API_KEY) {
+      kpApiPrimaryKey = env.KINOPOISK_API_KEY;
+      localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
+    }
+    if (env.KINOPOISK_API_KEY2) {
+      kpApiSecondaryKey = env.KINOPOISK_API_KEY2;
+      localStorage.setItem("KINOPOISK_API_KEY2", env.KINOPOISK_API_KEY2);
+    }
+    applyKpApiSelection(selectedKpApiValue);
     if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
     if (typeof env.TWITCH_CLIENT_ID === "string") {
       const trimmedClientId = env.TWITCH_CLIENT_ID.trim();

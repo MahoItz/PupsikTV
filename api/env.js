@@ -57,6 +57,9 @@ export default function handler(req, res) {
     if (process.env.KINOPOISK_API_KEY) {
       env.KINOPOISK_API_KEY = process.env.KINOPOISK_API_KEY;
     }
+    if (process.env.KINOPOISK_API_KEY2) {
+      env.KINOPOISK_API_KEY2 = process.env.KINOPOISK_API_KEY2;
+    }
     if (process.env.RAWG_API_KEY) {
       env.RAWG_API_KEY = process.env.RAWG_API_KEY;
     }

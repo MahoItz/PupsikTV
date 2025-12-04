@@ -191,7 +191,7 @@ async function loadSettingsFromSupabase() {
     const { data, error } = await supabaseClient
       .from("settings")
       .select(
-        "id, roulette_last_winner, ai_model_name, ai_model, selected_ai_model, selected_ai_model_name"
+        "id, roulette_last_winner, ai_model_name, ai_model, selected_ai_model, selected_ai_model_name, kp_api"
       )
       .order("id", { ascending: true });
 
@@ -207,6 +207,7 @@ async function loadSettingsFromSupabase() {
     const remoteValue = (settingsRow?.roulette_last_winner || "").trim();
 
     renderAiModelOptions(rows, settingsRow?.selected_ai_model || null);
+    applyKpApiSelection(settingsRow?.kp_api || "API 1");
 
     if (rouletteLastWinnerHasPendingSync) {
       const pending = rouletteLastWinnerPendingValue;
@@ -475,7 +476,13 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   const kpStored = localStorage.getItem("KINOPOISK_API_KEY");
-  if (kpStored) KINOPOISK_API_KEY = kpStored;
+  if (kpStored) {
+    kpApiPrimaryKey = kpStored;
+  }
+  const kpStoredSecondary = localStorage.getItem("KINOPOISK_API_KEY2");
+  if (kpStoredSecondary) {
+    kpApiSecondaryKey = kpStoredSecondary;
+  }
   const rawgStored = localStorage.getItem("RAWG_API_KEY");
   if (rawgStored) RAWG_API_KEY = rawgStored;
   const cached = localStorage.getItem("moviesCache");
@@ -508,6 +515,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   settingsPanelCloseButton = document.getElementById("settingsPanelCloseButton");
   aiModelSelect = document.getElementById("aiModelSelect");
   aiModelStatus = document.getElementById("aiModelStatus");
+  kpApiSelect = document.getElementById("kpApiSelect");
+  kpApiStatus = document.getElementById("kpApiStatus");
 
   if (settingsToggleButton && settingsPanel) {
     settingsToggleButton.addEventListener("click", () => toggleSettingsPanel());
@@ -519,9 +528,14 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (aiModelSelect) {
     aiModelSelect.addEventListener("change", handleAiModelChange);
   }
+  if (kpApiSelect) {
+    kpApiSelect.addEventListener("change", handleKpApiChange);
+  }
 
   adminElements = Array.from(document.querySelectorAll(".admin-only"));
   hideAdminControls(true);
+
+  applyKpApiSelection(selectedKpApiValue);
 
   const storedToken = adminToken;
   if (storedToken) {
@@ -534,11 +548,17 @@ document.addEventListener("DOMContentLoaded", async function () {
           updateAdminSession(storedToken, verification.expiresAt);
           showAdminControls(true);
           if (env.KINOPOISK_API_KEY) {
+            kpApiPrimaryKey = env.KINOPOISK_API_KEY;
             localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
+          }
+          if (env.KINOPOISK_API_KEY2) {
+            kpApiSecondaryKey = env.KINOPOISK_API_KEY2;
+            localStorage.setItem("KINOPOISK_API_KEY2", env.KINOPOISK_API_KEY2);
           }
           if (env.RAWG_API_KEY) {
             localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
           }
+          applyKpApiSelection(selectedKpApiValue);
         } else {
           clearAdminSession();
         }
@@ -613,14 +633,23 @@ document.addEventListener("DOMContentLoaded", async function () {
               isAdmin = true;
               showAdminControls();
               if (env.KINOPOISK_API_KEY) {
+                kpApiPrimaryKey = env.KINOPOISK_API_KEY;
                 localStorage.setItem(
                   "KINOPOISK_API_KEY",
                   env.KINOPOISK_API_KEY
                 );
               }
+              if (env.KINOPOISK_API_KEY2) {
+                kpApiSecondaryKey = env.KINOPOISK_API_KEY2;
+                localStorage.setItem(
+                  "KINOPOISK_API_KEY2",
+                  env.KINOPOISK_API_KEY2
+                );
+              }
               if (env.RAWG_API_KEY) {
                 localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
               }
+              applyKpApiSelection(selectedKpApiValue);
               await loadSettingsFromSupabase();
               closeModal("adminModal");
             } else {
