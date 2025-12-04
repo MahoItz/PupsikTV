@@ -2356,12 +2356,21 @@ function initFortuneWheel() {
       return;
     }
 
+    const previousMetadata = fortuneItemMetadata.get(value) || {};
+    const resolvedKinopoiskId =
+      options.kinopoiskId ??
+      previousMetadata.kinopoiskId ??
+      (typeof extractKinopoiskIdFromValue === "function"
+        ? extractKinopoiskIdFromValue(value)
+        : null);
+
     activeItems.push(value);
     setFortuneItemMetadata(value, {
-      imdbId: options.imdbId,
-      kinopoiskId: options.kinopoiskId,
-      movie: options.movie,
-      parentGuideStatus: options.parentGuideStatus,
+      imdbId: options.imdbId ?? previousMetadata.imdbId ?? null,
+      kinopoiskId: resolvedKinopoiskId ?? null,
+      movie: options.movie ?? previousMetadata.movie ?? null,
+      parentGuideStatus:
+        options.parentGuideStatus ?? previousMetadata.parentGuideStatus ?? null,
     });
     input.value = activeItems.join("\n");
     if (fortuneItemInput) {
@@ -2369,10 +2378,13 @@ function initFortuneWheel() {
     }
     hideResultOverlay();
     updateFromInput();
-    if (options.parentGuideStatus === "loading") {
+    if (
+      options.parentGuideStatus === "loading" ||
+      previousMetadata.parentGuideStatus === "loading"
+    ) {
       preloadFortuneParentGuide(value);
     }
-    if (options.kinopoiskId) {
+    if (resolvedKinopoiskId) {
       preloadFortuneTimings(value);
     }
   }

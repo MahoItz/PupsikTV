@@ -1218,6 +1218,16 @@ function buildFortuneWinnerMovie(label) {
   };
 }
 
+function getStoredFortuneKinopoiskId(label) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel || typeof fortuneItemMetadata === "undefined") {
+    return null;
+  }
+
+  const metadata = fortuneItemMetadata.get(normalizedLabel);
+  return metadata?.kinopoiskId || null;
+}
+
 async function resolveFortuneMovieKinopoiskId(movie) {
   if (!movie) {
     return null;
@@ -1501,7 +1511,11 @@ if (fortuneWinnerWatchBtn) {
       return;
     }
 
+    const storedKinopoiskId = getStoredFortuneKinopoiskId(
+      fortuneWinnerMovie.label
+    );
     const kinopoiskId =
+      storedKinopoiskId ||
       getKinopoiskIdFromMovie(fortuneWinnerMovie) ||
       getKinopoiskIdFromMovie(fortuneWinnerMovie.match) ||
       fortuneWinnerMovie.kinopoiskId;
