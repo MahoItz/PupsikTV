@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="300" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0BD3FF" stop-opacity="0.14" />
+      <stop offset="1" stop-color="#FF6C42" stop-opacity="0.16" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="450" rx="18" fill="url(#bg)" stroke="#9AA4B2" stroke-dasharray="10 8" stroke-width="4" />
+  <g fill="#9AA4B2" font-family="'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="700">
+    <text x="150" y="210" font-size="26" text-anchor="middle">Нет постера</text>
+    <text x="150" y="248" font-size="16" text-anchor="middle">Пока что</text>
+  </g>
+  <path d="M98 308c8-18 21-40 43-40 19 0 29 14 41 27 3 3 7 3 10-1 11-13 17-22 29-22 15 0 24 14 33 31" stroke="#9AA4B2" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="124" cy="197" r="24" stroke="#9AA4B2" stroke-width="10" />
+</svg>
