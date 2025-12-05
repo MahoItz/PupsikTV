@@ -531,7 +531,7 @@ function showRAWGPreview() {
       steamGridPoster ||
       selectedRAWGGame.background_image ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
-    orderBy: document.getElementById("gameOrderBy").value || "",
+    orderBy: "",
     orderType: document.getElementById("gameOrderType").value || "",
     dateAdded: new Date().toISOString().split("T")[0],
   };

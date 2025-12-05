@@ -813,8 +813,9 @@ function createPlayedGameCard(
   const card = document.createElement("div");
   card.dataset.id = game.id;
   let cardClass = "movie-card";
-  if (game.rating === 0 && game.id !== 0) cardClass += " rating-low";
-  if (game.rating === 11 && game.id !== 0) cardClass += " rating-high";
+  const hasPersistentId = typeof game.id === "number" && game.id !== 0;
+  if (hasPersistentId && game.rating === 0) cardClass += " rating-low";
+  if (hasPersistentId && game.rating === 11) cardClass += " rating-high";
   card.className = cardClass;
 
   const poster = document.createElement("img");

@@ -325,8 +325,8 @@ document
   ?.addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const orderBy = document.getElementById("gameOrderBy").value;
     const orderType = document.getElementById("gameOrderType").value;
+    const orderBy = "";
 
     let gameData;
 
