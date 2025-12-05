@@ -1458,6 +1458,8 @@ async function trySelectRouletteWinnerMovie() {
     return;
   }
 
+  const input = getAutoTitleInput();
+
   const resolvedId =
     kinopoiskId ||
     extractKinopoiskIdFromValue(
@@ -1472,6 +1474,17 @@ async function trySelectRouletteWinnerMovie() {
   kpResults = [resolvedMovie];
   selectedKPMovie = resolvedMovie;
   showKPPreview();
+
+  if (input) {
+    const resolvedTitle =
+      resolvedMovie.nameRu || resolvedMovie.nameEn || resolvedMovie.title || "";
+
+    if (resolvedTitle) {
+      input.value = resolvedTitle;
+      rouletteLastWinner = resolvedTitle;
+    }
+    syncRouletteAutofillState();
+  }
 
   const resultsContainer = document.getElementById("autoResultsContainer");
   if (resultsContainer) {

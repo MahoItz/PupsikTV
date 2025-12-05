@@ -21,12 +21,12 @@ function toggleSortOrder() {
 }
 
 // Модальные окна
-function openAddMovieModal() {
+async function openAddMovieModal() {
   const modal = document.getElementById("addMovieModal");
   if (modal) {
     modal.style.display = "block";
   }
-  applyRouletteAutofill({ force: true, triggerSuggestions: true });
+  await applyRouletteAutofill({ force: true });
 }
 
 function openAddToWatchlistModal() {
