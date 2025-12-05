@@ -141,7 +141,6 @@ const fortuneParentGuideLoads = new Map();
 const fortuneTimings = document.getElementById("fortuneTimings");
 const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
-const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const fortuneTimingsLoads = new Map();
 
 function setFortuneAutocompleteVisible(isOpen) {
@@ -1155,25 +1154,10 @@ function setFortuneTimingsStatus(message) {
   }
 }
 
-function setFortuneTimingsAuthor(author = null) {
-  if (!fortuneTimingsAuthor) {
-    return;
-  }
-
-  if (author) {
-    fortuneTimingsAuthor.textContent = author;
-    fortuneTimingsAuthor.style.display = "inline";
-  } else {
-    fortuneTimingsAuthor.textContent = "";
-    fortuneTimingsAuthor.style.display = "none";
-  }
-}
-
 function resetFortuneTimings(
   message = "Выберите фильм, чтобы увидеть тайминги"
 ) {
   setFortuneTimingsStatus(message);
-  setFortuneTimingsAuthor(null);
   if (fortuneTimingsList) {
     fortuneTimingsList.innerHTML = "";
   }
@@ -1249,22 +1233,8 @@ function getFortuneTimingsGroups(metadata = {}) {
 function renderFortuneTimings(metadata = {}) {
   const groups = getFortuneTimingsGroups(metadata);
   const hasTimings = groups.length > 0;
-  const uniqueAuthors = Array.from(
-    new Set(
-      groups
-        .map((group) => (group?.author || "").trim())
-        .filter((name) => Boolean(name))
-    )
-  );
 
   renderFortuneTimingsList(groups);
-  setFortuneTimingsAuthor(
-    uniqueAuthors.length === 1
-      ? `Автор: ${uniqueAuthors[0]}`
-      : uniqueAuthors.length > 1
-        ? `Авторы: ${uniqueAuthors.join(", ")}`
-        : null
-  );
   setFortuneTimingsStatus(
     hasTimings ? "Тайминги загружены" : "Тайминги не найдены"
   );
@@ -1272,7 +1242,6 @@ function renderFortuneTimings(metadata = {}) {
 
 function setFortuneTimingsError(message) {
   renderFortuneTimingsList([]);
-  setFortuneTimingsAuthor(null);
   setFortuneTimingsStatus(message);
 }
 
@@ -1294,20 +1263,6 @@ const FORTUNE_TIMINGS_PARSER_SELF_TEST = false;
 
     if (timingsStatus === "empty") {
       const groups = getFortuneTimingsGroups(metadata);
-      const authors = Array.from(
-        new Set(
-          groups
-            .map((group) => (group?.author || "").trim())
-            .filter(Boolean)
-        )
-      );
-      setFortuneTimingsAuthor(
-        authors.length === 1
-          ? `Автор: ${authors[0]}`
-          : authors.length > 1
-            ? `Авторы: ${authors.join(", ")}`
-            : null
-      );
       renderFortuneTimingsList([]);
       setFortuneTimingsStatus("Тайминги не найдены");
       return true;
@@ -1315,7 +1270,6 @@ const FORTUNE_TIMINGS_PARSER_SELF_TEST = false;
 
     if (timingsStatus === "loading") {
       setFortuneTimingsStatus("Загружаем тайминги...");
-      setFortuneTimingsAuthor(null);
       renderFortuneTimingsList([]);
       return true;
     }

@@ -513,11 +513,6 @@
     gap: 12px;
 }
 
-#fortuneMovieModal .fortune-timings__author {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
 #fortuneMovieModal .fortune-timings__status {
     font-size: 14px;
     color: var(--text-secondary);
@@ -534,17 +529,17 @@
 }
 
 #fortuneMovieModal .fortune-timings__item {
-    position: relative;
     padding: 14px 12px 12px 12px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 #fortuneMovieModal .fortune-timings__item-author {
-    position: absolute;
-    top: 10px;
-    right: 12px;
+    align-self: flex-end;
     font-size: 12px;
     color: var(--text-secondary);
     background: rgba(255, 255, 255, 0.05);
