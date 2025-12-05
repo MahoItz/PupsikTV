@@ -191,7 +191,7 @@ async function loadSettingsFromSupabase() {
     const { data, error } = await supabaseClient
       .from("settings")
       .select(
-        "id, roulette_last_winner, ai_model_name, ai_model, selected_ai_model, selected_ai_model_name, kp_api"
+        "id, roulette_last_winner, ai_model_name, ai_model, selected_ai_model, selected_ai_model_name, kp_api, victory_volume, lose_volume"
       )
       .order("id", { ascending: true });
 
@@ -205,9 +205,15 @@ async function loadSettingsFromSupabase() {
 
     settingsRowId = settingsRow?.id ?? settingsRowId;
     const remoteValue = (settingsRow?.roulette_last_winner || "").trim();
+    const remoteVictoryVolume =
+      clampVictoryVolume(settingsRow?.victory_volume) ?? DEFAULT_VICTORY_VOLUME;
+    const remoteLoseVolume =
+      clampLoseVolume(settingsRow?.lose_volume) ?? DEFAULT_LOSE_VOLUME;
 
     renderAiModelOptions(rows, settingsRow?.selected_ai_model || null);
     applyKpApiSelection(settingsRow?.kp_api || "API 1");
+    applyVictoryVolume(remoteVictoryVolume);
+    applyLoseVolume(remoteLoseVolume);
 
     if (rouletteLastWinnerHasPendingSync) {
       const pending = rouletteLastWinnerPendingValue;
@@ -517,6 +523,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   aiModelStatus = document.getElementById("aiModelStatus");
   kpApiSelect = document.getElementById("kpApiSelect");
   kpApiStatus = document.getElementById("kpApiStatus");
+  victoryVolumeSlider = document.getElementById("victoryVolumeSlider");
+  victoryVolumeValue = document.getElementById("victoryVolumeValue");
+  loseVolumeSlider = document.getElementById("loseVolumeSlider");
+  loseVolumeValue = document.getElementById("loseVolumeValue");
 
   if (settingsToggleButton && settingsPanel) {
     settingsToggleButton.addEventListener("click", () => toggleSettingsPanel());
@@ -530,6 +540,16 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
   if (kpApiSelect) {
     kpApiSelect.addEventListener("change", handleKpApiChange);
+  }
+  applyVictoryVolume(victoryVolume);
+  if (victoryVolumeSlider) {
+    victoryVolumeSlider.addEventListener("input", handleVictoryVolumeInput);
+    victoryVolumeSlider.addEventListener("change", handleVictoryVolumeChange);
+  }
+  applyLoseVolume(loseVolume);
+  if (loseVolumeSlider) {
+    loseVolumeSlider.addEventListener("input", handleLoseVolumeInput);
+    loseVolumeSlider.addEventListener("change", handleLoseVolumeChange);
   }
 
   adminElements = Array.from(document.querySelectorAll(".admin-only"));

@@ -2280,6 +2280,10 @@ function initFortuneWheel() {
     if (!items.includes(label)) {
       items.push(label);
     }
+
+    if (typeof playLoseSound === "function") {
+      playLoseSound();
+    }
   }
 
   function clearEliminatedHistory() {
