@@ -2776,6 +2776,7 @@ function initFortuneWheel() {
   let lastAngularTimestamp = null;
   let previousRotation = 0;
   const tickBaseIntervalMs = 520;
+  let tickSegmentAngle = null;
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
   function setInputValuePreservingState(value) {
@@ -3215,10 +3216,11 @@ function initFortuneWheel() {
     const deltaTime = current - lastAngularTimestamp;
     const deltaRotation = normalizeAngle(rotation - previousRotation);
     const angularSpeed = deltaTime > 0 ? deltaRotation / deltaTime : 0;
-    const interval = Math.max(
-      30,
-      tickBaseIntervalMs / Math.max(angularSpeed || 0, 0.001)
-    );
+    const targetInterval =
+      angularSpeed > 0 && tickSegmentAngle
+        ? tickSegmentAngle / angularSpeed
+        : tickBaseIntervalMs;
+    const interval = clamp(30, 450, targetInterval);
 
     if (fortuneTickAudio && tickEnabled && angularSpeed > 0.00005) {
       const sinceLastTick =
@@ -3282,6 +3284,7 @@ function initFortuneWheel() {
     spinStartTime = performance.now();
     spinning = true;
     rotation = startRotation;
+    tickSegmentAngle = segmentAngle;
     resetTickTiming();
     statusEl.textContent = "Вращение… Удачи!";
     if (durationInput) {
