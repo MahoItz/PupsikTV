@@ -442,6 +442,24 @@
     position: relative;
 }
 
+.settings-panel__range {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.settings-panel__range .volume-slider {
+    flex: 1;
+    width: 100%;
+}
+
+.settings-panel__range-value {
+    min-width: 52px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
 .settings-panel__select {
     width: 100%;
     border-radius: 10px;

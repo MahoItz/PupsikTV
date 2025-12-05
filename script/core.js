@@ -26,6 +26,11 @@ let kpApiStatus;
 let selectedKpApiValue = "API 1";
 let kpApiPrimaryKey = null;
 let kpApiSecondaryKey = null;
+let victoryVolumeSlider;
+let victoryVolumeValue;
+let victoryVolume = 0.5;
+let victoryThemeAudio = null;
+const DEFAULT_VICTORY_VOLUME = 0.5;
 
 function getGuestId() {
   if (cachedGuestId) return cachedGuestId;
@@ -347,6 +352,106 @@ async function handleKpApiChange(event) {
   } finally {
     selectEl.disabled = false;
   }
+}
+
+function clampVictoryVolume(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.min(1, Math.max(0, parsed));
+}
+
+function updateVictoryVolumeUI(volume) {
+  if (victoryVolumeSlider) {
+    victoryVolumeSlider.value = String(volume);
+  }
+
+  if (victoryVolumeValue) {
+    victoryVolumeValue.textContent = `${Math.round(volume * 100)}%`;
+  }
+}
+
+function applyVictoryVolume(volume) {
+  const normalized =
+    clampVictoryVolume(volume) ?? clampVictoryVolume(victoryVolume);
+  const resolved = normalized ?? DEFAULT_VICTORY_VOLUME;
+
+  victoryVolume = resolved;
+  updateVictoryVolumeUI(resolved);
+  if (victoryThemeAudio) {
+    victoryThemeAudio.volume = resolved;
+  }
+}
+
+function ensureVictoryThemeAudio() {
+  if (victoryThemeAudio) {
+    return victoryThemeAudio;
+  }
+
+  const audio = new Audio("Music/Victory_Theme.mp3");
+  audio.preload = "auto";
+  audio.volume = victoryVolume;
+  victoryThemeAudio = audio;
+  return victoryThemeAudio;
+}
+
+async function playVictoryTheme() {
+  const audio = ensureVictoryThemeAudio();
+  audio.currentTime = 0;
+  try {
+    await audio.play();
+  } catch (err) {
+    console.warn("Failed to play victory theme", err);
+  }
+}
+
+function stopVictoryTheme() {
+  if (!victoryThemeAudio) {
+    return;
+  }
+
+  victoryThemeAudio.pause();
+  victoryThemeAudio.currentTime = 0;
+}
+
+async function persistVictoryVolume(value) {
+  const normalized = clampVictoryVolume(value) ?? DEFAULT_VICTORY_VOLUME;
+  await persistSettingsPayload({ victory_volume: normalized });
+}
+
+const debouncedPersistVictoryVolume = debounce((value) => {
+  persistVictoryVolume(value).catch((err) =>
+    console.error("Failed to save victory volume", err)
+  );
+}, 300);
+
+function handleVictoryVolumeInput(event) {
+  const rawValue = event?.target?.value;
+  const normalized = clampVictoryVolume(rawValue);
+  if (normalized === null) {
+    return;
+  }
+
+  applyVictoryVolume(normalized);
+  debouncedPersistVictoryVolume(normalized);
+}
+
+function handleVictoryVolumeChange(event) {
+  const rawValue = event?.target?.value;
+  const normalized = clampVictoryVolume(rawValue);
+  if (normalized === null) {
+    return;
+  }
+
+  persistVictoryVolume(normalized).catch((err) =>
+    console.error("Failed to save victory volume", err)
+  );
 }
 
 function showSearchLoading(containerId, listId) {
@@ -1581,10 +1686,12 @@ function showFortuneWinnerModal(label) {
     modalAudioPlayer.currentTime = 0;
   }
 
+  playVictoryTheme();
   fortuneWinnerModal.style.display = "block";
 }
 
 function closeFortuneWinnerModal() {
+  stopVictoryTheme();
   fortuneWinnerMovie = null;
   if (fortuneWinnerFilmNameEl) {
     fortuneWinnerFilmNameEl.textContent = "";
@@ -1607,6 +1714,7 @@ function closeFortuneWinnerModal() {
 
 if (fortuneWinnerWatchBtn) {
   fortuneWinnerWatchBtn.addEventListener("click", () => {
+    stopVictoryTheme();
     const baseUrl = REYOHOHO_BASE_URL;
 
     if (!fortuneWinnerMovie) {
