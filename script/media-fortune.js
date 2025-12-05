@@ -1338,8 +1338,8 @@ function buildFortuneParentGuideText(data, label = null) {
   const originalSections = data?.original || {};
   const sectionTitles = {
     sexAndNudity: "Sex & Nudity",
-    violenceAndGore: "Violence & Gore",
     profanity: "Profanity",
+    violenceAndGore: "Violence & Gore",
   };
 
   const lines = [];
