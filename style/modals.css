@@ -623,6 +623,12 @@
     animation: spoilerExpand 0.2s ease-out;
 }
 
+#fortuneMovieModal .notice-text {
+    color: var(--primary-color);
+    font-size: 14px;
+    font-style: italic;
+}
+
 @keyframes spoilerExpand {
     from {
         opacity: 0;

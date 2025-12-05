@@ -1000,17 +1000,17 @@
                         </summary>
                         <ul id="fortuneParentGuideSex" class="fortune-parent-guide__list"></ul>
                     </details>
-                    <details id="fortuneParentGuideViolenceSection" class="fortune-parent-guide__category fortune-parent-guide__spoiler">
-                        <summary class="fortune-parent-guide__spoiler-summary">
-                            <h4>Насилие и кровь (могут быть спойлеры)</h4>
-                        </summary>
-                        <ul id="fortuneParentGuideViolence" class="fortune-parent-guide__list"></ul>
-                    </details>
                     <details id="fortuneParentGuideProfanitySection" class="fortune-parent-guide__category fortune-parent-guide__spoiler">
                         <summary class="fortune-parent-guide__spoiler-summary">
                             <h4>Ненормативная лексика</h4>
                         </summary>
                         <ul id="fortuneParentGuideProfanity" class="fortune-parent-guide__list"></ul>
+                    </details>
+                    <details id="fortuneParentGuideViolenceSection" class="fortune-parent-guide__category fortune-parent-guide__spoiler">
+                        <summary class="fortune-parent-guide__spoiler-summary">
+                            <h4>Насилие и кровь <span class="notice-text">(могут быть спойлеры)</span></h4>
+                        </summary>
+                        <ul id="fortuneParentGuideViolence" class="fortune-parent-guide__list"></ul>
                     </details>
                 </div>
             </div>
@@ -1280,7 +1280,6 @@
                         <option value="">Загружаем модели...</option>
                     </select>
                 </div>
-                <p id="aiModelStatus" class="settings-panel__note">Настройки сохраняются автоматически.</p>
             </div>
             <div class="settings-panel__section">
                 <div class="settings-panel__section-header">
@@ -1292,14 +1291,11 @@
                         <option value="API 2">API 2</option>
                     </select>
                 </div>
-                <p id="kpApiStatus" class="settings-panel__note">Настройки сохраняются автоматически.</p>
             </div>
             <div class="settings-panel__section">
                 <div class="settings-panel__section-header">
                     <p class="settings-panel__section-title">Мелодия победы</p>
-                    <p class="settings-panel__section-hint">Громкость музыки при выборе победившего фильма.</p>
                 </div>
-                <label for="victoryVolumeSlider" class="settings-panel__label">Громкость</label>
                 <div class="settings-panel__field">
                     <div class="settings-panel__range">
                         <input type="range" id="victoryVolumeSlider" class="volume-slider" min="0" max="1" step="0.01"
@@ -1307,14 +1303,11 @@
                         <span id="victoryVolumeValue" class="settings-panel__range-value">50%</span>
                     </div>
                 </div>
-                <p class="settings-panel__note">Настройки сохраняются автоматически.</p>
             </div>
             <div class="settings-panel__section">
                 <div class="settings-panel__section-header">
                     <p class="settings-panel__section-title">Звук выбывания</p>
-                    <p class="settings-panel__section-hint">Громкость звука при выбывании фильма из рулетки.</p>
                 </div>
-                <label for="loseVolumeSlider" class="settings-panel__label">Громкость</label>
                 <div class="settings-panel__field">
                     <div class="settings-panel__range">
                         <input type="range" id="loseVolumeSlider" class="volume-slider" min="0" max="1" step="0.01"
@@ -1322,7 +1315,6 @@
                         <span id="loseVolumeValue" class="settings-panel__range-value">50%</span>
                     </div>
                 </div>
-                <p class="settings-panel__note">Настройки сохраняются автоматически.</p>
             </div>
         </div>
     </aside>
