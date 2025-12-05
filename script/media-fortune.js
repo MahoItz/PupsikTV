@@ -2775,8 +2775,8 @@ function initFortuneWheel() {
   let lastTickTimestamp = null;
   let lastAngularTimestamp = null;
   let previousRotation = 0;
-  const tickBaseIntervalMs = 520;
   let tickSegmentAngle = null;
+  let tickAccumulatedRotation = 0;
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
   function setInputValuePreservingState(value) {
@@ -3190,6 +3190,7 @@ function initFortuneWheel() {
     lastTickTimestamp = null;
     lastAngularTimestamp = null;
     previousRotation = rotation;
+    tickAccumulatedRotation = 0;
     if (fortuneTickAudio) {
       fortuneTickAudio.pause();
       fortuneTickAudio.currentTime = 0;
@@ -3214,21 +3215,21 @@ function initFortuneWheel() {
     rotation = startRotation + (targetRotation - startRotation) * eased;
 
     const deltaTime = current - lastAngularTimestamp;
-    const deltaRotation = normalizeAngle(rotation - previousRotation);
+    const deltaRotation = Math.max(0, rotation - previousRotation);
     const angularSpeed = deltaTime > 0 ? deltaRotation / deltaTime : 0;
-    const targetInterval =
-      angularSpeed > 0 && tickSegmentAngle
-        ? tickSegmentAngle / angularSpeed
-        : tickBaseIntervalMs;
-    const interval = clamp(30, 450, targetInterval);
-
+    tickAccumulatedRotation += deltaRotation;
     if (fortuneTickAudio && tickEnabled && angularSpeed > 0.00005) {
-      const sinceLastTick =
-        lastTickTimestamp === null ? Infinity : current - lastTickTimestamp;
-      if (sinceLastTick >= interval) {
-        fortuneTickAudio.currentTime = 0;
-        fortuneTickAudio.play().catch(() => {});
+      const ticksDue = tickSegmentAngle
+        ? Math.floor(tickAccumulatedRotation / tickSegmentAngle)
+        : 0;
+
+      if (ticksDue > 0) {
+        for (let i = 0; i < ticksDue; i += 1) {
+          fortuneTickAudio.currentTime = 0;
+          fortuneTickAudio.play().catch(() => {});
+        }
         lastTickTimestamp = current;
+        tickAccumulatedRotation -= tickSegmentAngle * ticksDue;
       }
     }
 
