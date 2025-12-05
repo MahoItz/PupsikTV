@@ -1983,6 +1983,23 @@ if (fortuneItemInput) {
   });
 }
 
+if (fortuneAutoResultsContainer && fortuneItemInput) {
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Node)) {
+      return;
+    }
+
+    const clickedInsideAutocomplete =
+      fortuneAutoResultsContainer.contains(target) ||
+      fortuneItemInput.contains(target);
+
+    if (!clickedInsideAutocomplete) {
+      setFortuneAutocompleteVisible(false);
+    }
+  });
+}
+
 fortuneWheelApi = initFortuneWheel();
 
 function initFortuneWheel() {
