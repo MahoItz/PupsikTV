@@ -2703,6 +2703,34 @@ function initFortuneWheel() {
     lastEliminatedLabel = null;
   }
 
+  // ============= TICK SOUND: Sound loading =============
+  let tickBase = null;
+  const tickAudioPath = "Music/ding.mp3";
+  
+  // Load tick sound once
+  (function loadTickSound() {
+    const audio = new Audio();
+    audio.src = tickAudioPath;
+    audio.preload = "auto";
+    audio.volume = 1.0;
+    // Load it silently
+    audio.load();
+    tickBase = audio;
+  })();
+  
+  // Function to play tick sound by cloning
+  function playTick() {
+    if (!tickBase) return;
+    try {
+      const clone = tickBase.cloneNode();
+      clone.volume = tickBase.volume;
+      clone.play().catch(() => {/* ignore */});
+    } catch (err) {
+      /* ignore cloning errors */
+    }
+  }
+  // ======================================================
+
   let rotation = 0;
   let spinning = false;
   let startRotation = 0;
@@ -2711,6 +2739,12 @@ function initFortuneWheel() {
   let spinDurationMs = 15000;
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
+  
+  // ============= TICK SOUND: State for ticks =============
+  let segmentsCount = 0;              // Number of segments for current spin
+  let lastTickSegmentIndex = null;    // Last segment index under the pointer
+  const pointerOffsetDeg = 0;         // Pointer offset in degrees (0 = right side)
+  // =======================================================
   function setInputValuePreservingState(value) {
     if (!input) {
       return;
@@ -2915,6 +2949,32 @@ function initFortuneWheel() {
     const clamped = Math.min(1, Math.max(0, t));
     return 1 - Math.pow(1 - clamped, 3);
   }
+
+  // ============= TICK SOUND: handleWheelTick function =============
+  function handleWheelTick(currentRotationDeg) {
+    // Normalize angle to [0, 360)
+    let angle = currentRotationDeg % 360;
+    if (angle < 0) angle += 360;
+
+    // If no segments, exit
+    if (segmentsCount <= 0) return;
+
+    // Calculate angle per segment
+    const segmentAngle = 360 / segmentsCount;
+
+    // Calculate angle under the pointer
+    const angleUnderPointer = (angle + pointerOffsetDeg) % 360;
+
+    // Determine current segment index
+    const currentSegmentIndex = Math.floor(angleUnderPointer / segmentAngle);
+
+    // If segment changed, play tick
+    if (currentSegmentIndex !== lastTickSegmentIndex) {
+      lastTickSegmentIndex = currentSegmentIndex;
+      playTick();
+    }
+  }
+  // ================================================================
 
   function dprScaleCanvas(cnv) {
     const rect = cnv.getBoundingClientRect();
@@ -3142,6 +3202,13 @@ function initFortuneWheel() {
     }
 
     drawWheel();
+    
+    // ============= TICK SOUND: Call handleWheelTick during spin =============
+    // Convert rotation from radians to degrees and check for segment crossings
+    const rotationDeg = (rotation * 180) / Math.PI;
+    handleWheelTick(rotationDeg);
+    // ========================================================================
+    
     requestAnimationFrame(animate);
   }
 
@@ -3154,6 +3221,12 @@ function initFortuneWheel() {
     stopIdleAnimation();
 
     hideResultOverlay();
+    
+    // ============= TICK SOUND: Initialize tick state before spin =============
+    segmentsCount = activeItems.length;
+    lastTickSegmentIndex = null;
+    // ==========================================================================
+    
     const segmentAngle = (Math.PI * 2) / activeItems.length;
     const winnerIndex = Math.floor(Math.random() * activeItems.length);
     const randomOffset = 0.15 + Math.random() * 0.7;
