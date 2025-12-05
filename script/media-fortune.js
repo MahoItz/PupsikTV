@@ -56,6 +56,12 @@ const volumeSlider = document.getElementById("volumeSlider");
 const volumeValue = document.getElementById("volumeValue");
 const fortuneTipButton = document.getElementById("fortuneTipButton");
 const fortuneTipAudio = document.getElementById("fortuneTipAudio");
+const fortuneTickAudio = document.getElementById("fortuneTickAudio");
+const fortuneTickToggle = document.getElementById("fortuneTickToggle");
+const fortuneTickVolume = document.getElementById("fortuneTickVolume");
+const fortuneTickVolumeValue = document.getElementById(
+  "fortuneTickVolumeValue"
+);
 const fortuneSuggestionsContainer = document.getElementById(
   "fortuneSuggestionsContainer"
 );
@@ -99,6 +105,8 @@ let fortuneSuggestionsSupabaseErrorLogged = false;
 let fortuneWheelApi = null;
 let rulesPanelManuallyCollapsed = false;
 let rulesPanelStandaloneOpen = false;
+const FORTUNE_TICK_VOLUME_KEY = "fortuneTickVolume";
+const FORTUNE_TICK_ENABLED_KEY = "fortuneTickEnabled";
 const fortuneAutoResultsContainer = document.getElementById(
   "fortuneAutoResultsContainer"
 );
@@ -2092,6 +2100,61 @@ function initFortuneWheel() {
   let lastEliminatedLabel = null;
   let pendingFortuneItemLabel = null;
   let pendingFortuneItemOptions = null;
+  let tickEnabled = true;
+  let tickVolume = 0.4;
+
+  const storedTickEnabled = localStorage.getItem(FORTUNE_TICK_ENABLED_KEY);
+  if (storedTickEnabled !== null) {
+    tickEnabled = storedTickEnabled === "true";
+  }
+
+  const storedTickVolume = localStorage.getItem(FORTUNE_TICK_VOLUME_KEY);
+  if (storedTickVolume !== null) {
+    const parsed = Number.parseFloat(storedTickVolume);
+    if (Number.isFinite(parsed)) {
+      tickVolume = clamp(parsed, 0, 1);
+    }
+  }
+
+  const updateTickVolumeValue = () => {
+    if (!fortuneTickVolumeValue) {
+      return;
+    }
+    fortuneTickVolumeValue.textContent = `${Math.round(tickVolume * 100)}%`;
+  };
+
+  const applyTickAudioSettings = () => {
+    if (!fortuneTickAudio) {
+      return;
+    }
+    fortuneTickAudio.volume = tickVolume;
+    fortuneTickAudio.muted = !tickEnabled;
+  };
+
+  if (fortuneTickToggle) {
+    fortuneTickToggle.checked = tickEnabled;
+    fortuneTickToggle.addEventListener("change", () => {
+      tickEnabled = fortuneTickToggle.checked;
+      localStorage.setItem(FORTUNE_TICK_ENABLED_KEY, String(tickEnabled));
+      applyTickAudioSettings();
+    });
+  }
+
+  if (fortuneTickVolume) {
+    fortuneTickVolume.value = String(tickVolume);
+    fortuneTickVolume.addEventListener("input", () => {
+      const parsed = Number.parseFloat(fortuneTickVolume.value);
+      if (Number.isFinite(parsed)) {
+        tickVolume = clamp(parsed, 0, 1);
+        localStorage.setItem(FORTUNE_TICK_VOLUME_KEY, String(tickVolume));
+        updateTickVolumeValue();
+        applyTickAudioSettings();
+      }
+    });
+  }
+
+  updateTickVolumeValue();
+  applyTickAudioSettings();
   function setFortuneItemMetadata(label, metadata = {}) {
     const normalizedLabel = (label || "").trim();
     if (!normalizedLabel) {
@@ -2709,6 +2772,10 @@ function initFortuneWheel() {
   let targetRotation = 0;
   let spinStartTime = 0;
   let spinDurationMs = 15000;
+  let lastTickTimestamp = null;
+  let lastAngularTimestamp = null;
+  let previousRotation = 0;
+  const tickBaseIntervalMs = 520;
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
   function setInputValuePreservingState(value) {
@@ -2860,6 +2927,8 @@ function initFortuneWheel() {
       commitDuration(event.target.value);
     });
   }
+
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
   function normalizeAngle(angle) {
     const tau = Math.PI * 2;
@@ -3116,12 +3185,26 @@ function initFortuneWheel() {
       .replaceAll("'", "&#039;");
   }
 
+  function resetTickTiming() {
+    lastTickTimestamp = null;
+    lastAngularTimestamp = null;
+    previousRotation = rotation;
+    if (fortuneTickAudio) {
+      fortuneTickAudio.pause();
+      fortuneTickAudio.currentTime = 0;
+    }
+  }
+
   function animate(now) {
     if (!spinning) {
       return;
     }
 
     const current = typeof now === "number" ? now : performance.now();
+    if (lastAngularTimestamp === null) {
+      lastAngularTimestamp = current;
+      previousRotation = rotation;
+    }
     const elapsed = current - spinStartTime;
     const duration = Math.max(1, spinDurationMs);
     const progress = Math.min(1, elapsed / duration);
@@ -3129,12 +3212,35 @@ function initFortuneWheel() {
 
     rotation = startRotation + (targetRotation - startRotation) * eased;
 
+    const deltaTime = current - lastAngularTimestamp;
+    const deltaRotation = normalizeAngle(rotation - previousRotation);
+    const angularSpeed = deltaTime > 0 ? deltaRotation / deltaTime : 0;
+    const interval = clamp(
+      30,
+      200,
+      tickBaseIntervalMs / Math.max(angularSpeed || 0, 0.001)
+    );
+
+    if (fortuneTickAudio && tickEnabled && angularSpeed > 0.00005) {
+      const sinceLastTick =
+        lastTickTimestamp === null ? Infinity : current - lastTickTimestamp;
+      if (sinceLastTick >= interval) {
+        fortuneTickAudio.currentTime = 0;
+        fortuneTickAudio.play().catch(() => {});
+        lastTickTimestamp = current;
+      }
+    }
+
+    previousRotation = rotation;
+    lastAngularTimestamp = current;
+
     if (progress >= 1) {
       rotation = normalizeAngle(rotation);
       spinning = false;
       if (durationInput) {
         durationInput.disabled = false;
       }
+      resetTickTiming();
       drawWheel();
       const winner = pickCurrentIndex();
       announceWinner(winner);
@@ -3177,6 +3283,7 @@ function initFortuneWheel() {
     spinStartTime = performance.now();
     spinning = true;
     rotation = startRotation;
+    resetTickTiming();
     statusEl.textContent = "Вращение… Удачи!";
     if (durationInput) {
       durationInput.disabled = true;

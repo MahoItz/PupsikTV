@@ -1217,6 +1217,7 @@
                                 </button>
                             </div>
                             <audio id="fortuneTipAudio" preload="none"></audio>
+                            <audio id="fortuneTickAudio" src="sounds/fortune-tick.wav" preload="auto"></audio>
                         </div>
                     </section>
                 </div>
@@ -1298,6 +1299,25 @@
                     </select>
                 </div>
                 <p id="kpApiStatus" class="settings-panel__note">Настройки сохраняются автоматически.</p>
+            </div>
+            <div class="settings-panel__section">
+                <div class="settings-panel__section-header">
+                </div>
+                <label class="settings-panel__label" for="fortuneTickToggle">Звук кликов рулетки</label>
+                <div class="settings-panel__field">
+                    <label class="settings-panel__checkbox">
+                        <input id="fortuneTickToggle" type="checkbox" checked>
+                        <span>Включить клики</span>
+                    </label>
+                </div>
+                <div class="settings-panel__field">
+                    <label for="fortuneTickVolume" class="settings-panel__label">Громкость кликов</label>
+                    <div class="settings-panel__range">
+                        <input id="fortuneTickVolume" type="range" min="0" max="1" step="0.01" value="0.4">
+                        <span id="fortuneTickVolumeValue" class="settings-panel__range-value">40%</span>
+                    </div>
+                </div>
+                <p class="settings-panel__note">Клики не влияют на основной плеер.</p>
             </div>
         </div>
     </aside>
