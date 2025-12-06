@@ -628,9 +628,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadGamesFromSupabase(),
     loadPlayedGamesFromSupabase(),
   ]);
-  const headerImg = document.querySelector(
-    "#headerLogo img[src='images/Pupsik_TV_Header.webp']"
-  );
+  const headerImg = document.querySelector("#headerLogo img");
   if (headerImg)
     headerImg.addEventListener("click", () => {
       document.getElementById("adminModal").style.display = "block";
