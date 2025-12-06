@@ -3570,7 +3570,7 @@ select option {
 }
 
 .fortune-items-list-item--content-warning {
-    border-color: rgba(255, 59, 59, 0.7);
+    border-color: rgba(255, 59, 59, 0.342);
     box-shadow:
         0 0 0 1px rgba(255, 59, 59, 0.25),
         0 0 16px rgba(255, 59, 59, 0.15);
