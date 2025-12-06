@@ -143,7 +143,7 @@ const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const fortuneTimingsLoads = new Map();
-const FORTUNE_CONTENT_BANWORDS = ["violence", "gore", "suicide"];
+const FORTUNE_CONTENT_BANWORDS = ["сиськи", "член", "грудь", "сиси", "голая", "пися",];
 
 function computeFortuneContentWarning(metadata = {}) {
   const normalizedBanwords = (FORTUNE_CONTENT_BANWORDS || [])
