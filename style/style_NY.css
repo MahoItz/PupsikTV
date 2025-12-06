@@ -3569,6 +3569,17 @@ select option {
     border-color: rgba(255, 255, 255, 0.18);
 }
 
+.fortune-items-list-item--content-warning {
+    border-color: rgba(255, 59, 59, 0.7);
+    box-shadow:
+        0 0 0 1px rgba(255, 59, 59, 0.25),
+        0 0 16px rgba(255, 59, 59, 0.15);
+}
+
+.fortune-items-list-item--content-warning .fortune-items-color-strip {
+    box-shadow: 0 0 0 1px rgba(255, 59, 59, 0.5);
+}
+
 @keyframes fortune-item-flip {
     0% {
         transform: rotateX(0deg);

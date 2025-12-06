@@ -143,6 +143,48 @@ const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const fortuneTimingsLoads = new Map();
+const FORTUNE_CONTENT_BANWORDS = ["violence", "gore", "suicide"];
+
+function computeFortuneContentWarning(metadata = {}) {
+  const normalizedBanwords = (FORTUNE_CONTENT_BANWORDS || [])
+    .map((word) => (word || "").toString().toLowerCase().trim())
+    .filter(Boolean);
+
+  if (normalizedBanwords.length === 0) {
+    return false;
+  }
+
+  const hasBanwordInText = (text) => {
+    const normalizedText = (text || "").toString().toLowerCase();
+    if (!normalizedText) {
+      return false;
+    }
+
+    return normalizedBanwords.some(
+      (banword) => banword && normalizedText.includes(banword)
+    );
+  };
+
+  const parentGuideSections = metadata?.parentGuide?.original || {};
+  const parentGuideText = Object.values(parentGuideSections)
+    .filter((items) => Array.isArray(items))
+    .flat()
+    .map((item) => (item || "").toString())
+    .join(" ");
+
+  if (hasBanwordInText(parentGuideText)) {
+    return true;
+  }
+
+  const timingsText = (Array.isArray(metadata.timingsGroups)
+    ? metadata.timingsGroups
+    : []
+  )
+    .map((group) => (group?.text || "").toString())
+    .join(" ");
+
+  return hasBanwordInText(timingsText);
+}
 
 function setFortuneAutocompleteVisible(isOpen) {
   if (!fortuneAutoResultsContainer) return;
@@ -1547,6 +1589,7 @@ async function fetchFortuneParentGuide(imdbId) {
         parentGuideStatus: "ready",
         parentGuideError: null,
       });
+      renderFortuneItemsList();
     }
 
     if (requestId !== fortuneParentGuideRequestId) {
@@ -2130,11 +2173,16 @@ function initFortuneWheel() {
       "timingsStatus",
       "timingsError",
       "timingsAuthor",
+      "contentWarning",
     ].forEach((key) => {
       if (Object.prototype.hasOwnProperty.call(metadata, key)) {
         normalizedMetadata[key] = metadata[key];
       }
     });
+
+    normalizedMetadata.contentWarning = computeFortuneContentWarning(
+      normalizedMetadata
+    );
 
     const hasData = Object.values(normalizedMetadata).some(
       (value) => value !== undefined && value !== null && value !== ""
@@ -2239,6 +2287,8 @@ function initFortuneWheel() {
           });
         }
 
+        renderFortuneItemsList();
+
         if (
           selectedFortuneLabel === normalizedLabel &&
           fortuneMovieModal?.style.display === "block"
@@ -2251,6 +2301,8 @@ function initFortuneWheel() {
           timingsStatus: "error",
           timingsError: "Не удалось загрузить тайминги. Попробуйте позже.",
         });
+
+        renderFortuneItemsList();
 
         if (
           selectedFortuneLabel === normalizedLabel &&
@@ -2583,10 +2635,14 @@ function initFortuneWheel() {
 
     const appendItem = (label, options = {}) => {
       const { isEliminated = false, color } = options;
+      const metadata = fortuneItemMetadata.get(label) || {};
       const listItem = document.createElement("li");
       listItem.className = "fortune-items-list-item";
       if (isEliminated) {
         listItem.setAttribute("data-fortune-item-state", "eliminated");
+      }
+      if (metadata.contentWarning) {
+        listItem.classList.add("fortune-items-list-item--content-warning");
       }
 
       const colorStrip = document.createElement("span");
@@ -2623,7 +2679,6 @@ function initFortuneWheel() {
       actionsEl.appendChild(kinopoiskLink);
       actionsEl.appendChild(imdbLink);
 
-      const metadata = fortuneItemMetadata.get(label) || {};
       const parentGuideStatus = metadata.parentGuideStatus;
       const parentGuideAction = document.createElement("div");
       parentGuideAction.className = "fortune-items-parent-guide";
