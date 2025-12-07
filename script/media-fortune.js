@@ -144,6 +144,48 @@ const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const fortuneTimingsLoads = new Map();
 const FORTUNE_CONTENT_BANWORDS = ["сиськи", "член", "грудь", "сиси", "голая", "голый", "пися", "nudity", "sex", "nigga", "niger", "nigger"];
+function setFortuneItemMetadata(label, metadata = {}) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel) {
+    return;
+  }
+
+  const previous = fortuneItemMetadata.get(normalizedLabel) || {};
+  const normalizedMetadata = { ...previous };
+
+  [
+    "imdbId",
+    "kinopoiskId",
+    "movie",
+    "parentGuide",
+    "parentGuideStatus",
+    "parentGuideError",
+    "timingsText",
+    "timingsGroups",
+    "timingsStatus",
+    "timingsError",
+    "timingsAuthor",
+    "contentWarning",
+  ].forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(metadata, key)) {
+      normalizedMetadata[key] = metadata[key];
+    }
+  });
+
+  normalizedMetadata.contentWarning = computeFortuneContentWarning(
+    normalizedMetadata
+  );
+
+  const hasData = Object.values(normalizedMetadata).some(
+    (value) => value !== undefined && value !== null && value !== ""
+  );
+
+  if (hasData) {
+    fortuneItemMetadata.set(normalizedLabel, normalizedMetadata);
+  } else {
+    fortuneItemMetadata.delete(normalizedLabel);
+  }
+}
 function computeFortuneContentWarning(metadata = {}) {
   const normalizedBanwords = (FORTUNE_CONTENT_BANWORDS || [])
     .map((word) => (word || "").toString().toLowerCase().trim())
@@ -2306,49 +2348,6 @@ function initFortuneWheel() {
   let lastEliminatedLabel = null;
   let pendingFortuneItemLabel = null;
   let pendingFortuneItemOptions = null;
-  function setFortuneItemMetadata(label, metadata = {}) {
-    const normalizedLabel = (label || "").trim();
-    if (!normalizedLabel) {
-      return;
-    }
-
-    const previous = fortuneItemMetadata.get(normalizedLabel) || {};
-    const normalizedMetadata = { ...previous };
-
-    [
-      "imdbId",
-      "kinopoiskId",
-      "movie",
-      "parentGuide",
-      "parentGuideStatus",
-      "parentGuideError",
-      "timingsText",
-      "timingsGroups",
-      "timingsStatus",
-      "timingsError",
-      "timingsAuthor",
-      "contentWarning",
-    ].forEach((key) => {
-      if (Object.prototype.hasOwnProperty.call(metadata, key)) {
-        normalizedMetadata[key] = metadata[key];
-      }
-    });
-
-    normalizedMetadata.contentWarning = computeFortuneContentWarning(
-      normalizedMetadata
-    );
-
-    const hasData = Object.values(normalizedMetadata).some(
-      (value) => value !== undefined && value !== null && value !== ""
-    );
-
-    if (hasData) {
-      fortuneItemMetadata.set(normalizedLabel, normalizedMetadata);
-    } else {
-      fortuneItemMetadata.delete(normalizedLabel);
-    }
-  }
-
   async function preloadFortuneParentGuide(label) {
     const normalizedLabel = (label || "").trim();
     if (!normalizedLabel || fortuneParentGuideLoads.has(normalizedLabel)) {
