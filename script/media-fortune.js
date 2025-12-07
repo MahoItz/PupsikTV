@@ -1482,19 +1482,21 @@ function renderFortuneParentGuideList(listEl, items) {
 }
 
 function renderFortuneParentGuide(data) {
-  const original = data?.original || {};
+  const normalized = normalizeParentGuideData(data);
+  const translationStatus = normalized?.translationStatus || null;
+  const original = normalized?.original || {};
+  const translated = normalized?.translated || null;
 
-  setCurrentFortuneParentGuideData(data);
+  setCurrentFortuneParentGuideData(normalized);
 
-  const sections = {
-    sexAndNudity: original.sexAndNudity || [],
-    violenceAndGore: original.violenceAndGore || [],
-    profanity: original.profanity || [],
-  };
+  const useTranslated =
+    translationStatus === "ready" &&
+    translated &&
+    hasParentGuideContent(translated);
 
-  const hasAny = Object.values(sections).some(
-    (items) => Array.isArray(items) && items.length > 0
-  );
+  const sections = useTranslated ? translated : original;
+
+  const hasAny = hasParentGuideContent(sections);
 
   if (!hasAny) {
     if (fortuneParentGuideContent) {
@@ -1513,7 +1515,9 @@ function renderFortuneParentGuide(data) {
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "grid";
   }
-  setFortuneParentGuideStatus("Данные загружены");
+  setFortuneParentGuideStatus(
+    getParentGuideStatusFromTranslation(translationStatus)
+  );
 }
 
 function setFortuneParentGuideError(message) {
@@ -1528,6 +1532,150 @@ function setFortuneParentGuideError(message) {
   });
   setCurrentFortuneParentGuideData(null);
   setFortuneParentGuideStatus(message);
+}
+
+function normalizeParentGuideSections(sections = {}) {
+  const normalizeItems = (value) =>
+    Array.isArray(value)
+      ? value
+          .filter((item) => typeof item === "string" && item.trim())
+          .map((item) => item.trim())
+      : [];
+
+  return {
+    sexAndNudity: normalizeItems(sections.sexAndNudity),
+    violenceAndGore: normalizeItems(sections.violenceAndGore),
+    profanity: normalizeItems(sections.profanity),
+  };
+}
+
+function normalizeParentGuideData(data) {
+  if (!data) {
+    return null;
+  }
+
+  const normalized = { ...data };
+  normalized.original = normalizeParentGuideSections(data.original || {});
+  normalized.translated = data.translated
+    ? normalizeParentGuideSections(data.translated)
+    : null;
+  normalized.translationStatus = data.translationStatus || null;
+
+  return normalized;
+}
+
+function hasParentGuideContent(sections = {}) {
+  return Object.values(sections).some(
+    (items) => Array.isArray(items) && items.length > 0
+  );
+}
+
+function getParentGuideStatusFromTranslation(translationStatus) {
+  if (translationStatus === "pending") {
+    return "переводим на русский";
+  }
+  if (translationStatus === "ready") {
+    return "переведено";
+  }
+  if (translationStatus === "error") {
+    return "ошибка перевода";
+  }
+
+  return "Данные загружены";
+}
+
+function applyParentGuideTranslationState(
+  label,
+  data,
+  translationStatus,
+  options = {}
+) {
+  const { translated, requestId = null } = options;
+  const updatedGuide = normalizeParentGuideData({
+    ...data,
+    translated:
+      translated !== undefined ? translated : data?.translated ?? null,
+    translationStatus: translationStatus || null,
+  });
+
+  if (label) {
+    setFortuneItemMetadata(label, { parentGuide: updatedGuide });
+  }
+
+  const shouldRender =
+    label &&
+    label === selectedFortuneLabel &&
+    fortuneMovieModal?.style.display === "block" &&
+    (requestId === null || requestId === fortuneParentGuideRequestId);
+
+  if (shouldRender) {
+    renderFortuneParentGuide(updatedGuide);
+  }
+
+  return updatedGuide;
+}
+
+async function translateParentGuideSections(originalSections) {
+  const normalizedSections = normalizeParentGuideSections(originalSections);
+
+  const response = await fetch("/api/translate-parent-guide", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sections: normalizedSections,
+      model: selectedAiModelValue,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Translation failed: ${response.status}`);
+  }
+
+  const payload = await response.json();
+  const translated = payload?.translated || payload?.translation || null;
+
+  return normalizeParentGuideSections(translated || {});
+}
+
+async function startFortuneParentGuideTranslation(label, data, options = {}) {
+  const { requestId = null } = options;
+  const translationStatus = data?.translationStatus || null;
+
+  if (translationStatus === "pending" || translationStatus === "ready") {
+    return;
+  }
+
+  const normalizedData = normalizeParentGuideData(data);
+  const originalSections = normalizedData?.original || {};
+
+  if (!hasParentGuideContent(originalSections)) {
+    return;
+  }
+
+  if (!selectedAiModelValue) {
+    applyParentGuideTranslationState(label, normalizedData, "error", { requestId });
+    return;
+  }
+
+  const pendingGuide = applyParentGuideTranslationState(
+    label,
+    normalizedData,
+    "pending",
+    { requestId }
+  );
+
+  try {
+    const translatedSections = await translateParentGuideSections(originalSections);
+    applyParentGuideTranslationState(label, pendingGuide, "ready", {
+      translated: translatedSections,
+      requestId,
+    });
+  } catch (err) {
+    console.error("Failed to translate parent guide", err);
+    applyParentGuideTranslationState(label, pendingGuide, "error", { requestId });
+  }
 }
 
 async function fetchFortuneImdbId(kinopoiskId) {
@@ -1581,10 +1729,11 @@ async function fetchFortuneParentGuide(imdbId) {
 
   try {
     const guideData = await loadFortuneParentGuideDataWithRetry(imdbId);
+    const normalizedGuideData = normalizeParentGuideData(guideData);
 
     if (selectedFortuneLabel) {
       setFortuneItemMetadata(selectedFortuneLabel, {
-        parentGuide: guideData,
+        parentGuide: normalizedGuideData,
         parentGuideStatus: "ready",
         parentGuideError: null,
       });
@@ -1595,7 +1744,10 @@ async function fetchFortuneParentGuide(imdbId) {
       return;
     }
 
-    renderFortuneParentGuide(guideData);
+    renderFortuneParentGuide(normalizedGuideData);
+    startFortuneParentGuideTranslation(selectedFortuneLabel, normalizedGuideData, {
+      requestId,
+    });
   } catch (err) {
     if (requestId !== fortuneParentGuideRequestId) {
       return;
@@ -1699,6 +1851,9 @@ function showFortuneParentGuideFromMetadata(label) {
   // Handle ready state - show the data
   if (metadata.parentGuide && metadata.parentGuideStatus === "ready") {
     renderFortuneParentGuide(metadata.parentGuide);
+    startFortuneParentGuideTranslation(label, metadata.parentGuide, {
+      requestId: fortuneParentGuideRequestId,
+    });
     return true;
   }
 
@@ -2216,13 +2371,15 @@ function initFortuneWheel() {
         const guideData = await loadFortuneParentGuideDataWithRetry(
           metadata.imdbId
         );
+        const normalizedGuideData = normalizeParentGuideData(guideData);
         setFortuneItemMetadata(normalizedLabel, {
           parentGuideStatus: "ready",
-          parentGuide: guideData,
+          parentGuide: normalizedGuideData,
           parentGuideError: null,
         });
         renderFortuneItemsList();
         fortuneParentGuideLoads.delete(normalizedLabel);
+        startFortuneParentGuideTranslation(normalizedLabel, normalizedGuideData);
       } catch (err) {
         console.error("Failed to preload parent guide", err);
         setFortuneItemMetadata(normalizedLabel, {
