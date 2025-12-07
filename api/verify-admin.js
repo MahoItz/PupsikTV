@@ -1,9 +1,9 @@
-import {
+const {
   extractBearerToken,
   issueAdminToken,
   verifyAdminToken,
-} from "./_admin-session.js";
-import { createNetlifyHandler } from "./_netlify-wrapper.js";
+} = require("./_admin-session.js");
+const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
 const ALLOWED_METHODS = ["GET", "POST"];
 
@@ -87,5 +87,5 @@ function handler(req, res) {
     .json({ ok: false, error: "Method Not Allowed" });
 }
 
-export default handler;
-export const handler = createNetlifyHandler(handler);
+module.exports = handler;
+module.exports.handler = createNetlifyHandler(handler);

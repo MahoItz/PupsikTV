@@ -59,7 +59,7 @@ function createResponseResolver(resolve) {
   };
 }
 
-export function createNetlifyHandler(handler) {
+function createNetlifyHandler(handler) {
   return async function netlifyHandler(event, context) {
     return await new Promise((resolve) => {
       const req = {
@@ -90,3 +90,7 @@ export function createNetlifyHandler(handler) {
     });
   };
 }
+
+module.exports = {
+  createNetlifyHandler,
+};

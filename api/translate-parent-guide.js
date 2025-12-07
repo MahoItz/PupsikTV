@@ -1,4 +1,4 @@
-import { createNetlifyHandler } from "./_netlify-wrapper.js";
+const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
 const PARENT_GUIDE_KEYS = [
   "sexAndNudity",
@@ -118,5 +118,5 @@ async function handler(req, res) {
   }
 }
 
-export default handler;
-export const handler = createNetlifyHandler(handler);
+module.exports = handler;
+module.exports.handler = createNetlifyHandler(handler);

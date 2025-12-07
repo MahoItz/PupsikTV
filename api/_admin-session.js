@@ -1,4 +1,4 @@
-import crypto from "crypto";
+const crypto = require("crypto");
 
 function base64UrlEncode(str) {
   return Buffer.from(str, "utf8")
@@ -43,7 +43,7 @@ function timingSafeCompare(a, b) {
   return crypto.timingSafeEqual(aBuffer, bBuffer);
 }
 
-export function extractBearerToken(headerValue) {
+function extractBearerToken(headerValue) {
   if (!headerValue || typeof headerValue !== "string") {
     return null;
   }
@@ -51,7 +51,7 @@ export function extractBearerToken(headerValue) {
   return match ? match[1].trim() : null;
 }
 
-export function issueAdminToken() {
+function issueAdminToken() {
   const secret = getSecret();
   const now = Date.now();
   const payload = {
@@ -64,7 +64,7 @@ export function issueAdminToken() {
   return { token, payload };
 }
 
-export function verifyAdminToken(token) {
+function verifyAdminToken(token) {
   const secret = getSecret();
   if (!token || typeof token !== "string") {
     return { valid: false, error: "Missing token" };
@@ -103,4 +103,10 @@ export function verifyAdminToken(token) {
 
   return { valid: true, payload };
 }
+
+module.exports = {
+  extractBearerToken,
+  issueAdminToken,
+  verifyAdminToken,
+};
 

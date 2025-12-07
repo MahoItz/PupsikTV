@@ -1,4 +1,4 @@
-import { createNetlifyHandler } from "./_netlify-wrapper.js";
+const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
 async function handler(req, res) {
   const search = req.query.search || '';
@@ -41,5 +41,5 @@ async function handler(req, res) {
   }
 }
 
-export default handler;
-export const handler = createNetlifyHandler(handler);
+module.exports = handler;
+module.exports.handler = createNetlifyHandler(handler);

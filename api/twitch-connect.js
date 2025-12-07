@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-import { createNetlifyHandler } from "./_netlify-wrapper.js";
+const { createClient } = require("@supabase/supabase-js");
+const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const EVENTSUB_SECRET = process.env.TWITCH_EVENTSUB_SECRET || "";
@@ -324,7 +324,7 @@ async function getStoredTwitchToken(supabase) {
   return data;
 }
 
-export async function refreshTwitchToken({ supabase, clientId, clientSecret }) {
+async function refreshTwitchToken({ supabase, clientId, clientSecret }) {
   if (!supabase) {
     throw new Error("Supabase client is required for refresh");
   }
@@ -585,6 +585,6 @@ async function ensureChatSubscription({
   }
 }
 
-
-export default handler;
-export const handler = createNetlifyHandler(handler);
+module.exports = handler;
+module.exports.handler = createNetlifyHandler(handler);
+module.exports.refreshTwitchToken = refreshTwitchToken;
