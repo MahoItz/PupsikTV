@@ -1657,7 +1657,41 @@ function applyParentGuideTranslationState(
   return updatedGuide;
 }
 
-async function translateParentGuideSections(originalSections) {
+let fortuneTranslationModelCache = null;
+
+async function loadFortuneTranslationModel() {
+  if (fortuneTranslationModelCache?.model) {
+    return fortuneTranslationModelCache;
+  }
+
+  if (!supabaseClient || typeof supabaseClient.from !== "function") {
+    return { model: null, name: null };
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("settings")
+      .select("selected_ai_model, selected_ai_model_name")
+      .order("id", { ascending: true });
+
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    const selectedRow =
+      rows.find((item) => item?.selected_ai_model) || rows[0] || null;
+
+    const model = selectedRow?.selected_ai_model || null;
+    const name = selectedRow?.selected_ai_model_name || null;
+
+    fortuneTranslationModelCache = { model, name };
+    return fortuneTranslationModelCache;
+  } catch (err) {
+    console.error("Failed to load translation model from Supabase", err);
+    return { model: null, name: null };
+  }
+}
+
+async function translateParentGuideSections(originalSections, modelValue) {
   const normalizedSections = normalizeParentGuideSections(originalSections);
 
   const response = await fetch("/api/translate-parent-guide", {
@@ -1667,7 +1701,7 @@ async function translateParentGuideSections(originalSections) {
     },
     body: JSON.stringify({
       sections: normalizedSections,
-      model: selectedAiModelValue,
+      model: modelValue,
     }),
   });
 
@@ -1696,7 +1730,10 @@ async function startFortuneParentGuideTranslation(label, data, options = {}) {
     return;
   }
 
-  if (!selectedAiModelValue) {
+  const { model: selectedTranslationModel } =
+    (await loadFortuneTranslationModel()) || {};
+
+  if (!selectedTranslationModel) {
     applyParentGuideTranslationState(label, normalizedData, "error", { requestId });
     return;
   }
@@ -1709,7 +1746,10 @@ async function startFortuneParentGuideTranslation(label, data, options = {}) {
   );
 
   try {
-    const translatedSections = await translateParentGuideSections(originalSections);
+    const translatedSections = await translateParentGuideSections(
+      originalSections,
+      selectedTranslationModel
+    );
     applyParentGuideTranslationState(label, pendingGuide, "ready", {
       translated: translatedSections,
       requestId,
