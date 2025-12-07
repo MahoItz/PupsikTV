@@ -1,3 +1,5 @@
+import { createNetlifyHandler } from "./_netlify-wrapper.js";
+
 const PARENT_GUIDE_KEYS = [
   "sexAndNudity",
   "violenceAndGore",
@@ -23,7 +25,7 @@ function hasContent(sections = {}) {
   );
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     res.status(405).json({ error: "Method not allowed" });
@@ -115,3 +117,6 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Server error" });
   }
 }
+
+export default handler;
+export const handler = createNetlifyHandler(handler);

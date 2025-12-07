@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { createNetlifyHandler } from "./_netlify-wrapper.js";
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const COMMAND_PREFIX = "!кино";
@@ -48,7 +49,7 @@ function extractChatter(event) {
   return normalizeLogin(event?.chatter_user_login) || normalizeLogin(event?.chatter_user_name);
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).end();
@@ -128,4 +129,7 @@ export default async function handler(req, res) {
 
   return res.status(400).end();
 }
+
+export default handler;
+export const handler = createNetlifyHandler(handler);
 

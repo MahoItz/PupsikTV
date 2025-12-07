@@ -1,12 +1,35 @@
 import { createClient } from "@supabase/supabase-js";
+import { createNetlifyHandler } from "./_netlify-wrapper.js";
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const REDIRECT_URI = "https://pupsik-tv.vercel.app/api/twitch-connect";
-const CHAT_WEBHOOK_URL =
-  process.env.TWITCH_EVENTSUB_CALLBACK_URL ||
-  "https://pupsik-tv.vercel.app/api/twitch-chat-webhook";
 const EVENTSUB_SECRET = process.env.TWITCH_EVENTSUB_SECRET || "";
 const TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
+
+function resolveSiteUrl(req) {
+  const envUrl =
+    process.env.SITE_URL ||
+    process.env.URL ||
+    process.env.DEPLOY_PRIME_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+
+  if (envUrl) {
+    return envUrl.replace(/\/$/, "");
+  }
+
+  const host = req?.headers?.host;
+  if (typeof host === "string" && host.length > 0) {
+    const protocol = host.startsWith("localhost") ? "http" : "https";
+    return `${protocol}://${host.replace(/\/$/, "")}`;
+  }
+
+  return "https://pupsik-tv.vercel.app";
+}
+
+function buildAbsoluteUrl(base, path) {
+  const normalizedBase = base.replace(/\/$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
 
 function ensureString(value) {
   if (Array.isArray(value)) {
@@ -15,7 +38,7 @@ function ensureString(value) {
   return typeof value === "string" ? value : "";
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const method = (req.method || "").toUpperCase();
 
   if (method !== "GET") {
@@ -42,6 +65,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Server configuration error" });
   }
 
+  const siteUrl = resolveSiteUrl(req);
+  const redirectUri = buildAbsoluteUrl(siteUrl, "/api/twitch-connect");
+  const chatWebhookUrl =
+    process.env.TWITCH_EVENTSUB_CALLBACK_URL ||
+    buildAbsoluteUrl(siteUrl, "/api/twitch-chat-webhook");
+
   let tokenPayload;
   try {
     const tokenResponse = await fetch(
@@ -56,7 +85,7 @@ export default async function handler(req, res) {
           client_secret: clientSecret,
           code,
           grant_type: "authorization_code",
-          redirect_uri: REDIRECT_URI,
+          redirect_uri: redirectUri,
         }),
       }
     );
@@ -159,7 +188,7 @@ export default async function handler(req, res) {
       clientId,
       clientSecret,
       broadcasterUserId,
-      callbackUrl: CHAT_WEBHOOK_URL,
+      callbackUrl: chatWebhookUrl,
       secret: EVENTSUB_SECRET,
     });
   } catch (err) {
@@ -556,3 +585,6 @@ async function ensureChatSubscription({
   }
 }
 
+
+export default handler;
+export const handler = createNetlifyHandler(handler);

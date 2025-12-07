@@ -2,8 +2,9 @@ import {
   extractBearerToken,
   verifyAdminToken,
 } from "./_admin-session.js";
+import { createNetlifyHandler } from "./_netlify-wrapper.js";
 
-export default function handler(req, res) {
+function handler(req, res) {
   let password;
   try {
     password =
@@ -70,3 +71,6 @@ export default function handler(req, res) {
 
   res.status(200).json(env);
 }
+
+export default handler;
+export const handler = createNetlifyHandler(handler);

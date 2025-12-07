@@ -1,4 +1,6 @@
-export default async function handler(req, res) {
+import { createNetlifyHandler } from "./_netlify-wrapper.js";
+
+async function handler(req, res) {
   const search = req.query.search || '';
   if (!search) {
     res.status(400).json({ error: 'Missing search' });
@@ -38,3 +40,6 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'Server error' });
   }
 }
+
+export default handler;
+export const handler = createNetlifyHandler(handler);

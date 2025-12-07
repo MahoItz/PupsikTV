@@ -1,3 +1,5 @@
+import { createNetlifyHandler } from "./_netlify-wrapper.js";
+
 const SECTION_MARKERS = {
   sexAndNudity: [
     'data-testid="sub-section-nudity"',
@@ -85,7 +87,7 @@ function extractSection(html, markers = []) {
   return [];
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const { id } = req.query || {};
   if (!id) {
     res.status(400).json({ error: "Missing IMDb title id" });
@@ -123,3 +125,6 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Server error", message: err.message });
   }
 }
+
+export default handler;
+export const handler = createNetlifyHandler(handler);

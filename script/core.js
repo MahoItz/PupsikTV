@@ -1,6 +1,21 @@
 ﻿// Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const TWITCH_REDIRECT_URI = "https://pupsik-tv.vercel.app/api/twitch-connect"; 
+const API_BASE_PATH = "/api";
+
+function buildApiPath(path) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE_PATH}${normalizedPath}`;
+}
+
+function buildAbsoluteApiUrl(path) {
+  const apiPath = buildApiPath(path);
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return `${window.location.origin}${apiPath}`;
+  }
+  return apiPath;
+}
+
+const TWITCH_REDIRECT_URI = buildAbsoluteApiUrl("/twitch-connect");
 const TWITCH_AUTH_SCOPES = ["user:read:chat", "user:bot", "channel:bot"];
 let TWITCH_CLIENT_ID = null;
 let SUPABASE_KEY;

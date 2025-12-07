@@ -3,10 +3,11 @@ import {
   issueAdminToken,
   verifyAdminToken,
 } from "./_admin-session.js";
+import { createNetlifyHandler } from "./_netlify-wrapper.js";
 
 const ALLOWED_METHODS = ["GET", "POST"];
 
-export default function handler(req, res) {
+function handler(req, res) {
   const method = (req.method || "").toUpperCase();
 
   if (method === "GET") {
@@ -85,3 +86,6 @@ export default function handler(req, res) {
     .status(405)
     .json({ ok: false, error: "Method Not Allowed" });
 }
+
+export default handler;
+export const handler = createNetlifyHandler(handler);
