@@ -2977,24 +2977,61 @@ function initFortuneWheel() {
   // ============= TICK SOUND: Sound loading =============
   let tickBase = null;
   const tickAudioPath = "Music/ding.mp3";
-  
+
+  function normalizeRouletteSpinVolume(volume) {
+    const parsed = Number(volume);
+    if (!Number.isFinite(parsed)) {
+      return 0.5;
+    }
+    return Math.min(1, Math.max(0, parsed));
+  }
+
+  function resolveRouletteSpinVolume() {
+    if (typeof getRouletteSpinVolume === "function") {
+      return getRouletteSpinVolume();
+    }
+    if (typeof DEFAULT_ROULETTE_SPIN_VOLUME !== "undefined") {
+      return DEFAULT_ROULETTE_SPIN_VOLUME;
+    }
+    return 0.5;
+  }
+
+  function updateTickBaseVolume(volume) {
+    const resolved = normalizeRouletteSpinVolume(
+      volume ?? resolveRouletteSpinVolume()
+    );
+    if (tickBase) {
+      tickBase.volume = resolved;
+    }
+  }
+
   // Load tick sound once
   (function loadTickSound() {
     const audio = new Audio();
     audio.src = tickAudioPath;
     audio.preload = "auto";
-    audio.volume = 1.0;
+    audio.volume = normalizeRouletteSpinVolume(resolveRouletteSpinVolume());
     // Load it silently
     audio.load();
     tickBase = audio;
   })();
-  
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("roulette:spin-volume-change", (event) => {
+      updateTickBaseVolume(event?.detail?.volume);
+    });
+  }
+
   // Function to play tick sound by cloning
   function playTick() {
     if (!tickBase) return;
     try {
       const clone = tickBase.cloneNode();
-      clone.volume = tickBase.volume;
+      const resolvedVolume = normalizeRouletteSpinVolume(
+        resolveRouletteSpinVolume()
+      );
+      tickBase.volume = resolvedVolume;
+      clone.volume = resolvedVolume;
       clone.play().catch(() => {/* ignore */});
     } catch (err) {
       /* ignore cloning errors */

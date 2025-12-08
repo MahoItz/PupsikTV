@@ -51,6 +51,10 @@ let loseVolumeValue;
 let loseVolume = 0.5;
 let loseSoundAudio = null;
 const DEFAULT_LOSE_VOLUME = 0.5;
+let rouletteSpinVolumeSlider;
+let rouletteSpinVolumeValue;
+let rouletteSpinVolume = 0.5;
+const DEFAULT_ROULETTE_SPIN_VOLUME = 0.5;
 
 function getGuestId() {
   if (cachedGuestId) return cachedGuestId;
@@ -570,6 +574,86 @@ function handleLoseVolumeChange(event) {
 
   persistLoseVolume(normalized).catch((err) =>
     console.error("Failed to save lose volume", err)
+  );
+}
+
+function clampRouletteSpinVolume(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  return Math.min(1, Math.max(0, parsed));
+}
+
+function updateRouletteSpinVolumeUI(volume) {
+  if (rouletteSpinVolumeSlider) {
+    rouletteSpinVolumeSlider.value = String(volume);
+  }
+
+  if (rouletteSpinVolumeValue) {
+    rouletteSpinVolumeValue.textContent = `${Math.round(volume * 100)}%`;
+  }
+}
+
+function applyRouletteSpinVolume(volume) {
+  const normalized =
+    clampRouletteSpinVolume(volume) ??
+    clampRouletteSpinVolume(rouletteSpinVolume);
+  const resolved = normalized ?? DEFAULT_ROULETTE_SPIN_VOLUME;
+
+  rouletteSpinVolume = resolved;
+  updateRouletteSpinVolumeUI(resolved);
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("roulette:spin-volume-change", {
+        detail: { volume: resolved },
+      })
+    );
+  }
+}
+
+function getRouletteSpinVolume() {
+  return rouletteSpinVolume ?? DEFAULT_ROULETTE_SPIN_VOLUME;
+}
+
+async function persistRouletteSpinVolume(value) {
+  const normalized =
+    clampRouletteSpinVolume(value) ?? DEFAULT_ROULETTE_SPIN_VOLUME;
+  await persistSettingsPayload({ spin_volume: normalized });
+}
+
+const debouncedPersistRouletteSpinVolume = debounce((value) => {
+  persistRouletteSpinVolume(value).catch((err) =>
+    console.error("Failed to save roulette spin volume", err)
+  );
+}, 300);
+
+function handleRouletteSpinVolumeInput(event) {
+  const rawValue = event?.target?.value;
+  const normalized = clampRouletteSpinVolume(rawValue);
+  if (normalized === null) {
+    return;
+  }
+
+  applyRouletteSpinVolume(normalized);
+  debouncedPersistRouletteSpinVolume(normalized);
+}
+
+function handleRouletteSpinVolumeChange(event) {
+  const rawValue = event?.target?.value;
+  const normalized = clampRouletteSpinVolume(rawValue);
+  if (normalized === null) {
+    return;
+  }
+
+  persistRouletteSpinVolume(normalized).catch((err) =>
+    console.error("Failed to save roulette spin volume", err)
   );
 }
 

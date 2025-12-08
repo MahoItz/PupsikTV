@@ -1274,9 +1274,11 @@
         <div class="settings-panel__content">
             <div class="settings-panel__section">
                 <div class="settings-panel__section-header">
+                    <p class="settings-panel__section-title">Модель для перевода</p>
+                    <p class="settings-panel__section-hint">Выберите поставщика для автоматических переводов</p>
                 </div>
-                <label for="aiModelSelect" class="settings-panel__label">Модель для перевода</label>
                 <div class="settings-panel__field">
+                    <label for="aiModelSelect" class="settings-panel__label">Модель для перевода</label>
                     <select id="aiModelSelect" class="settings-panel__select" disabled>
                         <option value="">Загружаем модели...</option>
                     </select>
@@ -1284,36 +1286,50 @@
             </div>
             <div class="settings-panel__section">
                 <div class="settings-panel__section-header">
+                    <p class="settings-panel__section-title">API Кинопоиска</p>
+                    <p class="settings-panel__section-hint">Управление основным и запасным ключами</p>
                 </div>
-                <label for="kpApiSelect" class="settings-panel__label">API Кинопоиска</label>
                 <div class="settings-panel__field">
+                    <label for="kpApiSelect" class="settings-panel__label">API Кинопоиска</label>
                     <select id="kpApiSelect" class="settings-panel__select" disabled>
                         <option value="API 1">API 1</option>
                         <option value="API 2">API 2</option>
                     </select>
                 </div>
             </div>
-            <div class="settings-panel__section">
+            <div class="settings-panel__section settings-panel__section--audio">
                 <div class="settings-panel__section-header">
-                    <p class="settings-panel__section-title">Мелодия победы</p>
+                    <p class="settings-panel__section-title">Звуки рулетки</p>
+                    <p class="settings-panel__section-hint">Отрегулируйте громкость каждого эффекта</p>
                 </div>
-                <div class="settings-panel__field">
-                    <div class="settings-panel__range">
-                        <input type="range" id="victoryVolumeSlider" class="volume-slider" min="0" max="1" step="0.01"
-                            value="0.5">
-                        <span id="victoryVolumeValue" class="settings-panel__range-value">50%</span>
+                <div class="settings-panel__subsection">
+                    <p class="settings-panel__subsection-title">Мелодия победы</p>
+                    <div class="settings-panel__field">
+                        <div class="settings-panel__range">
+                            <input type="range" id="victoryVolumeSlider" class="volume-slider" min="0" max="1"
+                                step="0.01" value="0.5">
+                            <span id="victoryVolumeValue" class="settings-panel__range-value">50%</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="settings-panel__section">
-                <div class="settings-panel__section-header">
-                    <p class="settings-panel__section-title">Звук выбывания</p>
+                <div class="settings-panel__subsection">
+                    <p class="settings-panel__subsection-title">Звук выбывания</p>
+                    <div class="settings-panel__field">
+                        <div class="settings-panel__range">
+                            <input type="range" id="loseVolumeSlider" class="volume-slider" min="0" max="1" step="0.01"
+                                value="0.5">
+                            <span id="loseVolumeValue" class="settings-panel__range-value">50%</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="settings-panel__field">
-                    <div class="settings-panel__range">
-                        <input type="range" id="loseVolumeSlider" class="volume-slider" min="0" max="1" step="0.01"
-                            value="0.5">
-                        <span id="loseVolumeValue" class="settings-panel__range-value">50%</span>
+                <div class="settings-panel__subsection">
+                    <p class="settings-panel__subsection-title">Вращение рулетки</p>
+                    <div class="settings-panel__field">
+                        <div class="settings-panel__range">
+                            <input type="range" id="rouletteSpinVolumeSlider" class="volume-slider" min="0" max="1"
+                                step="0.01" value="0.5">
+                            <span id="rouletteSpinVolumeValue" class="settings-panel__range-value">50%</span>
+                        </div>
                     </div>
                 </div>
             </div>

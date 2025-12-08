@@ -191,7 +191,7 @@ async function loadSettingsFromSupabase() {
     const { data, error } = await supabaseClient
       .from("settings")
       .select(
-        "id, roulette_last_winner, ai_model_name, ai_model, selected_ai_model, selected_ai_model_name, kp_api, victory_volume, lose_volume"
+        "id, roulette_last_winner, ai_model_name, ai_model, selected_ai_model, selected_ai_model_name, kp_api, victory_volume, lose_volume, spin_volume"
       )
       .order("id", { ascending: true });
 
@@ -209,11 +209,15 @@ async function loadSettingsFromSupabase() {
       clampVictoryVolume(settingsRow?.victory_volume) ?? DEFAULT_VICTORY_VOLUME;
     const remoteLoseVolume =
       clampLoseVolume(settingsRow?.lose_volume) ?? DEFAULT_LOSE_VOLUME;
+    const remoteSpinVolume =
+      clampRouletteSpinVolume(settingsRow?.spin_volume) ??
+      DEFAULT_ROULETTE_SPIN_VOLUME;
 
     renderAiModelOptions(rows, settingsRow?.selected_ai_model || null);
     applyKpApiSelection(settingsRow?.kp_api || "API 1");
     applyVictoryVolume(remoteVictoryVolume);
     applyLoseVolume(remoteLoseVolume);
+    applyRouletteSpinVolume(remoteSpinVolume);
 
     if (rouletteLastWinnerHasPendingSync) {
       const pending = rouletteLastWinnerPendingValue;
@@ -527,6 +531,12 @@ document.addEventListener("DOMContentLoaded", async function () {
   victoryVolumeValue = document.getElementById("victoryVolumeValue");
   loseVolumeSlider = document.getElementById("loseVolumeSlider");
   loseVolumeValue = document.getElementById("loseVolumeValue");
+  rouletteSpinVolumeSlider = document.getElementById(
+    "rouletteSpinVolumeSlider"
+  );
+  rouletteSpinVolumeValue = document.getElementById(
+    "rouletteSpinVolumeValue"
+  );
 
   if (settingsToggleButton && settingsPanel) {
     settingsToggleButton.addEventListener("click", () => toggleSettingsPanel());
@@ -550,6 +560,17 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (loseVolumeSlider) {
     loseVolumeSlider.addEventListener("input", handleLoseVolumeInput);
     loseVolumeSlider.addEventListener("change", handleLoseVolumeChange);
+  }
+  applyRouletteSpinVolume(rouletteSpinVolume);
+  if (rouletteSpinVolumeSlider) {
+    rouletteSpinVolumeSlider.addEventListener(
+      "input",
+      handleRouletteSpinVolumeInput
+    );
+    rouletteSpinVolumeSlider.addEventListener(
+      "change",
+      handleRouletteSpinVolumeChange
+    );
   }
 
   adminElements = Array.from(document.querySelectorAll(".admin-only"));
