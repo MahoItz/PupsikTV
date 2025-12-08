@@ -144,6 +144,26 @@ const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const fortuneTimingsLoads = new Map();
 const FORTUNE_CONTENT_BANWORDS = ["сиськи", "член", "грудь", "сиси", "голая", "голый", "пися", "nudity", "sex", "nigga", "niger", "nigger"];
+
+function escapeRegExp(str = "") {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const fortuneBanwordPattern = (FORTUNE_CONTENT_BANWORDS || [])
+  .map((word) => (word || "").toString().toLowerCase().trim())
+  .filter(Boolean)
+  .map(escapeRegExp)
+  .join("|");
+
+const fortuneBanwordRegex =
+  fortuneBanwordPattern.length > 0
+    ? new RegExp(`(${fortuneBanwordPattern})`, "i")
+    : null;
+
+const fortuneBanwordHighlightRegex =
+  fortuneBanwordPattern.length > 0
+    ? new RegExp(`(${fortuneBanwordPattern})`, "gi")
+    : null;
 function setFortuneItemMetadata(label, metadata = {}) {
   const normalizedLabel = (label || "").trim();
   if (!normalizedLabel) {
@@ -165,16 +185,13 @@ function setFortuneItemMetadata(label, metadata = {}) {
     "timingsStatus",
     "timingsError",
     "timingsAuthor",
-    "contentWarning",
   ].forEach((key) => {
     if (Object.prototype.hasOwnProperty.call(metadata, key)) {
       normalizedMetadata[key] = metadata[key];
     }
   });
 
-  normalizedMetadata.contentWarning = computeFortuneContentWarning(
-    normalizedMetadata
-  );
+  delete normalizedMetadata.contentWarning;
 
   const hasData = Object.values(normalizedMetadata).some(
     (value) => value !== undefined && value !== null && value !== ""
@@ -186,26 +203,20 @@ function setFortuneItemMetadata(label, metadata = {}) {
     fortuneItemMetadata.delete(normalizedLabel);
   }
 }
-function computeFortuneContentWarning(metadata = {}) {
-  const normalizedBanwords = (FORTUNE_CONTENT_BANWORDS || [])
-    .map((word) => (word || "").toString().toLowerCase().trim())
-    .filter(Boolean);
-
-  if (normalizedBanwords.length === 0) {
+function hasFortuneBanwordInText(text = "") {
+  if (!fortuneBanwordRegex) {
     return false;
   }
 
-  const hasBanwordInText = (text) => {
-    const normalizedText = (text || "").toString().toLowerCase();
-    if (!normalizedText) {
-      return false;
-    }
+  const normalizedText = (text || "").toString();
+  if (!normalizedText) {
+    return false;
+  }
 
-    return normalizedBanwords.some(
-      (banword) => banword && normalizedText.includes(banword)
-    );
-  };
+  return fortuneBanwordRegex.test(normalizedText);
+}
 
+function computeFortuneContentWarning(metadata = {}) {
   const parentGuideSections = metadata?.parentGuide?.original || {};
   const parentGuideText = Object.values(parentGuideSections)
     .filter((items) => Array.isArray(items))
@@ -213,7 +224,7 @@ function computeFortuneContentWarning(metadata = {}) {
     .map((item) => (item || "").toString())
     .join(" ");
 
-  if (hasBanwordInText(parentGuideText)) {
+  if (hasFortuneBanwordInText(parentGuideText)) {
     return true;
   }
 
@@ -224,7 +235,19 @@ function computeFortuneContentWarning(metadata = {}) {
     .map((group) => (group?.text || "").toString())
     .join(" ");
 
-  return hasBanwordInText(timingsText);
+  return hasFortuneBanwordInText(timingsText);
+}
+
+function highlightFortuneBanwords(text = "") {
+  const safeText = escapeHtml(text || "");
+  if (!fortuneBanwordHighlightRegex) {
+    return safeText;
+  }
+
+  return safeText.replace(
+    fortuneBanwordHighlightRegex,
+    '<span class="fortune-banword">$1</span>'
+  );
 }
 
 function setFortuneAutocompleteVisible(isOpen) {
@@ -1300,7 +1323,9 @@ function renderFortuneTimingsList(groups = []) {
 
     const textEl = document.createElement("p");
     textEl.className = "fortune-timings__raw";
-    textEl.textContent = normalizeFortuneTimingsText(group?.text || "");
+    textEl.innerHTML = highlightFortuneBanwords(
+      normalizeFortuneTimingsText(group?.text || "")
+    );
 
     listItem.appendChild(authorEl);
     listItem.appendChild(textEl);
@@ -1518,7 +1543,7 @@ function renderFortuneParentGuideList(listEl, items) {
 
   items.forEach((item) => {
     const li = document.createElement("li");
-    li.textContent = item;
+    li.innerHTML = highlightFortuneBanwords(item || "");
     listEl.appendChild(li);
   });
 }
@@ -2836,10 +2861,6 @@ function initFortuneWheel() {
       if (isEliminated) {
         listItem.setAttribute("data-fortune-item-state", "eliminated");
       }
-      if (metadata.contentWarning) {
-        listItem.classList.add("fortune-items-list-item--content-warning");
-      }
-
       const colorStrip = document.createElement("span");
       colorStrip.className = "fortune-items-color-strip";
       colorStrip.setAttribute("aria-hidden", "true");
