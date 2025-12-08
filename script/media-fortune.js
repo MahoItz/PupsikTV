@@ -164,6 +164,16 @@ const fortuneBanwordHighlightRegex =
   fortuneBanwordPattern.length > 0
     ? new RegExp(`(${fortuneBanwordPattern})`, "gi")
     : null;
+
+function escapeHtml(str = "") {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function setFortuneItemMetadata(label, metadata = {}) {
   const normalizedLabel = (label || "").trim();
   if (!normalizedLabel) {
@@ -3494,15 +3504,6 @@ function initFortuneWheel() {
         { duration: 900, easing: "ease" }
       );
     }
-  }
-
-  function escapeHtml(str) {
-    return String(str)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
   }
 
   function animate(now) {
