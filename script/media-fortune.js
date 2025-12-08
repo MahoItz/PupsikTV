@@ -143,7 +143,24 @@ const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const fortuneTimingsLoads = new Map();
-const FORTUNE_CONTENT_BANWORDS = ["сиськи", "член", "грудь", "сиси", "голая", "голый", "пися", "nudity", "sex", "nigga", "niger", "nigger"];
+const FORTUNE_CONTENT_BANWORDS = [
+  "сиськи",
+  "член",
+  "грудь",
+  "сиси",
+  "голая",
+  "голый",
+  "пися",
+  "секс",
+  "нагота",
+  "nudity",
+  "sex",
+  "nigga",
+  "niger",
+  "nigger",
+  "ниггер",
+  "нигга",
+];
 
 function escapeRegExp(str = "") {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -258,6 +275,28 @@ function highlightFortuneBanwords(text = "") {
     fortuneBanwordHighlightRegex,
     '<span class="fortune-banword">$1</span>'
   );
+}
+
+function refreshFortuneBanwordHighlights() {
+  if (fortuneParentGuideContent) {
+    fortuneParentGuideContent
+      .querySelectorAll(".fortune-parent-guide__list li")
+      .forEach((item) => {
+        const text = (item?.textContent || "").trim();
+        if (text) {
+          item.innerHTML = highlightFortuneBanwords(text);
+        }
+      });
+  }
+
+  if (fortuneTimingsList) {
+    fortuneTimingsList
+      .querySelectorAll(".fortune-timings__raw")
+      .forEach((node) => {
+        const text = normalizeFortuneTimingsText(node?.textContent || "");
+        node.innerHTML = highlightFortuneBanwords(text);
+      });
+  }
 }
 
 function setFortuneAutocompleteVisible(isOpen) {
@@ -1386,6 +1425,8 @@ function renderFortuneTimings(metadata = {}) {
   setFortuneTimingsStatus(
     hasTimings ? "Тайминги загружены" : "Тайминги не найдены"
   );
+
+  refreshFortuneBanwordHighlights();
 }
 
 function setFortuneTimingsError(message) {
@@ -1588,6 +1629,8 @@ function renderFortuneParentGuide(data) {
   Object.entries(sections).forEach(([key, items]) => {
     renderFortuneParentGuideList(fortuneParentGuideLists[key], items);
   });
+
+  refreshFortuneBanwordHighlights();
 
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "grid";
