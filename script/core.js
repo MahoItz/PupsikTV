@@ -159,6 +159,15 @@ function toggleSettingsPanel(forceState) {
 
   settingsPanel.classList.toggle("open", nextState);
   settingsPanel.setAttribute("aria-hidden", nextState ? "false" : "true");
+  settingsPanel.toggleAttribute("inert", !nextState);
+
+  if (!nextState && settingsPanel.contains(document.activeElement)) {
+    if (settingsToggleButton) {
+      settingsToggleButton.focus();
+    } else {
+      document.activeElement.blur();
+    }
+  }
   if (settingsToggleButton) {
     settingsToggleButton.classList.toggle("is-active", nextState);
     settingsToggleButton.setAttribute(
