@@ -143,25 +143,7 @@ const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const fortuneTimingsLoads = new Map();
-const FORTUNE_CONTENT_BANWORDS = [
-  "сиськи",
-  "член",
-  "грудь",
-  "сиси",
-  "голая",
-  "голый",
-  "пися",
-  "секс",
-  "нагота",
-  "nudity",
-  "sex",
-  "nigga",
-  "niger",
-  "nigger",
-  "ниггер",
-  "нигга",
-];
-
+const FORTUNE_CONTENT_BANWORDS = ["сиськи","член","грудь","сиси","голая","голый","голых","пися","секс","нагота","ниггер","нигга","обнажен","гениталии","гениталий","nudity","sex","nigga","niger","nigger"];
 function escapeRegExp(str = "") {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -255,9 +237,8 @@ function computeFortuneContentWarning(metadata = {}) {
     return true;
   }
 
-  const timingsText = (Array.isArray(metadata.timingsGroups)
-    ? metadata.timingsGroups
-    : []
+  const timingsText = (
+    Array.isArray(metadata.timingsGroups) ? metadata.timingsGroups : []
   )
     .map((group) => (group?.text || "").toString())
     .join(" ");
@@ -558,9 +539,7 @@ function createFortuneSuggestionSearchLink(
   link.href = href;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
-  link.className = ["fortune-items-link", extraClass]
-    .filter(Boolean)
-    .join(" ");
+  link.className = ["fortune-items-link", extraClass].filter(Boolean).join(" ");
   link.setAttribute("aria-label", ariaLabel);
   link.title = ariaLabel;
   const icon = document.createElement("img");
@@ -717,7 +696,10 @@ function renderFortuneSuggestionsList() {
           clearTimeout(highlightRemovalTimer);
           highlightRemovalTimer = null;
         }
-        listItem.removeEventListener("animationend", handleHighlightAnimationEnd);
+        listItem.removeEventListener(
+          "animationend",
+          handleHighlightAnimationEnd
+        );
       };
       listItem.addEventListener("animationend", handleHighlightAnimationEnd);
     }
@@ -916,9 +898,8 @@ function toggleFortuneSuggestionsDropdown() {
 function handleFortuneSuggestionsOutsideClick(event) {
   if (!fortuneSuggestionsState.dropdownOpen) return;
   if (!fortuneSuggestionsContainer) return;
-  const composedPath = typeof event.composedPath === "function"
-    ? event.composedPath()
-    : null;
+  const composedPath =
+    typeof event.composedPath === "function" ? event.composedPath() : null;
   const clickInside = composedPath
     ? composedPath.includes(fortuneSuggestionsContainer)
     : fortuneSuggestionsContainer.contains(event.target);
@@ -948,10 +929,7 @@ async function mutateFortuneSuggestion(item, afterDelete) {
   try {
     client = await waitForSupabaseClientForSuggestions();
   } catch (err) {
-    console.error(
-      "Supabase недоступен для удаления предложенного фильма",
-      err
-    );
+    console.error("Supabase недоступен для удаления предложенного фильма", err);
     fortuneSuggestionsState.pendingIds.delete(id);
     renderFortuneSuggestionsList();
     return;
@@ -997,8 +975,7 @@ async function mutateFortuneSuggestion(item, afterDelete) {
 }
 
 function handleFortuneSuggestionAccept(item) {
-  const label =
-    typeof item?.raw_text === "string" ? item.raw_text.trim() : "";
+  const label = typeof item?.raw_text === "string" ? item.raw_text.trim() : "";
 
   mutateFortuneSuggestion(item, () => {
     if (!label) {
@@ -1242,8 +1219,12 @@ function resetFortuneAutocomplete() {
 }
 
 function getFortuneMovieLabel(movie) {
-  const baseTitle =
-    (movie?.nameRu || movie?.nameEn || movie?.nameOriginal || "").trim();
+  const baseTitle = (
+    movie?.nameRu ||
+    movie?.nameEn ||
+    movie?.nameOriginal ||
+    ""
+  ).trim();
   if (!baseTitle) {
     return "";
   }
@@ -1293,10 +1274,7 @@ function updateFortuneTranslateButton(isEnabled) {
   }
 
   fortuneParentGuideTranslate.disabled = !isEnabled;
-  fortuneParentGuideTranslate.classList.toggle(
-    "btn-disabled",
-    !isEnabled
-  );
+  fortuneParentGuideTranslate.classList.toggle("btn-disabled", !isEnabled);
 }
 
 function setCurrentFortuneParentGuideData(data) {
@@ -1419,8 +1397,8 @@ function renderFortuneTimings(metadata = {}) {
     uniqueAuthors.length === 1
       ? `Автор: ${uniqueAuthors[0]}`
       : uniqueAuthors.length > 1
-        ? `Авторы: ${uniqueAuthors.join(", ")}`
-        : null
+      ? `Авторы: ${uniqueAuthors.join(", ")}`
+      : null
   );
   setFortuneTimingsStatus(
     hasTimings ? "Тайминги загружены" : "Тайминги не найдены"
@@ -1437,47 +1415,45 @@ function setFortuneTimingsError(message) {
 
 const FORTUNE_TIMINGS_PARSER_SELF_TEST = false;
 
-  function showFortuneTimingsFromMetadata(label) {
-    const normalizedLabel = (label || "").trim();
-    if (!normalizedLabel) {
-      return false;
-    }
+function showFortuneTimingsFromMetadata(label) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel) {
+    return false;
+  }
 
-    const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
-    const { timingsStatus } = metadata;
+  const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
+  const { timingsStatus } = metadata;
 
-    if (timingsStatus === "ready") {
-      renderFortuneTimings(metadata);
-      return true;
-    }
+  if (timingsStatus === "ready") {
+    renderFortuneTimings(metadata);
+    return true;
+  }
 
-    if (timingsStatus === "empty") {
-      const groups = getFortuneTimingsGroups(metadata);
-      const authors = Array.from(
-        new Set(
-          groups
-            .map((group) => (group?.author || "").trim())
-            .filter(Boolean)
-        )
-      );
-      setFortuneTimingsAuthor(
-        authors.length === 1
-          ? `Автор: ${authors[0]}`
-          : authors.length > 1
-            ? `Авторы: ${authors.join(", ")}`
-            : null
-      );
-      renderFortuneTimingsList([]);
-      setFortuneTimingsStatus("Тайминги не найдены");
-      return true;
-    }
+  if (timingsStatus === "empty") {
+    const groups = getFortuneTimingsGroups(metadata);
+    const authors = Array.from(
+      new Set(
+        groups.map((group) => (group?.author || "").trim()).filter(Boolean)
+      )
+    );
+    setFortuneTimingsAuthor(
+      authors.length === 1
+        ? `Автор: ${authors[0]}`
+        : authors.length > 1
+        ? `Авторы: ${authors.join(", ")}`
+        : null
+    );
+    renderFortuneTimingsList([]);
+    setFortuneTimingsStatus("Тайминги не найдены");
+    return true;
+  }
 
-    if (timingsStatus === "loading") {
-      setFortuneTimingsStatus("Загружаем тайминги...");
-      setFortuneTimingsAuthor(null);
-      renderFortuneTimingsList([]);
-      return true;
-    }
+  if (timingsStatus === "loading") {
+    setFortuneTimingsStatus("Загружаем тайминги...");
+    setFortuneTimingsAuthor(null);
+    renderFortuneTimingsList([]);
+    return true;
+  }
 
   if (timingsStatus === "error") {
     setFortuneTimingsError(
@@ -1564,7 +1540,9 @@ function resetFortuneParentGuideSections() {
   });
 }
 
-function resetFortuneParentGuide(message = "Выберите фильм, чтобы увидеть содержание руководства") {
+function resetFortuneParentGuide(
+  message = "Выберите фильм, чтобы увидеть содержание руководства"
+) {
   setFortuneParentGuideStatus(message);
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "none";
@@ -1620,9 +1598,7 @@ function renderFortuneParentGuide(data) {
     if (fortuneParentGuideContent) {
       fortuneParentGuideContent.style.display = "none";
     }
-    setFortuneParentGuideStatus(
-      "Нет данных в разделах Parent Guide."
-    );
+    setFortuneParentGuideStatus("Нет данных в разделах Parent Guide.");
     return;
   }
 
@@ -1812,7 +1788,9 @@ async function startFortuneParentGuideTranslation(label, data, options = {}) {
     (await loadFortuneTranslationModel()) || {};
 
   if (!selectedTranslationModel) {
-    applyParentGuideTranslationState(label, normalizedData, "error", { requestId });
+    applyParentGuideTranslationState(label, normalizedData, "error", {
+      requestId,
+    });
     return;
   }
 
@@ -1834,7 +1812,9 @@ async function startFortuneParentGuideTranslation(label, data, options = {}) {
     });
   } catch (err) {
     console.error("Failed to translate parent guide", err);
-    applyParentGuideTranslationState(label, pendingGuide, "error", { requestId });
+    applyParentGuideTranslationState(label, pendingGuide, "error", {
+      requestId,
+    });
   }
 }
 
@@ -1905,9 +1885,13 @@ async function fetchFortuneParentGuide(imdbId) {
     }
 
     renderFortuneParentGuide(normalizedGuideData);
-    startFortuneParentGuideTranslation(selectedFortuneLabel, normalizedGuideData, {
-      requestId,
-    });
+    startFortuneParentGuideTranslation(
+      selectedFortuneLabel,
+      normalizedGuideData,
+      {
+        requestId,
+      }
+    );
   } catch (err) {
     if (requestId !== fortuneParentGuideRequestId) {
       return;
@@ -2007,7 +1991,7 @@ async function loadFortuneTimingsData(kinopoiskId) {
 
 function showFortuneParentGuideFromMetadata(label) {
   const metadata = fortuneItemMetadata.get(label) || {};
-  
+
   // Handle ready state - show the data
   if (metadata.parentGuide && metadata.parentGuideStatus === "ready") {
     renderFortuneParentGuide(metadata.parentGuide);
@@ -2050,7 +2034,8 @@ async function openFortuneMovieModal(movie, options = {}) {
     useCachedParentGuide = false,
     updateInputField = true,
   } = options;
-  const displayLabel = label || movie?.fortuneLabel || getFortuneMovieLabel(movie);
+  const displayLabel =
+    label || movie?.fortuneLabel || getFortuneMovieLabel(movie);
   if (fortuneItemInput && displayLabel && updateInputField) {
     fortuneItemInput.value = displayLabel;
   }
@@ -2100,19 +2085,27 @@ async function openFortuneMovieModal(movie, options = {}) {
     // If metadata shows "loading" and there's an active load promise, wait for it
     const loadPromise = fortuneParentGuideLoads.get(displayLabel);
     if (loadPromise) {
-      loadPromise.then(() => {
-        // Only update if this modal is still showing the same movie
-        if (selectedFortuneLabel === displayLabel && fortuneMovieModal.style.display === "block") {
-          showFortuneParentGuideFromMetadata(displayLabel);
-        }
-      }).catch((err) => {
-        console.error("Parent guide load failed", err);
-        // Error is already handled by preloadFortuneParentGuide
-        // Just refresh the UI to show the error state
-        if (selectedFortuneLabel === displayLabel && fortuneMovieModal.style.display === "block") {
-          showFortuneParentGuideFromMetadata(displayLabel);
-        }
-      });
+      loadPromise
+        .then(() => {
+          // Only update if this modal is still showing the same movie
+          if (
+            selectedFortuneLabel === displayLabel &&
+            fortuneMovieModal.style.display === "block"
+          ) {
+            showFortuneParentGuideFromMetadata(displayLabel);
+          }
+        })
+        .catch((err) => {
+          console.error("Parent guide load failed", err);
+          // Error is already handled by preloadFortuneParentGuide
+          // Just refresh the UI to show the error state
+          if (
+            selectedFortuneLabel === displayLabel &&
+            fortuneMovieModal.style.display === "block"
+          ) {
+            showFortuneParentGuideFromMetadata(displayLabel);
+          }
+        });
     }
   }
 
@@ -2269,7 +2262,10 @@ if (fortuneAutoResults) {
     setFortuneAutocompleteVisible(false);
 
     const kinopoiskId =
-      chosenMovie?.kinopoiskId || chosenMovie?.filmId || chosenMovie?.id || null;
+      chosenMovie?.kinopoiskId ||
+      chosenMovie?.filmId ||
+      chosenMovie?.id ||
+      null;
     let imdbId = chosenMovie?.imdbId || null;
 
     if (!imdbId && kinopoiskId) {
@@ -2428,9 +2424,11 @@ function initFortuneWheel() {
     if (!fortunePointerEl) {
       return;
     }
-    const pointerGap =
-      Math.max(0, (canvasWidth - Math.min(canvasWidth, canvasHeight)) / 2 + 4);
-  
+    const pointerGap = Math.max(
+      0,
+      (canvasWidth - Math.min(canvasWidth, canvasHeight)) / 2 + 4
+    );
+
     if (pointerGap !== lastPointerGap || fortunePointerWidth === null) {
       const measuredWidth = measurePointerWidth();
       if (measuredWidth > 0) {
@@ -2440,11 +2438,11 @@ function initFortuneWheel() {
       }
       lastPointerGap = pointerGap;
     }
-  
+
     const effectiveWidth = fortunePointerWidth ?? 0;
     const pointerRight = pointerGap - effectiveWidth + POINTER_SHIFT; // ← тут сдвиг
     const pointerRightValue = `${pointerRight}px`;
-  
+
     if (pointerRightValue !== lastPointerRightValue) {
       fortunePointerEl.style.right = pointerRightValue;
       lastPointerRightValue = pointerRightValue;
@@ -2496,7 +2494,10 @@ function initFortuneWheel() {
         });
         renderFortuneItemsList();
         fortuneParentGuideLoads.delete(normalizedLabel);
-        startFortuneParentGuideTranslation(normalizedLabel, normalizedGuideData);
+        startFortuneParentGuideTranslation(
+          normalizedLabel,
+          normalizedGuideData
+        );
       } catch (err) {
         console.error("Failed to preload parent guide", err);
         setFortuneItemMetadata(normalizedLabel, {
@@ -2970,14 +2971,10 @@ function initFortuneWheel() {
         parentGuideBtn.textContent = "PG";
 
         if (parentGuideStatus === "ready") {
-          parentGuideBtn.classList.add(
-            "fortune-parent-guide-indicator--ready"
-          );
+          parentGuideBtn.classList.add("fortune-parent-guide-indicator--ready");
           parentGuideBtn.title = "Открыть родительский гайд";
         } else if (parentGuideStatus === "error") {
-          parentGuideBtn.classList.add(
-            "fortune-parent-guide-indicator--error"
-          );
+          parentGuideBtn.classList.add("fortune-parent-guide-indicator--error");
           parentGuideBtn.title =
             metadata.parentGuideError ||
             "Не удалось загрузить родительский гайд";
@@ -3106,7 +3103,9 @@ function initFortuneWheel() {
       );
       tickBase.volume = resolvedVolume;
       clone.volume = resolvedVolume;
-      clone.play().catch(() => {/* ignore */});
+      clone.play().catch(() => {
+        /* ignore */
+      });
     } catch (err) {
       /* ignore cloning errors */
     }
@@ -3121,11 +3120,11 @@ function initFortuneWheel() {
   let spinDurationMs = 15000;
   const pointerAngle = 0;
   let resultOverlayTimeoutId = null;
-  
+
   // ============= TICK SOUND: State for ticks =============
-  let segmentsCount = 0;              // Number of segments for current spin
-  let lastTickSegmentIndex = null;    // Last segment index under the pointer
-  const pointerOffsetDeg = 0;         // Pointer offset in degrees (0 = right side)
+  let segmentsCount = 0; // Number of segments for current spin
+  let lastTickSegmentIndex = null; // Last segment index under the pointer
+  const pointerOffsetDeg = 0; // Pointer offset in degrees (0 = right side)
   // =======================================================
   function setInputValuePreservingState(value) {
     if (!input) {
@@ -3575,13 +3574,13 @@ function initFortuneWheel() {
     }
 
     drawWheel();
-    
+
     // ============= TICK SOUND: Call handleWheelTick during spin =============
     // Convert rotation from radians to degrees and check for segment crossings
     const rotationDeg = (rotation * 180) / Math.PI;
     handleWheelTick(rotationDeg);
     // ========================================================================
-    
+
     requestAnimationFrame(animate);
   }
 
@@ -3594,12 +3593,12 @@ function initFortuneWheel() {
     stopIdleAnimation();
 
     hideResultOverlay();
-    
+
     // ============= TICK SOUND: Initialize tick state before spin =============
     segmentsCount = activeItems.length;
     lastTickSegmentIndex = null;
     // ==========================================================================
-    
+
     const segmentAngle = (Math.PI * 2) / activeItems.length;
     const winnerIndex = Math.floor(Math.random() * activeItems.length);
     const randomOffset = 0.15 + Math.random() * 0.7;
