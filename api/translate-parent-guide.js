@@ -25,6 +25,42 @@ function hasContent(sections = {}) {
   );
 }
 
+function extractJsonString(raw = "") {
+  if (typeof raw !== "string") {
+    return null;
+  }
+
+  let text = raw;
+
+  // Remove Markdown code fences like ```json ... ``` or ``` ... ```
+  text = text.replace(/```(?:json)?\s*([\s\S]*?)```/gi, "$1");
+
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+    return null;
+  }
+
+  return text.slice(firstBrace, lastBrace + 1);
+}
+
+function safeJsonParse(rawText, contextLabel) {
+  const jsonString = extractJsonString(rawText);
+
+  if (!jsonString) {
+    console.warn(`[translate-parent-guide] Missing JSON payload in ${contextLabel}`);
+    return null;
+  }
+
+  try {
+    return JSON.parse(jsonString);
+  } catch (err) {
+    console.error(`[translate-parent-guide] Failed to parse JSON from ${contextLabel}`, err, rawText);
+    return null;
+  }
+}
+
 async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -98,15 +134,31 @@ async function handler(req, res) {
       return;
     }
 
-    const completion = await response.json();
+    const completionText = await response.text();
+    const completion = safeJsonParse(completionText, "completion response");
+
+    if (!completion) {
+      res
+        .status(200)
+        .json({
+          translated: sections,
+          warning: "Could not parse translation response; returning original sections.",
+        });
+      return;
+    }
+
     const content = completion?.choices?.[0]?.message?.content || "";
 
     let parsed;
-    try {
-      parsed = typeof content === "string" ? JSON.parse(content) : {};
-    } catch (err) {
-      console.error("Failed to parse translation response", err, content);
-      res.status(502).json({ error: "Invalid translation response" });
+    parsed = safeJsonParse(content, "message content");
+
+    if (!parsed) {
+      res
+        .status(200)
+        .json({
+          translated: sections,
+          warning: "Could not parse translation message content; returning original sections.",
+        });
       return;
     }
 
