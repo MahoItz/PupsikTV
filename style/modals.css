@@ -484,6 +484,14 @@
     gap: 6px;
 }
 
+.fortune-banword {
+    color: inherit;
+    text-decoration-line: underline;
+    text-decoration-color: #ff4d4f;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+}
+
 #fortuneMovieModal .fortune-parent-guide__empty {
     list-style: none;
     padding-left: 0;
