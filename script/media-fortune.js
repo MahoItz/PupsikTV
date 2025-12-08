@@ -143,26 +143,41 @@ const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const fortuneTimingsLoads = new Map();
-const FORTUNE_CONTENT_BANWORDS = ["сиськи","член","грудь","сиси","голая","голый","голых","пися","секс","нагота","ниггер","нигга","обнажен","гениталии","гениталий","nudity","sex","nigga","niger","nigger"];
+let fortuneBanwords = [];
+
 function escapeRegExp(str = "") {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const fortuneBanwordPattern = (FORTUNE_CONTENT_BANWORDS || [])
-  .map((word) => (word || "").toString().toLowerCase().trim())
-  .filter(Boolean)
-  .map(escapeRegExp)
-  .join("|");
+let fortuneBanwordRegex = null;
+let fortuneBanwordHighlightRegex = null;
+let fortuneBanwordsLoadPromise = null;
 
-const fortuneBanwordRegex =
-  fortuneBanwordPattern.length > 0
-    ? new RegExp(`(${fortuneBanwordPattern})`, "i")
-    : null;
+function normalizeFortuneBanwords(words = []) {
+  return Array.isArray(words)
+    ? Array.from(
+        new Set(
+          words
+            .map((word) => (word || "").toString().toLowerCase().trim())
+            .filter(Boolean)
+        )
+      )
+    : [];
+}
 
-const fortuneBanwordHighlightRegex =
-  fortuneBanwordPattern.length > 0
-    ? new RegExp(`(${fortuneBanwordPattern})`, "gi")
-    : null;
+function updateFortuneBanwordMatchers(words = []) {
+  fortuneBanwords = normalizeFortuneBanwords(words);
+
+  const pattern = fortuneBanwords.map(escapeRegExp).join("|");
+
+  fortuneBanwordRegex =
+    pattern.length > 0 ? new RegExp(`(${pattern})`, "i") : null;
+
+  fortuneBanwordHighlightRegex =
+    pattern.length > 0 ? new RegExp(`(${pattern})`, "gi") : null;
+}
+
+updateFortuneBanwordMatchers();
 
 function escapeHtml(str = "") {
   return String(str)
@@ -279,6 +294,91 @@ function refreshFortuneBanwordHighlights() {
       });
   }
 }
+
+function waitForSupabaseClient(timeoutMs = 10000) {
+  if (supabaseClient && typeof supabaseClient.from === "function") {
+    return Promise.resolve(supabaseClient);
+  }
+
+  return new Promise((resolve, reject) => {
+    const startedAt = Date.now();
+
+    const attempt = () => {
+      if (supabaseClient && typeof supabaseClient.from === "function") {
+        resolve(supabaseClient);
+        return;
+      }
+
+      if (Date.now() - startedAt > timeoutMs) {
+        reject(new Error("Supabase client is not ready"));
+        return;
+      }
+
+      setTimeout(attempt, 150);
+    };
+
+    attempt();
+  });
+}
+
+function parseFortuneBanwordsString(raw = "") {
+  return (raw || "")
+    .split(/\s+/)
+    .map((word) => word.toLowerCase().trim())
+    .filter(Boolean);
+}
+
+async function loadFortuneBanwordsFromSettings() {
+  if (fortuneBanwordsLoadPromise) {
+    return fortuneBanwordsLoadPromise;
+  }
+
+  fortuneBanwordsLoadPromise = (async () => {
+    let client = null;
+
+    try {
+      client = await waitForSupabaseClient();
+    } catch (err) {
+      console.error("Supabase client is not available for banwords", err);
+    }
+
+    if (!client) {
+      updateFortuneBanwordMatchers([]);
+      return fortuneBanwords;
+    }
+
+    try {
+      const { data, error } = await client
+        .from("settings")
+        .select("banwords")
+        .order("id", { ascending: true });
+
+      if (error) throw error;
+
+      const rows = Array.isArray(data) ? data : [];
+      const rowWithBanwords =
+        rows.find((row) => (row?.banwords || "").trim()) || rows[0] || null;
+      const banwordsText = rowWithBanwords?.banwords || "";
+
+      updateFortuneBanwordMatchers(parseFortuneBanwordsString(banwordsText));
+      refreshFortuneBanwordHighlights();
+
+      return fortuneBanwords;
+    } catch (err) {
+      console.error("Failed to load fortune banwords", err);
+      updateFortuneBanwordMatchers([]);
+      return fortuneBanwords;
+    }
+  })();
+
+  return fortuneBanwordsLoadPromise.finally(() => {
+    fortuneBanwordsLoadPromise = null;
+  });
+}
+
+loadFortuneBanwordsFromSettings().catch((err) => {
+  console.error("Unexpected error initializing fortune banwords", err);
+});
 
 function setFortuneAutocompleteVisible(isOpen) {
   if (!fortuneAutoResultsContainer) return;
