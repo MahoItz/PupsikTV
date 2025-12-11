@@ -1917,7 +1917,7 @@ select option {
 
     .movies-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 12px;1fr;
+        gap: 12px;
     }
 
     .btn {
