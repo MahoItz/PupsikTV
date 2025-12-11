@@ -1916,10 +1916,9 @@ select option {
     }
 
     .movies-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;1fr;
     }
-
-
 
     .btn {
         width: 100%;
