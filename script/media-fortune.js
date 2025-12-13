@@ -1374,6 +1374,7 @@ function mapFortuneFilmToMovieCard(movie) {
 
 const FORTUNE_SPECIAL_STUDIOS = [
   { keyword: "netflix", className: "netflix", label: "Netflix" },
+  { keyword: "warner bros. pictures", className: "warner", label: "Warner Bros. Pictures" },
   { keyword: "warner", className: "warner", label: "Warner Bros" },
   { keyword: "disney company", className: "disney", label: "Disney Company" },
   { keyword: "disney", className: "disney", label: "Disney" },

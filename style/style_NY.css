@@ -3635,15 +3635,15 @@ select option {
 }
 
 .fortune-studio-badge--warner {
-    background: linear-gradient(135deg, #003399, #0052d4);
+    background: #e50914;
     color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.25);
+    border-color: #ff5f6d;
 }
 
 .fortune-studio-badge--disney {
-    background: linear-gradient(135deg, #0f52ba, #00b4ff);
+    background: #e50914;
     color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: #ff5f6d;
 }
 
 .fortune-items-list-actions {
