@@ -631,6 +631,55 @@
     animation: spoilerExpand 0.2s ease-out;
 }
 
+#fortuneMovieModal .fortune-studio {
+    background: #141625;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#fortuneMovieModal .fortune-studio__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+#fortuneMovieModal .fortune-studio__status {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+}
+
+#fortuneMovieModal .fortune-studio__content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#fortuneMovieModal .fortune-studio__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+#fortuneMovieModal .fortune-studio__countries {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 13px;
+}
+
+#fortuneMovieModal .fortune-studio__link {
+    color: #7fa1ff;
+    font-size: 13px;
+    word-break: break-word;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 #fortuneMovieModal .notice-text {
     color: var(--primary-color);
     font-size: 14px;
