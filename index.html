@@ -512,54 +512,96 @@
     <div id="movieInfoModal" class="modal">
         <div class="modal-content movie-info-modal">
             <span class="close" onclick="closeModal('movieInfoModal')" aria-label="Закрыть окно">&times;</span>
-            <div class="movie-info-modal__poster">
-                <img id="movieInfoPoster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера"
-                    alt="Постер фильма" loading="lazy">
+
+            <div class="movie-info-modal__header">
+                <div class="movie-info-modal__titles">
+                    <p class="movie-info-modal__eyebrow">Карточка фильма</p>
+                    <h2 data-movie-info="title">Название фильма</h2>
+                    <p class="movie-info-modal__original" data-movie-info="originalTitle"></p>
+                </div>
+                <div class="movie-info-modal__id">
+                    <span class="movie-info-modal__label">ID записи</span>
+                    <span class="movie-info-modal__value" data-movie-info="id"></span>
+                </div>
             </div>
-            <div class="movie-info-modal__details">
-                <h2 id="movieInfoTitle">Название фильма</h2>
-                <p class="movie-info-modal__original" id="movieInfoOriginalTitle"></p>
-                <div class="movie-info-modal__stats">
-                    <div class="movie-info-modal__stat">
-                        <span class="movie-info-modal__label">Год</span>
-                        <span class="movie-info-modal__value" id="movieInfoYear"></span>
+
+            <div class="movie-info-modal__layout">
+                <div class="movie-info-modal__left">
+                    <div class="movie-info-modal__poster-card">
+                        <div class="movie-info-modal__poster">
+                            <img id="movieInfoPoster"
+                                src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера"
+                                alt="Постер фильма" loading="lazy">
+                        </div>
+                        <div class="movie-info-modal__badge-row">
+                            <div class="movie-info-modal__chip">
+                                <span class="movie-info-modal__chip-label">Год</span>
+                                <span class="movie-info-modal__chip-value" data-movie-info="year"></span>
+                            </div>
+                            <div class="movie-info-modal__chip">
+                                <span class="movie-info-modal__chip-label">Жанры</span>
+                                <span class="movie-info-modal__chip-value" data-movie-info="genres"></span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="movie-info-modal__stat">
-                        <span class="movie-info-modal__label">Жанры</span>
-                        <span class="movie-info-modal__value" id="movieInfoGenres"></span>
-                    </div>
-                    <div class="movie-info-modal__stat">
-                        <span class="movie-info-modal__label">Оценка PupsikTV</span>
-                        <span class="movie-info-modal__value" id="movieInfoRating"></span>
-                    </div>
-                    <div class="movie-info-modal__stat">
-                        <span class="movie-info-modal__label">Рейтинг Кинопоиска</span>
-                        <span class="movie-info-modal__value" id="movieInfoKpRating"></span>
-                    </div>
-                    <div class="movie-info-modal__stat">
-                        <span class="movie-info-modal__label">Оценка зрителей</span>
-                        <span class="movie-info-modal__value" id="movieInfoUserRating"></span>
-                        <span class="movie-info-modal__muted" id="movieInfoVotes"></span>
-                    </div>
-                    <div class="movie-info-modal__stat">
-                        <span class="movie-info-modal__label">ID записи</span>
-                        <span class="movie-info-modal__value" id="movieInfoId"></span>
+
+                    <div class="movie-info-modal__rating-panel">
+                        <div class="movie-info-modal__rating-card">
+                            <span class="movie-info-modal__label">Оценка PupsikTV</span>
+                            <span class="movie-info-modal__rating" data-movie-info="rating"></span>
+                        </div>
+                        <div class="movie-info-modal__rating-card">
+                            <span class="movie-info-modal__label">Рейтинг Кинопоиска</span>
+                            <span class="movie-info-modal__rating" data-movie-info="kpRating"></span>
+                        </div>
+                        <div class="movie-info-modal__rating-card">
+                            <span class="movie-info-modal__label">Оценка зрителей</span>
+                            <div class="movie-info-modal__rating-sub">
+                                <span class="movie-info-modal__rating" data-movie-info="userRating"></span>
+                                <span class="movie-info-modal__muted" data-movie-info="votes"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="movie-info-modal__section">
-                    <h3 class="movie-info-modal__section-title">Детали заказа</h3>
-                    <div class="movie-info-modal__stats">
-                        <div class="movie-info-modal__stat">
-                            <span class="movie-info-modal__label">Заказчик</span>
-                            <span class="movie-info-modal__value" id="movieInfoOrderBy"></span>
+
+                <div class="movie-info-modal__right">
+                    <div class="movie-info-modal__panel">
+                        <h3 class="movie-info-modal__section-title">Основные сведения</h3>
+                        <div class="movie-info-modal__stats-grid">
+                            <div class="movie-info-modal__stat">
+                                <span class="movie-info-modal__label">Год релиза</span>
+                                <span class="movie-info-modal__value" data-movie-info="year"></span>
+                            </div>
+                            <div class="movie-info-modal__stat">
+                                <span class="movie-info-modal__label">Жанры</span>
+                                <span class="movie-info-modal__value" data-movie-info="genres"></span>
+                            </div>
+                            <div class="movie-info-modal__stat">
+                                <span class="movie-info-modal__label">Русское название</span>
+                                <span class="movie-info-modal__value" data-movie-info="title"></span>
+                            </div>
+                            <div class="movie-info-modal__stat">
+                                <span class="movie-info-modal__label">Оригинальное название</span>
+                                <span class="movie-info-modal__value" data-movie-info="originalTitle"></span>
+                            </div>
                         </div>
-                        <div class="movie-info-modal__stat">
-                            <span class="movie-info-modal__label">Способ заказа</span>
-                            <span class="movie-info-modal__value" id="movieInfoOrderType"></span>
-                        </div>
-                        <div class="movie-info-modal__stat">
-                            <span class="movie-info-modal__label">Дата добавления</span>
-                            <span class="movie-info-modal__value" id="movieInfoAdded"></span>
+                    </div>
+
+                    <div class="movie-info-modal__panel">
+                        <h3 class="movie-info-modal__section-title">Детали заказа</h3>
+                        <div class="movie-info-modal__stats-grid">
+                            <div class="movie-info-modal__stat">
+                                <span class="movie-info-modal__label">Заказчик</span>
+                                <span class="movie-info-modal__value" data-movie-info="orderBy"></span>
+                            </div>
+                            <div class="movie-info-modal__stat">
+                                <span class="movie-info-modal__label">Способ заказа</span>
+                                <span class="movie-info-modal__value" data-movie-info="orderType"></span>
+                            </div>
+                            <div class="movie-info-modal__stat">
+                                <span class="movie-info-modal__label">Дата добавления</span>
+                                <span class="movie-info-modal__value" data-movie-info="added"></span>
+                            </div>
                         </div>
                     </div>
                 </div>

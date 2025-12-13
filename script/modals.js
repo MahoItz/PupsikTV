@@ -122,10 +122,15 @@ function openMovieInfoModal(movieIdOrObject) {
 
   if (!movie) return;
 
-  const setText = (id, value) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = normalizeMovieInfoValue(value);
+  const setText = (key, value) => {
+    const nodes = document.querySelectorAll(`[data-movie-info="${key}"]`);
+    nodes.forEach((node) => {
+      const normalized = value === "" ? "" : normalizeMovieInfoValue(value);
+      node.textContent = normalized;
+      if (key === "originalTitle") {
+        node.style.display = value ? "block" : "none";
+      }
+    });
   };
 
   const posterEl = document.getElementById("movieInfoPoster");
@@ -141,25 +146,15 @@ function openMovieInfoModal(movieIdOrObject) {
     };
   }
 
-  const originalTitle = document.getElementById("movieInfoOriginalTitle");
-  if (originalTitle) {
-    if (movie.originalTitle) {
-      originalTitle.textContent = movie.originalTitle;
-      originalTitle.style.display = "block";
-    } else {
-      originalTitle.textContent = "";
-      originalTitle.style.display = "none";
-    }
-  }
-
-  setText("movieInfoTitle", movie.title || "Без названия");
-  setText("movieInfoYear", movie.year);
-  setText("movieInfoGenres", movie.genre);
-  setText("movieInfoRating", movie.rating);
-  setText("movieInfoKpRating", movie.kpRating);
-  setText("movieInfoOrderBy", movie.orderBy);
-  setText("movieInfoOrderType", movie.orderType);
-  setText("movieInfoId", movie.id);
+  setText("title", movie.title || "Без названия");
+  setText("originalTitle", movie.originalTitle || "");
+  setText("year", movie.year);
+  setText("genres", movie.genre);
+  setText("rating", movie.rating);
+  setText("kpRating", movie.kpRating);
+  setText("orderBy", movie.orderBy);
+  setText("orderType", movie.orderType);
+  setText("id", movie.id);
 
   const votes = Number(movie.ratingCount ?? 0);
   const userRatingDefined =
@@ -170,13 +165,12 @@ function openMovieInfoModal(movieIdOrObject) {
     : userRatingDefined
       ? "Оценок пока нет"
       : "";
-  setText("movieInfoUserRating", userRatingText);
-  const votesEl = document.getElementById("movieInfoVotes");
-  if (votesEl) votesEl.textContent = votesText;
+  setText("userRating", userRatingText);
+  setText("votes", votesText);
 
   const addedText =
     formatDateTime(movie.dateAdded) || formatDate(movie.dateAdded) || "—";
-  setText("movieInfoAdded", addedText);
+  setText("added", addedText);
 
   const modal = document.getElementById("movieInfoModal");
   if (modal) modal.style.display = "block";
