@@ -1422,6 +1422,7 @@ function buildFortuneStudioInfo(details = {}) {
   }
 
   const homepageLower = homepage.toLowerCase();
+  const hideHomepageLink = homepageLower.includes("netflix");
   FORTUNE_SPECIAL_STUDIOS.forEach(({ keyword, label }) => {
     if (homepageLower.includes(keyword)) {
       addStudio(label);
@@ -1438,7 +1439,7 @@ function buildFortuneStudioInfo(details = {}) {
 
   return {
     studios: Array.from(studios),
-    homepage,
+    homepage: hideHomepageLink ? "" : homepage,
   };
 }
 
@@ -1470,6 +1471,30 @@ function resetFortuneStudioInfo(
     fortuneStudioLink.removeAttribute("href");
   }
   setFortuneStudioStatus(message);
+}
+
+function moveFortuneStudioIntoPreviewCard(card) {
+  if (!fortuneStudioSection || !card) {
+    return;
+  }
+
+  const infoBlock = card.querySelector(".movie-info");
+  if (!infoBlock) {
+    return;
+  }
+
+  const genreBlock = infoBlock.querySelector(".movie-genres");
+  const yearBlock = infoBlock.querySelector(".movie-year");
+
+  fortuneStudioSection.classList.add("fortune-studio--inline");
+
+  if (yearBlock) {
+    infoBlock.insertBefore(fortuneStudioSection, yearBlock);
+  } else if (genreBlock?.nextSibling) {
+    infoBlock.insertBefore(fortuneStudioSection, genreBlock.nextSibling);
+  } else {
+    infoBlock.appendChild(fortuneStudioSection);
+  }
 }
 
 function renderFortuneStudioInfo(studioInfo) {
