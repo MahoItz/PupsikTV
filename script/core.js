@@ -113,6 +113,10 @@ const KINOPOISK_FILM_URL = "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 let kpResults = [];
 let selectedKPMovie = null;
 
+// TMDB
+const TMDB_API_BASE_URL = "https://api.themoviedb.org/3";
+let TMBD_API_KEY = null;
+
 function notifyKinopoiskQuotaExceeded() {
   const fullMessage =
     "Превышен дневной лимит запросов к Кинопоиску 500 в день.";
