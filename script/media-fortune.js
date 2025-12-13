@@ -130,6 +130,10 @@ const fortuneParentGuideLists = {
   violenceAndGore: document.getElementById("fortuneParentGuideViolence"),
   profanity: document.getElementById("fortuneParentGuideProfanity"),
 };
+const fortuneStudioSection = document.getElementById("fortuneStudio");
+const fortuneStudioList = document.getElementById("fortuneStudioList");
+const fortuneStudioLink = document.getElementById("fortuneStudioLink");
+const fortuneStudioStatus = document.getElementById("fortuneStudioStatus");
 let fortuneParentGuideRequestId = 0;
 let fortuneCurrentParentGuideData = null;
 const fortuneItemInput = document.getElementById("fortuneItemInput");
@@ -143,6 +147,8 @@ const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const fortuneTimingsLoads = new Map();
+const fortuneStudioLoads = new Map();
+let preloadFortuneStudioInfo;
 let fortuneBanwords = [];
 
 function escapeRegExp(str = "") {
@@ -209,6 +215,9 @@ function setFortuneItemMetadata(label, metadata = {}) {
     "timingsStatus",
     "timingsError",
     "timingsAuthor",
+    "studioInfo",
+    "studioInfoStatus",
+    "studioInfoError",
   ].forEach((key) => {
     if (Object.prototype.hasOwnProperty.call(metadata, key)) {
       normalizedMetadata[key] = metadata[key];
@@ -1362,10 +1371,178 @@ function mapFortuneFilmToMovieCard(movie) {
   };
 }
 
+const FORTUNE_SPECIAL_STUDIOS = [
+  { keyword: "netflix", className: "netflix", label: "Netflix" },
+  { keyword: "warner bros. pictures", className: "warner", label: "Warner Bros. Pictures" },
+  { keyword: "warner", className: "warner", label: "Warner Bros" },
+  { keyword: "disney company", className: "disney", label: "Disney Company" },
+  { keyword: "disney", className: "disney", label: "Disney" },
+];
+
+function normalizeStudioName(name = "") {
+  return name.toString().trim();
+}
+
+function getSpecialStudioClass(studioName = "") {
+  const normalized = studioName.toLowerCase();
+  const match = FORTUNE_SPECIAL_STUDIOS.find(({ keyword }) =>
+    normalized.includes(keyword)
+  );
+  return match ? match.className : null;
+}
+
+function createFortuneStudioBadge(studioName) {
+  const badge = document.createElement("span");
+  badge.className = "fortune-studio-badge";
+  badge.textContent = normalizeStudioName(studioName) || "-";
+
+  const specialClass = getSpecialStudioClass(studioName);
+  if (specialClass) {
+    badge.classList.add(`fortune-studio-badge--${specialClass}`);
+  }
+
+  return badge;
+}
+
+function buildFortuneStudioInfo(details = {}) {
+  const studios = new Set();
+  const homepage = normalizeStudioName(details?.homepage);
+
+  const addStudio = (name) => {
+    const normalizedName = normalizeStudioName(name);
+    if (normalizedName) {
+      studios.add(normalizedName);
+    }
+  };
+
+  if (Array.isArray(details?.production_companies)) {
+    details.production_companies.forEach((company) => {
+      addStudio(company?.name || "");
+    });
+  }
+
+  const homepageLower = homepage.toLowerCase();
+  const hideHomepageLink = homepageLower.includes("netflix");
+  FORTUNE_SPECIAL_STUDIOS.forEach(({ keyword, label }) => {
+    if (homepageLower.includes(keyword)) {
+      addStudio(label);
+    }
+  });
+
+  Array.from(studios).forEach((studioName) => {
+    FORTUNE_SPECIAL_STUDIOS.forEach(({ keyword, label }) => {
+      if (studioName.toLowerCase().includes(keyword)) {
+        addStudio(label);
+      }
+    });
+  });
+
+  return {
+    studios: Array.from(studios),
+    homepage: hideHomepageLink ? "" : homepage,
+  };
+}
+
 function setFortuneParentGuideStatus(message) {
   if (fortuneParentGuideStatus) {
     fortuneParentGuideStatus.textContent = message;
   }
+}
+
+function setFortuneStudioStatus(message) {
+  if (fortuneStudioStatus) {
+    fortuneStudioStatus.textContent = message;
+  }
+}
+
+function resetFortuneStudioInfo(
+  message = "Выберите фильм, чтобы увидеть студию"
+) {
+  if (!fortuneStudioSection) {
+    return;
+  }
+
+  if (fortuneStudioList) {
+    fortuneStudioList.innerHTML = "";
+  }
+  if (fortuneStudioLink) {
+    fortuneStudioLink.style.display = "none";
+    fortuneStudioLink.textContent = "";
+    fortuneStudioLink.removeAttribute("href");
+  }
+  setFortuneStudioStatus(message);
+}
+
+function renderFortuneStudioInfo(studioInfo) {
+  if (!fortuneStudioSection) {
+    return;
+  }
+
+  if (!studioInfo || !Array.isArray(studioInfo.studios)) {
+    resetFortuneStudioInfo("Студия не указана.");
+    return;
+  }
+
+  setFortuneStudioStatus("");
+
+  if (fortuneStudioList) {
+    fortuneStudioList.innerHTML = "";
+    studioInfo.studios.forEach((studio) => {
+      fortuneStudioList.appendChild(createFortuneStudioBadge(studio));
+    });
+  }
+
+  if (fortuneStudioLink) {
+    if (studioInfo.homepage) {
+      fortuneStudioLink.href = studioInfo.homepage;
+      fortuneStudioLink.textContent = studioInfo.homepage;
+      fortuneStudioLink.style.display = "inline-flex";
+    } else {
+      fortuneStudioLink.removeAttribute("href");
+      fortuneStudioLink.style.display = "none";
+      fortuneStudioLink.textContent = "";
+    }
+  }
+}
+
+function showFortuneStudioFromMetadata(label) {
+  const normalizedLabel = (label || "").trim();
+  if (!normalizedLabel) {
+    resetFortuneStudioInfo();
+    return false;
+  }
+
+  const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
+
+  if (!TMDB_API_KEY) {
+    resetFortuneStudioInfo("TMDB API ключ не настроен.");
+    return false;
+  }
+
+  if (metadata.studioInfoStatus === "loading") {
+    setFortuneStudioStatus("Загружаем данные о студии...");
+    return true;
+  }
+
+  if (metadata.studioInfoStatus === "error") {
+    setFortuneStudioStatus(
+      metadata.studioInfoError || "Не удалось загрузить данные о студии."
+    );
+    return true;
+  }
+
+  if (metadata.studioInfoStatus === "empty") {
+    setFortuneStudioStatus("Студия не указана.");
+    return true;
+  }
+
+  if (metadata.studioInfoStatus === "ready" && metadata.studioInfo) {
+    renderFortuneStudioInfo(metadata.studioInfo);
+    return true;
+  }
+
+  resetFortuneStudioInfo("Студия не загружена.");
+  return false;
 }
 
 function updateFortuneTranslateButton(isEnabled) {
@@ -1950,6 +2127,48 @@ async function fetchFortuneImdbId(kinopoiskId) {
   }
 }
 
+async function fetchFortuneTmdbStudioInfo(imdbId) {
+  if (!imdbId || !TMDB_API_KEY) {
+    return null;
+  }
+
+  try {
+    const findUrl = `${TMDB_API_BASE_URL}/find/${encodeURIComponent(
+      imdbId
+    )}?api_key=${TMDB_API_KEY}&external_source=imdb_id`;
+    const findResponse = await fetch(findUrl);
+
+    if (!findResponse.ok) {
+      throw new Error(`TMDB find request failed: ${findResponse.status}`);
+    }
+
+    const findData = await findResponse.json();
+    const movieResult =
+      findData?.movie_results?.[0] || findData?.tv_results?.[0] || null;
+
+    if (!movieResult?.id) {
+      return null;
+    }
+
+    const resourceType =
+      Array.isArray(findData?.movie_results) && findData.movie_results.length > 0
+        ? "movie"
+        : "tv";
+    const detailsUrl = `${TMDB_API_BASE_URL}/${resourceType}/${movieResult.id}?api_key=${TMDB_API_KEY}&language=ru-RU`;
+    const detailsResponse = await fetch(detailsUrl);
+
+    if (!detailsResponse.ok) {
+      throw new Error(`TMDB details request failed: ${detailsResponse.status}`);
+    }
+
+    const details = await detailsResponse.json();
+    return buildFortuneStudioInfo(details);
+  } catch (err) {
+    console.error("Failed to fetch TMDB studio info", err);
+    throw err;
+  }
+}
+
 async function fetchFortuneParentGuide(imdbId) {
   if (!imdbId) {
     setFortuneParentGuideError("Для выбранного фильма нет IMDb ID.");
@@ -2155,6 +2374,7 @@ async function openFortuneMovieModal(movie, options = {}) {
   fortuneMoviePreview.innerHTML = "";
   resetFortuneParentGuide();
   resetFortuneTimings();
+  resetFortuneStudioInfo();
   if (typeof createMovieCard === "function") {
     const card = createMovieCard(
       mapFortuneFilmToMovieCard(movie),
@@ -2213,6 +2433,10 @@ async function openFortuneMovieModal(movie, options = {}) {
     ? showFortuneTimingsFromMetadata(displayLabel)
     : false;
 
+  const handledStudioFromCache = displayLabel
+    ? showFortuneStudioFromMetadata(displayLabel)
+    : false;
+
   if (!handledTimingsFromCache) {
     if (kinopoiskId) {
       setFortuneTimingsStatus("Загружаем тайминги...");
@@ -2240,6 +2464,22 @@ async function openFortuneMovieModal(movie, options = {}) {
             showFortuneTimingsFromMetadata(displayLabel);
           }
         });
+    }
+  }
+
+  if (!handledStudioFromCache && imdbId && TMDB_API_KEY) {
+    preloadFortuneStudioInfo(displayLabel, imdbId);
+  } else if (displayLabel && fortuneStudioLoads.has(displayLabel)) {
+    const studioPromise = fortuneStudioLoads.get(displayLabel);
+    if (studioPromise) {
+      studioPromise.finally(() => {
+        if (
+          selectedFortuneLabel === displayLabel &&
+          fortuneMovieModal?.style.display === "block"
+        ) {
+          showFortuneStudioFromMetadata(displayLabel);
+        }
+      });
     }
   }
 
@@ -2384,7 +2624,12 @@ if (fortuneAutoResults) {
         kinopoiskId,
         movie: selectedFortuneKPMovie,
         parentGuideStatus: imdbId ? "loading" : null,
+        studioInfoStatus: imdbId && TMDB_API_KEY ? "loading" : null,
       });
+
+      if (imdbId && TMDB_API_KEY) {
+        preloadFortuneStudioInfo(label, imdbId);
+      }
     }
 
     resetFortuneAutocomplete();
@@ -2614,6 +2859,59 @@ function initFortuneWheel() {
     return loadPromise;
   }
 
+  preloadFortuneStudioInfo = async function preloadFortuneStudioInfo(
+    label,
+    imdbIdOverride = null
+  ) {
+    const normalizedLabel = (label || "").trim();
+    if (!normalizedLabel || fortuneStudioLoads.has(normalizedLabel)) {
+      return;
+    }
+
+    const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
+    const imdbId =
+      imdbIdOverride || metadata.imdbId || metadata.movie?.imdbId || null;
+
+    if (!imdbId || !TMDB_API_KEY || metadata.studioInfoStatus === "ready") {
+      return;
+    }
+
+    setFortuneItemMetadata(normalizedLabel, {
+      studioInfoStatus: "loading",
+      studioInfoError: null,
+    });
+    renderFortuneItemsList();
+
+    const loadPromise = (async () => {
+      try {
+        const studioInfo = await fetchFortuneTmdbStudioInfo(imdbId);
+        const status = studioInfo?.studios?.length ? "ready" : "empty";
+        setFortuneItemMetadata(normalizedLabel, {
+          studioInfoStatus: status,
+          studioInfo: studioInfo || null,
+          studioInfoError: null,
+        });
+      } catch (err) {
+        setFortuneItemMetadata(normalizedLabel, {
+          studioInfoStatus: "error",
+          studioInfoError: "Не удалось загрузить данные о студии.",
+        });
+      } finally {
+        renderFortuneItemsList();
+        if (
+          selectedFortuneLabel === normalizedLabel &&
+          fortuneMovieModal?.style.display === "block"
+        ) {
+          showFortuneStudioFromMetadata(normalizedLabel);
+        }
+        fortuneStudioLoads.delete(normalizedLabel);
+      }
+    })();
+
+    fortuneStudioLoads.set(normalizedLabel, loadPromise);
+    return loadPromise;
+  };
+
   async function preloadFortuneTimings(label) {
     const normalizedLabel = (label || "").trim();
     if (!normalizedLabel || fortuneTimingsLoads.has(normalizedLabel)) {
@@ -2818,6 +3116,11 @@ function initFortuneWheel() {
       movie: options.movie ?? previousMetadata.movie ?? null,
       parentGuideStatus:
         options.parentGuideStatus ?? previousMetadata.parentGuideStatus ?? null,
+      studioInfo: options.studioInfo ?? previousMetadata.studioInfo ?? null,
+      studioInfoStatus:
+        options.studioInfoStatus ?? previousMetadata.studioInfoStatus ?? null,
+      studioInfoError:
+        options.studioInfoError ?? previousMetadata.studioInfoError ?? null,
     });
     input.value = activeItems.join("\n");
     if (fortuneItemInput) {
@@ -2843,6 +3146,9 @@ function initFortuneWheel() {
       kinopoiskId = null,
       movie = null,
       parentGuideStatus = null,
+      studioInfo = null,
+      studioInfoStatus = null,
+      studioInfoError = null,
     } = options;
     const value = (label || "").trim();
     if (!value) {
@@ -2877,6 +3183,9 @@ function initFortuneWheel() {
       kinopoiskId,
       movie,
       parentGuideStatus,
+      studioInfo,
+      studioInfoStatus,
+      studioInfoError,
     });
     resetFortuneDuplicateState();
   }

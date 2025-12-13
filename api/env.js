@@ -51,6 +51,10 @@ function handler(req, res) {
     isAdmin,
   };
 
+  if (process.env.TMDB_API) {
+    env.TMDB_API = process.env.TMDB_API;
+  }
+
   if (isAdmin) {
     if (process.env.KINOPOISK_API_KEY) {
       env.KINOPOISK_API_KEY = process.env.KINOPOISK_API_KEY;

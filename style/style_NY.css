@@ -3594,6 +3594,58 @@ select option {
     min-height: 1.75em;
 }
 
+.fortune-items-studio {
+    margin-top: 4px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    color: #cdd2f5;
+    font-size: 13px;
+}
+
+.fortune-items-studio__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.fortune-items-studio__countries {
+    font-size: 12px;
+    opacity: 0.85;
+}
+
+.fortune-studio-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #21273f;
+    color: #dfe3ff;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.2px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fortune-studio-badge--netflix {
+    background: #e50914;
+    color: #ffffff;
+    border-color: #ff5f6d;
+}
+
+.fortune-studio-badge--warner {
+    background: #e50914;
+    color: #ffffff;
+    border-color: #ff5f6d;
+}
+
+.fortune-studio-badge--disney {
+    background: #e50914;
+    color: #ffffff;
+    border-color: #ff5f6d;
+}
+
 .fortune-items-list-actions {
     display: flex;
     align-items: center;
