@@ -115,7 +115,7 @@ let selectedKPMovie = null;
 
 // TMDB
 const TMDB_API_BASE_URL = "https://api.themoviedb.org/3";
-let TMBD_API_KEY = null;
+let TMDB_API_KEY = null;
 
 function notifyKinopoiskQuotaExceeded() {
   const fullMessage =

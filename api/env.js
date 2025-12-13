@@ -51,8 +51,8 @@ function handler(req, res) {
     isAdmin,
   };
 
-  if (process.env.TMBD_API) {
-    env.TMBD_API = process.env.TMBD_API;
+  if (process.env.TMDB_API) {
+    env.TMDB_API = process.env.TMDB_API;
   }
 
   if (isAdmin) {

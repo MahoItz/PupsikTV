@@ -1535,7 +1535,7 @@ function showFortuneStudioFromMetadata(label) {
 
   const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
 
-  if (!TMBD_API_KEY) {
+  if (!TMDB_API_KEY) {
     resetFortuneStudioInfo("TMDB API ключ не настроен.");
     return false;
   }
@@ -2149,14 +2149,14 @@ async function fetchFortuneImdbId(kinopoiskId) {
 }
 
 async function fetchFortuneTmdbStudioInfo(imdbId) {
-  if (!imdbId || !TMBD_API_KEY) {
+  if (!imdbId || !TMDB_API_KEY) {
     return null;
   }
 
   try {
     const findUrl = `${TMDB_API_BASE_URL}/find/${encodeURIComponent(
       imdbId
-    )}?api_key=${TMBD_API_KEY}&external_source=imdb_id`;
+    )}?api_key=${TMDB_API_KEY}&external_source=imdb_id`;
     const findResponse = await fetch(findUrl);
 
     if (!findResponse.ok) {
@@ -2175,7 +2175,7 @@ async function fetchFortuneTmdbStudioInfo(imdbId) {
       Array.isArray(findData?.movie_results) && findData.movie_results.length > 0
         ? "movie"
         : "tv";
-    const detailsUrl = `${TMDB_API_BASE_URL}/${resourceType}/${movieResult.id}?api_key=${TMBD_API_KEY}&language=ru-RU`;
+    const detailsUrl = `${TMDB_API_BASE_URL}/${resourceType}/${movieResult.id}?api_key=${TMDB_API_KEY}&language=ru-RU`;
     const detailsResponse = await fetch(detailsUrl);
 
     if (!detailsResponse.ok) {
@@ -2488,7 +2488,7 @@ async function openFortuneMovieModal(movie, options = {}) {
     }
   }
 
-  if (!handledStudioFromCache && imdbId && TMBD_API_KEY) {
+  if (!handledStudioFromCache && imdbId && TMDB_API_KEY) {
     preloadFortuneStudioInfo(displayLabel, imdbId);
   } else if (displayLabel && fortuneStudioLoads.has(displayLabel)) {
     const studioPromise = fortuneStudioLoads.get(displayLabel);
@@ -2645,10 +2645,10 @@ if (fortuneAutoResults) {
         kinopoiskId,
         movie: selectedFortuneKPMovie,
         parentGuideStatus: imdbId ? "loading" : null,
-        studioInfoStatus: imdbId && TMBD_API_KEY ? "loading" : null,
+        studioInfoStatus: imdbId && TMDB_API_KEY ? "loading" : null,
       });
 
-      if (imdbId && TMBD_API_KEY) {
+      if (imdbId && TMDB_API_KEY) {
         preloadFortuneStudioInfo(label, imdbId);
       }
     }
@@ -2890,7 +2890,7 @@ function initFortuneWheel() {
     const imdbId =
       imdbIdOverride || metadata.imdbId || metadata.movie?.imdbId || null;
 
-    if (!imdbId || !TMBD_API_KEY || metadata.studioInfoStatus === "ready") {
+    if (!imdbId || !TMDB_API_KEY || metadata.studioInfoStatus === "ready") {
       return;
     }
 

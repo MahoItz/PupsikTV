@@ -485,8 +485,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     return;
   }
 
-  if (initialEnv.TMBD_API) {
-    TMBD_API_KEY = initialEnv.TMBD_API;
+  if (initialEnv.TMDB_API) {
+    TMDB_API_KEY = initialEnv.TMDB_API;
   }
 
   const kpStored = localStorage.getItem("KINOPOISK_API_KEY");
@@ -600,8 +600,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             kpApiSecondaryKey = env.KINOPOISK_API_KEY2;
             localStorage.setItem("KINOPOISK_API_KEY2", env.KINOPOISK_API_KEY2);
           }
-          if (env.TMBD_API) {
-            TMBD_API_KEY = env.TMBD_API;
+          if (env.TMDB_API) {
+            TMDB_API_KEY = env.TMDB_API;
           }
           if (env.RAWG_API_KEY) {
             localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
@@ -692,8 +692,8 @@ document.addEventListener("DOMContentLoaded", async function () {
                   env.KINOPOISK_API_KEY2
                 );
               }
-              if (env.TMBD_API) {
-                TMBD_API_KEY = env.TMBD_API;
+              if (env.TMDB_API) {
+                TMDB_API_KEY = env.TMDB_API;
               }
               if (env.RAWG_API_KEY) {
                 localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
