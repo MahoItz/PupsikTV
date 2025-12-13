@@ -1544,6 +1544,21 @@ function showFortuneStudioFromMetadata(label) {
   return false;
 }
 
+function moveFortuneStudioIntoPreviewCard(card) {
+  if (!fortuneStudioSection || !fortuneMoviePreview || !card) {
+    return;
+  }
+
+  const targetContainer =
+    card.querySelector(".movie-info") || card.querySelector(".movie-card") || card;
+
+  if (targetContainer.contains(fortuneStudioSection)) {
+    return;
+  }
+
+  targetContainer.appendChild(fortuneStudioSection);
+}
+
 function updateFortuneTranslateButton(isEnabled) {
   if (!fortuneParentGuideTranslate) {
     return;
