@@ -2385,6 +2385,7 @@ async function openFortuneMovieModal(movie, options = {}) {
       }
     );
     fortuneMoviePreview.appendChild(card);
+    moveFortuneStudioIntoPreviewCard(card);
   }
 
   let imdbId = movie?.imdbId || null;
