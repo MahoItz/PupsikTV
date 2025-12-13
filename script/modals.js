@@ -128,17 +128,24 @@ function setMovieInfoBadge(elementId, value) {
 
 function openMovieInfoModal(movieId) {
   const modal = document.getElementById("movieInfoModal");
-  const preview = document.getElementById("movieInfoPreview");
-  if (!modal || !preview) return;
+  const titleEl = document.getElementById("movieInfoTitle");
+  const originalTitleEl = document.getElementById("movieInfoOriginalTitle");
+  const posterEl = document.getElementById("movieInfoPoster");
+  const secondaryOrderedBy = document.getElementById(
+    "movieInfoOrderedBySecondary",
+  );
+  const secondaryAddedAt = document.getElementById("movieInfoAddedAtSecondary");
+  if (!modal || !titleEl || !originalTitleEl || !posterEl) return;
 
   const movie = allMovies.find((m) => m.id === movieId);
   if (!movie) return;
 
-  preview.innerHTML = "";
-  if (typeof createMovieCard === "function") {
-    const card = createMovieCard(movie, false, false, { showDate: false });
-    preview.appendChild(card);
-  }
+  titleEl.textContent = movie.title;
+  originalTitleEl.textContent =
+    movie.originalTitle || movie.original_title || "Оригинальное название неизвестно";
+  posterEl.src =
+    movie.poster || "https://via.placeholder.com/320x480?text=Нет+постера";
+  posterEl.alt = movie.title;
 
   setMovieInfoField("movieInfoGenres", movie.genre ?? "");
   setMovieInfoField("movieInfoYear", movie.year ?? "");
@@ -149,6 +156,10 @@ function openMovieInfoModal(movieId) {
       : movie.dateAdded ?? "";
   setMovieInfoField("movieInfoAddedAt", formattedDate, "Дата не указана");
   setMovieInfoField("movieInfoOrderedBy", movie.orderBy ?? "", "Не указан");
+  if (secondaryAddedAt)
+    secondaryAddedAt.textContent = formattedDate || "Дата не указана";
+  if (secondaryOrderedBy)
+    secondaryOrderedBy.textContent = movie.orderBy || "Не указан";
   setMovieInfoBadge("movieInfoOrderType", movie.orderType);
 
   const pupsikRating = Number.isFinite(movie.rating) ? movie.rating : "-";

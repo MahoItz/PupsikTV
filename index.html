@@ -1040,52 +1040,80 @@
     </div>
 
     <div id="movieInfoModal" class="modal">
-        <div class="modal-content fortune-movie-modal">
+        <div class="modal-content movie-info-modal">
             <span class="close" onclick="closeModal('movieInfoModal')">&times;</span>
-            <div id="movieInfoPreview" class="fortune-movie-preview"></div>
-
-            <div class="movie-info-details">
-                <div class="movie-info-section">
-                    <div class="movie-info-section__header">
-                        <h3>Детали заказа</h3>
-                        <span id="movieInfoOrderType" class="movie-info-badge movie-info-badge--muted">Не указан</span>
+            <div class="movie-info-shell">
+                <div class="movie-info-hero">
+                    <div class="movie-info-poster">
+                        <img id="movieInfoPoster" src="https://via.placeholder.com/320x480?text=Нет+постера" alt="Постер фильма">
                     </div>
-                    <div class="movie-info-meta-grid">
-                        <div class="movie-info-meta">
-                            <span class="movie-info-label">Заказал</span>
-                            <span id="movieInfoOrderedBy" class="movie-info-value">Не указан</span>
+                    <div class="movie-info-summary">
+                        <div class="movie-info-heading">
+                            <h2 id="movieInfoTitle" class="movie-info-title">Название фильма</h2>
+                            <p id="movieInfoOriginalTitle" class="movie-info-original">Оригинальное название</p>
+                            <div class="movie-info-order">
+                                <span id="movieInfoOrderType" class="movie-info-badge movie-info-badge--muted">Не указан</span>
+                            </div>
                         </div>
-                        <div class="movie-info-meta">
-                            <span class="movie-info-label">Дата добавления</span>
-                            <span id="movieInfoAddedAt" class="movie-info-value">Дата не указана</span>
+                        <div class="movie-info-meta-row">
+                            <div class="movie-info-meta-card">
+                                <span class="movie-info-label">Заказал</span>
+                                <span id="movieInfoOrderedBy" class="movie-info-value">Не указан</span>
+                            </div>
+                            <div class="movie-info-meta-card">
+                                <span class="movie-info-label">Дата добавления</span>
+                                <span id="movieInfoAddedAt" class="movie-info-value">Дата не указана</span>
+                            </div>
+                        </div>
+                        <div class="movie-info-rating-grid">
+                            <div class="movie-info-rating-card">
+                                <span class="movie-info-label">Pupsik</span>
+                                <span id="movieInfoRating" class="movie-info-rating-value">—</span>
+                            </div>
+                            <div class="movie-info-rating-card">
+                                <span class="movie-info-label">Кинопоиск</span>
+                                <span id="movieInfoKpRating" class="movie-info-rating-value">—</span>
+                            </div>
+                            <div class="movie-info-rating-card">
+                                <span class="movie-info-label">Зрители</span>
+                                <span id="movieInfoAudience" class="movie-info-rating-value">—</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="movie-info-section">
-                    <div class="movie-info-section__header">
-                        <h3>Информация о фильме</h3>
+                <div class="movie-info-panels">
+                    <div class="movie-info-panel">
+                        <div class="movie-info-panel__header">
+                            <h3>Информация о фильме</h3>
+                        </div>
+                        <div class="movie-info-panel__body">
+                            <div class="movie-info-data-grid">
+                                <div class="movie-info-data">
+                                    <span class="movie-info-label">Год выхода</span>
+                                    <span id="movieInfoYear" class="movie-info-value">—</span>
+                                </div>
+                                <div class="movie-info-data">
+                                    <span class="movie-info-label">Жанры</span>
+                                    <span id="movieInfoGenres" class="movie-info-value">—</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="movie-info-meta-grid">
-                        <div class="movie-info-meta">
-                            <span class="movie-info-label">Год выхода</span>
-                            <span id="movieInfoYear" class="movie-info-value">—</span>
+                    <div class="movie-info-panel">
+                        <div class="movie-info-panel__header">
+                            <h3>Детали заказа</h3>
                         </div>
-                        <div class="movie-info-meta">
-                            <span class="movie-info-label">Жанры</span>
-                            <span id="movieInfoGenres" class="movie-info-value">—</span>
-                        </div>
-                        <div class="movie-info-meta">
-                            <span class="movie-info-label">Оценка Pupsik</span>
-                            <span id="movieInfoRating" class="movie-info-value">—</span>
-                        </div>
-                        <div class="movie-info-meta">
-                            <span class="movie-info-label">Кинопоиск</span>
-                            <span id="movieInfoKpRating" class="movie-info-value">—</span>
-                        </div>
-                        <div class="movie-info-meta">
-                            <span class="movie-info-label">Оценка зрителей</span>
-                            <span id="movieInfoAudience" class="movie-info-value">—</span>
+                        <div class="movie-info-panel__body">
+                            <div class="movie-info-data-grid">
+                                <div class="movie-info-data">
+                                    <span class="movie-info-label">Кто заказал</span>
+                                    <span id="movieInfoOrderedBySecondary" class="movie-info-value">Не указан</span>
+                                </div>
+                                <div class="movie-info-data">
+                                    <span class="movie-info-label">Дата добавления</span>
+                                    <span id="movieInfoAddedAtSecondary" class="movie-info-value">Дата не указана</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
