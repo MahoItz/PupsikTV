@@ -132,6 +132,7 @@ const fortuneParentGuideLists = {
 };
 const fortuneStudioSection = document.getElementById("fortuneStudio");
 const fortuneStudioList = document.getElementById("fortuneStudioList");
+const fortuneStudioCountries = document.getElementById("fortuneStudioCountries");
 const fortuneStudioLink = document.getElementById("fortuneStudioLink");
 const fortuneStudioStatus = document.getElementById("fortuneStudioStatus");
 let fortuneParentGuideRequestId = 0;
@@ -1373,10 +1374,8 @@ function mapFortuneFilmToMovieCard(movie) {
 
 const FORTUNE_SPECIAL_STUDIOS = [
   { keyword: "netflix", className: "netflix", label: "Netflix" },
-  { keyword: "warner bros. pictures", className: "warner", label: "Warner Bros. Pictures" },
   { keyword: "warner", className: "warner", label: "Warner Bros" },
-  { keyword: "disney company", className: "disney", label: "Disney Company" },
-  { keyword: "disney", className: "disney", label: "Disney" },
+  { keyword: "disney", className: "disney", label: "Disney Company" },
 ];
 
 function normalizeStudioName(name = "") {
@@ -1406,6 +1405,7 @@ function createFortuneStudioBadge(studioName) {
 
 function buildFortuneStudioInfo(details = {}) {
   const studios = new Set();
+  const countries = new Set();
   const homepage = normalizeStudioName(details?.homepage);
 
   const addStudio = (name) => {
@@ -1415,14 +1415,26 @@ function buildFortuneStudioInfo(details = {}) {
     }
   };
 
+  const addCountry = (countryName) => {
+    const normalizedName = normalizeStudioName(countryName);
+    if (normalizedName) {
+      countries.add(normalizedName);
+    }
+  };
+
   if (Array.isArray(details?.production_companies)) {
     details.production_companies.forEach((company) => {
       addStudio(company?.name || "");
     });
   }
 
+  if (Array.isArray(details?.production_countries)) {
+    details.production_countries.forEach((country) => {
+      addCountry(country?.name || country?.iso_3166_1 || "");
+    });
+  }
+
   const homepageLower = homepage.toLowerCase();
-  const hideHomepageLink = homepageLower.includes("netflix");
   FORTUNE_SPECIAL_STUDIOS.forEach(({ keyword, label }) => {
     if (homepageLower.includes(keyword)) {
       addStudio(label);
@@ -1439,7 +1451,8 @@ function buildFortuneStudioInfo(details = {}) {
 
   return {
     studios: Array.from(studios),
-    homepage: hideHomepageLink ? "" : homepage,
+    countries: Array.from(countries),
+    homepage,
   };
 }
 
@@ -1465,36 +1478,15 @@ function resetFortuneStudioInfo(
   if (fortuneStudioList) {
     fortuneStudioList.innerHTML = "";
   }
+  if (fortuneStudioCountries) {
+    fortuneStudioCountries.textContent = "";
+  }
   if (fortuneStudioLink) {
     fortuneStudioLink.style.display = "none";
     fortuneStudioLink.textContent = "";
     fortuneStudioLink.removeAttribute("href");
   }
   setFortuneStudioStatus(message);
-}
-
-function moveFortuneStudioIntoPreviewCard(card) {
-  if (!fortuneStudioSection || !card) {
-    return;
-  }
-
-  const infoBlock = card.querySelector(".movie-info");
-  if (!infoBlock) {
-    return;
-  }
-
-  const genreBlock = infoBlock.querySelector(".movie-genres");
-  const yearBlock = infoBlock.querySelector(".movie-year");
-
-  fortuneStudioSection.classList.add("fortune-studio--inline");
-
-  if (yearBlock) {
-    infoBlock.insertBefore(fortuneStudioSection, yearBlock);
-  } else if (genreBlock?.nextSibling) {
-    infoBlock.insertBefore(fortuneStudioSection, genreBlock.nextSibling);
-  } else {
-    infoBlock.appendChild(fortuneStudioSection);
-  }
 }
 
 function renderFortuneStudioInfo(studioInfo) {
@@ -1514,6 +1506,12 @@ function renderFortuneStudioInfo(studioInfo) {
     studioInfo.studios.forEach((studio) => {
       fortuneStudioList.appendChild(createFortuneStudioBadge(studio));
     });
+  }
+
+  if (fortuneStudioCountries) {
+    fortuneStudioCountries.textContent = studioInfo.countries?.length
+      ? `Страны: ${studioInfo.countries.join(", ")}`
+      : "";
   }
 
   if (fortuneStudioLink) {
@@ -3361,6 +3359,46 @@ function initFortuneWheel() {
       titleEl.className = "fortune-items-list-title";
       titleEl.textContent = label;
       listItem.appendChild(titleEl);
+
+      if (
+        metadata.studioInfoStatus ||
+        (metadata.studioInfo && metadata.studioInfo.studios?.length)
+      ) {
+        const studioWrapper = document.createElement("div");
+        studioWrapper.className = "fortune-items-studio";
+
+        if (metadata.studioInfoStatus === "loading") {
+          studioWrapper.textContent = "Студия: загружается...";
+        } else if (metadata.studioInfoStatus === "error") {
+          studioWrapper.textContent =
+            metadata.studioInfoError || "Студия: ошибка загрузки.";
+        } else if (
+          metadata.studioInfoStatus === "empty" ||
+          !metadata.studioInfo?.studios?.length
+        ) {
+          studioWrapper.textContent = "Студия: не указана.";
+        } else {
+          const badgeContainer = document.createElement("div");
+          badgeContainer.className = "fortune-items-studio__badges";
+
+          metadata.studioInfo.studios.slice(0, 3).forEach((studio) => {
+            badgeContainer.appendChild(createFortuneStudioBadge(studio));
+          });
+
+          studioWrapper.appendChild(badgeContainer);
+
+          if (metadata.studioInfo.countries?.length) {
+            const countriesEl = document.createElement("span");
+            countriesEl.className = "fortune-items-studio__countries";
+            countriesEl.textContent = metadata.studioInfo.countries.join(", ");
+            studioWrapper.appendChild(countriesEl);
+          }
+        }
+
+        if (studioWrapper.childElementCount > 0 || studioWrapper.textContent) {
+          listItem.appendChild(studioWrapper);
+        }
+      }
 
       const actionsEl = document.createElement("div");
       actionsEl.className = "fortune-items-list-actions";

@@ -634,29 +634,31 @@
 }
 
 #fortuneMovieModal .fortune-studio {
+    background: #141625;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 12px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
-#fortuneMovieModal .fortune-studio--inline {
-    width: auto;
-    max-width: none;
-    background: transparent;
-    border: none;
-    padding: 0;
-    align-items: flex-start;
+#fortuneMovieModal .fortune-studio__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 #fortuneMovieModal .fortune-studio__status {
     color: rgba(255, 255, 255, 0.7);
-    font-size: 13px;
+    font-size: 12px;
 }
 
 #fortuneMovieModal .fortune-studio__content {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
     gap: 6px;
 }
 
@@ -664,6 +666,11 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+}
+
+#fortuneMovieModal .fortune-studio__countries {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 13px;
 }
 
 #fortuneMovieModal .fortune-studio__link {
