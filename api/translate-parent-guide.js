@@ -62,8 +62,16 @@ function safeJsonParse(rawText, contextLabel) {
 }
 
 async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+  const method = (req.method || "").toUpperCase();
+
+  if (method === "OPTIONS") {
+    res.setHeader("Allow", "POST, OPTIONS");
+    res.status(204).end();
+    return;
+  }
+
+  if (method !== "POST") {
+    res.setHeader("Allow", "POST, OPTIONS");
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
