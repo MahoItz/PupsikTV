@@ -668,11 +668,6 @@
     gap: 6px;
 }
 
-#fortuneMovieModal .fortune-studio__countries {
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 13px;
-}
-
 #fortuneMovieModal .fortune-studio__link {
     color: #7fa1ff;
     font-size: 13px;

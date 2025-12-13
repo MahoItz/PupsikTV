@@ -132,7 +132,6 @@ const fortuneParentGuideLists = {
 };
 const fortuneStudioSection = document.getElementById("fortuneStudio");
 const fortuneStudioList = document.getElementById("fortuneStudioList");
-const fortuneStudioCountries = document.getElementById("fortuneStudioCountries");
 const fortuneStudioLink = document.getElementById("fortuneStudioLink");
 const fortuneStudioStatus = document.getElementById("fortuneStudioStatus");
 let fortuneParentGuideRequestId = 0;
@@ -1407,7 +1406,6 @@ function createFortuneStudioBadge(studioName) {
 
 function buildFortuneStudioInfo(details = {}) {
   const studios = new Set();
-  const countries = new Set();
   const homepage = normalizeStudioName(details?.homepage);
 
   const addStudio = (name) => {
@@ -1417,22 +1415,9 @@ function buildFortuneStudioInfo(details = {}) {
     }
   };
 
-  const addCountry = (countryName) => {
-    const normalizedName = normalizeStudioName(countryName);
-    if (normalizedName) {
-      countries.add(normalizedName);
-    }
-  };
-
   if (Array.isArray(details?.production_companies)) {
     details.production_companies.forEach((company) => {
       addStudio(company?.name || "");
-    });
-  }
-
-  if (Array.isArray(details?.production_countries)) {
-    details.production_countries.forEach((country) => {
-      addCountry(country?.name || country?.iso_3166_1 || "");
     });
   }
 
@@ -1453,7 +1438,6 @@ function buildFortuneStudioInfo(details = {}) {
 
   return {
     studios: Array.from(studios),
-    countries: Array.from(countries),
     homepage,
   };
 }
@@ -1480,9 +1464,6 @@ function resetFortuneStudioInfo(
   if (fortuneStudioList) {
     fortuneStudioList.innerHTML = "";
   }
-  if (fortuneStudioCountries) {
-    fortuneStudioCountries.textContent = "";
-  }
   if (fortuneStudioLink) {
     fortuneStudioLink.style.display = "none";
     fortuneStudioLink.textContent = "";
@@ -1508,12 +1489,6 @@ function renderFortuneStudioInfo(studioInfo) {
     studioInfo.studios.forEach((studio) => {
       fortuneStudioList.appendChild(createFortuneStudioBadge(studio));
     });
-  }
-
-  if (fortuneStudioCountries) {
-    fortuneStudioCountries.textContent = studioInfo.countries?.length
-      ? `Страны: ${studioInfo.countries.join(", ")}`
-      : "";
   }
 
   if (fortuneStudioLink) {
