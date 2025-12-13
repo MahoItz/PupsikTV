@@ -110,6 +110,63 @@ function openUserRateGameModal(id) {
   setupRatingStars("userRateGameStars");
 }
 
+function setMovieInfoField(elementId, value, fallback = "—") {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const displayValue = value ?? "";
+  el.textContent = displayValue !== "" ? displayValue : fallback;
+}
+
+function setMovieInfoBadge(elementId, value) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const displayValue = value ?? "";
+  el.textContent = displayValue || "Не указан";
+  el.className =
+    "movie-info-badge" + (displayValue ? "" : " movie-info-badge--muted");
+}
+
+function openMovieInfoModal(movieId) {
+  const modal = document.getElementById("movieInfoModal");
+  const preview = document.getElementById("movieInfoPreview");
+  if (!modal || !preview) return;
+
+  const movie = allMovies.find((m) => m.id === movieId);
+  if (!movie) return;
+
+  preview.innerHTML = "";
+  if (typeof createMovieCard === "function") {
+    const card = createMovieCard(movie, false, false, { showDate: false });
+    preview.appendChild(card);
+  }
+
+  setMovieInfoField("movieInfoGenres", movie.genre ?? "");
+  setMovieInfoField("movieInfoYear", movie.year ?? "");
+
+  const formattedDate =
+    typeof formatDateTime === "function"
+      ? formatDateTime(movie.dateAdded)
+      : movie.dateAdded ?? "";
+  setMovieInfoField("movieInfoAddedAt", formattedDate, "Дата не указана");
+  setMovieInfoField("movieInfoOrderedBy", movie.orderBy ?? "", "Не указан");
+  setMovieInfoBadge("movieInfoOrderType", movie.orderType);
+
+  const pupsikRating = Number.isFinite(movie.rating) ? movie.rating : "-";
+  const kpRating = movie.kpRating ?? "-";
+  const userRatingValue = movie.userRating ?? "-";
+  const votes = Math.round(movie.ratingCount ?? 0);
+  const audienceText =
+    userRatingValue === "-"
+      ? "-"
+      : `${userRatingValue}${votes ? ` (${votes} голосов)` : ""}`;
+
+  setMovieInfoField("movieInfoRating", pupsikRating);
+  setMovieInfoField("movieInfoKpRating", kpRating);
+  setMovieInfoField("movieInfoAudience", audienceText);
+
+  modal.style.display = "block";
+}
+
 function openEditModal(id) {
   editingMovieId = id;
   const movie = allMovies.find((m) => m.id === id);

@@ -1038,6 +1038,60 @@
             </div>
         </div>
     </div>
+
+    <div id="movieInfoModal" class="modal">
+        <div class="modal-content fortune-movie-modal">
+            <span class="close" onclick="closeModal('movieInfoModal')">&times;</span>
+            <div id="movieInfoPreview" class="fortune-movie-preview"></div>
+
+            <div class="movie-info-details">
+                <div class="movie-info-section">
+                    <div class="movie-info-section__header">
+                        <h3>Детали заказа</h3>
+                        <span id="movieInfoOrderType" class="movie-info-badge movie-info-badge--muted">Не указан</span>
+                    </div>
+                    <div class="movie-info-meta-grid">
+                        <div class="movie-info-meta">
+                            <span class="movie-info-label">Заказал</span>
+                            <span id="movieInfoOrderedBy" class="movie-info-value">Не указан</span>
+                        </div>
+                        <div class="movie-info-meta">
+                            <span class="movie-info-label">Дата добавления</span>
+                            <span id="movieInfoAddedAt" class="movie-info-value">Дата не указана</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="movie-info-section">
+                    <div class="movie-info-section__header">
+                        <h3>Информация о фильме</h3>
+                    </div>
+                    <div class="movie-info-meta-grid">
+                        <div class="movie-info-meta">
+                            <span class="movie-info-label">Год выхода</span>
+                            <span id="movieInfoYear" class="movie-info-value">—</span>
+                        </div>
+                        <div class="movie-info-meta">
+                            <span class="movie-info-label">Жанры</span>
+                            <span id="movieInfoGenres" class="movie-info-value">—</span>
+                        </div>
+                        <div class="movie-info-meta">
+                            <span class="movie-info-label">Оценка Pupsik</span>
+                            <span id="movieInfoRating" class="movie-info-value">—</span>
+                        </div>
+                        <div class="movie-info-meta">
+                            <span class="movie-info-label">Кинопоиск</span>
+                            <span id="movieInfoKpRating" class="movie-info-value">—</span>
+                        </div>
+                        <div class="movie-info-meta">
+                            <span class="movie-info-label">Оценка зрителей</span>
+                            <span id="movieInfoAudience" class="movie-info-value">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Модальное окно напоминания о поиске -->

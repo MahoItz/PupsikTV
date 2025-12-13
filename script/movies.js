@@ -401,10 +401,13 @@ function createMovieCard(
   const footer = document.createElement("div");
   footer.className = "movie-footer";
   if (showDate) {
-    const dateDiv = document.createElement("div");
-    dateDiv.className = "movie-date";
-    dateDiv.textContent = `${formatDate(movie.dateAdded)}`;
-    footer.appendChild(dateDiv);
+    const infoBtn = document.createElement("button");
+    infoBtn.type = "button";
+    infoBtn.className = "movie-info-btn";
+    infoBtn.textContent = "i";
+    infoBtn.title = "Подробнее о фильме";
+    infoBtn.onclick = () => openMovieInfoModal(movie.id);
+    footer.appendChild(infoBtn);
   }
 
   const actions = document.createElement("div");

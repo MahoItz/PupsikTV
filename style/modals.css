@@ -377,6 +377,23 @@
     align-items: flex-start;
 }
 
+#movieInfoModal .fortune-movie-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+#movieInfoModal .fortune-movie-preview .movie-card {
+    width: 100%;
+    max-width: 860px;
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 20px;
+    align-items: flex-start;
+}
+
 #fortuneMovieModal .fortune-movie-preview .movie-poster,
 #fortuneMovieModal .fortune-movie-preview .movie-poster-placeholder {
     width: 170px;
@@ -390,6 +407,22 @@
 }
 
 #fortuneMovieModal .fortune-movie-preview .movie-rating {
+    margin-top: 4px;
+}
+
+#movieInfoModal .fortune-movie-preview .movie-poster,
+#movieInfoModal .fortune-movie-preview .movie-poster-placeholder {
+    width: 170px;
+    min-height: 240px;
+}
+
+#movieInfoModal .fortune-movie-preview .movie-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#movieInfoModal .fortune-movie-preview .movie-rating {
     margin-top: 4px;
 }
 
@@ -694,12 +727,15 @@
 }
 
 @media (max-width: 720px) {
-    #fortuneMovieModal .fortune-movie-preview .movie-card {
+    #fortuneMovieModal .fortune-movie-preview .movie-card,
+    #movieInfoModal .fortune-movie-preview .movie-card {
         grid-template-columns: 1fr;
     }
 
     #fortuneMovieModal .fortune-movie-preview .movie-poster,
-    #fortuneMovieModal .fortune-movie-preview .movie-poster-placeholder {
+    #fortuneMovieModal .fortune-movie-preview .movie-poster-placeholder,
+    #movieInfoModal .fortune-movie-preview .movie-poster,
+    #movieInfoModal .fortune-movie-preview .movie-poster-placeholder {
         width: 100%;
         min-height: 280px;
     }
@@ -733,6 +769,73 @@
 }
 
 /* Подтверждение удаления игры */
+
+.movie-info-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.movie-info-section {
+    padding: 14px 16px;
+    background: linear-gradient(145deg, rgba(20, 25, 40, 0.92), rgba(10, 10, 20, 0.92));
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    border-radius: 14px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45), 0 0 24px rgba(0, 212, 255, 0.12);
+}
+
+.movie-info-section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.movie-info-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.movie-info-meta {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.movie-info-label {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.movie-info-value {
+    color: var(--text-primary);
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.movie-info-badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(128, 99, 247, 0.2));
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: var(--text-primary);
+    font-weight: 700;
+    text-transform: capitalize;
+    letter-spacing: 0.01em;
+}
+
+.movie-info-badge--muted {
+    opacity: 0.7;
+}
+
 #confirmDeletePlayedGameModal .modal-content {
     text-align: center;
 }
