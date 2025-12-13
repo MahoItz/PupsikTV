@@ -87,6 +87,79 @@
     display: inline-block;
 }
 
+.movie-info-modal {
+    display: grid;
+    grid-template-columns: minmax(180px, 260px) 1fr;
+    gap: 24px;
+    max-width: 920px;
+    width: 95%;
+}
+
+.movie-info-modal__poster img {
+    width: 100%;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    object-fit: cover;
+    background: #0f111a;
+}
+
+.movie-info-modal__details {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.movie-info-modal__original {
+    color: var(--text-secondary);
+    margin: -10px 0 4px;
+}
+
+.movie-info-modal__section-title {
+    margin: 6px 0;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+}
+
+.movie-info-modal__section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.movie-info-modal__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px 16px;
+}
+
+.movie-info-modal__stat {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 10px 12px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.movie-info-modal__label {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+}
+
+.movie-info-modal__value {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.movie-info-modal__muted {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
 #fortuneWinnerModal .modal-content {
     text-align: left;
     max-width: 780px;

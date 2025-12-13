@@ -110,6 +110,78 @@ function openUserRateGameModal(id) {
   setupRatingStars("userRateGameStars");
 }
 
+function normalizeMovieInfoValue(value) {
+  return value === null || value === undefined || value === "" ? "—" : value;
+}
+
+function openMovieInfoModal(movieIdOrObject) {
+  const movie =
+    typeof movieIdOrObject === "object"
+      ? movieIdOrObject
+      : allMovies.find((m) => m.id === movieIdOrObject);
+
+  if (!movie) return;
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = normalizeMovieInfoValue(value);
+  };
+
+  const posterEl = document.getElementById("movieInfoPoster");
+  if (posterEl) {
+    posterEl.src =
+      movie.poster ||
+      "https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера";
+    posterEl.alt = movie.title || "Постер фильма";
+    posterEl.onerror = () => {
+      posterEl.onerror = null;
+      posterEl.src =
+        "https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера";
+    };
+  }
+
+  const originalTitle = document.getElementById("movieInfoOriginalTitle");
+  if (originalTitle) {
+    if (movie.originalTitle) {
+      originalTitle.textContent = movie.originalTitle;
+      originalTitle.style.display = "block";
+    } else {
+      originalTitle.textContent = "";
+      originalTitle.style.display = "none";
+    }
+  }
+
+  setText("movieInfoTitle", movie.title || "Без названия");
+  setText("movieInfoYear", movie.year);
+  setText("movieInfoGenres", movie.genre);
+  setText("movieInfoRating", movie.rating);
+  setText("movieInfoKpRating", movie.kpRating);
+  setText("movieInfoOrderBy", movie.orderBy);
+  setText("movieInfoOrderType", movie.orderType);
+  setText("movieInfoId", movie.id);
+
+  const votes = Number(movie.ratingCount ?? 0);
+  const userRatingDefined =
+    movie.userRating !== null && movie.userRating !== undefined;
+  const userRatingText = userRatingDefined ? movie.userRating : "—";
+  const votesText = votes > 0
+    ? `${votes} оценок`
+    : userRatingDefined
+      ? "Оценок пока нет"
+      : "";
+  setText("movieInfoUserRating", userRatingText);
+  const votesEl = document.getElementById("movieInfoVotes");
+  if (votesEl) votesEl.textContent = votesText;
+
+  const addedText =
+    formatDateTime(movie.dateAdded) || formatDate(movie.dateAdded) || "—";
+  setText("movieInfoAdded", addedText);
+
+  const modal = document.getElementById("movieInfoModal");
+  if (modal) modal.style.display = "block";
+}
+
 function openEditModal(id) {
   editingMovieId = id;
   const movie = allMovies.find((m) => m.id === id);

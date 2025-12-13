@@ -508,6 +508,65 @@
         </div>
     </div>
 
+    <!-- Модальное окно информации о фильме -->
+    <div id="movieInfoModal" class="modal">
+        <div class="modal-content movie-info-modal">
+            <span class="close" onclick="closeModal('movieInfoModal')" aria-label="Закрыть окно">&times;</span>
+            <div class="movie-info-modal__poster">
+                <img id="movieInfoPoster" src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера"
+                    alt="Постер фильма" loading="lazy">
+            </div>
+            <div class="movie-info-modal__details">
+                <h2 id="movieInfoTitle">Название фильма</h2>
+                <p class="movie-info-modal__original" id="movieInfoOriginalTitle"></p>
+                <div class="movie-info-modal__stats">
+                    <div class="movie-info-modal__stat">
+                        <span class="movie-info-modal__label">Год</span>
+                        <span class="movie-info-modal__value" id="movieInfoYear"></span>
+                    </div>
+                    <div class="movie-info-modal__stat">
+                        <span class="movie-info-modal__label">Жанры</span>
+                        <span class="movie-info-modal__value" id="movieInfoGenres"></span>
+                    </div>
+                    <div class="movie-info-modal__stat">
+                        <span class="movie-info-modal__label">Оценка PupsikTV</span>
+                        <span class="movie-info-modal__value" id="movieInfoRating"></span>
+                    </div>
+                    <div class="movie-info-modal__stat">
+                        <span class="movie-info-modal__label">Рейтинг Кинопоиска</span>
+                        <span class="movie-info-modal__value" id="movieInfoKpRating"></span>
+                    </div>
+                    <div class="movie-info-modal__stat">
+                        <span class="movie-info-modal__label">Оценка зрителей</span>
+                        <span class="movie-info-modal__value" id="movieInfoUserRating"></span>
+                        <span class="movie-info-modal__muted" id="movieInfoVotes"></span>
+                    </div>
+                    <div class="movie-info-modal__stat">
+                        <span class="movie-info-modal__label">ID записи</span>
+                        <span class="movie-info-modal__value" id="movieInfoId"></span>
+                    </div>
+                </div>
+                <div class="movie-info-modal__section">
+                    <h3 class="movie-info-modal__section-title">Детали заказа</h3>
+                    <div class="movie-info-modal__stats">
+                        <div class="movie-info-modal__stat">
+                            <span class="movie-info-modal__label">Заказчик</span>
+                            <span class="movie-info-modal__value" id="movieInfoOrderBy"></span>
+                        </div>
+                        <div class="movie-info-modal__stat">
+                            <span class="movie-info-modal__label">Способ заказа</span>
+                            <span class="movie-info-modal__value" id="movieInfoOrderType"></span>
+                        </div>
+                        <div class="movie-info-modal__stat">
+                            <span class="movie-info-modal__label">Дата добавления</span>
+                            <span class="movie-info-modal__value" id="movieInfoAdded"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Модальное окно редактирования фильма -->
     <div id="editMovieModal" class="modal">
         <div class="modal-content">
