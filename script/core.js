@@ -1164,32 +1164,43 @@ function scoreMatch(normalizedQuery, value) {
   if (normalizedValue === normalizedQuery) return 100;
   // Начало строки — очень хорошо
   if (normalizedValue.startsWith(normalizedQuery)) return 90;
-  // Вхождение где-то в середине
-  if (normalizedValue.includes(normalizedQuery)) return 80;
+  const tokens = normalizedValue.split(/\s+/).filter(Boolean);
+  if (!tokens.length) return 0;
 
+  let bestScore = 0;
   const queryClean = normalizedQuery.replace(/\s+/g, "");
-  const valueClean = normalizedValue.replace(/\s+/g, "");
-  if (!queryClean || !valueClean) return 0;
+  if (!queryClean) return 0;
 
-  const allowedDistance = queryClean.length <= 4 ? 1 : 2;
-  let best = Infinity;
+  for (const token of tokens) {
+    const tokenClean = token.replace(/\s+/g, "");
+    if (!tokenClean) continue;
 
-  if (valueClean.length <= queryClean.length) {
-    best = levenshteinDistance(queryClean, valueClean);
-  } else {
-    const lenDiff = valueClean.length - queryClean.length;
-    for (let i = 0; i <= lenDiff; i++) {
-      const segment = valueClean.slice(i, i + queryClean.length);
-      const d = levenshteinDistance(queryClean, segment);
-      if (d < best) best = d;
-      if (best === 0) break;
+    if (tokenClean === queryClean) {
+      bestScore = Math.max(bestScore, 80);
+      continue;
+    }
+
+    if (tokenClean.startsWith(queryClean)) {
+      bestScore = Math.max(bestScore, 75);
+      continue;
+    }
+
+    // Нечеткое совпадение только по отдельным словам
+    const lengthDiff = Math.abs(tokenClean.length - queryClean.length);
+    if (lengthDiff > 1) continue;
+
+    const minLength = Math.min(tokenClean.length, queryClean.length);
+    const allowedDistance = minLength >= 4 ? 1 : 0;
+    if (allowedDistance === 0) continue;
+
+    const distance = levenshteinDistance(queryClean, tokenClean);
+    if (distance <= allowedDistance) {
+      const score = 70 - distance * 10; // 70 или 60
+      bestScore = Math.max(bestScore, score);
     }
   }
 
-  if (best > allowedDistance) return 0;
-
-  // Чем меньше расстояние — тем выше балл
-  return 70 - best * 10; // 70, 60, 50...
+  return bestScore;
 }
 
 function extractYearValue(value) {
