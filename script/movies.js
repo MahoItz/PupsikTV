@@ -129,6 +129,28 @@ function renderMovies() {
   const start = (currentPage - 1) * moviesPerPage;
   movies = filtered.slice(start, start + moviesPerPage);
 
+  if (movies.length === 0) {
+    const emptyState = document.createElement("div");
+    emptyState.className = "empty-state";
+    emptyState.style.gridColumn = "1 / -1";
+
+    const message = document.createElement("div");
+    message.textContent = "Ничего не найдено";
+
+    const image = document.createElement("img");
+    image.src = "images/Sad_Winston.webp";
+    image.alt = "Ничего не найдено";
+
+    emptyState.append(message, image);
+
+    grid.replaceChildren(emptyState);
+    movieCardElements = new Map();
+    movieDataMap = new Map();
+    hasRenderedMovies = false;
+    renderPagination();
+    return;
+  }
+
   const newElements = new Map();
   const newData = new Map();
   const orderedCards = [];
