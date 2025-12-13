@@ -1473,6 +1473,30 @@ function resetFortuneStudioInfo(
   setFortuneStudioStatus(message);
 }
 
+function moveFortuneStudioIntoPreviewCard(card) {
+  if (!fortuneStudioSection || !card) {
+    return;
+  }
+
+  const infoBlock = card.querySelector(".movie-info");
+  if (!infoBlock) {
+    return;
+  }
+
+  const genreBlock = infoBlock.querySelector(".movie-genres");
+  const yearBlock = infoBlock.querySelector(".movie-year");
+
+  fortuneStudioSection.classList.add("fortune-studio--inline");
+
+  if (yearBlock) {
+    infoBlock.insertBefore(fortuneStudioSection, yearBlock);
+  } else if (genreBlock?.nextSibling) {
+    infoBlock.insertBefore(fortuneStudioSection, genreBlock.nextSibling);
+  } else {
+    infoBlock.appendChild(fortuneStudioSection);
+  }
+}
+
 function renderFortuneStudioInfo(studioInfo) {
   if (!fortuneStudioSection) {
     return;
@@ -2386,6 +2410,7 @@ async function openFortuneMovieModal(movie, options = {}) {
       }
     );
     fortuneMoviePreview.appendChild(card);
+    moveFortuneStudioIntoPreviewCard(card);
   }
 
   let imdbId = movie?.imdbId || null;

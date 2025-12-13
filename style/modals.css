@@ -634,32 +634,29 @@
 }
 
 #fortuneMovieModal .fortune-studio {
-    width: 100%;
-    max-width: 860px;
-    background: #141625;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
-#fortuneMovieModal .fortune-studio__header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px;
+#fortuneMovieModal .fortune-studio--inline {
+    width: auto;
+    max-width: none;
+    background: transparent;
+    border: none;
+    padding: 0;
+    align-items: flex-start;
 }
 
 #fortuneMovieModal .fortune-studio__status {
     color: rgba(255, 255, 255, 0.7);
-    font-size: 12px;
+    font-size: 13px;
 }
 
 #fortuneMovieModal .fortune-studio__content {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 6px;
 }
 
