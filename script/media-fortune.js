@@ -1375,7 +1375,8 @@ function mapFortuneFilmToMovieCard(movie) {
 const FORTUNE_SPECIAL_STUDIOS = [
   { keyword: "netflix", className: "netflix", label: "Netflix" },
   { keyword: "warner", className: "warner", label: "Warner Bros" },
-  { keyword: "disney", className: "disney", label: "Disney Company" },
+  { keyword: "disney company", className: "disney", label: "Disney Company" },
+  { keyword: "disney", className: "disney", label: "Disney" },
 ];
 
 function normalizeStudioName(name = "") {
@@ -3359,46 +3360,6 @@ function initFortuneWheel() {
       titleEl.className = "fortune-items-list-title";
       titleEl.textContent = label;
       listItem.appendChild(titleEl);
-
-      if (
-        metadata.studioInfoStatus ||
-        (metadata.studioInfo && metadata.studioInfo.studios?.length)
-      ) {
-        const studioWrapper = document.createElement("div");
-        studioWrapper.className = "fortune-items-studio";
-
-        if (metadata.studioInfoStatus === "loading") {
-          studioWrapper.textContent = "Студия: загружается...";
-        } else if (metadata.studioInfoStatus === "error") {
-          studioWrapper.textContent =
-            metadata.studioInfoError || "Студия: ошибка загрузки.";
-        } else if (
-          metadata.studioInfoStatus === "empty" ||
-          !metadata.studioInfo?.studios?.length
-        ) {
-          studioWrapper.textContent = "Студия: не указана.";
-        } else {
-          const badgeContainer = document.createElement("div");
-          badgeContainer.className = "fortune-items-studio__badges";
-
-          metadata.studioInfo.studios.slice(0, 3).forEach((studio) => {
-            badgeContainer.appendChild(createFortuneStudioBadge(studio));
-          });
-
-          studioWrapper.appendChild(badgeContainer);
-
-          if (metadata.studioInfo.countries?.length) {
-            const countriesEl = document.createElement("span");
-            countriesEl.className = "fortune-items-studio__countries";
-            countriesEl.textContent = metadata.studioInfo.countries.join(", ");
-            studioWrapper.appendChild(countriesEl);
-          }
-        }
-
-        if (studioWrapper.childElementCount > 0 || studioWrapper.textContent) {
-          listItem.appendChild(studioWrapper);
-        }
-      }
 
       const actionsEl = document.createElement("div");
       actionsEl.className = "fortune-items-list-actions";
