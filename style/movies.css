@@ -363,9 +363,21 @@
     align-items: center;
 }
 
-.movie-date {
-    color: #a0a0a0;
-    font-size: 14px;
+.movie-info-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.45);
+    background: rgba(0, 212, 255, 0.12);
+    color: var(--text-primary);
+    font-weight: 800;
+    font-size: 1rem;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.movie-info-btn:hover {
+    background: rgba(0, 212, 255, 0.18);
+    transform: translateY(-1px);
 }
 
 .movie-actions {

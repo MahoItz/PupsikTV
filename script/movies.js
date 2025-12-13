@@ -401,10 +401,13 @@ function createMovieCard(
   const footer = document.createElement("div");
   footer.className = "movie-footer";
   if (showDate) {
-    const dateDiv = document.createElement("div");
-    dateDiv.className = "movie-date";
-    dateDiv.textContent = `${formatDate(movie.dateAdded)}`;
-    footer.appendChild(dateDiv);
+    const infoBtn = document.createElement("button");
+    infoBtn.type = "button";
+    infoBtn.className = "btn btn-icon movie-info-btn";
+    infoBtn.textContent = "i";
+    infoBtn.title = "Подробнее о фильме";
+    infoBtn.onclick = () => openMovieInfoModal(movie.id);
+    footer.appendChild(infoBtn);
   }
 
   const actions = document.createElement("div");
@@ -441,6 +444,77 @@ function createMovieCard(
   card.appendChild(info);
 
   return card;
+}
+
+function setMovieInfoText(elementId, value, fallback = "—") {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  const normalized =
+    value !== undefined && value !== null && value !== "" && value !== "null"
+      ? value
+      : fallback;
+
+  el.textContent = normalized;
+}
+
+function updateMovieInfoOrderBadge(movie) {
+  const badge = document.getElementById("movieInfoOrderBadge");
+  if (!badge) return;
+
+  const orderTypeText = movie.orderType || "Не указано";
+  const typeClass = ORDER_TYPE_CLASSES[movie.orderType] || "";
+
+  badge.textContent = orderTypeText;
+  badge.className = `movie-info-modal__order-badge order-badge ${typeClass}`;
+  badge.style.display = orderTypeText ? "inline-flex" : "none";
+}
+
+function openMovieInfoModal(movieId) {
+  const movie = allMovies.find((m) => m.id === movieId);
+  if (!movie) return;
+
+  const posterEl = document.getElementById("movieInfoPoster");
+  const placeholder = document.getElementById("movieInfoPosterPlaceholder");
+  if (posterEl) {
+    posterEl.src = movie.poster;
+    posterEl.alt = movie.title || "Постер фильма";
+    posterEl.style.display = "block";
+    posterEl.onerror = () => {
+      posterEl.style.display = "none";
+      if (placeholder) placeholder.style.display = "flex";
+    };
+  }
+  if (placeholder) {
+    placeholder.style.display = movie.poster ? "none" : "flex";
+  }
+
+  setMovieInfoText("movieInfoTitle", movie.title || "Без названия");
+  setMovieInfoText("movieInfoOriginalTitle", movie.originalTitle);
+  setMovieInfoText("movieInfoGenres", movie.genre);
+  setMovieInfoText("movieInfoYear", movie.year);
+  setMovieInfoText("movieInfoPupsikRating", movie.rating ?? "-", "-");
+  setMovieInfoText("movieInfoKPRating", movie.kpRating ?? "-", "-");
+  setMovieInfoText("movieInfoUserRating", movie.userRating ?? "-", "-");
+  setMovieInfoText(
+    "movieInfoVotes",
+    Math.round(movie.ratingCount ?? 0) || 0,
+    "0"
+  );
+  setMovieInfoText("movieInfoOrderBy", movie.orderBy || "Не указан");
+  setMovieInfoText("movieInfoOrderType", movie.orderType || "Не указано");
+  setMovieInfoText(
+    "movieInfoDateAdded",
+    movie.dateAdded ? formatDate(movie.dateAdded) : null,
+    "Не указана"
+  );
+
+  updateMovieInfoOrderBadge(movie);
+
+  const modal = document.getElementById("movieInfoModal");
+  if (modal) {
+    modal.style.display = "block";
+  }
 }
 
 // Отображение списка к просмотру

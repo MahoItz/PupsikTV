@@ -1038,6 +1038,72 @@
             </div>
         </div>
     </div>
+
+    <div id="movieInfoModal" class="modal">
+        <div class="modal-content fortune-movie-modal movie-info-modal">
+            <span class="close" onclick="closeModal('movieInfoModal')">&times;</span>
+            <div class="movie-info-modal__body">
+                <div class="movie-info-modal__poster">
+                    <img id="movieInfoPoster" class="movie-poster" alt="Постер фильма" loading="lazy">
+                    <div id="movieInfoPosterPlaceholder" class="movie-poster-placeholder">
+                        <span>Нет постера</span>
+                    </div>
+                </div>
+                <div class="movie-info-modal__details">
+                    <div class="movie-info-modal__title-block">
+                        <div class="modal-film-name" id="movieInfoTitle"></div>
+                        <p id="movieInfoOriginalTitle" class="movie-info-modal__original"></p>
+                        <div id="movieInfoGenres" class="movie-info-modal__genres"></div>
+                        <div class="movie-info-modal__meta-row">
+                            <div class="info-chip">
+                                <span>Год</span>
+                                <strong id="movieInfoYear"></strong>
+                            </div>
+                            <div id="movieInfoOrderBadge" class="movie-info-modal__order-badge order-badge"></div>
+                        </div>
+                    </div>
+
+                    <div class="movie-info-modal__section">
+                        <h3>Рейтинги</h3>
+                        <div class="movie-info-modal__stats">
+                            <div class="info-stat">
+                                <span class="info-stat__label">Pupsik</span>
+                                <span id="movieInfoPupsikRating" class="info-stat__value"></span>
+                            </div>
+                            <div class="info-stat">
+                                <span class="info-stat__label">Кинопоиск</span>
+                                <span id="movieInfoKPRating" class="info-stat__value"></span>
+                            </div>
+                            <div class="info-stat">
+                                <span class="info-stat__label">Зрители</span>
+                                <div class="info-stat__value-group">
+                                    <span id="movieInfoUserRating" class="info-stat__value"></span>
+                                    <span class="info-stat__hint">голосов: <span id="movieInfoVotes"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="movie-info-modal__section">
+                        <h3>Заказ</h3>
+                        <div class="movie-info-modal__order-grid">
+                            <div class="info-row">
+                                <span class="info-row__label">Заказчик</span>
+                                <strong id="movieInfoOrderBy" class="info-row__value"></strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row__label">Способ</span>
+                                <strong id="movieInfoOrderType" class="info-row__value"></strong>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-row__label">Когда добавлен</span>
+                                <strong id="movieInfoDateAdded" class="info-row__value"></strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Модальное окно напоминания о поиске -->
