@@ -1538,8 +1538,8 @@ function showFortuneStudioFromMetadata(label) {
 
   const metadata = fortuneItemMetadata.get(normalizedLabel) || {};
 
-  if (!TMDB_API_KEY) {
-    resetFortuneStudioInfo("TMDB API ключ не настроен.");
+  if (!TMDB_ENABLED) {
+    resetFortuneStudioInfo("TMDB API недоступен.");
     return false;
   }
 
@@ -2152,41 +2152,30 @@ async function fetchFortuneImdbId(kinopoiskId) {
 }
 
 async function fetchFortuneTmdbStudioInfo(imdbId) {
-  if (!imdbId || !TMDB_API_KEY) {
+  if (!imdbId || !TMDB_ENABLED) {
     return null;
   }
 
   try {
-    const findUrl = `${TMDB_API_BASE_URL}/find/${encodeURIComponent(
-      imdbId
-    )}?api_key=${TMDB_API_KEY}&external_source=imdb_id`;
-    const findResponse = await fetch(findUrl);
+    const params = new URLSearchParams({ imdbId });
+    const tmdbUrl = `${buildApiPath("/tmdb")}?${params.toString()}`;
+    const response = await fetch(tmdbUrl);
 
-    if (!findResponse.ok) {
-      throw new Error(`TMDB find request failed: ${findResponse.status}`);
+    if (!response.ok) {
+      throw new Error(`TMDB request failed: ${response.status}`);
     }
 
-    const findData = await findResponse.json();
-    const movieResult =
-      findData?.movie_results?.[0] || findData?.tv_results?.[0] || null;
+    const payload = await response.json();
 
-    if (!movieResult?.id) {
-      return null;
+    if (payload?.details) {
+      return buildFortuneStudioInfo(payload.details);
     }
 
-    const resourceType =
-      Array.isArray(findData?.movie_results) && findData.movie_results.length > 0
-        ? "movie"
-        : "tv";
-    const detailsUrl = `${TMDB_API_BASE_URL}/${resourceType}/${movieResult.id}?api_key=${TMDB_API_KEY}&language=ru-RU`;
-    const detailsResponse = await fetch(detailsUrl);
-
-    if (!detailsResponse.ok) {
-      throw new Error(`TMDB details request failed: ${detailsResponse.status}`);
+    if (payload && (payload.studios || payload.homepage)) {
+      return payload;
     }
 
-    const details = await detailsResponse.json();
-    return buildFortuneStudioInfo(details);
+    return null;
   } catch (err) {
     console.error("Failed to fetch TMDB studio info", err);
     throw err;
@@ -2492,7 +2481,7 @@ async function openFortuneMovieModal(movie, options = {}) {
     }
   }
 
-  if (!handledStudioFromCache && imdbId && TMDB_API_KEY) {
+  if (!handledStudioFromCache && imdbId && TMDB_ENABLED) {
     preloadFortuneStudioInfo(displayLabel, imdbId);
   } else if (displayLabel && fortuneStudioLoads.has(displayLabel)) {
     const studioPromise = fortuneStudioLoads.get(displayLabel);
@@ -2643,19 +2632,19 @@ if (fortuneAutoResults) {
       selectedFortuneKPMovie?.fortuneLabel ||
       getFortuneMovieLabel(selectedFortuneKPMovie);
 
-    if (fortuneWheelApi && label) {
-      fortuneWheelApi.addItem(label, {
-        imdbId,
-        kinopoiskId,
-        movie: selectedFortuneKPMovie,
-        parentGuideStatus: imdbId ? "loading" : null,
-        studioInfoStatus: imdbId && TMDB_API_KEY ? "loading" : null,
-      });
+      if (fortuneWheelApi && label) {
+        fortuneWheelApi.addItem(label, {
+          imdbId,
+          kinopoiskId,
+          movie: selectedFortuneKPMovie,
+          parentGuideStatus: imdbId ? "loading" : null,
+          studioInfoStatus: imdbId && TMDB_ENABLED ? "loading" : null,
+        });
 
-      if (imdbId && TMDB_API_KEY) {
-        preloadFortuneStudioInfo(label, imdbId);
+        if (imdbId && TMDB_ENABLED) {
+          preloadFortuneStudioInfo(label, imdbId);
+        }
       }
-    }
 
     resetFortuneAutocomplete();
     if (fortuneItemInput) {
@@ -2897,7 +2886,7 @@ function initFortuneWheel() {
     const imdbId =
       imdbIdOverride || metadata.imdbId || metadata.movie?.imdbId || null;
 
-    if (!imdbId || !TMDB_API_KEY || metadata.studioInfoStatus === "ready") {
+    if (!imdbId || !TMDB_ENABLED || metadata.studioInfoStatus === "ready") {
       return;
     }
 

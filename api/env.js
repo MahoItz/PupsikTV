@@ -49,11 +49,8 @@ function handler(req, res) {
   const env = {
     SUPABASE_KEY: process.env.SUPABASE_KEY,
     isAdmin,
+    TMDB_ENABLED: Boolean(process.env.TMDB_API),
   };
-
-  if (process.env.TMDB_API) {
-    env.TMDB_API = process.env.TMDB_API;
-  }
 
   if (isAdmin) {
     if (process.env.KINOPOISK_API_KEY) {
