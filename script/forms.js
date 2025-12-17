@@ -326,7 +326,7 @@ document
     e.preventDefault();
 
     const orderType = document.getElementById("gameOrderType").value;
-    const orderBy = "";
+    const orderBy = document.getElementById("gameOrderBy").value;
 
     let gameData;
 
