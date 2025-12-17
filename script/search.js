@@ -7,192 +7,177 @@ function searchMovies(query) {
 
 const debouncedSearchMovies = debounce(searchMovies, 300);
 
-const debouncedKPSearch = debounce(async (query) => {
-  if (!query) {
-    const container = document.getElementById("autoResultsContainer");
-    if (container) container.style.display = "none";
-    kpResults = [];
-    selectedKPMovie = null;
-    showKPPreview();
-    return;
-  }
+function createAutocompleteFetcher({
+  source,
+  resultsVar,
+  selectedVar,
+  containerId,
+  listId,
+  onPreview,
+  onReset,
+}) {
+  const clearState = () => {
+    resultsVar.set([]);
+    selectedVar.set(null);
+    if (onReset) {
+      onReset();
+    }
+    const list = document.getElementById(listId);
+    if (list) list.innerHTML = "";
+  };
 
-  try {
-    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
-      query
-    )}&page=1`;
-    const res = await fetch(url, {
+  const toggleContainer = (isVisible) => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.style.display = isVisible ? "block" : "none";
+  };
+
+  return debounce(async (query) => {
+    if (!query) {
+      toggleContainer(false);
+      clearState();
+      if (onPreview) onPreview();
+      return;
+    }
+
+    const { url, options, mapResults, formatItem, handleError } = source(query);
+
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        if (handleError) {
+          await handleError(res);
+        }
+        toggleContainer(false);
+        clearState();
+        if (onPreview) onPreview();
+        return;
+      }
+
+      const data = await res.json();
+      const results = (mapResults ? mapResults(data) : data) || [];
+      resultsVar.set(results);
+
+      if (!results.length) {
+        toggleContainer(false);
+        clearState();
+        if (onPreview) onPreview();
+        return;
+      }
+
+      const list = document.getElementById(listId);
+      if (!list) return;
+
+      list.innerHTML = "";
+      results.forEach((item, idx) => {
+        const div = document.createElement("div");
+        div.className = "autocomplete-option";
+        div.dataset.index = idx;
+        div.textContent = formatItem ? formatItem(item) : item?.name || "";
+        list.appendChild(div);
+      });
+
+      toggleContainer(true);
+    } catch (err) {
+      console.error("Autocomplete fetch error", err);
+      toggleContainer(false);
+      clearState();
+      if (onPreview) onPreview();
+    }
+  }, 100);
+}
+
+const debouncedKPSearch = createAutocompleteFetcher({
+  source: (query) => ({
+    url: `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`,
+    options: {
       headers: {
         "X-API-KEY": KINOPOISK_API_KEY,
         "Content-Type": "application/json",
       },
-    });
-    const container = document.getElementById("autoResultsContainer");
-    const list = document.getElementById("autoResults");
-    if (!res.ok) {
-      await handleKinopoiskErrorResponse(res);
-      kpResults = [];
-      selectedKPMovie = null;
-      if (list) list.innerHTML = "";
-      if (container) container.style.display = "none";
-      return;
-    }
-    const data = await res.json();
-    kpResults = data.films || [];
-    if (!list) return;
-    list.innerHTML = "";
-    kpResults.forEach((m, idx) => {
-      const div = document.createElement("div");
-      div.className = "autocomplete-option";
-      div.dataset.index = idx;
+    },
+    mapResults: (data) => data.films || [],
+    formatItem: (m) => {
       const year = m.year || "";
       const name = m.nameRu || m.nameEn || "";
-      div.textContent = `${name}${year ? ` (${year})` : ""}`;
-      list.appendChild(div);
-    });
-    if (kpResults.length > 0) {
-      container.style.display = "block";
-    } else {
-      container.style.display = "none";
-    }
-  } catch (err) {
-    console.error("Kinopoisk autocomplete error", err);
-  }
-}, 100);
+      return `${name}${year ? ` (${year})` : ""}`;
+    },
+    handleError: handleKinopoiskErrorResponse,
+  }),
+  resultsVar: { set: (value) => (kpResults = value) },
+  selectedVar: { set: (value) => (selectedKPMovie = value) },
+  containerId: "autoResultsContainer",
+  listId: "autoResults",
+  onPreview: showKPPreview,
+});
 
-const debouncedWatchlistKPSearch = debounce(async (query) => {
-  if (!query) {
-    const container = document.getElementById("watchAutoResultsContainer");
-    if (container) container.style.display = "none";
-    kpOrderResults = [];
-    selectedKPOrderMovie = null;
-    showWatchlistKPPreview();
-    return;
-  }
-
-  try {
-    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
-      query
-    )}&page=1`;
-    const res = await fetch(url, {
+const debouncedWatchlistKPSearch = createAutocompleteFetcher({
+  source: (query) => ({
+    url: `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`,
+    options: {
       headers: {
         "X-API-KEY": KINOPOISK_API_KEY,
         "Content-Type": "application/json",
       },
-    });
-    const container = document.getElementById("watchAutoResultsContainer");
-    const list = document.getElementById("watchAutoResults");
-    if (!res.ok) {
-      await handleKinopoiskErrorResponse(res);
-      kpOrderResults = [];
-      selectedKPOrderMovie = null;
-      if (list) list.innerHTML = "";
-      if (container) container.style.display = "none";
-      return;
-    }
-    const data = await res.json();
-    kpOrderResults = data.films || [];
-    if (!list) return;
-    list.innerHTML = "";
-    kpOrderResults.forEach((m, idx) => {
-      const div = document.createElement("div");
-      div.className = "autocomplete-option";
-      div.dataset.index = idx;
+    },
+    mapResults: (data) => data.films || [],
+    formatItem: (m) => {
       const year = m.year || "";
       const name = m.nameRu || m.nameEn || "";
-      div.textContent = `${name}${year ? ` (${year})` : ""}`;
-      list.appendChild(div);
-    });
-    if (kpOrderResults.length > 0) {
-      container.style.display = "block";
-    } else {
-      container.style.display = "none";
-    }
-  } catch (err) {
-    console.error("Kinopoisk autocomplete error", err);
-  }
-}, 100);
+      return `${name}${year ? ` (${year})` : ""}`;
+    },
+    handleError: handleKinopoiskErrorResponse,
+  }),
+  resultsVar: { set: (value) => (kpOrderResults = value) },
+  selectedVar: { set: (value) => (selectedKPOrderMovie = value) },
+  containerId: "watchAutoResultsContainer",
+  listId: "watchAutoResults",
+  onPreview: showWatchlistKPPreview,
+});
 
-const debouncedRAWGSearch = debounce(async (query) => {
-  if (!query) {
-    const container = document.getElementById("gameAutoResultsContainer");
-    if (container) container.style.display = "none";
-    rawgResults = [];
-    selectedRAWGGame = null;
+const debouncedRAWGSearch = createAutocompleteFetcher({
+  source: (query) => ({
+    url: `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      query
+    )}&page_size=5`,
+    mapResults: (data) => data.results || [],
+    formatItem: (g) => {
+      const year = g.released ? g.released.split("-")[0] : "";
+      return `${g.name}${year ? ` (${year})` : ""}`;
+    },
+  }),
+  resultsVar: { set: (value) => (rawgResults = value) },
+  selectedVar: { set: (value) => (selectedRAWGGame = value) },
+  containerId: "gameAutoResultsContainer",
+  listId: "gameAutoResults",
+  onPreview: showRAWGPreview,
+  onReset: () => {
     steamGridPoster = null;
     steamGridPosters = [];
-    showRAWGPreview();
-    return;
-  }
+  },
+});
 
-  try {
-    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+const debouncedPlayedRAWGSearch = createAutocompleteFetcher({
+  source: (query) => ({
+    url: `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
       query
-    )}&page_size=5`;
-    const res = await fetch(url);
-    const data = await res.json();
-    rawgResults = data.results || [];
-    const container = document.getElementById("gameAutoResultsContainer");
-    const list = document.getElementById("gameAutoResults");
-    if (!list) return;
-    list.innerHTML = "";
-    rawgResults.forEach((g, idx) => {
-      const div = document.createElement("div");
-      div.className = "autocomplete-option";
-      div.dataset.index = idx;
+    )}&page_size=5`,
+    mapResults: (data) => data.results || [],
+    formatItem: (g) => {
       const year = g.released ? g.released.split("-")[0] : "";
-      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
-      list.appendChild(div);
-    });
-    if (rawgResults.length > 0) {
-      container.style.display = "block";
-    } else {
-      container.style.display = "none";
-    }
-  } catch (err) {
-    console.error("RAWG autocomplete error", err);
-  }
-}, 100);
-
-const debouncedPlayedRAWGSearch = debounce(async (query) => {
-  if (!query) {
-    const container = document.getElementById("playedGameAutoResultsContainer");
-    if (container) container.style.display = "none";
-    rawgResults = [];
-    selectedRAWGGame = null;
+      return `${g.name}${year ? ` (${year})` : ""}`;
+    },
+  }),
+  resultsVar: { set: (value) => (rawgResults = value) },
+  selectedVar: { set: (value) => (selectedRAWGGame = value) },
+  containerId: "playedGameAutoResultsContainer",
+  listId: "playedGameAutoResults",
+  onPreview: showPlayedGamePreview,
+  onReset: () => {
     steamGridPoster = null;
-    showPlayedGamePreview();
-    return;
-  }
-
-  try {
-    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
-      query
-    )}&page_size=5`;
-    const res = await fetch(url);
-    const data = await res.json();
-    rawgResults = data.results || [];
-    const container = document.getElementById("playedGameAutoResultsContainer");
-    const list = document.getElementById("playedGameAutoResults");
-    if (!list) return;
-    list.innerHTML = "";
-    rawgResults.forEach((g, idx) => {
-      const div = document.createElement("div");
-      div.className = "autocomplete-option";
-      div.dataset.index = idx;
-      const year = g.released ? g.released.split("-")[0] : "";
-      div.textContent = `${g.name}${year ? ` (${year})` : ""}`;
-      list.appendChild(div);
-    });
-    if (rawgResults.length > 0) {
-      container.style.display = "block";
-    } else {
-      container.style.display = "none";
-    }
-  } catch (err) {
-    console.error("RAWG autocomplete error", err);
-  }
-}, 100);
+    steamGridPosters = [];
+  },
+});
 
 async function handleKPSearch() {
   const btn = document.getElementById("autoSearchBtn");
