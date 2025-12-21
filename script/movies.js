@@ -714,7 +714,7 @@ function createGameCard(game, showActions = isAdmin) {
   card.className = "order-card";
 
   const poster = document.createElement("img");
-  poster.src = game.poster;
+  poster.src = resolveGamePosterUrl(game.poster, "ordered");
   poster.alt = game.title;
   poster.className = "order-poster";
   poster.loading = "lazy";
@@ -857,7 +857,7 @@ function createPlayedGameCard(
   card.className = cardClass;
 
   const poster = document.createElement("img");
-  poster.src = game.poster;
+  poster.src = resolveGamePosterUrl(game.poster, "played");
   poster.alt = game.title;
   poster.className = "movie-poster";
   poster.loading = "lazy";
@@ -1150,4 +1150,3 @@ async function deletePlayedGame(id) {
     );
   }
 }
-

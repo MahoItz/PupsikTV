@@ -64,7 +64,10 @@ function openRateGameModal(id) {
   const item = gameOrders.find((g) => g.id === id);
   if (item) {
     document.getElementById("rateGameTitle").textContent = item.title;
-    document.getElementById("rateGamePoster").src = item.poster;
+    document.getElementById("rateGamePoster").src = resolveGamePosterUrl(
+      item.poster,
+      "ordered"
+    );
   } else {
     document.getElementById("rateGameTitle").textContent = "";
     document.getElementById("rateGamePoster").src =
@@ -102,7 +105,9 @@ function openUserRateGameModal(id) {
     const titleEl = document.getElementById("userRateGameTitle");
     if (titleEl) titleEl.textContent = game.title;
     const posterEl = document.getElementById("userRateGamePoster");
-    if (posterEl) posterEl.src = game.poster;
+    if (posterEl) {
+      posterEl.src = resolveGamePosterUrl(game.poster, "played");
+    }
     setRatingStars("userRateGameStars", 0);
   }
   const modal = document.getElementById("userRateGameModal");
@@ -248,7 +253,7 @@ function openEditGameModal(id) {
   document.getElementById("editGameGenres").value = game.genres || "";
   document.getElementById("editGameOrderBy").value = game.orderBy || "";
   document.getElementById("editGameOrderType").value = game.orderType || "";
-  preview.src = game.poster;
+  preview.src = resolveGamePosterUrl(game.poster, "ordered");
   document.getElementById("editGamePoster").value = "";
   editGamePosterData = null;
   const delBtn = document.getElementById("deleteGameBtn");
@@ -276,7 +281,7 @@ function openEditPlayedGameModal(id) {
   document.getElementById("editPlayedGameOrderBy").value = game.orderBy || "";
   document.getElementById("editPlayedGameOrderType").value =
     game.orderType || "";
-  preview.src = game.poster;
+  preview.src = resolveGamePosterUrl(game.poster, "played");
   document.getElementById("editPlayedGamePoster").value = "";
   setRatingStars("editPlayedGameRatingStars", game.rating);
   setupRatingStars("editPlayedGameRatingStars");
@@ -676,4 +681,3 @@ function getRatingValue(inputId) {
   const el = document.getElementById(inputId);
   return el ? parseFloat(el.value.replace(/,/, ".")) : NaN;
 }
-

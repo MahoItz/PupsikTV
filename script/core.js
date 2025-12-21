@@ -1,6 +1,10 @@
 ﻿// Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const API_BASE_PATH = "/api";
+const IMAGE_PROXY_PRESETS = {
+  ordered: { width: 240, height: 360 },
+  played: { width: 300, height: 450 },
+};
 
 function buildApiPath(path) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -13,6 +17,24 @@ function buildAbsoluteApiUrl(path) {
     return `${window.location.origin}${apiPath}`;
   }
   return apiPath;
+}
+
+function buildImageProxyUrl(sourceUrl, preset) {
+  if (typeof sourceUrl !== "string" || !sourceUrl.trim()) return sourceUrl;
+  if (!/^https?:\\/\\//i.test(sourceUrl)) return sourceUrl;
+  if (sourceUrl.includes("/api/image-proxy")) return sourceUrl;
+  if (!IMAGE_PROXY_PRESETS[preset]) return sourceUrl;
+
+  const params = new URLSearchParams({
+    url: sourceUrl,
+    preset,
+  });
+
+  return buildApiPath(`/image-proxy?${params.toString()}`);
+}
+
+function resolveGamePosterUrl(sourceUrl, status) {
+  return buildImageProxyUrl(sourceUrl, status);
 }
 
 const TWITCH_REDIRECT_URI = buildAbsoluteApiUrl("/twitch-connect");
@@ -2138,4 +2160,3 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
 
   render();
 }
-
