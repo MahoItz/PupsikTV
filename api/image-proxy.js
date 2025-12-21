@@ -42,7 +42,14 @@ function buildSourceUrl(rawUrl) {
 function buildProxyUrl(sourceUrl, preset, outputFormat) {
   const { width, height } = PRESETS[preset];
   const proxyUrl = new URL("https://wsrv.nl/");
-  proxyUrl.searchParams.set("url", sourceUrl);
+  const parsedSource = new URL(sourceUrl);
+  const sourcePath = `${parsedSource.host}${parsedSource.pathname}${parsedSource.search}`;
+  const isHttps = parsedSource.protocol === "https:";
+
+  proxyUrl.searchParams.set("url", sourcePath);
+  if (isHttps) {
+    proxyUrl.searchParams.set("ssl", "1");
+  }
   proxyUrl.searchParams.set("w", String(width));
   proxyUrl.searchParams.set("h", String(height));
   proxyUrl.searchParams.set("fit", "cover");
