@@ -21,7 +21,7 @@ function buildAbsoluteApiUrl(path) {
 
 function buildImageProxyUrl(sourceUrl, preset) {
   if (typeof sourceUrl !== "string" || !sourceUrl.trim()) return sourceUrl;
-  if (!/^https?:\\/\\//i.test(sourceUrl)) return sourceUrl;
+  if (!/^https?:\/\//i.test(sourceUrl)) return sourceUrl;
   if (sourceUrl.includes("/api/image-proxy")) return sourceUrl;
   if (!IMAGE_PROXY_PRESETS[preset]) return sourceUrl;
 
