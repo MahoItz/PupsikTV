@@ -33,7 +33,7 @@ async function handler(req, res) {
     }
     const gridData = await gridRes.json();
     const posters = Array.isArray(gridData.data)
-      ? gridData.data.map((g) => g.thumb || g.url)   
+      ? gridData.data.map((g) => g.url)
       : [];
     res.status(200).json({ posters });
   } catch (err) {
