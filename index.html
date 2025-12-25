@@ -620,10 +620,13 @@
     </div>
     <!-- Модальное окно планирования просмотра -->
     <div id="planDateModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content plan-modal">
             <span class="close" onclick="closeModal('planDateModal')">&times;</span>
             <h2>Запланировать просмотр</h2>
             <p id="planDateMovieTitle" class="modal-subtitle"></p>
+            <div class="plan-modal-hint">
+                Настройте дату и время, чтобы фильм или игра появились в расписании без путаницы.
+            </div>
             <form id="planDateForm">
                 <div class="datetime-picker">
                     <div class="form-group">
@@ -641,7 +644,7 @@
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить</button>
+                <button type="submit" class="btn btn-primary plan-submit-btn" style="width: 100%;">Сохранить расписание</button>
             </form>
         </div>
     </div>

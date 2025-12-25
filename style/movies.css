@@ -396,12 +396,54 @@
 }
 
 .btn-plan {
-    background: rgba(0, 212, 255, 0.12);
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(255, 108, 66, 0.08));
     color: var(--text-primary);
+    border: 1px solid rgba(0, 212, 255, 0.35);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.18);
 }
 
 .btn-plan:hover {
-    background: rgba(0, 212, 255, 0.2);
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.25), rgba(255, 108, 66, 0.14));
+    transform: translateY(-1px);
+    box-shadow: 0 0 18px rgba(0, 212, 255, 0.32);
+}
+
+.plan-action-btn {
+    gap: 10px;
+    padding: 10px 16px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+}
+
+.plan-action-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.06), transparent 40%);
+    pointer-events: none;
+}
+
+.plan-action-btn .btn-icon-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 212, 255, 0.16);
+    color: #ffd05e;
+    box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.4);
+    font-size: 1.05rem;
+}
+
+.plan-action-btn .btn-label {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
 }
 
 .btn-delete {

@@ -610,9 +610,11 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     const actions = document.createElement("div");
     actions.className = "order-actions";
     const planBtn = document.createElement("button");
-    planBtn.className = "btn btn-plan btn-icon";
-    planBtn.textContent = "⏰";
+    planBtn.className = "btn btn-plan btn-icon plan-action-btn";
+    planBtn.innerHTML =
+      '<span class="btn-icon-circle">⏰</span><span class="btn-label">План</span>';
     planBtn.title = "Запланировать просмотр";
+    planBtn.setAttribute("aria-label", "Запланировать просмотр");
     planBtn.onclick = () => openPlanDateModal(order.id);
     const editBtn = document.createElement("button");
     editBtn.className = "btn btn-edit btn-icon";
@@ -821,9 +823,11 @@ function createGameCard(game, showActions = isAdmin) {
     const actions = document.createElement("div");
     actions.className = "order-actions";
     const planBtn = document.createElement("button");
-    planBtn.className = "btn btn-plan btn-icon";
-    planBtn.textContent = "⏰";
+    planBtn.className = "btn btn-plan btn-icon plan-action-btn";
+    planBtn.innerHTML =
+      '<span class="btn-icon-circle">⏰</span><span class="btn-label">План</span>';
     planBtn.title = "Запланировать игру";
+    planBtn.setAttribute("aria-label", "Запланировать игру");
     planBtn.onclick = () => openPlanDateModal(game.id, "game");
     const editBtn = document.createElement("button");
     editBtn.className = "btn btn-edit btn-icon";

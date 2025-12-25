@@ -260,6 +260,80 @@
     font-size: 0.95rem;
 }
 
+.plan-modal {
+    background: radial-gradient(circle at 10% 20%, rgba(0, 212, 255, 0.08), transparent 35%),
+        radial-gradient(circle at 80% 0%, rgba(255, 108, 66, 0.08), transparent 45%),
+        var(--modal-bg);
+    border: 1px solid rgba(0, 212, 255, 0.35);
+    box-shadow: 0 0 45px rgba(0, 212, 255, 0.15), 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.plan-modal h2 {
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.plan-modal h2::before {
+    content: "⏰";
+    font-size: 1.4rem;
+    color: #ffd05e;
+    text-shadow: 0 0 12px rgba(255, 208, 94, 0.6);
+}
+
+.plan-modal-hint {
+    background: rgba(0, 212, 255, 0.06);
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    color: var(--text-secondary);
+    border-radius: var(--border-radius-small);
+    padding: 12px 14px;
+    margin: -6px 0 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.plan-modal-hint::before {
+    content: "\f073";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: var(--secondary-color);
+}
+
+#planDateModal .datetime-picker {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--border-radius-small);
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+#planDateModal .form-group label {
+    margin-top: 10px;
+}
+
+#planDateModal .input-with-icon {
+    border-color: rgba(0, 212, 255, 0.35);
+    background: rgba(0, 212, 255, 0.05);
+}
+
+#planDateModal .input-with-icon:hover {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.28);
+}
+
+#planDateModal .input-with-icon input {
+    font-size: 1.05rem;
+}
+
+.plan-submit-btn {
+    margin-top: 10px;
+    letter-spacing: 0.06em;
+    box-shadow: 0 12px 30px rgba(255, 108, 66, 0.35);
+}
+
 .form-hint {
     color: var(--text-secondary);
     font-size: 0.9rem;
