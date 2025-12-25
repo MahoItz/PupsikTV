@@ -981,13 +981,21 @@ document
 
     let planValue = null;
 
-    if (dateValue || timeValue) {
-      if (!dateValue || !timeValue) {
-        alert("Укажите и дату, и время или очистите оба поля.");
+    if (dateValue && !timeValue) {
+      const dateOnly = new Date(`${dateValue}T00:00`);
+
+      if (Number.isNaN(dateOnly.getTime())) {
+        alert("Некорректная дата. Проверьте ввод.");
         return;
       }
 
+      planValue = `${dateValue}T00:00`;
+    } else if (!dateValue && timeValue) {
+      alert("Чтобы указать время, заполните дату или очистите оба поля.");
+      return;
+    } else if (dateValue && timeValue) {
       const combinedValue = new Date(`${dateValue}T${timeValue}`);
+
       if (Number.isNaN(combinedValue.getTime())) {
         alert("Некорректная дата или время. Проверьте ввод.");
         return;
@@ -1133,6 +1141,15 @@ function formatDate(dateStr) {
 
 function formatDateTime(dateStr) {
   if (!dateStr) return "";
+  const hasTime = /T\d{2}:\d{2}/.test(dateStr);
+  const timePart = hasTime
+    ? dateStr.slice(dateStr.indexOf("T") + 1, dateStr.indexOf("T") + 6)
+    : "";
+
+  if (!hasTime || timePart === "00:00") {
+    return formatDate(dateStr);
+  }
+
   const d = new Date(dateStr);
   return d.toLocaleString("ru-RU", {
     day: "2-digit",
