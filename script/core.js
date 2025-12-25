@@ -1041,6 +1041,7 @@ let ratedGames = JSON.parse(localStorage.getItem("ratedGames") || "{}");
 let editPosterData = null;
 let editingOrderId = null;
 let planDateOrderId = null;
+let planDateOrderType = "movie";
 let editOrderPosterData = null;
 let editingGameId = null;
 let editGamePosterData = null;

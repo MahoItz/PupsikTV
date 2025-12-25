@@ -706,9 +706,61 @@ async function clearPlanDate(orderId) {
   }
 }
 
+async function clearGamePlanDate(gameId) {
+  const game = gameOrders.find((g) => g.id === gameId);
+  if (!game) return;
+
+  const previousPlan = game.planDate;
+  game.planDate = null;
+  renderGames();
+
+  try {
+    const { error } = await supabaseClient
+      .from("Game_Orders")
+      .update({ game_plan_date: null })
+      .eq("id", gameId)
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw error;
+  } catch (err) {
+    console.error("Error clearing game plan date", err);
+    game.planDate = previousPlan;
+    renderGames();
+    alert("Не удалось удалить запланированное время. Попробуйте ещё раз.");
+  }
+}
+
 function createGameCard(game, showActions = isAdmin) {
   const wrapper = document.createElement("div");
   wrapper.className = "order-wrapper";
+
+  if (game.planDate) {
+    const planBanner = document.createElement("div");
+    planBanner.className = "order-plan-banner";
+
+    const planIcon = document.createElement("span");
+    planIcon.className = "order-plan-icon";
+    planIcon.textContent = "⏰";
+
+    const planText = document.createElement("span");
+    planText.className = "order-plan-text";
+    planText.textContent = `Запланировано: ${formatDateTime(game.planDate)}`;
+
+    planBanner.append(planIcon, planText);
+
+    if (isAdmin) {
+      const clearBtn = document.createElement("button");
+      clearBtn.type = "button";
+      clearBtn.className = "order-plan-remove btn-icon";
+      clearBtn.title = "Удалить запланированное время";
+      clearBtn.textContent = "✕";
+      clearBtn.onclick = () => clearGamePlanDate(game.id);
+      planBanner.appendChild(clearBtn);
+    }
+
+    wrapper.appendChild(planBanner);
+  }
 
   const card = document.createElement("div");
   card.className = "order-card";
@@ -768,10 +820,16 @@ function createGameCard(game, showActions = isAdmin) {
   if (showActions) {
     const actions = document.createElement("div");
     actions.className = "order-actions";
+    const planBtn = document.createElement("button");
+    planBtn.className = "btn btn-plan btn-icon";
+    planBtn.textContent = "⏰";
+    planBtn.title = "Запланировать игру";
+    planBtn.onclick = () => openPlanDateModal(game.id, "game");
     const editBtn = document.createElement("button");
     editBtn.className = "btn btn-edit btn-icon";
     editBtn.textContent = "✏️";
     editBtn.onclick = () => openEditGameModal(game.id);
+    actions.appendChild(planBtn);
     actions.appendChild(editBtn);
     row.appendChild(actions);
   }
@@ -806,7 +864,31 @@ function renderGames() {
     renderEmptyState(container, "Заказанных игр пока нет");
     return;
   }
-  gameOrders.forEach((g) => container.appendChild(createGameCard(g)));
+  getSortedGameOrders().forEach((g) =>
+    container.appendChild(createGameCard(g))
+  );
+}
+
+function getSortedGameOrders() {
+  return gameOrders
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const aHasPlan = Boolean(a.item.planDate);
+      const bHasPlan = Boolean(b.item.planDate);
+
+      if (aHasPlan && !bHasPlan) return -1;
+      if (!aHasPlan && bHasPlan) return 1;
+
+      if (aHasPlan && bHasPlan) {
+        const aDate = new Date(a.item.planDate).getTime();
+        const bDate = new Date(b.item.planDate).getTime();
+
+        if (aDate !== bDate) return aDate - bDate;
+      }
+
+      return a.index - b.index;
+    })
+    .map(({ item }) => item);
 }
 
 function getFilteredSortedPlayedGames() {

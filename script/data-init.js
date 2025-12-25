@@ -376,7 +376,7 @@ async function loadGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Game_Orders")
       .select(
-        "id, created_at, game_title, game_order_type, game_order_by, game_genres, game_poster, game_year"
+        "id, created_at, game_title, game_order_type, game_order_by, game_genres, game_poster, game_year, game_plan_date"
       )
       .order("id", { ascending: true });
 
@@ -388,6 +388,7 @@ async function loadGamesFromSupabase() {
       genres: item.game_genres,
       poster: item.game_poster,
       year: item.game_year || "",
+      planDate: item.game_plan_date || null,
       orderBy:
         item.game_order_by && item.game_order_by !== "null"
           ? item.game_order_by

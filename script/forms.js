@@ -403,6 +403,7 @@ document
         genres: data.game_genres,
         poster: data.game_poster,
         year: data.game_year || "",
+        planDate: data.game_plan_date || null,
         orderBy: data.game_order_by,
         orderType: data.game_order_type,
         dateAdded: data.created_at,
@@ -970,7 +971,9 @@ document
 
     if (planDateOrderId === null) return;
 
-    const order = watchlist.find((o) => o.id === planDateOrderId);
+    const isGamePlan = planDateOrderType === "game";
+    const orders = isGamePlan ? gameOrders : watchlist;
+    const order = orders.find((o) => o.id === planDateOrderId);
     const dateInput = document.getElementById("planDateInput");
     const timeInput = document.getElementById("planTimeInput");
     const dateValue = dateInput?.value?.trim();
@@ -994,26 +997,32 @@ document
     }
 
     try {
+      const column = isGamePlan ? "game_plan_date" : "plan_date";
       const { data, error } = await supabaseClient
-        .from("Movie_Orders")
-        .update({ plan_date: planValue })
+        .from(isGamePlan ? "Game_Orders" : "Movie_Orders")
+        .update({ [column]: planValue })
         .eq("id", planDateOrderId)
-        .select("plan_date")
+        .select(column)
         .single();
 
       if (error) throw error;
 
       if (order) {
-        order.planDate = data?.plan_date || null;
+        order.planDate = data?.[column] || null;
       }
 
-      renderWatchlist();
+      if (isGamePlan) {
+        renderGames();
+      } else {
+        renderWatchlist();
+      }
       closeModal("planDateModal");
     } catch (err) {
       console.error("Error updating plan date", err);
       alert("Не удалось сохранить время просмотра. Попробуйте ещё раз.");
     } finally {
       planDateOrderId = null;
+      planDateOrderType = "movie";
     }
   });
 

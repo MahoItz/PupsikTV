@@ -355,9 +355,12 @@ async function confirmDeleteGameOrder() {
   closeModal("confirmDeleteGameOrderModal");
 }
 
-function openPlanDateModal(id) {
+function openPlanDateModal(id, type = "movie") {
   planDateOrderId = id;
-  const order = watchlist.find((o) => o.id === id);
+  planDateOrderType = type;
+  const isGamePlan = type === "game";
+  const orders = isGamePlan ? gameOrders : watchlist;
+  const order = orders.find((o) => o.id === id);
   const titleEl = document.getElementById("planDateMovieTitle");
   if (titleEl) {
     titleEl.textContent = order?.title || "";
@@ -372,8 +375,8 @@ function openPlanDateModal(id) {
     dateValue = formatDateLocal(order.planDate);
     timeValue = formatTimeLocal(order.planDate);
   } else {
-    // Auto-calculate from last scheduled movie
-    const scheduled = watchlist.filter((o) => o.planDate && o.id !== id);
+    // Auto-calculate from last scheduled item
+    const scheduled = orders.filter((o) => o.planDate && o.id !== id);
     if (scheduled.length > 0) {
       // Find max date+time
       const last = scheduled.reduce((prev, current) => {
