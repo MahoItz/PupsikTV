@@ -50,12 +50,14 @@
     height: 100%;
 }
 
-#moviesGrid .movie-card--clickable {
+#moviesGrid .movie-card--clickable,
+#gamesGridPlayed .movie-card--clickable {
     cursor: pointer;
     will-change: transform;
 }
 
-#moviesGrid .movie-card--clickable:hover {
+#moviesGrid .movie-card--clickable:hover,
+#gamesGridPlayed .movie-card--clickable:hover {
     transform: translateY(-8px) scale(1.03);
     box-shadow:
         0 20px 40px rgba(0, 0, 0, 0.3),
@@ -63,7 +65,8 @@
     border-color: var(--secondary-color);
 }
 
-#moviesGrid .movie-card--clickable:focus-visible {
+#moviesGrid .movie-card--clickable:focus-visible,
+#gamesGridPlayed .movie-card--clickable:focus-visible {
     outline: 2px solid var(--secondary-color);
     outline-offset: 3px;
     transform: translateY(-6px) scale(1.02);

@@ -953,8 +953,10 @@ function getFilteredSortedPlayedGames() {
 function createPlayedGameCard(
   game,
   showActions = isAdmin,
-  showRateButton = true
+  showRateButton = true,
+  options = {}
 ) {
+  const { clickable = false } = options;
   const card = document.createElement("div");
   card.dataset.id = game.id;
   let cardClass = "movie-card";
@@ -962,6 +964,22 @@ function createPlayedGameCard(
   if (hasPersistentId && game.rating === 0) cardClass += " rating-low";
   if (hasPersistentId && game.rating === 11) cardClass += " rating-high";
   card.className = cardClass;
+  if (clickable) {
+    card.classList.add("movie-card--clickable");
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", `Открыть карточку игры: ${game.title}`);
+    card.addEventListener("click", (event) => {
+      if (shouldIgnoreMovieCardClick(event)) return;
+      openGameDetailsModal(game.id);
+    });
+    card.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      if (shouldIgnoreMovieCardClick(event)) return;
+      event.preventDefault();
+      openGameDetailsModal(game.id);
+    });
+  }
 
   const poster = document.createElement("img");
   poster.src = game.poster;
@@ -1129,7 +1147,7 @@ function renderPlayedGames() {
     const prevData = playedGameDataMap.get(game.id);
     if (!card || prevData !== dataKey) {
       if (card) card.remove();
-      card = createPlayedGameCard(game);
+      card = createPlayedGameCard(game, isAdmin, true, { clickable: true });
     }
     fragment.appendChild(card);
     newElements.set(game.id, card);

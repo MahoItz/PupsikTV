@@ -1102,6 +1102,58 @@
             </div>
         </div>
     </div>
+    <div id="gameDetailsModal" class="modal">
+        <div class="modal-content game-details-modal">
+            <span class="close" onclick="closeModal('gameDetailsModal')">&times;</span>
+            <div class="movie-details-body">
+                <div class="movie-details-poster-wrap">
+                    <img id="gameDetailsPoster" class="movie-details-poster"
+                        src="https://via.placeholder.com/300x450?text=Нет+постера" alt="Постер игры" loading="lazy">
+                </div>
+                <div class="movie-details-info">
+                    <div class="movie-details-headings">
+                        <h2 id="gameDetailsTitle" class="movie-details-title"></h2>
+                    </div>
+                    <div class="movie-details-meta">
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Год</span>
+                            <span id="gameDetailsYear" class="movie-details-meta-value"></span>
+                        </div>
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Жанр</span>
+                            <span id="gameDetailsGenre" class="movie-details-meta-value"></span>
+                        </div>
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Дата добавления</span>
+                            <span id="gameDetailsDate" class="movie-details-meta-value"></span>
+                        </div>
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Кто заказал</span>
+                            <span id="gameDetailsOrderBy" class="movie-details-meta-value"></span>
+                        </div>
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Способ заказа</span>
+                            <span id="gameDetailsOrderType" class="movie-details-meta-value"></span>
+                        </div>
+                    </div>
+                    <div class="movie-details-section">
+                        <div class="movie-details-section-title">Оценки</div>
+                        <div class="movie-details-ratings">
+                            <div class="movie-details-rating">
+                                <img src="images/Pupsik_TV_Icon.webp" alt="Pupsik Rate">
+                                <span id="gameDetailsPupsikRating"></span>
+                            </div>
+                            <div class="movie-details-rating">
+                                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                <span id="gameDetailsUserRating"></span>
+                                <span id="gameDetailsVotes" class="movie-details-votes"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="searchReminderModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('searchReminderModal')">&times;</span>

@@ -400,24 +400,28 @@
     margin-top: 20px;
 }
 
-#movieDetailsModal .modal-content {
+#movieDetailsModal .modal-content,
+#gameDetailsModal .modal-content {
     max-width: 960px;
     padding: 32px;
 }
 
-#movieDetailsModal h2 {
+#movieDetailsModal h2,
+#gameDetailsModal h2 {
     text-transform: none;
     margin-bottom: 8px;
 }
 
-#movieDetailsModal .movie-details-body {
+#movieDetailsModal .movie-details-body,
+#gameDetailsModal .movie-details-body {
     display: flex;
     gap: 24px;
     align-items: flex-start;
     flex-wrap: wrap;
 }
 
-#movieDetailsModal .movie-details-poster {
+#movieDetailsModal .movie-details-poster,
+#gameDetailsModal .movie-details-poster {
     width: 220px;
     min-height: 320px;
     border-radius: 14px;
@@ -426,7 +430,8 @@
     background: rgba(0, 0, 0, 0.2);
 }
 
-#movieDetailsModal .movie-details-info {
+#movieDetailsModal .movie-details-info,
+#gameDetailsModal .movie-details-info {
     flex: 1;
     min-width: 260px;
     display: flex;
@@ -434,28 +439,37 @@
     gap: 18px;
 }
 
-#movieDetailsModal .movie-details-original {
+#movieDetailsModal .movie-details-original,
+#gameDetailsModal .movie-details-original {
     color: var(--text-secondary);
     font-size: 0.95rem;
     font-style: italic;
 }
 
-#movieDetailsModal .movie-details-meta {
+#movieDetailsModal .movie-details-meta,
+#gameDetailsModal .movie-details-meta {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-#movieDetailsModal .movie-details-meta-item {
+#movieDetailsModal .movie-details-meta-item,
+#gameDetailsModal .movie-details-meta-item {
     display: flex;
     gap: 8px;
     align-items: baseline;
-    padding: 0;
+    padding: 10px 0;
     border: none;
     background: transparent;
 }
 
-#movieDetailsModal .movie-details-meta-label {
+#movieDetailsModal .movie-details-meta-item:not(:last-child),
+#gameDetailsModal .movie-details-meta-item:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#movieDetailsModal .movie-details-meta-label,
+#gameDetailsModal .movie-details-meta-label {
     font-size: 13px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -463,12 +477,14 @@
     min-width: 150px;
 }
 
-#movieDetailsModal .movie-details-meta-value {
+#movieDetailsModal .movie-details-meta-value,
+#gameDetailsModal .movie-details-meta-value {
     color: var(--text-primary);
     font-weight: 600;
 }
 
-#movieDetailsModal .movie-details-section-title {
+#movieDetailsModal .movie-details-section-title,
+#gameDetailsModal .movie-details-section-title {
     font-size: 0.95rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -476,13 +492,15 @@
     margin-bottom: 10px;
 }
 
-#movieDetailsModal .movie-details-ratings {
+#movieDetailsModal .movie-details-ratings,
+#gameDetailsModal .movie-details-ratings {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
 }
 
-#movieDetailsModal .movie-details-rating {
+#movieDetailsModal .movie-details-rating,
+#gameDetailsModal .movie-details-rating {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -492,16 +510,19 @@
     border-radius: 12px;
 }
 
-#movieDetailsModal .movie-details-rating img {
+#movieDetailsModal .movie-details-rating img,
+#gameDetailsModal .movie-details-rating img {
     width: 20px;
     height: 20px;
 }
 
-#movieDetailsModal .movie-details-rating i {
+#movieDetailsModal .movie-details-rating i,
+#gameDetailsModal .movie-details-rating i {
     color: #ffd166;
 }
 
-#movieDetailsModal .movie-details-votes {
+#movieDetailsModal .movie-details-votes,
+#gameDetailsModal .movie-details-votes {
     margin-left: 6px;
     font-size: 0.85rem;
     color: var(--text-secondary);
@@ -824,15 +845,29 @@
         justify-content: center;
     }
 
-    #movieDetailsModal .movie-details-body {
+    #movieDetailsModal .movie-details-body,
+    #gameDetailsModal .movie-details-body {
         flex-direction: column;
         align-items: stretch;
     }
 
-    #movieDetailsModal .movie-details-poster {
+    #movieDetailsModal .movie-details-poster,
+    #gameDetailsModal .movie-details-poster {
         width: 100%;
         max-width: 340px;
         margin: 0 auto;
+    }
+
+    #movieDetailsModal .movie-details-meta-item,
+    #gameDetailsModal .movie-details-meta-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    #movieDetailsModal .movie-details-meta-label,
+    #gameDetailsModal .movie-details-meta-label {
+        min-width: 0;
     }
 }
 

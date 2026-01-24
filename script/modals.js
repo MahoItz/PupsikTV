@@ -184,6 +184,52 @@ function openMovieDetailsModal(id) {
   modal.style.display = "block";
 }
 
+function openGameDetailsModal(id) {
+  const game = allPlayedGames.find((g) => g.id === id);
+  const modal = document.getElementById("gameDetailsModal");
+  if (!game || !modal) return;
+
+  const title = formatMovieDetailsValue(game.title, "Без названия");
+  const genreValue = game.genres || "";
+  const orderByValue =
+    game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
+  const orderTypeValue = game.orderType || "";
+
+  const titleEl = document.getElementById("gameDetailsTitle");
+  if (titleEl) titleEl.textContent = title;
+
+  const posterEl = document.getElementById("gameDetailsPoster");
+  if (posterEl) {
+    const posterSrc = game.poster || DEFAULT_POSTER_PLACEHOLDER;
+    posterEl.src = posterSrc;
+    posterEl.alt = title ? `Постер: ${title}` : "Постер игры";
+    posterEl.onerror = () => {
+      posterEl.src = DEFAULT_POSTER_PLACEHOLDER;
+      posterEl.alt = "Постер игры";
+    };
+  }
+
+  setMovieDetailsText("gameDetailsYear", game.year);
+  setMovieDetailsText("gameDetailsGenre", genreValue);
+  setMovieDetailsText(
+    "gameDetailsDate",
+    game.dateAdded ? formatDateTime(game.dateAdded) : ""
+  );
+  setMovieDetailsText("gameDetailsOrderBy", orderByValue);
+  setMovieDetailsText("gameDetailsOrderType", orderTypeValue);
+  setMovieDetailsText("gameDetailsPupsikRating", game.rating);
+  setMovieDetailsText("gameDetailsUserRating", game.userRating ?? "-");
+
+  const votes = Math.round(game.ratingCount ?? 0);
+  const votesEl = document.getElementById("gameDetailsVotes");
+  if (votesEl) {
+    votesEl.textContent = `Голосов: ${votes}`;
+    votesEl.classList.toggle("movie-details-muted", votes === 0);
+  }
+
+  modal.style.display = "block";
+}
+
 function openEditModal(id) {
   editingMovieId = id;
   const movie = allMovies.find((m) => m.id === id);
