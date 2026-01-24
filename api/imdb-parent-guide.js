@@ -96,12 +96,48 @@ async function handler(req, res) {
 
   try {
     const imdbUrl = `https://www.imdb.com/title/${encodeURIComponent(id)}/parentalguide/`;
+    const imdbHeaders = {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      "Sec-CH-UA":
+        '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+      "Sec-CH-UA-Mobile": "?0",
+      "Sec-CH-UA-Platform": '"Windows"',
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none",
+      "Sec-Fetch-User": "?1",
+      "Upgrade-Insecure-Requests": "1",
+    };
 
     const imdbResponse = await fetch(imdbUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
-      },
+      headers: imdbHeaders,
     });
+
+    const wafAction = imdbResponse.headers.get("x-amzn-waf-action");
+    const serverHeader = imdbResponse.headers.get("server") || "";
+    const contentLength = imdbResponse.headers.get("content-length");
+    const isCloudfront = serverHeader.toLowerCase().includes("cloudfront");
+    const isWafChallenge =
+      imdbResponse.status === 202 ||
+      (wafAction && wafAction !== "allow") ||
+      (isCloudfront && contentLength === "0");
+
+    if (isWafChallenge) {
+      res.status(503).json({
+        error: "IMDb WAF challenge",
+        message:
+          "IMDb защитил запрос (WAF challenge). Попробуйте позже или повторите запрос.",
+        code: "waf_challenge",
+        status: imdbResponse.status,
+      });
+      return;
+    }
 
     if (!imdbResponse.ok) {
       res

@@ -2229,9 +2229,13 @@ async function fetchFortuneParentGuide(imdbId) {
       return;
     }
     console.error("Failed to load parental guide", err);
-    setFortuneParentGuideError(
-      "Не удалось загрузить родительский гайд. Попробуйте позже."
-    );
+    const fallbackMessage =
+      "Не удалось загрузить родительский гайд. Попробуйте позже.";
+    const errorMessage =
+      err && typeof err.message === "string" && err.message.trim()
+        ? err.message
+        : fallbackMessage;
+    setFortuneParentGuideError(errorMessage);
   }
 }
 
@@ -2245,7 +2249,20 @@ async function loadFortuneParentGuideData(imdbId) {
   );
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+    let errorMessage = `Request failed: ${response.status}`;
+    try {
+      const payload = await response.json();
+      if (payload) {
+        const message =
+          typeof payload.message === "string" ? payload.message : null;
+        const errorText =
+          typeof payload.error === "string" ? payload.error : null;
+        errorMessage = message?.trim() || errorText?.trim() || errorMessage;
+      }
+    } catch (err) {
+      // ignore parse errors and use fallback message
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
