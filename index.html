@@ -1146,12 +1146,12 @@
     <div id="orderDetailsModal" class="modal">
         <div class="modal-content order-details-modal">
             <span class="close" onclick="closeModal('orderDetailsModal')">&times;</span>
-            <div class="movie-details-body">
-                <div class="movie-details-poster-wrap">
-                    <img id="orderDetailsPoster" class="movie-details-poster"
-                        src="https://via.placeholder.com/300x450?text=Нет+постера" alt="Постер фильма" loading="lazy">
-                </div>
-                <div class="movie-details-info">
+              <div class="movie-details-body">
+                  <div class="movie-details-poster-wrap">
+                      <img id="orderDetailsPoster" class="movie-details-poster"
+                          src="https://via.placeholder.com/300x450?text=Нет+постера" alt="Постер фильма" loading="lazy">
+                  </div>
+                  <div class="movie-details-info">
                     <div class="movie-details-headings">
                         <h2 id="orderDetailsTitle" class="movie-details-title"></h2>
                         <div id="orderDetailsOriginal" class="movie-details-original"></div>
@@ -1186,19 +1186,55 @@
                             <span id="orderDetailsOrderType" class="movie-details-meta-value"></span>
                         </div>
                     </div>
-                    <div class="movie-details-section">
-                        <div class="movie-details-section-title">Оценки</div>
-                        <div class="movie-details-ratings">
-                            <div class="movie-details-rating">
-                                <img src="images/kp_icon.webp" alt="KP Rate">
-                                <span id="orderDetailsKpRating"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                      <div class="movie-details-section">
+                          <div class="movie-details-section-title">Оценки</div>
+                          <div class="movie-details-ratings">
+                              <div class="movie-details-rating">
+                                  <img src="images/kp_icon.webp" alt="KP Rate">
+                                  <span id="orderDetailsKpRating"></span>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="order-details-divider" aria-hidden="true"></div>
+              <div id="orderParentGuide" class="fortune-parent-guide">
+                  <div class="fortune-parent-guide__header">
+                      <h3>Parents Guide</h3>
+                      <div class="fortune-parent-guide__actions">
+                          <div id="orderParentGuideStatus" class="fortune-parent-guide__status">
+                              Выберите фильм, чтобы увидеть содержание руководства
+                          </div>
+                          <button id="orderParentGuideTranslate" type="button"
+                              class="btn btn-secondary fortune-parent-guide__translate" disabled>
+                              Google Translate
+                          </button>
+                      </div>
+                  </div>
+                  <div id="orderParentGuideContent" class="fortune-parent-guide__content" style="display: none;">
+                      <details id="orderParentGuideSexSection"
+                          class="fortune-parent-guide__category fortune-parent-guide__spoiler">
+                          <summary class="fortune-parent-guide__spoiler-summary">
+                              <h4>Секс и нагота</h4>
+                          </summary>
+                          <ul id="orderParentGuideSex" class="fortune-parent-guide__list"></ul>
+                      </details>
+                  </div>
+              </div>
+              <div id="orderTimings" class="fortune-timings">
+                  <div class="fortune-timings__header">
+                      <h3>Timings</h3>
+                      <div class="fortune-timings__meta">
+                          <span id="orderTimingsAuthor" class="fortune-timings__author"></span>
+                          <span id="orderTimingsStatus" class="fortune-timings__status">Выберите фильм, чтобы увидеть
+                              тайминги</span>
+                      </div>
+                  </div>
+                  <ul id="orderTimingsList" class="fortune-timings__list"></ul>
+                  <div class="fortune-timings__source">Источник таймингов: Reyohoho</div>
+              </div>
+          </div>
+      </div>
     <div id="gameOrderDetailsModal" class="modal">
         <div class="modal-content game-order-details-modal">
             <span class="close" onclick="closeModal('gameOrderDetailsModal')">&times;</span>

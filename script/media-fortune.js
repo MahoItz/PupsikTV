@@ -142,10 +142,32 @@ const fortuneTimings = document.getElementById("fortuneTimings");
 const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
+const orderDetailsModal = document.getElementById("orderDetailsModal");
+const orderParentGuideStatus = document.getElementById("orderParentGuideStatus");
+const orderParentGuideTranslate = document.getElementById(
+  "orderParentGuideTranslate"
+);
+const orderParentGuideContent = document.getElementById(
+  "orderParentGuideContent"
+);
+const orderParentGuideSections = {
+  sexAndNudity: document.getElementById("orderParentGuideSexSection"),
+};
+const orderParentGuideLists = {
+  sexAndNudity: document.getElementById("orderParentGuideSex"),
+};
+const orderTimings = document.getElementById("orderTimings");
+const orderTimingsStatus = document.getElementById("orderTimingsStatus");
+const orderTimingsList = document.getElementById("orderTimingsList");
+const orderTimingsAuthor = document.getElementById("orderTimingsAuthor");
 const fortuneTimingsLoads = new Map();
 const fortuneStudioLoads = new Map();
 let preloadFortuneStudioInfo;
 let fortuneBanwords = [];
+let orderParentGuideRequestId = 0;
+let orderCurrentParentGuideData = null;
+let orderTimingsRequestId = 0;
+let activeOrderDetailsId = null;
 
 function escapeRegExp(str = "") {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1710,6 +1732,604 @@ function setFortuneTimingsError(message) {
   setFortuneTimingsStatus(message);
 }
 
+function setOrderMetadata(order, metadata = {}) {
+  if (!order) {
+    return;
+  }
+
+  Object.keys(metadata).forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(metadata, key)) {
+      order[key] = metadata[key];
+    }
+  });
+}
+
+function getActiveOrderDetails() {
+  if (!activeOrderDetailsId || !Array.isArray(watchlist)) {
+    return null;
+  }
+
+  return watchlist.find((order) => order.id === activeOrderDetailsId) || null;
+}
+
+function setOrderParentGuideStatus(message) {
+  if (orderParentGuideStatus) {
+    orderParentGuideStatus.textContent = message;
+  }
+}
+
+function updateOrderTranslateButton(isEnabled) {
+  if (!orderParentGuideTranslate) {
+    return;
+  }
+
+  orderParentGuideTranslate.disabled = !isEnabled;
+  orderParentGuideTranslate.classList.toggle("btn-disabled", !isEnabled);
+}
+
+function setCurrentOrderParentGuideData(data) {
+  orderCurrentParentGuideData = data || null;
+  updateOrderTranslateButton(Boolean(data));
+}
+
+function resetOrderParentGuideSections() {
+  Object.entries(orderParentGuideSections).forEach(([key, section]) => {
+    if (!section) return;
+
+    section.open = key === "sexAndNudity";
+  });
+}
+
+function resetOrderParentGuide(
+  message = "Выберите фильм, чтобы увидеть содержание руководства"
+) {
+  setOrderParentGuideStatus(message);
+  if (orderParentGuideContent) {
+    orderParentGuideContent.style.display = "none";
+  }
+  resetOrderParentGuideSections();
+  Object.values(orderParentGuideLists).forEach((list) => {
+    if (list) {
+      list.innerHTML = "";
+    }
+  });
+  setCurrentOrderParentGuideData(null);
+}
+
+function renderOrderParentGuideList(listEl, items) {
+  if (!listEl) {
+    return;
+  }
+
+  listEl.innerHTML = "";
+  if (!items || items.length === 0) {
+    const emptyItem = document.createElement("li");
+    emptyItem.textContent = "Нет данных";
+    emptyItem.className = "fortune-parent-guide__empty";
+    listEl.appendChild(emptyItem);
+    return;
+  }
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.innerHTML = highlightFortuneBanwords(item || "");
+    listEl.appendChild(li);
+  });
+}
+
+function renderOrderParentGuide(data) {
+  const normalized = normalizeParentGuideData(data);
+  const translationStatus = normalized?.translationStatus || null;
+  const original = normalized?.original || {};
+  const translated = normalized?.translated || null;
+
+  setCurrentOrderParentGuideData(normalized);
+
+  const useTranslated =
+    translated && hasParentGuideContent(translated);
+
+  const sections = useTranslated ? translated : original;
+  const hasAny = hasParentGuideContent(sections);
+
+  if (!hasAny) {
+    if (orderParentGuideContent) {
+      orderParentGuideContent.style.display = "none";
+    }
+    setOrderParentGuideStatus("Нет данных в разделах Parent Guide.");
+    return;
+  }
+
+  Object.entries(orderParentGuideLists).forEach(([key, list]) => {
+    const items = sections[key] || [];
+    renderOrderParentGuideList(list, items);
+  });
+
+  if (orderParentGuideContent) {
+    orderParentGuideContent.style.display = "grid";
+  }
+  setOrderParentGuideStatus(
+    getParentGuideStatusFromTranslation(translationStatus)
+  );
+}
+
+function setOrderParentGuideError(message) {
+  if (orderParentGuideContent) {
+    orderParentGuideContent.style.display = "none";
+  }
+  resetOrderParentGuideSections();
+  Object.values(orderParentGuideLists).forEach((list) => {
+    if (list) {
+      list.innerHTML = "";
+    }
+  });
+  setCurrentOrderParentGuideData(null);
+  setOrderParentGuideStatus(message);
+}
+
+function applyOrderParentGuideTranslationState(
+  order,
+  data,
+  translationStatus,
+  options = {}
+) {
+  const { translated, requestId = null } = options;
+  const updatedGuide = normalizeParentGuideData({
+    ...data,
+    translated:
+      translated !== undefined ? translated : data?.translated ?? null,
+    translationStatus: translationStatus || null,
+  });
+
+  setOrderMetadata(order, { parentGuide: updatedGuide });
+
+  const shouldRender =
+    order &&
+    activeOrderDetailsId === order.id &&
+    orderDetailsModal?.style.display === "block" &&
+    (requestId === null || requestId === orderParentGuideRequestId);
+
+  if (shouldRender) {
+    renderOrderParentGuide(updatedGuide);
+  }
+
+  return updatedGuide;
+}
+
+async function startOrderParentGuideTranslation(order, data, options = {}) {
+  const { requestId = null } = options;
+  const translationStatus = data?.translationStatus || null;
+
+  if (translationStatus === "pending" || translationStatus === "ready") {
+    return;
+  }
+
+  const normalizedData = normalizeParentGuideData(data);
+  const originalSections = normalizedData?.original || {};
+
+  if (!hasParentGuideContent(originalSections)) {
+    return;
+  }
+
+  const { model: selectedTranslationModel } =
+    (await loadFortuneTranslationModel()) || {};
+
+  if (!selectedTranslationModel) {
+    applyOrderParentGuideTranslationState(order, normalizedData, "error", {
+      requestId,
+    });
+    return;
+  }
+
+  const pendingGuide = applyOrderParentGuideTranslationState(
+    order,
+    normalizedData,
+    "pending",
+    { requestId }
+  );
+
+  try {
+    const translatedSections = await translateParentGuideSections(
+      originalSections,
+      selectedTranslationModel
+    );
+    applyOrderParentGuideTranslationState(order, pendingGuide, "ready", {
+      translated: translatedSections,
+      requestId,
+    });
+  } catch (err) {
+    console.error("Failed to translate parent guide for order", err);
+    applyOrderParentGuideTranslationState(order, pendingGuide, "error", {
+      requestId,
+    });
+  }
+}
+
+function showOrderParentGuideFromMetadata(order) {
+  if (!order) {
+    return false;
+  }
+
+  const { parentGuideStatus } = order;
+
+  if (order.parentGuide && parentGuideStatus === "ready") {
+    renderOrderParentGuide(order.parentGuide);
+    startOrderParentGuideTranslation(order, order.parentGuide, {
+      requestId: orderParentGuideRequestId,
+    });
+    return true;
+  }
+
+  if (parentGuideStatus === "loading") {
+    if (order.parentGuide) {
+      renderOrderParentGuide(order.parentGuide);
+      setOrderParentGuideStatus("Загружаем parent guide...");
+    } else {
+      setOrderParentGuideStatus("Загружаем parent guide...");
+    }
+    return true;
+  }
+
+  if (parentGuideStatus === "error") {
+    setOrderParentGuideError(
+      order.parentGuideError ||
+        "Не удалось загрузить родительский гайд. Попробуйте позже."
+    );
+    return true;
+  }
+
+  return false;
+}
+
+async function fetchOrderParentGuideForOrder(order) {
+  if (!order) {
+    return;
+  }
+
+  let imdbId = order.imdbId || null;
+  const kinopoiskId = order.kinopoiskId || null;
+  const requestId = ++orderParentGuideRequestId;
+
+  setOrderMetadata(order, {
+    parentGuideStatus: "loading",
+    parentGuideError: null,
+  });
+  setOrderParentGuideStatus("Загружаем parent guide...");
+  if (orderParentGuideContent) {
+    orderParentGuideContent.style.display = "none";
+  }
+  Object.values(orderParentGuideLists).forEach((list) => {
+    if (list) {
+      list.innerHTML = "";
+    }
+  });
+
+  if (!imdbId && kinopoiskId) {
+    setOrderParentGuideStatus("Ищем IMDb ID на Кинопоиске...");
+    imdbId = await fetchFortuneImdbId(kinopoiskId);
+    if (requestId !== orderParentGuideRequestId) {
+      return;
+    }
+    if (!imdbId) {
+      setOrderMetadata(order, {
+        parentGuideStatus: "error",
+        parentGuideError: "Для выбранного фильма нет IMDb ID.",
+      });
+      setOrderParentGuideError("Для выбранного фильма нет IMDb ID.");
+      return;
+    }
+    setOrderMetadata(order, { imdbId });
+  }
+
+  if (!imdbId) {
+    setOrderMetadata(order, {
+      parentGuideStatus: "error",
+      parentGuideError: "Для выбранного фильма нет IMDb ID.",
+    });
+    setOrderParentGuideError("Для выбранного фильма нет IMDb ID.");
+    return;
+  }
+
+  try {
+    const guideData = await loadFortuneParentGuideDataWithRetry(imdbId);
+    const normalizedGuideData = normalizeParentGuideData(guideData);
+
+    setOrderMetadata(order, {
+      parentGuide: normalizedGuideData,
+      parentGuideStatus: "ready",
+      parentGuideError: null,
+    });
+
+    if (requestId !== orderParentGuideRequestId) {
+      return;
+    }
+
+    renderOrderParentGuide(normalizedGuideData);
+    startOrderParentGuideTranslation(order, normalizedGuideData, {
+      requestId,
+    });
+  } catch (err) {
+    console.error("Failed to fetch parent guide for order", err);
+    if (requestId !== orderParentGuideRequestId) {
+      return;
+    }
+    setOrderMetadata(order, {
+      parentGuideStatus: "error",
+      parentGuideError:
+        "Не удалось загрузить родительский гайд. Попробуйте позже.",
+    });
+    setOrderParentGuideError(
+      "Не удалось загрузить родительский гайд. Попробуйте позже."
+    );
+  }
+}
+
+async function openOrderGuideInGoogleTranslate() {
+  const activeOrder = getActiveOrderDetails();
+  const activeGuideData =
+    orderCurrentParentGuideData || activeOrder?.parentGuide || null;
+  const label =
+    typeof formatMovieDetailsValue === "function"
+      ? formatMovieDetailsValue(activeOrder?.title, "Без названия")
+      : (activeOrder?.title || "");
+
+  const guideText = buildFortuneParentGuideText(activeGuideData, label);
+
+  if (!guideText) {
+    setOrderParentGuideStatus("Нет данных из IMDb для перевода.");
+    return;
+  }
+
+  const buildTranslateUrl = (textValue) =>
+    textValue
+      ? `https://translate.google.com/?sl=auto&tl=ru&text=${encodeURIComponent(
+          textValue
+        )}&op=translate`
+      : "https://translate.google.com/?sl=auto&tl=ru";
+
+  const initialUrl = buildTranslateUrl(guideText);
+
+  window.open(initialUrl, "_blank", "noopener,noreferrer");
+}
+
+function setOrderTimingsStatus(message) {
+  if (orderTimingsStatus) {
+    orderTimingsStatus.textContent = message;
+  }
+}
+
+function setOrderTimingsAuthor(author = null) {
+  if (!orderTimingsAuthor) {
+    return;
+  }
+
+  if (author) {
+    orderTimingsAuthor.textContent = author;
+    orderTimingsAuthor.style.display = "inline";
+  } else {
+    orderTimingsAuthor.textContent = "";
+    orderTimingsAuthor.style.display = "none";
+  }
+}
+
+function resetOrderTimings(message = "Выберите фильм, чтобы увидеть тайминги") {
+  setOrderTimingsStatus(message);
+  setOrderTimingsAuthor(null);
+  if (orderTimingsList) {
+    orderTimingsList.innerHTML = "";
+  }
+}
+
+function renderOrderTimingsList(groups = []) {
+  if (!orderTimingsList) {
+    return;
+  }
+
+  orderTimingsList.innerHTML = "";
+
+  const normalizedGroups = Array.isArray(groups)
+    ? groups.filter((group) => normalizeFortuneTimingsText(group?.text).trim())
+    : [];
+
+  if (normalizedGroups.length === 0) {
+    const emptyItem = document.createElement("li");
+    emptyItem.className = "fortune-timings__empty";
+    emptyItem.textContent = "Тайминги отсутствуют.";
+    orderTimingsList.appendChild(emptyItem);
+    return;
+  }
+
+  normalizedGroups.forEach((group) => {
+    const listItem = document.createElement("li");
+    listItem.className = "fortune-timings__item";
+
+    const author = (group?.author || "").trim() || "Автор не указан";
+    const authorEl = document.createElement("span");
+    authorEl.className = "fortune-timings__item-author";
+    authorEl.textContent = author;
+
+    const textEl = document.createElement("div");
+    textEl.className = "fortune-timings__raw";
+    textEl.innerHTML = highlightFortuneBanwords(
+      normalizeFortuneTimingsText(group?.text || "")
+    );
+
+    listItem.appendChild(authorEl);
+    listItem.appendChild(textEl);
+    orderTimingsList.appendChild(listItem);
+  });
+}
+
+function renderOrderTimings(metadata = {}) {
+  const groups = getFortuneTimingsGroups(metadata);
+  const hasTimings = groups.length > 0;
+  const uniqueAuthors = Array.from(
+    new Set(
+      groups
+        .map((group) => (group?.author || "").trim())
+        .filter(Boolean)
+    )
+  );
+
+  renderOrderTimingsList(groups);
+  setOrderTimingsAuthor(
+    uniqueAuthors.length === 1 ? `Автор: ${uniqueAuthors[0]}` : null
+  );
+  setOrderTimingsStatus(
+    hasTimings ? "Тайминги загружены" : "Тайминги не найдены"
+  );
+}
+
+function setOrderTimingsError(message) {
+  renderOrderTimingsList([]);
+  setOrderTimingsAuthor(null);
+  setOrderTimingsStatus(message);
+}
+
+function showOrderTimingsFromMetadata(order) {
+  if (!order) {
+    return false;
+  }
+
+  const { timingsStatus } = order;
+
+  if (timingsStatus === "ready") {
+    renderOrderTimings(order);
+    return true;
+  }
+
+  if (timingsStatus === "empty") {
+    const groups = getFortuneTimingsGroups(order);
+    const authors = Array.from(
+      new Set(
+        groups
+          .map((group) => (group?.author || "").trim())
+          .filter(Boolean)
+      )
+    );
+    setOrderTimingsAuthor(
+      authors.length === 1 ? `Автор: ${authors[0]}` : null
+    );
+    renderOrderTimingsList([]);
+    setOrderTimingsStatus("Тайминги не найдены");
+    return true;
+  }
+
+  if (timingsStatus === "loading") {
+    setOrderTimingsStatus("Загружаем тайминги...");
+    setOrderTimingsAuthor(null);
+    renderOrderTimingsList([]);
+    return true;
+  }
+
+  if (timingsStatus === "error") {
+    setOrderTimingsError(
+      order.timingsError || "Не удалось загрузить тайминги."
+    );
+    return true;
+  }
+
+  return false;
+}
+
+async function fetchOrderTimingsForOrder(order) {
+  if (!order) {
+    return;
+  }
+
+  const kinopoiskId = order.kinopoiskId || null;
+  const requestId = ++orderTimingsRequestId;
+
+  if (!kinopoiskId) {
+    setOrderMetadata(order, {
+      timingsStatus: "error",
+      timingsError: "Для выбранного фильма нет ID Кинопоиска.",
+    });
+    setOrderTimingsError("Для выбранного фильма нет ID Кинопоиска.");
+    return;
+  }
+
+  setOrderMetadata(order, { timingsStatus: "loading", timingsError: null });
+  setOrderTimingsStatus("Загружаем тайминги...");
+  setOrderTimingsAuthor(null);
+  renderOrderTimingsList([]);
+
+  try {
+    const timingsData = await loadFortuneTimingsData(kinopoiskId);
+    if (requestId !== orderTimingsRequestId) {
+      return;
+    }
+
+    if (
+      Array.isArray(timingsData?.timingsGroups) &&
+      timingsData.timingsGroups.length > 0
+    ) {
+      setOrderMetadata(order, {
+        timingsStatus: "ready",
+        timingsGroups: timingsData.timingsGroups,
+        timingsText: "",
+        timingsAuthor: null,
+        timingsError: null,
+      });
+    } else {
+      setOrderMetadata(order, {
+        timingsStatus: "empty",
+        timingsGroups: [],
+        timingsText: "",
+        timingsAuthor: null,
+        timingsError: null,
+      });
+    }
+
+    if (activeOrderDetailsId === order.id) {
+      showOrderTimingsFromMetadata(order);
+    }
+  } catch (err) {
+    console.error("Failed to load timings for order", err);
+    if (requestId !== orderTimingsRequestId) {
+      return;
+    }
+    setOrderMetadata(order, {
+      timingsStatus: "error",
+      timingsError: "Не удалось загрузить тайминги. Попробуйте позже.",
+    });
+    if (activeOrderDetailsId === order.id) {
+      showOrderTimingsFromMetadata(order);
+    }
+  }
+}
+
+function updateOrderDetailsExtras(order) {
+  if (!orderDetailsModal || (!orderParentGuideStatus && !orderTimingsStatus)) {
+    return;
+  }
+
+  activeOrderDetailsId = order?.id ?? null;
+  resetOrderParentGuide();
+  resetOrderTimings();
+
+  if (!order) {
+    return;
+  }
+
+  const handledGuide = showOrderParentGuideFromMetadata(order);
+  if (!handledGuide) {
+    if (order.imdbId || order.kinopoiskId) {
+      fetchOrderParentGuideForOrder(order);
+    } else {
+      setOrderParentGuideError("Для выбранного фильма нет IMDb ID.");
+    }
+  }
+
+  const handledTimings = showOrderTimingsFromMetadata(order);
+  if (!handledTimings) {
+    if (order.kinopoiskId) {
+      fetchOrderTimingsForOrder(order);
+    } else {
+      setOrderTimingsError("Для выбранного фильма нет ID Кинопоиска.");
+    }
+  }
+}
+
 const FORTUNE_TIMINGS_PARSER_SELF_TEST = false;
 
 function showFortuneTimingsFromMetadata(label) {
@@ -2665,6 +3285,13 @@ if (fortuneParentGuideTranslate) {
   fortuneParentGuideTranslate.addEventListener(
     "click",
     openFortuneGuideInGoogleTranslate
+  );
+}
+
+if (orderParentGuideTranslate) {
+  orderParentGuideTranslate.addEventListener(
+    "click",
+    openOrderGuideInGoogleTranslate
   );
 }
 

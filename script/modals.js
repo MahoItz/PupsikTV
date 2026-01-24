@@ -285,6 +285,10 @@ function openOrderDetailsModal(id) {
   setMovieDetailsText("orderDetailsOrderType", orderTypeValue);
   setMovieDetailsText("orderDetailsKpRating", order.kpRating ?? "-");
 
+  if (typeof updateOrderDetailsExtras === "function") {
+    updateOrderDetailsExtras(order);
+  }
+
   modal.style.display = "block";
 }
 
