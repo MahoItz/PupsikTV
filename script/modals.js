@@ -230,6 +230,105 @@ function openGameDetailsModal(id) {
   modal.style.display = "block";
 }
 
+function openOrderDetailsModal(id) {
+  const order = watchlist.find((o) => o.id === id);
+  const modal = document.getElementById("orderDetailsModal");
+  if (!order || !modal) return;
+
+  const title = formatMovieDetailsValue(order.title, "Без названия");
+  const originalTitle = order.originalTitle || "";
+  const genreValue = order.genres || "";
+  const orderByValue =
+    order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
+  const orderTypeValue = order.orderType || "";
+
+  const titleEl = document.getElementById("orderDetailsTitle");
+  if (titleEl) titleEl.textContent = title;
+
+  const originalEl = document.getElementById("orderDetailsOriginal");
+  if (originalEl) {
+    if (originalTitle) {
+      originalEl.textContent = `Оригинальное название: ${originalTitle}`;
+      originalEl.style.display = "block";
+    } else {
+      originalEl.textContent = "";
+      originalEl.style.display = "none";
+    }
+  }
+
+  const posterEl = document.getElementById("orderDetailsPoster");
+  if (posterEl) {
+    const posterSrc = order.poster || DEFAULT_POSTER_PLACEHOLDER;
+    posterEl.src = posterSrc;
+    posterEl.alt = title ? `Постер: ${title}` : "Постер фильма";
+    posterEl.onerror = () => {
+      posterEl.src = DEFAULT_POSTER_PLACEHOLDER;
+      posterEl.alt = "Постер фильма";
+    };
+  }
+
+  setMovieDetailsText("orderDetailsYear", order.year);
+  setMovieDetailsText("orderDetailsGenre", genreValue);
+  setMovieDetailsText(
+    "orderDetailsDate",
+    order.dateAdded ? formatDateTime(order.dateAdded) : ""
+  );
+  setMovieDetailsText(
+    "orderDetailsPlanDate",
+    order.planDate ? formatDateTime(order.planDate) : ""
+  );
+  setMovieDetailsText(
+    "orderDetailsLength",
+    order.length ? `${order.length} мин` : ""
+  );
+  setMovieDetailsText("orderDetailsOrderBy", orderByValue);
+  setMovieDetailsText("orderDetailsOrderType", orderTypeValue);
+  setMovieDetailsText("orderDetailsKpRating", order.kpRating ?? "-");
+
+  modal.style.display = "block";
+}
+
+function openGameOrderDetailsModal(id) {
+  const game = gameOrders.find((g) => g.id === id);
+  const modal = document.getElementById("gameOrderDetailsModal");
+  if (!game || !modal) return;
+
+  const title = formatMovieDetailsValue(game.title, "Без названия");
+  const genreValue = game.genres || "";
+  const orderByValue =
+    game.orderBy && game.orderBy !== "null" ? game.orderBy : "";
+  const orderTypeValue = game.orderType || "";
+
+  const titleEl = document.getElementById("gameOrderDetailsTitle");
+  if (titleEl) titleEl.textContent = title;
+
+  const posterEl = document.getElementById("gameOrderDetailsPoster");
+  if (posterEl) {
+    const posterSrc = game.poster || DEFAULT_POSTER_PLACEHOLDER;
+    posterEl.src = posterSrc;
+    posterEl.alt = title ? `Постер: ${title}` : "Постер игры";
+    posterEl.onerror = () => {
+      posterEl.src = DEFAULT_POSTER_PLACEHOLDER;
+      posterEl.alt = "Постер игры";
+    };
+  }
+
+  setMovieDetailsText("gameOrderDetailsYear", game.year);
+  setMovieDetailsText("gameOrderDetailsGenre", genreValue);
+  setMovieDetailsText(
+    "gameOrderDetailsDate",
+    game.dateAdded ? formatDateTime(game.dateAdded) : ""
+  );
+  setMovieDetailsText(
+    "gameOrderDetailsPlanDate",
+    game.planDate ? formatDateTime(game.planDate) : ""
+  );
+  setMovieDetailsText("gameOrderDetailsOrderBy", orderByValue);
+  setMovieDetailsText("gameOrderDetailsOrderType", orderTypeValue);
+
+  modal.style.display = "block";
+}
+
 function openEditModal(id) {
   editingMovieId = id;
   const movie = allMovies.find((m) => m.id === id);

@@ -524,6 +524,15 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const card = document.createElement("div");
   card.className = "order-card";
 
+  const infoBtn = document.createElement("button");
+  infoBtn.type = "button";
+  infoBtn.className = "order-info-button";
+  infoBtn.textContent = "i";
+  infoBtn.title = "Информация о фильме";
+  infoBtn.setAttribute("aria-label", "Информация о заказанном фильме");
+  infoBtn.onclick = () => openOrderDetailsModal(order.id);
+  card.appendChild(infoBtn);
+
   const poster = document.createElement("img");
   poster.src = order.poster;
   poster.alt = order.title;
@@ -789,6 +798,15 @@ function createGameCard(game, showActions = isAdmin) {
 
   const card = document.createElement("div");
   card.className = "order-card";
+
+  const infoBtn = document.createElement("button");
+  infoBtn.type = "button";
+  infoBtn.className = "order-info-button";
+  infoBtn.textContent = "i";
+  infoBtn.title = "Информация об игре";
+  infoBtn.setAttribute("aria-label", "Информация о заказанной игре");
+  infoBtn.onclick = () => openGameOrderDetailsModal(game.id);
+  card.appendChild(infoBtn);
 
   const poster = document.createElement("img");
   poster.src = game.poster;

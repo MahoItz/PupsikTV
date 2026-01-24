@@ -49,6 +49,37 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.order-info-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    background: rgba(0, 0, 0, 0.55);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    z-index: 2;
+}
+
+.order-info-button:hover {
+    transform: scale(1.08);
+    border-color: var(--secondary-color);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.order-info-button:focus-visible {
+    outline: 2px solid var(--secondary-color);
+    outline-offset: 2px;
+}
+
 .order-wrapper {
     display: flex;
     flex-direction: column;
