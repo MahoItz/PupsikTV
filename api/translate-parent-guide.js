@@ -1,10 +1,6 @@
 const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
-const PARENT_GUIDE_KEYS = [
-  "sexAndNudity",
-  "violenceAndGore",
-  "profanity",
-];
+const PARENT_GUIDE_KEYS = ["sexAndNudity"];
 
 function normalizeSections(sections = {}) {
   return Object.fromEntries(
@@ -102,7 +98,7 @@ async function handler(req, res) {
     {
       role: "system",
       content:
-        "Translate the provided IMDb parents guide entries into Russian. Respond with JSON only using keys sexAndNudity, violenceAndGore, and profanity. Preserve bullet order and number of items.",
+        "Translate the provided IMDb parents guide entries into Russian. Respond with JSON only using the key sexAndNudity. Preserve bullet order and number of items.",
     },
     {
       role: "user",

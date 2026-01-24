@@ -6,16 +6,6 @@ const SECTION_MARKERS = {
     'id="nudity"',
     "advisory-sex-content",
   ],
-  violenceAndGore: [
-    'data-testid="sub-section-violence"',
-    'id="violence"',
-    "advisory-violence-content",
-  ],
-  profanity: [
-    'data-testid="sub-section-profanity"',
-    'id="profanity"',
-    "advisory-profanity-content",
-  ],
 };
 
 const NAMED_ENTITIES = {
@@ -95,7 +85,7 @@ async function handler(req, res) {
   }
 
   try {
-    const imdbUrl = `https://www.imdb.com/title/${encodeURIComponent(id)}/parentalguide/`;
+    const imdbUrl = `https://m.imdb.com/title/${encodeURIComponent(id)}/parentalguide`;
 
     const imdbResponse = await fetch(imdbUrl, {
       headers: {

@@ -122,13 +122,9 @@ const fortuneParentGuideContent = document.getElementById(
 );
 const fortuneParentGuideSections = {
   sexAndNudity: document.getElementById("fortuneParentGuideSexSection"),
-  violenceAndGore: document.getElementById("fortuneParentGuideViolenceSection"),
-  profanity: document.getElementById("fortuneParentGuideProfanitySection"),
 };
 const fortuneParentGuideLists = {
   sexAndNudity: document.getElementById("fortuneParentGuideSex"),
-  violenceAndGore: document.getElementById("fortuneParentGuideViolence"),
-  profanity: document.getElementById("fortuneParentGuideProfanity"),
 };
 const fortuneStudioSection = document.getElementById("fortuneStudio");
 const fortuneStudioList = document.getElementById("fortuneStudioList");
@@ -1774,8 +1770,6 @@ function buildFortuneParentGuideText(data, label = null) {
   const originalSections = data?.original || {};
   const sectionTitles = {
     sexAndNudity: "Sex & Nudity",
-    profanity: "Profanity",
-    violenceAndGore: "Violence & Gore",
   };
 
   const lines = [];
@@ -1941,8 +1935,6 @@ function normalizeParentGuideSections(sections = {}) {
 
   return {
     sexAndNudity: normalizeItems(sections.sexAndNudity),
-    violenceAndGore: normalizeItems(sections.violenceAndGore),
-    profanity: normalizeItems(sections.profanity),
   };
 }
 
