@@ -52,6 +52,67 @@ function decodeHtmlEntities(text) {
     .replace(/&[a-zA-Z#0-9]+;?/g, (entity) => NAMED_ENTITIES[entity] ?? entity);
 }
 
+function extractNextData(html) {
+  const match = html.match(
+    /<script[^>]*id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i
+  );
+  if (!match) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch (error) {
+    return null;
+  }
+}
+
+function collectAdvisories(node, results) {
+  if (!node || typeof node !== "object") return;
+  if (Array.isArray(node)) {
+    node.forEach((item) => collectAdvisories(item, results));
+    return;
+  }
+
+  const maybeCategory =
+    typeof node.category === "string" ? node.category : node.section;
+  const maybeText =
+    typeof node.text === "string"
+      ? node.text
+      : typeof node.displayText === "string"
+        ? node.displayText
+        : typeof node.content === "string"
+          ? node.content
+          : null;
+
+  if (maybeCategory && maybeText) {
+    const key = normalizeCategory(maybeCategory);
+    results[key] = results[key] || [];
+    results[key].push(maybeText);
+  }
+
+  Object.values(node).forEach((value) => collectAdvisories(value, results));
+}
+
+function extractSectionsFromNextData(html) {
+  const data = extractNextData(html);
+  if (!data) return {};
+  const results = {};
+  collectAdvisories(data, results);
+  return results;
+}
+
+function normalizeCategory(category) {
+  const normalized = category.toLowerCase().replace(/[^a-z]+/g, "-");
+  if (normalized.includes("nudity") || normalized.includes("sex")) {
+    return "sexAndNudity";
+  }
+  if (normalized.includes("violence") || normalized.includes("gore")) {
+    return "violenceAndGore";
+  }
+  if (normalized.includes("profanity") || normalized.includes("language")) {
+    return "profanity";
+  }
+  return normalized;
+}
+
 function extractSection(html, markers = []) {
   const cleanText = (text) =>
     decodeHtmlEntities(
@@ -128,10 +189,17 @@ async function handler(req, res) {
 
     const html = await imdbResponse.text();
 
+    const nextDataSections = extractSectionsFromNextData(html);
+
     const sections = Object.fromEntries(
       Object.entries(SECTION_MARKERS).map(([key, markers]) => [
         key,
-        extractSection(html, markers),
+        (() => {
+          const nextItems = (nextDataSections[key] || [])
+            .map((item) => decodeHtmlEntities(item).trim())
+            .filter((item) => item.length);
+          return nextItems.length ? nextItems : extractSection(html, markers);
+        })(),
       ])
     );
 
