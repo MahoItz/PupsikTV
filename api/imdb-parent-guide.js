@@ -26,15 +26,31 @@ function decodeHtmlEntities(text) {
 }
 
 const SECTION_KEY_ALIASES = {
-  sexAndNudity: ["sexAndNudity", "sex_and_nudity", "sexNudity", "sex", "nudity"],
+  sexAndNudity: [
+    "sexAndNudity",
+    "sex_and_nudity",
+    "sexNudity",
+    "sex",
+    "nudity",
+    "nudity_info",
+  ],
   violenceAndGore: [
     "violenceAndGore",
     "violence_and_gore",
     "violenceGore",
     "violence",
     "gore",
+    "violence_info",
+    "gore_info",
   ],
-  profanity: ["profanity", "language", "profanityLanguage", "languageProfanity"],
+  profanity: [
+    "profanity",
+    "language",
+    "profanityLanguage",
+    "languageProfanity",
+    "profanity_info",
+    "language_info",
+  ],
 };
 
 const ITEM_TEXT_KEYS = [
@@ -56,6 +72,31 @@ function cleanText(value) {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function splitNumberedText(text) {
+  if (!text) return [];
+
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const items = [];
+  lines.forEach((line) => {
+    const match = line.match(/^\d+\.\s*(.+)$/);
+    if (match) {
+      items.push(match[1]);
+      return;
+    }
+    if (items.length === 0) {
+      items.push(line);
+    } else {
+      items[items.length - 1] = `${items[items.length - 1]} ${line}`.trim();
+    }
+  });
+
+  return items;
 }
 
 function extractItemText(item) {
@@ -90,7 +131,17 @@ function normalizeSectionValue(value, collected = []) {
 
   if (typeof value === "string") {
     const text = cleanText(value);
-    if (text) collected.push(text);
+    if (text) {
+      const splitItems = splitNumberedText(text);
+      if (splitItems.length > 1) {
+        splitItems.forEach((item) => {
+          const cleanedItem = cleanText(item);
+          if (cleanedItem) collected.push(cleanedItem);
+        });
+      } else {
+        collected.push(text);
+      }
+    }
     return collected;
   }
 
