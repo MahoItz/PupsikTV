@@ -174,10 +174,19 @@ async function handler(req, res) {
   try {
     const imdbUrl = `https://www.imdb.com/title/${encodeURIComponent(id)}/parentalguide/`;
 
+    const requestHeaders = {
+      "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
+    };
+
+    console.log("[imdb-parent-guide] fetch request", {
+      method: "GET",
+      url: imdbUrl,
+      headers: requestHeaders,
+    });
+
     const imdbResponse = await fetch(imdbUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
-      },
+      method: "GET",
+      headers: requestHeaders,
     });
 
     console.log("[imdb-parent-guide] fetch response", {
@@ -185,9 +194,7 @@ async function handler(req, res) {
       redirected: imdbResponse.redirected,
       status: imdbResponse.status,
       ok: imdbResponse.ok,
-      contentType: imdbResponse.headers.get("content-type"),
-      contentLength: imdbResponse.headers.get("content-length"),
-      location: imdbResponse.headers.get("location"),
+      headers: Object.fromEntries(imdbResponse.headers.entries()),
     });
 
     if (!imdbResponse.ok) {
