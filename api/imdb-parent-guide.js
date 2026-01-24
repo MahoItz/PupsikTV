@@ -180,6 +180,12 @@ async function handler(req, res) {
       },
     });
 
+    console.log("[imdb-parent-guide] fetch response", {
+      status: imdbResponse.status,
+      ok: imdbResponse.ok,
+      contentType: imdbResponse.headers.get("content-type"),
+    });
+
     if (!imdbResponse.ok) {
       res
         .status(imdbResponse.status)
