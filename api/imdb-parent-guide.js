@@ -181,9 +181,13 @@ async function handler(req, res) {
     });
 
     console.log("[imdb-parent-guide] fetch response", {
+      url: imdbResponse.url,
+      redirected: imdbResponse.redirected,
       status: imdbResponse.status,
       ok: imdbResponse.ok,
       contentType: imdbResponse.headers.get("content-type"),
+      contentLength: imdbResponse.headers.get("content-length"),
+      location: imdbResponse.headers.get("location"),
     });
 
     if (!imdbResponse.ok) {
@@ -193,11 +197,14 @@ async function handler(req, res) {
       return;
     }
 
-    const html = await imdbResponse.text();
+    const htmlBuffer = Buffer.from(await imdbResponse.arrayBuffer());
+    const htmlBytes = htmlBuffer.length;
+    const html = htmlBuffer.toString("utf8");
     const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/i);
 
     console.log("[imdb-parent-guide] html diagnostics", {
       length: html.length,
+      bytes: htmlBytes,
       hasNextData: html.includes("__NEXT_DATA__"),
       hasRobotCheck: /Robot Check/i.test(html),
       hasCaptcha: /captcha/i.test(html),
