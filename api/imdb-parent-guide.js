@@ -1,23 +1,5 @@
 const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
-const SECTION_MARKERS = {
-  sexAndNudity: [
-    'data-testid="sub-section-nudity"',
-    'id="nudity"',
-    "advisory-sex-content",
-  ],
-  violenceAndGore: [
-    'data-testid="sub-section-violence"',
-    'id="violence"',
-    "advisory-violence-content",
-  ],
-  profanity: [
-    'data-testid="sub-section-profanity"',
-    'id="profanity"',
-    "advisory-profanity-content",
-  ],
-};
-
 const NAMED_ENTITIES = {
   "&quot;": '"',
   "&apos;": "'",
@@ -43,48 +25,140 @@ function decodeHtmlEntities(text) {
     .replace(/&[a-zA-Z#0-9]+;?/g, (entity) => NAMED_ENTITIES[entity] ?? entity);
 }
 
-function extractSection(html, markers = []) {
-  const cleanText = (text) =>
-    decodeHtmlEntities(
-      text
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim()
-    );
+const SECTION_KEY_ALIASES = {
+  sexAndNudity: ["sexAndNudity", "sex_and_nudity", "sexNudity", "sex", "nudity"],
+  violenceAndGore: [
+    "violenceAndGore",
+    "violence_and_gore",
+    "violenceGore",
+    "violence",
+    "gore",
+  ],
+  profanity: ["profanity", "language", "profanityLanguage", "languageProfanity"],
+};
 
-  for (const marker of markers) {
-    const markerIndex = html.indexOf(marker);
-    if (markerIndex === -1) continue;
+const ITEM_TEXT_KEYS = [
+  "text",
+  "content",
+  "description",
+  "detail",
+  "comment",
+  "summary",
+  "body",
+  "warning",
+  "label",
+];
 
-    const sectionStart = html.lastIndexOf("<section", markerIndex);
-    const searchStart = sectionStart === -1 ? markerIndex : sectionStart;
-    const nextSection = html.indexOf("<section", markerIndex + marker.length);
-    const sectionHtml = html.slice(
-      searchStart,
-      nextSection === -1 ? html.length : nextSection
-    );
+function cleanText(value) {
+  if (typeof value !== "string") return "";
 
-    const itemHtmlMatches = Array.from(
-      sectionHtml.matchAll(
-        /data-testid="item-html"[\s\S]*?<div class="[^"]*ipc-html-content-inner-div[^"]*"[^>]*>([\s\S]*?)<\/div>/gi
-      )
-    );
+  return decodeHtmlEntities(value)
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
-    const items = itemHtmlMatches
-      .map((match) => cleanText(match[1]))
-      .filter(Boolean);
-    if (items.length) return items;
+function extractItemText(item) {
+  if (typeof item === "string") return cleanText(item);
+  if (typeof item === "number") return String(item);
+  if (!item || typeof item !== "object") return "";
 
-    const legacyItems = sectionHtml
-      .split(/<li[^>]*>/i)
-      .slice(1)
-      .map((item) => cleanText(item.split(/<\/li>/i)[0] || ""))
-      .filter(Boolean);
-
-    if (legacyItems.length) return legacyItems;
+  for (const key of ITEM_TEXT_KEYS) {
+    const value = item[key];
+    if (typeof value === "string" && value.trim()) {
+      return cleanText(value);
+    }
   }
 
-  return [];
+  const severity =
+    typeof item.severity === "string" && item.severity.trim()
+      ? item.severity.trim()
+      : "";
+
+  if (typeof item.text === "string" && item.text.trim()) {
+    return severity ? `${severity}: ${cleanText(item.text)}` : cleanText(item.text);
+  }
+
+  return "";
+}
+
+function normalizeSectionValue(value, collected = []) {
+  if (Array.isArray(value)) {
+    value.forEach((item) => normalizeSectionValue(item, collected));
+    return collected;
+  }
+
+  if (typeof value === "string") {
+    const text = cleanText(value);
+    if (text) collected.push(text);
+    return collected;
+  }
+
+  if (!value || typeof value !== "object") {
+    return collected;
+  }
+
+  const nestedCollections = [
+    value.items,
+    value.list,
+    value.entries,
+    value.data,
+    value.warnings,
+    value.guides,
+    value.sections,
+  ];
+
+  for (const nested of nestedCollections) {
+    if (nested !== undefined) {
+      normalizeSectionValue(nested, collected);
+    }
+  }
+
+  const itemText = extractItemText(value);
+  if (itemText) {
+    collected.push(itemText);
+  }
+
+  return collected;
+}
+
+function findSectionValue(sectionSource, aliases) {
+  if (!sectionSource || typeof sectionSource !== "object") {
+    return undefined;
+  }
+
+  for (const key of aliases) {
+    if (sectionSource[key] !== undefined) {
+      return sectionSource[key];
+    }
+  }
+
+  return undefined;
+}
+
+function extractSections(payload) {
+  const sources = [
+    payload?.original,
+    payload?.sections,
+    payload?.parentalGuide,
+    payload?.parental_guide,
+    payload?.data,
+    payload,
+  ].filter(Boolean);
+
+  const result = {};
+
+  for (const [sectionKey, aliases] of Object.entries(SECTION_KEY_ALIASES)) {
+    let value;
+    for (const source of sources) {
+      value = findSectionValue(source, aliases);
+      if (value !== undefined) break;
+    }
+
+    result[sectionKey] = Array.from(new Set(normalizeSectionValue(value)));
+  }
+
+  return result;
 }
 
 async function handler(req, res) {
@@ -95,29 +169,19 @@ async function handler(req, res) {
   }
 
   try {
-    const imdbUrl = `https://www.imdb.com/title/${encodeURIComponent(id)}/parentalguide/`;
+    const apiUrl = `https://api4.rhserv.vu/imdb_parental_guide/${encodeURIComponent(id)}`;
 
-    const imdbResponse = await fetch(imdbUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
-      },
-    });
+    const apiResponse = await fetch(apiUrl);
 
-    if (!imdbResponse.ok) {
+    if (!apiResponse.ok) {
       res
-        .status(imdbResponse.status)
+        .status(apiResponse.status)
         .json({ error: "Failed to fetch parental guide" });
       return;
     }
 
-    const html = await imdbResponse.text();
-
-    const sections = Object.fromEntries(
-      Object.entries(SECTION_MARKERS).map(([key, markers]) => [
-        key,
-        extractSection(html, markers),
-      ])
-    );
+    const payload = await apiResponse.json();
+    const sections = extractSections(payload);
 
     res.status(200).json({ original: sections });
   } catch (err) {
