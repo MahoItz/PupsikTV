@@ -2,19 +2,28 @@ const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
 const SECTION_MARKERS = {
   sexAndNudity: [
+    'data-testid="advisory-section-nudity"',
+    'data-testid="section-nudity"',
     'data-testid="sub-section-nudity"',
     'id="nudity"',
     "advisory-sex-content",
+    "Sex &amp; Nudity",
   ],
   violenceAndGore: [
+    'data-testid="advisory-section-violence"',
+    'data-testid="section-violence"',
     'data-testid="sub-section-violence"',
     'id="violence"',
     "advisory-violence-content",
+    "Violence &amp; Gore",
   ],
   profanity: [
+    'data-testid="advisory-section-profanity"',
+    'data-testid="section-profanity"',
     'data-testid="sub-section-profanity"',
     'id="profanity"',
     "advisory-profanity-content",
+    "Profanity",
   ],
 };
 
@@ -46,11 +55,12 @@ function decodeHtmlEntities(text) {
 function extractSection(html, markers = []) {
   const cleanText = (text) =>
     decodeHtmlEntities(
-      text
+      (text || "")
         .replace(/<[^>]+>/g, " ")
         .replace(/\s+/g, " ")
         .trim()
     );
+  const hasContent = (text) => typeof text === "string" && text.trim().length;
 
   for (const marker of markers) {
     const markerIndex = html.indexOf(marker);
@@ -64,22 +74,28 @@ function extractSection(html, markers = []) {
       nextSection === -1 ? html.length : nextSection
     );
 
-    const itemHtmlMatches = Array.from(
-      sectionHtml.matchAll(
-        /data-testid="item-html"[\s\S]*?<div class="[^"]*ipc-html-content-inner-div[^"]*"[^>]*>([\s\S]*?)<\/div>/gi
-      )
-    );
+    const itemHtmlMatches = [
+      ...sectionHtml.matchAll(
+        /data-testid="item-html"[\s\S]*?<div class="[^"]*ipc-html-content-inner[^"]*"[^>]*>([\s\S]*?)<\/div>/gi
+      ),
+      ...sectionHtml.matchAll(
+        /data-testid="(?:item-|parentalguide-item-|advisory-item-)?(?:content|description)"[^>]*>([\s\S]*?)<\/(?:div|span|p)>/gi
+      ),
+      ...sectionHtml.matchAll(
+        /class="[^"]*ipc-html-content-inner[^"]*"[^>]*>([\s\S]*?)<\/div>/gi
+      ),
+    ];
 
     const items = itemHtmlMatches
       .map((match) => cleanText(match[1]))
-      .filter(Boolean);
-    if (items.length) return items;
+      .filter(hasContent);
+    if (items.length) return Array.from(new Set(items));
 
     const legacyItems = sectionHtml
       .split(/<li[^>]*>/i)
       .slice(1)
       .map((item) => cleanText(item.split(/<\/li>/i)[0] || ""))
-      .filter(Boolean);
+      .filter(hasContent);
 
     if (legacyItems.length) return legacyItems;
   }
