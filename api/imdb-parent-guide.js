@@ -194,6 +194,16 @@ async function handler(req, res) {
     }
 
     const html = await imdbResponse.text();
+    const titleMatch = html.match(/<title>([\s\S]*?)<\/title>/i);
+
+    console.log("[imdb-parent-guide] html diagnostics", {
+      length: html.length,
+      hasNextData: html.includes("__NEXT_DATA__"),
+      hasRobotCheck: /Robot Check/i.test(html),
+      hasCaptcha: /captcha/i.test(html),
+      hasAccessDenied: /Access Denied/i.test(html),
+      title: titleMatch ? titleMatch[1].trim() : null,
+    });
 
     const nextDataSections = extractSectionsFromNextData(html);
 
