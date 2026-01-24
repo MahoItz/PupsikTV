@@ -110,6 +110,80 @@ function openUserRateGameModal(id) {
   setupRatingStars("userRateGameStars");
 }
 
+function formatMovieDetailsValue(value, fallback = "—") {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === "string" && value.trim() === "") return fallback;
+  if (value === "null") return fallback;
+  return String(value);
+}
+
+function setMovieDetailsText(id, value, fallback = "—") {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const text = formatMovieDetailsValue(value, fallback);
+  el.textContent = text;
+  el.classList.toggle("movie-details-muted", text === fallback);
+}
+
+function openMovieDetailsModal(id) {
+  const movie = allMovies.find((m) => m.id === id);
+  const modal = document.getElementById("movieDetailsModal");
+  if (!movie || !modal) return;
+
+  const title = formatMovieDetailsValue(movie.title, "Без названия");
+  const originalTitle = movie.originalTitle || movie.original_title || "";
+  const genreValue = movie.genre || movie.genres || "";
+  const orderByValue =
+    movie.orderBy && movie.orderBy !== "null" ? movie.orderBy : "";
+  const orderTypeValue = movie.orderType || "";
+
+  const titleEl = document.getElementById("movieDetailsTitle");
+  if (titleEl) titleEl.textContent = title;
+
+  const originalEl = document.getElementById("movieDetailsOriginal");
+  if (originalEl) {
+    if (originalTitle) {
+      originalEl.textContent = `Оригинальное название: ${originalTitle}`;
+      originalEl.style.display = "block";
+    } else {
+      originalEl.textContent = "";
+      originalEl.style.display = "none";
+    }
+  }
+
+  const posterEl = document.getElementById("movieDetailsPoster");
+  if (posterEl) {
+    const posterSrc = movie.poster || DEFAULT_POSTER_PLACEHOLDER;
+    posterEl.src = posterSrc;
+    posterEl.alt = title ? `Постер: ${title}` : "Постер фильма";
+    posterEl.onerror = () => {
+      posterEl.src = DEFAULT_POSTER_PLACEHOLDER;
+      posterEl.alt = "Постер фильма";
+    };
+  }
+
+  setMovieDetailsText("movieDetailsYear", movie.year);
+  setMovieDetailsText("movieDetailsGenre", genreValue);
+  setMovieDetailsText(
+    "movieDetailsDate",
+    movie.dateAdded ? formatDateTime(movie.dateAdded) : ""
+  );
+  setMovieDetailsText("movieDetailsOrderBy", orderByValue);
+  setMovieDetailsText("movieDetailsOrderType", orderTypeValue);
+  setMovieDetailsText("movieDetailsPupsikRating", movie.rating);
+  setMovieDetailsText("movieDetailsKpRating", movie.kpRating ?? "-");
+  setMovieDetailsText("movieDetailsUserRating", movie.userRating ?? "-");
+
+  const votes = Math.round(movie.ratingCount ?? 0);
+  const votesEl = document.getElementById("movieDetailsVotes");
+  if (votesEl) {
+    votesEl.textContent = `Голосов: ${votes}`;
+    votesEl.classList.toggle("movie-details-muted", votes === 0);
+  }
+
+  modal.style.display = "block";
+}
+
 function openEditModal(id) {
   editingMovieId = id;
   const movie = allMovies.find((m) => m.id === id);

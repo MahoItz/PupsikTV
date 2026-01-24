@@ -161,7 +161,7 @@ function renderMovies() {
     const prevData = movieDataMap.get(movie.id);
     if (!card || prevData !== dataKey) {
       if (card) card.remove();
-      card = createMovieCard(movie);
+      card = createMovieCard(movie, isAdmin, true, { clickable: true });
     }
     newElements.set(movie.id, card);
     newData.set(movie.id, dataKey);
@@ -241,13 +241,22 @@ function renderPagination() {
 }
 
 // Создание карточки фильма
+function shouldIgnoreMovieCardClick(event) {
+  if (!event) return false;
+  return Boolean(
+    event.target.closest(
+      ".movie-actions, .rating-item, button, a, input, select, textarea, label"
+    )
+  );
+}
+
 function createMovieCard(
   movie,
   showActions = isAdmin,
   showRateButton = true,
   options = {}
 ) {
-  const { showRatings = true, showDate = true } = options;
+  const { showRatings = true, showDate = true, clickable = false } = options;
   const card = document.createElement("div");
   card.dataset.id = movie.id;
   let cardClass = "movie-card";
@@ -255,6 +264,22 @@ function createMovieCard(
   if (movie.rating === 0 && movie.id !== 0) cardClass += " rating-low";
   if (movie.rating === 11 && movie.id !== 0) cardClass += " rating-high";
   card.className = cardClass;
+  if (clickable) {
+    card.classList.add("movie-card--clickable");
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", `Открыть карточку фильма: ${movie.title}`);
+    card.addEventListener("click", (event) => {
+      if (shouldIgnoreMovieCardClick(event)) return;
+      openMovieDetailsModal(movie.id);
+    });
+    card.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      if (shouldIgnoreMovieCardClick(event)) return;
+      event.preventDefault();
+      openMovieDetailsModal(movie.id);
+    });
+  }
 
   const poster = document.createElement("img");
   poster.src = movie.poster;

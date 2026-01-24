@@ -400,6 +400,117 @@
     margin-top: 20px;
 }
 
+#movieDetailsModal .modal-content {
+    max-width: 960px;
+    padding: 32px;
+}
+
+#movieDetailsModal h2 {
+    text-transform: none;
+    margin-bottom: 8px;
+}
+
+#movieDetailsModal .movie-details-body {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+#movieDetailsModal .movie-details-poster {
+    width: 220px;
+    min-height: 320px;
+    border-radius: 14px;
+    object-fit: cover;
+    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#movieDetailsModal .movie-details-info {
+    flex: 1;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+#movieDetailsModal .movie-details-original {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+#movieDetailsModal .movie-details-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#movieDetailsModal .movie-details-meta-item {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+#movieDetailsModal .movie-details-meta-label {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    min-width: 150px;
+}
+
+#movieDetailsModal .movie-details-meta-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+#movieDetailsModal .movie-details-section-title {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+#movieDetailsModal .movie-details-ratings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+#movieDetailsModal .movie-details-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    border-radius: 12px;
+}
+
+#movieDetailsModal .movie-details-rating img {
+    width: 20px;
+    height: 20px;
+}
+
+#movieDetailsModal .movie-details-rating i {
+    color: #ffd166;
+}
+
+#movieDetailsModal .movie-details-votes {
+    margin-left: 6px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.movie-details-muted {
+    color: var(--text-secondary);
+}
+
 #fortuneMovieModal .fortune-parent-guide {
     margin-top: 20px;
     padding: 16px 18px;
@@ -711,6 +822,17 @@
     #fortuneMovieModal .fortune-movie-actions {
         flex-wrap: wrap;
         justify-content: center;
+    }
+
+    #movieDetailsModal .movie-details-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #movieDetailsModal .movie-details-poster {
+        width: 100%;
+        max-width: 340px;
+        margin: 0 auto;
     }
 }
 
