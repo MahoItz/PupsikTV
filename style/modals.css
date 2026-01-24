@@ -753,6 +753,16 @@
     font-style: italic;
 }
 
+#fortuneMovieModal .fortune-timings__source {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: right;
+    font-style: italic;
+}
+
 /* Collapsible spoiler sections */
 #fortuneMovieModal .fortune-parent-guide__spoiler {
     width: 100%;
