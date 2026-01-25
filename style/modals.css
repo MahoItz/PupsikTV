@@ -546,6 +546,69 @@
     margin-bottom: 10px;
 }
 
+#movieDetailsModal .movie-details-description,
+#orderDetailsModal .movie-details-description {
+    color: var(--text-secondary);
+    line-height: 1.45;
+    font-size: 0.95rem;
+}
+
+#movieDetailsModal .movie-details-description-block {
+    width: 100%;
+    margin: 10px 0 6px;
+}
+
+#movieDetailsModal .movie-details-extra,
+#orderDetailsModal .movie-details-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#movieDetailsModal .movie-details-actors,
+#orderDetailsModal .movie-details-actors {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#movieDetailsModal .movie-details-actors-summary,
+#orderDetailsModal .movie-details-actors-summary {
+    cursor: pointer;
+    list-style: none;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+#movieDetailsModal .movie-details-actors-summary::-webkit-details-marker,
+#orderDetailsModal .movie-details-actors-summary::-webkit-details-marker {
+    display: none;
+}
+
+#movieDetailsModal .movie-details-actors-summary::after,
+#orderDetailsModal .movie-details-actors-summary::after {
+    content: "▾";
+    float: right;
+    color: var(--text-secondary);
+    transition: transform 0.2s ease;
+}
+
+#movieDetailsModal .movie-details-actors[open] .movie-details-actors-summary::after,
+#orderDetailsModal .movie-details-actors[open] .movie-details-actors-summary::after {
+    transform: rotate(180deg);
+}
+
+#movieDetailsModal .movie-details-actors-list,
+#orderDetailsModal .movie-details-actors-list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: var(--text-secondary);
+    display: grid;
+    gap: 4px;
+}
+
 #movieDetailsModal .movie-details-ratings,
 #gameDetailsModal .movie-details-ratings,
 #orderDetailsModal .movie-details-ratings,
@@ -1013,6 +1076,11 @@
 
 #orderDetailsModal .order-details-actions .btn {
     min-width: 160px;
+}
+
+#orderDetailsModal .order-details-description-block {
+    width: 100%;
+    margin: 8px 0 6px;
 }
 
 #orderDetailsModal .fortune-timings__meta {

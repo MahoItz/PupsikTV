@@ -1,4 +1,18 @@
 ﻿// Обработка форм
+function normalizeActorsForStorage(value, limit = 15) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, limit)
+      .join(", ");
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  return "";
+}
+
 document
   .getElementById("addMovieForm")
   .addEventListener("submit", async function (e) {
@@ -32,6 +46,7 @@ document
 
       if (selectedKPMovie) {
         const sel = selectedKPMovie;
+        const staff = sel.filmId ? await fetchKPFilmStaff(sel.filmId) : null;
         movieData = {
           title: sel.nameRu || sel.nameEn || "",
           originalTitle: sel.nameEn || "",
@@ -45,6 +60,9 @@ document
           dateAdded: new Date().toISOString().split("T")[0],
           genre: sel.genres?.map((g) => g.genre).join(", ") || "",
           description: sel.description || "",
+          country: sel.countries?.map((c) => c.country).join(", ") || "",
+          actors: staff?.actors || [],
+          director: (staff?.directors || []).join(", "),
           orderBy: "",
           orderType: "",
         };
@@ -58,6 +76,9 @@ document
           dateAdded: new Date().toISOString().split("T")[0],
           genre: "Неизвестно",
           description: "",
+          country: "",
+          actors: [],
+          director: "",
           orderBy: "",
           orderType: "",
         };
@@ -83,6 +104,10 @@ document
         poster: poster,
         dateAdded: new Date().toISOString().split("T")[0],
         genre: document.getElementById("manualGenre").value || "Неизвестно",
+        description: "",
+        country: "",
+        actors: [],
+        director: "",
         orderBy: "",
         orderType: "",
       };
@@ -137,6 +162,10 @@ document
           order_type: movieData.orderType || null,
           rating_sum: 0,
           rating_count: 0,
+          description: movieData.description,
+          country: movieData.country,
+          actors: normalizeActorsForStorage(movieData.actors),
+          director: movieData.director,
         })
         .select()
         .single();
@@ -158,6 +187,10 @@ document
         ratingSum: Number(data.rating_sum ?? 0) || 0,
         ratingCount: Number(data.rating_count ?? 0) || 0,
         userRating: null,
+        description: movieData.description,
+        country: movieData.country,
+        actors: movieData.actors,
+        director: movieData.director,
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
 
@@ -202,6 +235,7 @@ document
           sel.filmLength = await fetchKPFilmLength(sel.filmId);
         }
         filmLength = sel.filmLength || null;
+        const staff = sel.filmId ? await fetchKPFilmStaff(sel.filmId) : null;
         orderData = {
           title: sel.nameRu || sel.nameEn || "",
           originalTitle: sel.nameEn || "",
@@ -213,6 +247,10 @@ document
             sel.posterUrl ||
             "https://via.placeholder.com/300x400?text=Нет+постера",
           genres: sel.genres?.map((g) => g.genre).join(", ") || "",
+          description: sel.description || "",
+          country: sel.countries?.map((c) => c.country).join(", ") || "",
+          actors: staff?.actors || [],
+          director: (staff?.directors || []).join(", "),
           orderBy: orderBy,
           orderType: orderType,
           length: filmLength,
@@ -225,6 +263,10 @@ document
           kpRating: "-",
           poster: "https://via.placeholder.com/300x400?text=Нет+постера",
           genres: "",
+          description: "",
+          country: "",
+          actors: [],
+          director: "",
           orderBy: orderBy,
           orderType: orderType,
           length: filmLength,
@@ -250,6 +292,10 @@ document
         kpRating: "-",
         poster: poster,
         genres: document.getElementById("watchManualGenre").value || "",
+        description: "",
+        country: "",
+        actors: [],
+        director: "",
         orderBy: orderBy,
         orderType: orderType,
         length: filmLength,
@@ -287,6 +333,10 @@ document
           order_type: orderData.orderType,
           kinopoisk_rate: orderData.kpRating,
           order_length: orderData.length,
+          description: orderData.description,
+          country: orderData.country,
+          actors: normalizeActorsForStorage(orderData.actors),
+          director: orderData.director,
         })
         .select()
         .single();
@@ -310,6 +360,10 @@ document
         parentGuide: null,
         parentGuideStatus: null,
         parentGuideError: null,
+        description: orderData.description,
+        country: orderData.country,
+        actors: orderData.actors,
+        director: orderData.director,
       };
 
       watchlist.push(newOrder);
@@ -577,7 +631,10 @@ async function submitRating() {
         source.poster || "https://via.placeholder.com/300x400?text=Нет+постера",
       dateAdded: new Date().toISOString().split("T")[0],
       genre: source.genres || "",
-      description: "",
+      description: source.description || "",
+      country: source.country || "",
+      actors: source.actors || [],
+      director: source.director || "",
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
     };
@@ -598,6 +655,10 @@ async function submitRating() {
           date: watchedMovie.dateAdded,
           order_by: watchedMovie.orderBy,
           order_type: watchedMovie.orderType,
+          description: watchedMovie.description,
+          country: watchedMovie.country,
+          actors: normalizeActorsForStorage(watchedMovie.actors),
+          director: watchedMovie.director,
         })
         .select()
         .single();
@@ -616,6 +677,10 @@ async function submitRating() {
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
         userRating: null,
+        description: watchedMovie.description,
+        country: watchedMovie.country,
+        actors: watchedMovie.actors,
+        director: watchedMovie.director,
       };
 
       const { error: deleteError } = await supabaseClient

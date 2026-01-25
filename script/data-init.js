@@ -138,6 +138,12 @@ function computeMoviesSignature(list) {
     const ratingCount = Number(movie?.ratingCount ?? 0);
     const orderByHash = stringHash(movie?.orderBy ?? "");
     const orderTypeHash = stringHash(movie?.orderType ?? "");
+    const descriptionHash = stringHash(movie?.description ?? "");
+    const countryHash = stringHash(movie?.country ?? "");
+    const directorHash = stringHash(movie?.director ?? "");
+    const actorsHash = stringHash(
+      Array.isArray(movie?.actors) ? movie.actors.join(",") : movie?.actors ?? ""
+    );
 
     hash = (hash * 31 + Number(movie?.id ?? 0)) >>> 0;
     hash = (hash * 31 + Math.round(rating * 10)) >>> 0;
@@ -145,6 +151,10 @@ function computeMoviesSignature(list) {
     hash = (hash * 31 + ratingCount) >>> 0;
     hash = (hash * 31 + orderByHash) >>> 0;
     hash = (hash * 31 + orderTypeHash) >>> 0;
+    hash = (hash * 31 + descriptionHash) >>> 0;
+    hash = (hash * 31 + countryHash) >>> 0;
+    hash = (hash * 31 + directorHash) >>> 0;
+    hash = (hash * 31 + actorsHash) >>> 0;
   }
 
   return hash >>> 0;
@@ -255,6 +265,20 @@ function containerHasRenderableContent(node) {
   });
 }
 
+function normalizeActorsValue(value, limit = 15) {
+  if (Array.isArray(value)) {
+    return value.map((item) => item.trim()).filter(Boolean).slice(0, limit);
+  }
+  if (typeof value === "string") {
+    return value
+      .split(/[,;|]+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, limit);
+  }
+  return [];
+}
+
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
   const grid = document.getElementById("moviesGrid");
@@ -267,7 +291,7 @@ async function loadMoviesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type"
+        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director"
       )
       .order("id", { ascending: false });
 
@@ -295,6 +319,10 @@ async function loadMoviesFromSupabase() {
         dateAdded: item.date,
         orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
         orderType: item.order_type,
+        description: item.description || "",
+        country: item.country || "",
+        actors: normalizeActorsValue(item.actors),
+        director: item.director || "",
       };
     });
 
@@ -331,7 +359,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide"
+        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director"
       )
       .order("id", { ascending: true });
 
@@ -364,6 +392,10 @@ async function loadWatchlistFromSupabase() {
       parentGuide,
       parentGuideStatus: parentGuide ? "ready" : null,
       parentGuideError: null,
+      description: item.description || "",
+      country: item.country || "",
+      actors: normalizeActorsValue(item.actors),
+      director: item.director || "",
       };
     });
   } catch (err) {

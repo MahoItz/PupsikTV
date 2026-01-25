@@ -2025,6 +2025,60 @@ async function fetchKPFilmLength(filmId) {
   }
 }
 
+async function fetchKPFilmStaff(filmId) {
+  if (!filmId || !KINOPOISK_API_KEY) {
+    return { actors: [], directors: [] };
+  }
+
+  try {
+    const res = await fetch(
+      `https://kinopoiskapiunofficial.tech/api/v1/staff?filmId=${encodeURIComponent(
+        filmId
+      )}`,
+      {
+        headers: {
+          "X-API-KEY": KINOPOISK_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      return { actors: [], directors: [] };
+    }
+
+    const data = await res.json();
+    const actors = [];
+    const directors = [];
+    const isActorRole = (person) => {
+      const key = (person?.professionKey || "").toString().toUpperCase();
+      if (key === "ACTOR") return true;
+      const text = (person?.professionText || "").toString().toLowerCase();
+      return text.includes("актер") || text.includes("актёр") || text.includes("actor");
+    };
+
+    (Array.isArray(data) ? data : []).forEach((person) => {
+      const name = (person?.nameRu || person?.nameEn || "").trim();
+      if (!name) {
+        return;
+      }
+      if (isActorRole(person)) {
+        actors.push(name);
+      } else if (person?.professionKey === "DIRECTOR") {
+        directors.push(name);
+      }
+    });
+
+    return {
+      actors: Array.from(new Set(actors)).slice(0, 15),
+      directors: Array.from(new Set(directors)),
+    };
+  } catch (err) {
+    console.error("Failed to fetch film staff", err);
+    return { actors: [], directors: [] };
+  }
+}
+
 async function fetchSteamGridPosters(title) {
   steamGridPoster = null;
   steamGridPosters = [];
