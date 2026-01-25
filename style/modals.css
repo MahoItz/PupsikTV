@@ -593,6 +593,20 @@
 #fortuneMovieModal .fortune-parent-guide__status {
     font-size: 14px;
     color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#fortuneMovieModal
+    .fortune-parent-guide__status.fortune-parent-guide__status--loading::after {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.28);
+    border-top-color: var(--primary-color);
+    animation: spin 0.9s linear infinite;
 }
 
 #fortuneMovieModal .fortune-parent-guide__translate {

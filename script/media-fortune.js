@@ -1462,10 +1462,17 @@ function buildFortuneStudioInfo(details = {}) {
   };
 }
 
-function setFortuneParentGuideStatus(message) {
-  if (fortuneParentGuideStatus) {
-    fortuneParentGuideStatus.textContent = message;
+function setFortuneParentGuideStatus(message, options = {}) {
+  if (!fortuneParentGuideStatus) {
+    return;
   }
+
+  const { spinner = false } = options;
+  fortuneParentGuideStatus.textContent = message;
+  fortuneParentGuideStatus.classList.toggle(
+    "fortune-parent-guide__status--loading",
+    spinner
+  );
 }
 
 function setFortuneStudioStatus(message) {
@@ -2726,9 +2733,15 @@ function renderFortuneParentGuide(data) {
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "grid";
   }
-  setFortuneParentGuideStatus(
-    getParentGuideStatusFromTranslation(translationStatus)
-  );
+  if (translationStatus === "pending") {
+    setFortuneParentGuideStatus("Переводим информацию...", { spinner: true });
+  } else if (translationStatus === "ready") {
+    setFortuneParentGuideStatus("Перевод готов");
+  } else if (translationStatus === "error") {
+    setFortuneParentGuideStatus("Ошибка перевода");
+  } else {
+    setFortuneParentGuideStatus("Информация загружена");
+  }
 }
 
 function setFortuneParentGuideError(message) {
@@ -3001,7 +3014,7 @@ async function fetchFortuneParentGuide(imdbId) {
   }
 
   const requestId = ++fortuneParentGuideRequestId;
-  setFortuneParentGuideStatus("Загружаем parent guide...");
+  setFortuneParentGuideStatus("Загружаем информацию...", { spinner: true });
   if (fortuneParentGuideContent) {
     fortuneParentGuideContent.style.display = "none";
   }
@@ -3149,9 +3162,9 @@ function showFortuneParentGuideFromMetadata(label) {
   if (metadata.parentGuideStatus === "loading") {
     if (metadata.parentGuide) {
       renderFortuneParentGuide(metadata.parentGuide);
-      setFortuneParentGuideStatus("Загружаем parent guide...");
+      setFortuneParentGuideStatus("Загружаем информацию...", { spinner: true });
     } else {
-      setFortuneParentGuideStatus("Загружаем parent guide...");
+      setFortuneParentGuideStatus("Загружаем информацию...", { spinner: true });
     }
     return true;
   }
@@ -3435,7 +3448,9 @@ if (fortuneAutoResults) {
     let imdbId = chosenMovie?.imdbId || null;
 
     if (!imdbId && kinopoiskId) {
-      setFortuneParentGuideStatus("Ищем IMDb ID на Кинопоиске...");
+      setFortuneParentGuideStatus("Ищем IMDb ID на Кинопоиске...", {
+        spinner: true,
+      });
       imdbId = await fetchFortuneImdbId(kinopoiskId);
     }
 
