@@ -1753,10 +1753,17 @@ function getActiveOrderDetails() {
   return watchlist.find((order) => order.id === activeOrderDetailsId) || null;
 }
 
-function setOrderParentGuideStatus(message) {
-  if (orderParentGuideStatus) {
-    orderParentGuideStatus.textContent = message;
+function setOrderParentGuideStatus(message, options = {}) {
+  if (!orderParentGuideStatus) {
+    return;
   }
+
+  const { spinner = false } = options;
+  orderParentGuideStatus.textContent = message;
+  orderParentGuideStatus.classList.toggle(
+    "fortune-parent-guide__status--loading",
+    spinner
+  );
 }
 
 function updateOrderTranslateButton(isEnabled) {
@@ -1848,9 +1855,15 @@ function renderOrderParentGuide(data) {
   if (orderParentGuideContent) {
     orderParentGuideContent.style.display = "grid";
   }
-  setOrderParentGuideStatus(
-    getParentGuideStatusFromTranslation(translationStatus)
-  );
+  if (translationStatus === "pending") {
+    setOrderParentGuideStatus("Переводим информацию...", { spinner: true });
+  } else if (translationStatus === "ready") {
+    setOrderParentGuideStatus("Перевод готов");
+  } else if (translationStatus === "error") {
+    setOrderParentGuideStatus("Ошибка перевода");
+  } else {
+    setOrderParentGuideStatus("Информация загружена");
+  }
 }
 
 function setOrderParentGuideError(message) {
@@ -1963,9 +1976,9 @@ function showOrderParentGuideFromMetadata(order) {
   if (parentGuideStatus === "loading") {
     if (order.parentGuide) {
       renderOrderParentGuide(order.parentGuide);
-      setOrderParentGuideStatus("Загружаем parent guide...");
+      setOrderParentGuideStatus("Загружаем информацию...", { spinner: true });
     } else {
-      setOrderParentGuideStatus("Загружаем parent guide...");
+      setOrderParentGuideStatus("Загружаем информацию...", { spinner: true });
     }
     return true;
   }
@@ -1994,7 +2007,7 @@ async function fetchOrderParentGuideForOrder(order) {
     parentGuideStatus: "loading",
     parentGuideError: null,
   });
-  setOrderParentGuideStatus("Загружаем parent guide...");
+  setOrderParentGuideStatus("Загружаем информацию...", { spinner: true });
   if (orderParentGuideContent) {
     orderParentGuideContent.style.display = "none";
   }
@@ -2005,7 +2018,9 @@ async function fetchOrderParentGuideForOrder(order) {
   });
 
   if (!imdbId && kinopoiskId) {
-    setOrderParentGuideStatus("Ищем IMDb ID на Кинопоиске...");
+    setOrderParentGuideStatus("Ищем IMDb ID на Кинопоиске...", {
+      spinner: true,
+    });
     imdbId = await fetchFortuneImdbId(kinopoiskId);
     if (requestId !== orderParentGuideRequestId) {
       return;
@@ -2090,7 +2105,7 @@ async function prefetchOrderParentGuideForOrder(order, options = {}) {
       activeOrderDetailsId === order.id &&
       orderDetailsModal?.style.display === "block"
     ) {
-      setOrderParentGuideStatus("Загружаем parent guide...");
+      setOrderParentGuideStatus("Загружаем информацию...", { spinner: true });
     }
 
     if (!imdbId && kinopoiskId) {
@@ -2127,24 +2142,62 @@ async function prefetchOrderParentGuideForOrder(order, options = {}) {
         return null;
       }
 
+      const hasOriginalContent = hasParentGuideContent(
+        normalizedGuideData.original || {}
+      );
       const { model: selectedTranslationModel } =
         (await loadFortuneTranslationModel()) || {};
+
+      const initialTranslationStatus = hasOriginalContent
+        ? selectedTranslationModel
+          ? "pending"
+          : "error"
+        : null;
+
+      const baseGuide = normalizeParentGuideData({
+        original: normalizedGuideData.original || {},
+        translated: null,
+        translationStatus: initialTranslationStatus,
+      });
+
+      setOrderMetadata(order, {
+        parentGuide: baseGuide,
+        parentGuideStatus: "ready",
+        parentGuideError: null,
+      });
+      if (
+        activeOrderDetailsId === order.id &&
+        orderDetailsModal?.style.display === "block"
+      ) {
+        renderOrderParentGuide(baseGuide);
+      }
+
+      const { error: baseError } = await supabaseClient
+        .from("Movie_Orders")
+        .update({ parents_guide: baseGuide })
+        .eq("id", order.id)
+        .select("id")
+        .maybeSingle();
+
+      if (baseError) {
+        console.error("Failed to store parent guide for order", baseError);
+      }
+
+      if (initialTranslationStatus !== "pending") {
+        return baseGuide;
+      }
 
       let translated = null;
       let translationStatus = "ready";
 
-      if (!selectedTranslationModel) {
+      try {
+        translated = await translateParentGuideSections(
+          normalizedGuideData.original,
+          selectedTranslationModel
+        );
+      } catch (err) {
+        console.error("Failed to translate parent guide for order", err);
         translationStatus = "error";
-      } else if (hasParentGuideContent(normalizedGuideData.original || {})) {
-        try {
-          translated = await translateParentGuideSections(
-            normalizedGuideData.original,
-            selectedTranslationModel
-          );
-        } catch (err) {
-          console.error("Failed to translate parent guide for order", err);
-          translationStatus = "error";
-        }
       }
 
       const storedGuide = normalizeParentGuideData({
@@ -2456,7 +2509,7 @@ function updateOrderDetailsExtras(order) {
   const handledGuide = showOrderParentGuideFromMetadata(order);
   if (!handledGuide) {
     if (order.parentGuideStatus === "loading") {
-      setOrderParentGuideStatus("Загружаем parent guide...");
+      setOrderParentGuideStatus("Загружаем информацию...", { spinner: true });
     } else if (order.parentGuideStatus === "error") {
       setOrderParentGuideError(
         order.parentGuideError ||
