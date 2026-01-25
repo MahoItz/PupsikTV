@@ -331,13 +331,23 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length"
+        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide"
       )
       .order("id", { ascending: true });
 
     if (error) throw error;
 
-    watchlist = data.map((item) => ({
+    watchlist = data.map((item) => {
+      let parentGuide = item.parents_guide ?? null;
+      if (typeof parentGuide === "string") {
+        try {
+          parentGuide = JSON.parse(parentGuide);
+        } catch (err) {
+          parentGuide = null;
+        }
+      }
+
+      return {
       id: item.id,
       title: item.order_title,
       originalTitle: item.order_origin_title,
@@ -351,7 +361,11 @@ async function loadWatchlistFromSupabase() {
       orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
       orderType: item.order_type,
       dateAdded: item.created_at,
-    }));
+      parentGuide,
+      parentGuideStatus: parentGuide ? "ready" : null,
+      parentGuideError: null,
+      };
+    });
   } catch (err) {
     console.error("Error loading watchlist from Supabase", err);
   } finally {

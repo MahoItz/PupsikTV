@@ -162,6 +162,7 @@ const orderTimingsList = document.getElementById("orderTimingsList");
 const orderTimingsAuthor = document.getElementById("orderTimingsAuthor");
 const fortuneTimingsLoads = new Map();
 const fortuneStudioLoads = new Map();
+const orderParentGuidePrefetches = new Map();
 let preloadFortuneStudioInfo;
 let fortuneBanwords = [];
 let orderParentGuideRequestId = 0;
@@ -1951,7 +1952,7 @@ function showOrderParentGuideFromMetadata(order) {
 
   const { parentGuideStatus } = order;
 
-  if (order.parentGuide && parentGuideStatus === "ready") {
+  if (order.parentGuide && (!parentGuideStatus || parentGuideStatus === "ready")) {
     renderOrderParentGuide(order.parentGuide);
     startOrderParentGuideTranslation(order, order.parentGuide, {
       requestId: orderParentGuideRequestId,
@@ -2060,6 +2061,147 @@ async function fetchOrderParentGuideForOrder(order) {
     setOrderParentGuideError(
       "Не удалось загрузить родительский гайд. Попробуйте позже."
     );
+  }
+}
+
+async function prefetchOrderParentGuideForOrder(order, options = {}) {
+  const { force = false } = options;
+  if (!order || !order.id || !supabaseClient) {
+    return null;
+  }
+
+  if (!force && order.parentGuide && order.parentGuideStatus === "ready") {
+    return order.parentGuide;
+  }
+
+  if (!force && orderParentGuidePrefetches.has(order.id)) {
+    return orderParentGuidePrefetches.get(order.id);
+  }
+
+  const loadPromise = (async () => {
+    let imdbId = order.imdbId || null;
+    const kinopoiskId = order.kinopoiskId || null;
+
+    setOrderMetadata(order, {
+      parentGuideStatus: "loading",
+      parentGuideError: null,
+    });
+    if (
+      activeOrderDetailsId === order.id &&
+      orderDetailsModal?.style.display === "block"
+    ) {
+      setOrderParentGuideStatus("Загружаем parent guide...");
+    }
+
+    if (!imdbId && kinopoiskId) {
+      imdbId = await fetchFortuneImdbId(kinopoiskId);
+      if (imdbId) {
+        setOrderMetadata(order, { imdbId });
+      }
+    }
+
+    if (!imdbId) {
+      setOrderMetadata(order, {
+        parentGuideStatus: "error",
+        parentGuideError: "Для выбранного фильма нет IMDb ID.",
+      });
+      if (
+        activeOrderDetailsId === order.id &&
+        orderDetailsModal?.style.display === "block"
+      ) {
+        setOrderParentGuideError("Для выбранного фильма нет IMDb ID.");
+      }
+      return null;
+    }
+
+    try {
+      const guideData = await loadFortuneParentGuideDataWithRetry(imdbId);
+      const normalizedGuideData = normalizeParentGuideData(guideData);
+
+      if (!normalizedGuideData) {
+        setOrderMetadata(order, {
+          parentGuideStatus: "error",
+          parentGuideError:
+            "Не удалось загрузить родительский гайд. Попробуйте позже.",
+        });
+        return null;
+      }
+
+      const { model: selectedTranslationModel } =
+        (await loadFortuneTranslationModel()) || {};
+
+      let translated = null;
+      let translationStatus = "ready";
+
+      if (!selectedTranslationModel) {
+        translationStatus = "error";
+      } else if (hasParentGuideContent(normalizedGuideData.original || {})) {
+        try {
+          translated = await translateParentGuideSections(
+            normalizedGuideData.original,
+            selectedTranslationModel
+          );
+        } catch (err) {
+          console.error("Failed to translate parent guide for order", err);
+          translationStatus = "error";
+        }
+      }
+
+      const storedGuide = normalizeParentGuideData({
+        original: normalizedGuideData.original || {},
+        translated,
+        translationStatus,
+      });
+
+      setOrderMetadata(order, {
+        parentGuide: storedGuide,
+        parentGuideStatus: "ready",
+        parentGuideError: null,
+      });
+      if (
+        activeOrderDetailsId === order.id &&
+        orderDetailsModal?.style.display === "block"
+      ) {
+        renderOrderParentGuide(storedGuide);
+      }
+
+      const { error } = await supabaseClient
+        .from("Movie_Orders")
+        .update({ parents_guide: storedGuide })
+        .eq("id", order.id)
+        .select("id")
+        .maybeSingle();
+
+      if (error) {
+        console.error("Failed to store parent guide for order", error);
+      }
+
+      return storedGuide;
+    } catch (err) {
+      console.error("Failed to prefetch parent guide for order", err);
+      setOrderMetadata(order, {
+        parentGuideStatus: "error",
+        parentGuideError:
+          "Не удалось загрузить родительский гайд. Попробуйте позже.",
+      });
+      if (
+        activeOrderDetailsId === order.id &&
+        orderDetailsModal?.style.display === "block"
+      ) {
+        setOrderParentGuideError(
+          "Не удалось загрузить родительский гайд. Попробуйте позже."
+        );
+      }
+      return null;
+    }
+  })();
+
+  orderParentGuidePrefetches.set(order.id, loadPromise);
+
+  try {
+    return await loadPromise;
+  } finally {
+    orderParentGuidePrefetches.delete(order.id);
   }
 }
 
@@ -2313,10 +2455,15 @@ function updateOrderDetailsExtras(order) {
 
   const handledGuide = showOrderParentGuideFromMetadata(order);
   if (!handledGuide) {
-    if (order.imdbId || order.kinopoiskId) {
-      fetchOrderParentGuideForOrder(order);
+    if (order.parentGuideStatus === "loading") {
+      setOrderParentGuideStatus("Загружаем parent guide...");
+    } else if (order.parentGuideStatus === "error") {
+      setOrderParentGuideError(
+        order.parentGuideError ||
+          "Не удалось загрузить родительский гайд. Попробуйте позже."
+      );
     } else {
-      setOrderParentGuideError("Для выбранного фильма нет IMDb ID.");
+      setOrderParentGuideStatus("Parent guide еще не загружен.");
     }
   }
 

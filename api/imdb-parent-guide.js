@@ -86,18 +86,45 @@ async function handler(req, res) {
 
   try {
     const imdbUrl = `https://m.imdb.com/title/${encodeURIComponent(id)}/parentalguide`;
+    const maxAttempts = 3;
+    const baseDelayMs = 600;
+    let imdbResponse = null;
+    let lastError = null;
 
-    const imdbResponse = await fetch(imdbUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
-      },
-    });
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        imdbResponse = await fetch(imdbUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
+          },
+        });
 
-    if (!imdbResponse.ok) {
-      res
-        .status(imdbResponse.status)
-        .json({ error: "Failed to fetch parental guide" });
-      return;
+        if (imdbResponse.ok) {
+          break;
+        }
+
+        const shouldRetry =
+          imdbResponse.status === 429 || imdbResponse.status >= 500;
+        if (!shouldRetry || attempt === maxAttempts) {
+          res
+            .status(imdbResponse.status)
+            .json({ error: "Failed to fetch parental guide" });
+          return;
+        }
+      } catch (err) {
+        lastError = err;
+        if (attempt === maxAttempts) {
+          throw err;
+        }
+      }
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, baseDelayMs * attempt)
+      );
+    }
+
+    if (!imdbResponse || !imdbResponse.ok) {
+      throw lastError || new Error("Failed to fetch IMDb parental guide");
     }
 
     const html = await imdbResponse.text();

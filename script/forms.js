@@ -293,7 +293,7 @@ document
 
       if (error) throw error;
 
-      watchlist.push({
+      const newOrder = {
         id: data.id,
         title: data.order_title,
         originalTitle: data.order_origin_title,
@@ -307,8 +307,17 @@ document
         orderBy: data.order_by,
         orderType: data.order_type,
         dateAdded: data.created_at,
-      });
+        parentGuide: null,
+        parentGuideStatus: null,
+        parentGuideError: null,
+      };
+
+      watchlist.push(newOrder);
       renderWatchlist();
+
+      if (typeof prefetchOrderParentGuideForOrder === "function") {
+        prefetchOrderParentGuideForOrder(newOrder);
+      }
     } catch (err) {
       console.error("Error adding order", err);
     }
