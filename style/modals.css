@@ -698,10 +698,18 @@
 
 .fortune-banword {
     color: inherit;
-    text-decoration-line: underline;
-    text-decoration-color: #ff4d4f;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 2px;
+    padding: 0 4px;
+    border-radius: 6px;
+    background: linear-gradient(180deg, rgba(255, 124, 124, 0.16), rgba(173, 0, 0, 0.329));
+    border: 1px solid rgba(255, 124, 124, 0.25);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.fortune-banword:hover {
+    background: linear-gradient(180deg, rgba(255, 124, 124, 0.22), rgba(255, 124, 124, 0.12));
+    border-color: rgba(255, 124, 124, 0.38);
 }
 
 #fortuneMovieModal .fortune-parent-guide__empty {
