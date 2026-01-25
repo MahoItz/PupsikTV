@@ -966,6 +966,17 @@
     gap: 12px;
 }
 
+#orderDetailsModal .order-details-actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+#orderDetailsModal .order-details-actions .btn {
+    min-width: 160px;
+}
+
 #orderDetailsModal .fortune-timings__meta {
     display: flex;
     align-items: center;

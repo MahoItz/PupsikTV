@@ -285,6 +285,20 @@ function openOrderDetailsModal(id) {
   setMovieDetailsText("orderDetailsOrderType", orderTypeValue);
   setMovieDetailsText("orderDetailsKpRating", order.kpRating ?? "-");
 
+  const watchBtn = document.getElementById("orderDetailsWatch");
+  if (watchBtn) {
+    watchBtn.onclick = () => {
+      if (typeof openOrderOnReyohoho === "function") {
+        openOrderOnReyohoho(order);
+      }
+    };
+  }
+
+  const exitBtn = document.getElementById("orderDetailsExit");
+  if (exitBtn) {
+    exitBtn.onclick = () => closeModal("orderDetailsModal");
+  }
+
   if (typeof updateOrderDetailsExtras === "function") {
     updateOrderDetailsExtras(order);
   }
