@@ -1993,7 +1993,7 @@ function renderEmptyState(container, message) {
   wrapper.className = "empty-state";
 
   const img = document.createElement("img");
-  img.src = "images/Sad_Winston.webp";
+  img.src = "images/cloak_and_dagger.webp";
   img.alt = message;
   wrapper.appendChild(img);
 
