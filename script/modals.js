@@ -326,7 +326,9 @@ function reorderDetailsLayout(modal, config) {
   moveMetaItems(infoBody, [orderBy, orderType, date, ...extra]);
 
   const actorsSection = document.getElementById(actorsSectionId);
-  if (ratingsSection && actorsSection && actorsSection.parentElement === infoColumn) {
+  if (actorsSection && legacyInfoSection && legacyInfoSection.contains(actorsSection)) {
+    infoColumn?.insertBefore(actorsSection, ratingsSection?.nextSibling || null);
+  } else if (ratingsSection && actorsSection && actorsSection.parentElement === infoColumn) {
     infoColumn.insertBefore(actorsSection, ratingsSection.nextSibling);
   }
 
