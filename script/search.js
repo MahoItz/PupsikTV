@@ -228,6 +228,7 @@ const debouncedRAWGSearch = createAutocompleteFetcher({
   onReset: () => {
     steamGridPoster = null;
     steamGridPosters = [];
+    resetRawgPosterCache();
   },
 });
 
@@ -250,6 +251,7 @@ const debouncedPlayedRAWGSearch = createAutocompleteFetcher({
   onReset: () => {
     steamGridPoster = null;
     steamGridPosters = [];
+    resetRawgPosterCache();
   },
 });
 
@@ -602,6 +604,7 @@ async function handleGameSearch() {
       selectedRAWGGame = null;
       steamGridPoster = null;
       steamGridPosters = [];
+      resetRawgPosterCache();
       showRAWGPreview();
       alert("Ничего не найдено");
     }
@@ -620,6 +623,18 @@ function showRAWGPreview() {
     preview.style.display = "none";
     return;
   }
+  const rawgPosterUrl = selectedRAWGGame.background_image || "";
+  if (!steamGridPoster && rawgPosterUrl) {
+    ensureRawgOptimizedPoster(rawgPosterUrl, () => {
+      if (
+        selectedRAWGGame &&
+        selectedRAWGGame.background_image === rawgPosterUrl
+      ) {
+        showRAWGPreview();
+      }
+    });
+  }
+  const optimizedRawgPoster = getRawgOptimizedPosterFor(rawgPosterUrl);
   const game = {
     title: selectedRAWGGame.name || "",
     genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
@@ -628,7 +643,8 @@ function showRAWGPreview() {
       : "",
     poster:
       steamGridPoster ||
-      selectedRAWGGame.background_image ||
+      optimizedRawgPoster ||
+      rawgPosterUrl ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     orderBy: document.getElementById("gameOrderBy").value || "",
     orderType: document.getElementById("gameOrderType").value || "",
@@ -684,6 +700,7 @@ async function handlePlayedGameSearch() {
       container.style.display = "none";
       selectedRAWGGame = null;
       steamGridPoster = null;
+      resetRawgPosterCache();
       showPlayedGamePreview();
       alert("Ничего не найдено");
     }
@@ -702,6 +719,18 @@ function showPlayedGamePreview() {
     preview.style.display = "none";
     return;
   }
+  const rawgPosterUrl = selectedRAWGGame.background_image || "";
+  if (!steamGridPoster && rawgPosterUrl) {
+    ensureRawgOptimizedPoster(rawgPosterUrl, () => {
+      if (
+        selectedRAWGGame &&
+        selectedRAWGGame.background_image === rawgPosterUrl
+      ) {
+        showPlayedGamePreview();
+      }
+    });
+  }
+  const optimizedRawgPoster = getRawgOptimizedPosterFor(rawgPosterUrl);
   const game = {
     title: selectedRAWGGame.name || "",
     genres: selectedRAWGGame.genres?.map((g) => g.name).join(", ") || "",
@@ -710,7 +739,8 @@ function showPlayedGamePreview() {
       : "",
     poster:
       steamGridPoster ||
-      selectedRAWGGame.background_image ||
+      optimizedRawgPoster ||
+      rawgPosterUrl ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     rating: getCurrentRating("playedGameRatingStars"),
     orderBy: document.getElementById("playedGameOrderBy").value || "",

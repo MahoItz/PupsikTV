@@ -1014,6 +1014,19 @@ document.addEventListener("DOMContentLoaded", async function () {
         overlay.remove();
       gamePreview.src = steamGridPoster;
       editGamePosterData = steamGridPoster;
+      try {
+        const optimized = await readRemoteImageAsOptimizedDataURL(
+          steamGridPoster
+        );
+        if (optimized) {
+          editGamePosterData = optimized;
+          if (gamePreview.src === steamGridPoster) {
+            gamePreview.src = optimized;
+          }
+        }
+      } catch (err) {
+        console.error("Error optimizing SteamGrid poster", err);
+      }
       createPosterOverlay(gamePreview, steamGridPosters, true);
     });
   }
@@ -1052,6 +1065,19 @@ document.addEventListener("DOMContentLoaded", async function () {
         overlay.remove();
       playedPreview.src = steamGridPoster;
       editPlayedGamePosterData = steamGridPoster;
+      try {
+        const optimized = await readRemoteImageAsOptimizedDataURL(
+          steamGridPoster
+        );
+        if (optimized) {
+          editPlayedGamePosterData = optimized;
+          if (playedPreview.src === steamGridPoster) {
+            playedPreview.src = optimized;
+          }
+        }
+      } catch (err) {
+        console.error("Error optimizing SteamGrid poster", err);
+      }
       createPosterOverlay(playedPreview, steamGridPosters, true);
     });
   }

@@ -151,6 +151,9 @@ let rawgResults = [];
 let selectedRAWGGame = null;
 let steamGridPoster = null;
 let steamGridPosters = [];
+let rawgOptimizedPoster = null;
+let rawgOptimizedPosterSource = null;
+let rawgOptimizedPosterPromise = null;
 
 function debounce(func, delay) {
   let timeout;
@@ -1992,14 +1995,159 @@ let totalMovies = 0;
 // Mobile tabs
 let activeTab = "movies";
 
-// Utility to convert file to base64 string
-function readFileAsDataURL(file) {
+// Utility to convert file or remote image to optimized base64 string (poster-friendly)
+const POSTER_MAX_WIDTH = 440;
+const POSTER_MAX_HEIGHT = 660;
+const POSTER_OUTPUT_QUALITY = 0.78;
+const SUPPORTS_WEBP = (() => {
+  try {
+    const canvas = document.createElement("canvas");
+    return canvas.toDataURL("image/webp").startsWith("data:image/webp");
+  } catch {
+    return false;
+  }
+})();
+
+function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
+}
+
+async function optimizeImageBlobToDataURL(blob) {
+  const img = new Image();
+  const objectUrl = URL.createObjectURL(blob);
+
+  await new Promise((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = (err) => reject(err);
+    img.src = objectUrl;
+  });
+
+  URL.revokeObjectURL(objectUrl);
+
+  const srcWidth = img.naturalWidth || img.width;
+  const srcHeight = img.naturalHeight || img.height;
+
+  if (!srcWidth || !srcHeight) {
+    return fileToDataUrl(blob);
+  }
+
+  const scale = Math.min(
+    POSTER_MAX_WIDTH / srcWidth,
+    POSTER_MAX_HEIGHT / srcHeight,
+    1
+  );
+  const targetWidth = Math.round(srcWidth * scale);
+  const targetHeight = Math.round(srcHeight * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  const ctx = canvas.getContext("2d", { alpha: true });
+  if (!ctx) {
+    return fileToDataUrl(blob);
+  }
+
+  if (!SUPPORTS_WEBP) {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
+  }
+
+  ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+  const outputType = SUPPORTS_WEBP ? "image/webp" : "image/jpeg";
+  const blobResult = await new Promise((resolve) =>
+    canvas.toBlob(resolve, outputType, POSTER_OUTPUT_QUALITY)
+  );
+
+  if (!blobResult) {
+    return canvas.toDataURL(outputType, POSTER_OUTPUT_QUALITY);
+  }
+
+  return await fileToDataUrl(blobResult);
+}
+
+async function readFileAsDataURL(file) {
+  if (!file || !file.type || !file.type.startsWith("image/")) {
+    return fileToDataUrl(file);
+  }
+
+  try {
+    return await optimizeImageBlobToDataURL(file);
+  } catch (err) {
+    return fileToDataUrl(file);
+  }
+}
+
+async function readRemoteImageAsOptimizedDataURL(url) {
+  if (!url || typeof url !== "string") {
+    return url;
+  }
+  if (url.startsWith("data:")) {
+    return url;
+  }
+  try {
+    const res = await fetch(url, { mode: "cors", credentials: "omit" });
+    if (!res.ok) return url;
+    const blob = await res.blob();
+    if (!blob.type || !blob.type.startsWith("image/")) return url;
+    return await optimizeImageBlobToDataURL(blob);
+  } catch (err) {
+    return url;
+  }
+}
+
+function resetRawgPosterCache() {
+  rawgOptimizedPoster = null;
+  rawgOptimizedPosterSource = null;
+  rawgOptimizedPosterPromise = null;
+}
+
+function ensureRawgOptimizedPoster(url, onUpdate) {
+  if (!url) {
+    resetRawgPosterCache();
+    return null;
+  }
+  if (rawgOptimizedPosterSource === url && rawgOptimizedPoster) {
+    return rawgOptimizedPoster;
+  }
+  if (rawgOptimizedPosterPromise && rawgOptimizedPosterSource === url) {
+    return rawgOptimizedPosterPromise;
+  }
+
+  rawgOptimizedPosterSource = url;
+  rawgOptimizedPoster = null;
+
+  rawgOptimizedPosterPromise = readRemoteImageAsOptimizedDataURL(url)
+    .then((optimized) => {
+      if (rawgOptimizedPosterSource !== url) return null;
+      rawgOptimizedPoster = optimized || url;
+      rawgOptimizedPosterPromise = null;
+      if (typeof onUpdate === "function") onUpdate(rawgOptimizedPoster);
+      return rawgOptimizedPoster;
+    })
+    .catch(() => {
+      if (rawgOptimizedPosterSource !== url) return null;
+      rawgOptimizedPoster = url;
+      rawgOptimizedPosterPromise = null;
+      if (typeof onUpdate === "function") onUpdate(rawgOptimizedPoster);
+      return url;
+    });
+
+  return rawgOptimizedPosterPromise;
+}
+
+function getRawgOptimizedPosterFor(url) {
+  if (!url) return null;
+  if (rawgOptimizedPosterSource === url && rawgOptimizedPoster) {
+    return rawgOptimizedPoster;
+  }
+  return null;
 }
 
 function renderEmptyState(container, message) {
@@ -2104,8 +2252,18 @@ async function fetchSteamGridPosters(title) {
     if (!res.ok) return;
     const data = await res.json();
     const posters = Array.isArray(data.posters) ? data.posters : [];
-    steamGridPosters = posters.map((g) => (typeof g === "string" ? g : g.url));
-    steamGridPoster = steamGridPosters[0] || null;
+    steamGridPosters = posters
+      .map((g) => {
+        if (typeof g === "string") {
+          return { url: g, thumb: g };
+        }
+        if (!g) return null;
+        const url = g.url || g.thumb || null;
+        const thumb = g.thumb || g.url || url;
+        return url ? { url, thumb } : null;
+      })
+      .filter(Boolean);
+    steamGridPoster = steamGridPosters[0]?.thumb || steamGridPosters[0]?.url || null;
   } catch (err) {
     console.error("SteamGridDB fetch error", err);
   }
@@ -2135,10 +2293,19 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
     container.innerHTML = "";
     const endIdx = Math.min(startIdx + maxVisible, posters.length);
     for (let i = startIdx; i < endIdx; i++) {
-      const url = posters[i];
+      const entry = posters[i];
+      const poster =
+        typeof entry === "string"
+          ? { url: entry, thumb: entry }
+          : {
+              url: entry?.url || entry?.thumb,
+              thumb: entry?.thumb || entry?.url || null,
+            };
+      if (!poster.url) continue;
       const wrapper = document.createElement("div");
       wrapper.className = "thumb-wrapper";
-      if (selectedPoster === url) {
+      const thumbUrl = poster.thumb || poster.url;
+      if (selectedPoster === thumbUrl) {
         wrapper.classList.add("active");
       }
 
@@ -2148,7 +2315,7 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
 
       const img = document.createElement("img");
       img.className = "poster-thumb";
-      if (selectedPoster === url) {
+      if (selectedPoster === thumbUrl) {
         img.classList.add("selected");
       }
       img.style.display = "none";
@@ -2159,15 +2326,36 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
       img.onerror = () => {
         spinner.remove();
       };
-      img.src = url;
+      img.src = thumbUrl;
       img.onclick = () => {
-        steamGridPoster = url;
-        targetImg.src = url;
-        selectedPoster = url;
+        steamGridPoster = thumbUrl;
+        targetImg.src = steamGridPoster;
+        selectedPoster = steamGridPoster;
         if (targetImg.id === "editGamePosterPreview") {
-          editGamePosterData = url;
+          editGamePosterData = steamGridPoster;
         } else if (targetImg.id === "editPlayedGamePosterPreview") {
-          editPlayedGamePosterData = url;
+          editPlayedGamePosterData = steamGridPoster;
+        }
+        if (
+          targetImg.id === "editGamePosterPreview" ||
+          targetImg.id === "editPlayedGamePosterPreview"
+        ) {
+          const selection = steamGridPoster;
+          readRemoteImageAsOptimizedDataURL(selection)
+            .then((optimized) => {
+              if (!optimized || selection !== selectedPoster) return;
+              if (targetImg.id === "editGamePosterPreview") {
+                editGamePosterData = optimized;
+              } else if (targetImg.id === "editPlayedGamePosterPreview") {
+                editPlayedGamePosterData = optimized;
+              }
+              if (targetImg.src === selection) {
+                targetImg.src = optimized;
+              }
+            })
+            .catch((err) => {
+              console.error("Error optimizing SteamGrid poster", err);
+            });
         }
         render();
       };

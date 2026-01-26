@@ -402,13 +402,22 @@ document
 
       if (selectedRAWGGame) {
         const g = selectedRAWGGame;
+        const rawgPosterUrl = g.background_image || "";
+        const optimizedSteamPoster = steamGridPoster
+          ? await readRemoteImageAsOptimizedDataURL(steamGridPoster)
+          : null;
+        const optimizedRawgPoster = !steamGridPoster && rawgPosterUrl
+          ? await ensureRawgOptimizedPoster(rawgPosterUrl)
+          : null;
         gameData = {
           title: g.name || titleInput,
           year: g.released ? g.released.split("-")[0] : "",
           genres: g.genres?.map((x) => x.name).join(", ") || "",
           poster:
+            optimizedSteamPoster ||
             steamGridPoster ||
-            g.background_image ||
+            optimizedRawgPoster ||
+            rawgPosterUrl ||
             "https://via.placeholder.com/300x400?text=Нет+постера",
           orderBy: orderBy,
           orderType: orderType,
@@ -481,6 +490,7 @@ document
     selectedRAWGGame = null;
     steamGridPoster = null;
     steamGridPosters = [];
+    resetRawgPosterCache();
     rawgResults = [];
     showRAWGPreview();
   });
@@ -514,13 +524,22 @@ document
       }
 
       const g = selectedRAWGGame;
+      const rawgPosterUrl = g.background_image || "";
+      const optimizedSteamPoster = steamGridPoster
+        ? await readRemoteImageAsOptimizedDataURL(steamGridPoster)
+        : null;
+      const optimizedRawgPoster = !steamGridPoster && rawgPosterUrl
+        ? await ensureRawgOptimizedPoster(rawgPosterUrl)
+        : null;
       gameData = {
         title: g.name || titleInput,
         year: g.released ? g.released.split("-")[0] : "",
         genres: g.genres?.map((x) => x.name).join(", ") || "",
         poster:
+          optimizedSteamPoster ||
           steamGridPoster ||
-          g.background_image ||
+          optimizedRawgPoster ||
+          rawgPosterUrl ||
           "https://via.placeholder.com/300x400?text=Нет+постера",
         rating: rating,
         orderBy: orderBy,
@@ -603,6 +622,7 @@ document
     selectedRAWGGame = null;
     steamGridPoster = null;
     steamGridPosters = [];
+    resetRawgPosterCache();
     rawgResults = [];
     showPlayedGamePreview();
   });
@@ -1307,6 +1327,7 @@ function resetForm() {
   selectedRAWGGame = null;
   steamGridPoster = null;
   steamGridPosters = [];
+  resetRawgPosterCache();
   const gameAutoResults = document.getElementById("gameAutoResults");
   if (gameAutoResults) gameAutoResults.innerHTML = "";
   const gameAutoResultsContainer = document.getElementById(

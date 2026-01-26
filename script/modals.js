@@ -817,6 +817,7 @@ function openEditGameModal(id) {
   if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
   steamGridPoster = null;
   steamGridPosters = [];
+  resetRawgPosterCache();
   document.getElementById("editGameTitle").value = game.title;
   document.getElementById("editGameYear").value = game.year || "";
   document.getElementById("editGameGenres").value = game.genres || "";
@@ -844,6 +845,7 @@ function openEditPlayedGameModal(id) {
   if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
   steamGridPoster = null;
   steamGridPosters = [];
+  resetRawgPosterCache();
   document.getElementById("editPlayedGameTitle").value = game.title;
   document.getElementById("editPlayedGameYear").value = game.year || "";
   document.getElementById("editPlayedGameGenres").value = game.genres || "";
