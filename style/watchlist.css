@@ -135,28 +135,25 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.order-complete {
-    margin-top: 0;
-    width: 100%;
-}
-
 .watch-complete-btn {
-    width: 100%;
-    padding: 8px 0;
-    background: transparent;
-    color: white;
+    width: 140px;
+    height: 34px;
+    padding: 0;
+    background: rgba(0, 212, 255, 0.12);
+    color: #eafff4;
     border: none;
     cursor: pointer;
     font-size: 1rem;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s ease;
-    border-radius: 0 0 var(--border-radius-small) var(--border-radius-small);
+    transition: background 0.2s ease, transform 0.2s ease;
+    border-radius: var(--border-radius-small);
 }
 
 .watch-complete-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(46, 204, 113, 0.28);
+    transform: translateY(-1px);
 }
 
 .empty-state {

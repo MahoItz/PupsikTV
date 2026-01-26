@@ -1092,6 +1092,13 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
       toggleOrderActionsMenu(menu, menuBtn);
     });
 
+    const doneBtn = document.createElement("button");
+    doneBtn.className = "watch-complete-btn";
+    doneBtn.textContent = "Просмотрено ✓";
+    doneBtn.title = "Просмотрено";
+    doneBtn.onclick = () => openRateModal(order.id);
+
+    actions.appendChild(doneBtn);
     actions.appendChild(menuBtn);
     actions.appendChild(menu);
     row.appendChild(actions);
@@ -1101,17 +1108,6 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   info.appendChild(footer);
   card.appendChild(info);
   wrapper.appendChild(card);
-
-  if (showActions) {
-    const done = document.createElement("div");
-    done.className = "order-complete";
-    const doneBtn = document.createElement("button");
-    doneBtn.className = "watch-complete-btn";
-    doneBtn.textContent = "✓";
-    doneBtn.onclick = () => openRateModal(order.id);
-    done.appendChild(doneBtn);
-    wrapper.appendChild(done);
-  }
 
   return wrapper;
 }
@@ -1310,6 +1306,13 @@ function createGameCard(game, showActions = isAdmin) {
     editBtn.className = "btn btn-edit btn-icon";
     editBtn.textContent = "✏️";
     editBtn.onclick = () => openEditGameModal(game.id);
+    const doneBtn = document.createElement("button");
+    doneBtn.className = "watch-complete-btn";
+    doneBtn.textContent = "Просмотрено ✓";
+    doneBtn.title = "Просмотрено";
+    doneBtn.onclick = () => markGameDone(game.id);
+
+    actions.appendChild(doneBtn);
     actions.appendChild(planBtn);
     actions.appendChild(editBtn);
     row.appendChild(actions);
@@ -1319,17 +1322,6 @@ function createGameCard(game, showActions = isAdmin) {
   info.appendChild(footer);
   card.appendChild(info);
   wrapper.appendChild(card);
-
-  if (showActions) {
-    const done = document.createElement("div");
-    done.className = "order-complete";
-    const doneBtn = document.createElement("button");
-    doneBtn.className = "watch-complete-btn";
-    doneBtn.textContent = "✓";
-    doneBtn.onclick = () => markGameDone(game.id);
-    done.appendChild(doneBtn);
-    wrapper.appendChild(done);
-  }
 
   return wrapper;
 }
