@@ -542,6 +542,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (kpStoredSecondary) {
     kpApiSecondaryKey = kpStoredSecondary;
   }
+  const kpStoredTertiary = localStorage.getItem("KINOPOISK_API_KEY3");
+  if (kpStoredTertiary) {
+    kpApiTertiaryKey = kpStoredTertiary;
+  }
   const rawgStored = localStorage.getItem("RAWG_API_KEY");
   if (rawgStored) RAWG_API_KEY = rawgStored;
   const cached = localStorage.getItem("moviesCache");
@@ -645,6 +649,10 @@ document.addEventListener("DOMContentLoaded", async function () {
             kpApiSecondaryKey = env.KINOPOISK_API_KEY2;
             localStorage.setItem("KINOPOISK_API_KEY2", env.KINOPOISK_API_KEY2);
           }
+          if (env.KINOPOISK_API_KEY3) {
+            kpApiTertiaryKey = env.KINOPOISK_API_KEY3;
+            localStorage.setItem("KINOPOISK_API_KEY3", env.KINOPOISK_API_KEY3);
+          }
           TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
           if (env.RAWG_API_KEY) {
             localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
@@ -733,6 +741,13 @@ document.addEventListener("DOMContentLoaded", async function () {
                 localStorage.setItem(
                   "KINOPOISK_API_KEY2",
                   env.KINOPOISK_API_KEY2
+                );
+              }
+              if (env.KINOPOISK_API_KEY3) {
+                kpApiTertiaryKey = env.KINOPOISK_API_KEY3;
+                localStorage.setItem(
+                  "KINOPOISK_API_KEY3",
+                  env.KINOPOISK_API_KEY3
                 );
               }
               TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
@@ -1041,4 +1056,3 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
   }
 });
-

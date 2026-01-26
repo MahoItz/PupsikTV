@@ -41,6 +41,7 @@ let kpApiStatus;
 let selectedKpApiValue = "API 1";
 let kpApiPrimaryKey = null;
 let kpApiSecondaryKey = null;
+let kpApiTertiaryKey = null;
 let victoryVolumeSlider;
 let victoryVolumeValue;
 let victoryVolume = 0.5;
@@ -96,9 +97,11 @@ function clearAdminSession() {
   isAdmin = false;
   localStorage.removeItem("KINOPOISK_API_KEY");
   localStorage.removeItem("KINOPOISK_API_KEY2");
+  localStorage.removeItem("KINOPOISK_API_KEY3");
   localStorage.removeItem("RAWG_API_KEY");
   kpApiPrimaryKey = null;
   kpApiSecondaryKey = null;
+  kpApiTertiaryKey = null;
   KINOPOISK_API_KEY = undefined;
   RAWG_API_KEY = undefined;
   applyKpApiSelection(selectedKpApiValue);
@@ -337,7 +340,10 @@ async function handleAiModelChange(event) {
 }
 
 function normalizeKpApiValue(value) {
-  return value === "API 2" ? "API 2" : "API 1";
+  if (value === "API 2" || value === "API 3") {
+    return value;
+  }
+  return "API 1";
 }
 
 function setKpApiStatus(message) {
@@ -354,8 +360,12 @@ function applyKpApiSelection(value) {
     kpApiSelect.disabled = false;
   }
 
-  const activeKey =
-    selectedKpApiValue === "API 2" ? kpApiSecondaryKey : kpApiPrimaryKey;
+  let activeKey = kpApiPrimaryKey;
+  if (selectedKpApiValue === "API 2") {
+    activeKey = kpApiSecondaryKey;
+  } else if (selectedKpApiValue === "API 3") {
+    activeKey = kpApiTertiaryKey;
+  }
 
   KINOPOISK_API_KEY = activeKey || undefined;
 
@@ -906,6 +916,10 @@ async function loadEnv(options = {}) {
     if (env.KINOPOISK_API_KEY2) {
       kpApiSecondaryKey = env.KINOPOISK_API_KEY2;
       localStorage.setItem("KINOPOISK_API_KEY2", env.KINOPOISK_API_KEY2);
+    }
+    if (env.KINOPOISK_API_KEY3) {
+      kpApiTertiaryKey = env.KINOPOISK_API_KEY3;
+      localStorage.setItem("KINOPOISK_API_KEY3", env.KINOPOISK_API_KEY3);
     }
     applyKpApiSelection(selectedKpApiValue);
     if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
@@ -2193,4 +2207,3 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
 
   render();
 }
-
