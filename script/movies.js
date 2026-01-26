@@ -338,10 +338,23 @@ async function openKpFallbackDetailsModal(film) {
   let details = null;
   let staff = null;
   if (filmId && KINOPOISK_API_KEY) {
-    [details, staff] = await Promise.all([
+    const [detailsResult, staffResult] = await Promise.allSettled([
       fetchKpFallbackDetails(filmId),
       fetchKpFallbackStaff(filmId),
     ]);
+
+    if (detailsResult.status === "fulfilled") {
+      details = detailsResult.value;
+    } else {
+      console.error("Kinopoisk fallback details error", detailsResult.reason);
+    }
+
+    if (staffResult.status === "fulfilled") {
+      staff = staffResult.value;
+    } else {
+      console.error("Kinopoisk fallback staff error", staffResult.reason);
+      staff = { actors: [], directors: [] };
+    }
   }
 
   const order = buildKpFallbackOrder(film, details, staff);
@@ -1613,4 +1626,3 @@ async function deletePlayedGame(id) {
     );
   }
 }
-
