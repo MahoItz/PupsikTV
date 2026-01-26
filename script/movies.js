@@ -810,6 +810,78 @@ function openOrderOnReyohoho(order) {
   }
 }
 
+function copyOrderEditCommand(order) {
+  if (!order) return;
+  const title = order.title || "";
+  const yearPart = order.year ? ` (${order.year})` : "";
+  const orderByText =
+    order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
+  const commandText = `!editcom !фильм ${title}${yearPart}, заказ ${orderByText}`;
+
+  navigator.clipboard
+    .writeText(commandText)
+    .then(() => {
+      if (typeof showToastNotification === "function") {
+        showToastNotification("Команда !editcom скопирована", "success");
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to copy edit command:", err);
+      if (typeof showToastNotification === "function") {
+        showToastNotification("Не удалось скопировать команду", "error");
+      }
+    });
+}
+
+let activeOrderMenu = null;
+let activeOrderMenuButton = null;
+
+function closeOrderActionsMenu() {
+  if (!activeOrderMenu) return;
+  activeOrderMenu.classList.remove("open", "centered");
+  if (activeOrderMenuButton) {
+    activeOrderMenuButton.setAttribute("aria-expanded", "false");
+  }
+  activeOrderMenu = null;
+  activeOrderMenuButton = null;
+  document.removeEventListener("click", handleOrderMenuOutsideClick);
+}
+
+function handleOrderMenuOutsideClick(event) {
+  if (!activeOrderMenu) return;
+  const clickedInsideMenu = activeOrderMenu.contains(event.target);
+  const clickedButton =
+    activeOrderMenuButton && activeOrderMenuButton.contains(event.target);
+  if (clickedInsideMenu || clickedButton) return;
+  closeOrderActionsMenu();
+}
+
+function toggleOrderActionsMenu(menu, button) {
+  if (!menu || !button) return;
+  const isOpen = menu.classList.contains("open");
+  if (isOpen) {
+    closeOrderActionsMenu();
+    return;
+  }
+
+  if (activeOrderMenu && activeOrderMenu !== menu) {
+    closeOrderActionsMenu();
+  }
+
+  const isMobile = window.matchMedia("(max-width: 680px)").matches;
+  if (isMobile) {
+    menu.classList.add("centered");
+  } else {
+    menu.classList.remove("centered");
+  }
+
+  menu.classList.add("open");
+  button.setAttribute("aria-expanded", "true");
+  activeOrderMenu = menu;
+  activeOrderMenuButton = button;
+  document.addEventListener("click", handleOrderMenuOutsideClick);
+}
+
 function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const wrapper = document.createElement("div");
   wrapper.className = "order-wrapper";
@@ -955,25 +1027,73 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const row = document.createElement("div");
   row.className = "order-footer-row";
 
-  const dateDiv = document.createElement("div");
-  dateDiv.className = "order-date";
-  dateDiv.textContent = formatDate(order.dateAdded);
-  row.appendChild(dateDiv);
-
   if (showActions) {
     const actions = document.createElement("div");
     actions.className = "order-actions";
-    const planBtn = document.createElement("button");
-    planBtn.className = "btn btn-plan btn-icon";
-    planBtn.textContent = "⏰";
-    planBtn.title = "Запланировать просмотр";
-    planBtn.onclick = () => openPlanDateModal(order.id);
-    const editBtn = document.createElement("button");
-    editBtn.className = "btn btn-edit btn-icon";
-    editBtn.textContent = "✏️";
-    editBtn.onclick = () => openEditOrderModal(order.id);
-    actions.appendChild(planBtn);
-    actions.appendChild(editBtn);
+    const menuBtn = document.createElement("button");
+    menuBtn.type = "button";
+    menuBtn.className = "btn btn-icon order-menu-button";
+    menuBtn.title = "Действия";
+    menuBtn.setAttribute("aria-haspopup", "true");
+    menuBtn.setAttribute("aria-expanded", "false");
+
+    const menuIcon = document.createElement("span");
+    menuIcon.className = "order-menu-icon";
+    for (let i = 0; i < 3; i += 1) {
+      const line = document.createElement("span");
+      line.className = "order-menu-line";
+      menuIcon.appendChild(line);
+    }
+    menuBtn.appendChild(menuIcon);
+
+    const menu = document.createElement("div");
+    menu.className = "order-actions-menu";
+    menu.setAttribute("role", "menu");
+
+    const planItem = document.createElement("button");
+    planItem.type = "button";
+    planItem.className = "order-actions-item";
+    planItem.innerHTML = "<span>Запланировать</span><span aria-hidden=\"true\">⏰</span>";
+    planItem.onclick = () => {
+      closeOrderActionsMenu();
+      openPlanDateModal(order.id);
+    };
+
+    const copyItem = document.createElement("button");
+    copyItem.type = "button";
+    copyItem.className = "order-actions-item";
+    copyItem.innerHTML = "<span>Скопировать</span><span aria-hidden=\"true\">📋</span>";
+    copyItem.onclick = () => {
+      closeOrderActionsMenu();
+      copyOrderEditCommand(order);
+    };
+
+    const editItem = document.createElement("button");
+    editItem.type = "button";
+    editItem.className = "order-actions-item";
+    editItem.innerHTML = "<span>Редактировать</span><span aria-hidden=\"true\">✏️</span>";
+    editItem.onclick = () => {
+      closeOrderActionsMenu();
+      openEditOrderModal(order.id);
+    };
+
+    const deleteItem = document.createElement("button");
+    deleteItem.type = "button";
+    deleteItem.className = "order-actions-item order-actions-item--danger";
+    deleteItem.innerHTML = "<span>Удалить</span><span aria-hidden=\"true\">🗑️</span>";
+    deleteItem.onclick = () => {
+      closeOrderActionsMenu();
+      openConfirmDeleteOrderModal(order.id);
+    };
+
+    menu.append(planItem, copyItem, editItem, deleteItem);
+    menuBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleOrderActionsMenu(menu, menuBtn);
+    });
+
+    actions.appendChild(menuBtn);
+    actions.appendChild(menu);
     row.appendChild(actions);
   }
 
