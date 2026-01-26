@@ -949,18 +949,9 @@ const PLAN_MONTH_NAMES = [
 let planCalendarYear = null;
 let planCalendarMonth = null;
 
-function formatPlanDateDisplay(date) {
-  return date.toLocaleDateString("ru-RU", {
-    weekday: "short",
-    day: "2-digit",
-    month: "long",
-  });
-}
-
 function renderPlanCalendar(selectedDateStr = "") {
   const grid = document.getElementById("planCalendarGrid");
   const label = document.getElementById("planCalendarMonthLabel");
-  const display = document.getElementById("planDateDisplay");
   const dateInput = document.getElementById("planDateInput");
   if (!grid || planCalendarYear === null || planCalendarMonth === null) return;
 
@@ -1016,19 +1007,12 @@ function renderPlanCalendar(selectedDateStr = "") {
       if (dateInput) {
         dateInput.value = cellDateStr;
       }
-      if (display) {
-        display.textContent = formatPlanDateDisplay(cellDate);
-      }
       renderPlanCalendar(cellDateStr);
     });
 
     grid.appendChild(cell);
   }
 
-  if (display) {
-    const displayDate = selectedDate || new Date(planCalendarYear, planCalendarMonth, 1);
-    display.textContent = formatPlanDateDisplay(displayDate);
-  }
 }
 
 function openPlanDateModal(id, type = "movie") {

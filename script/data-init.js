@@ -676,21 +676,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   setupRatingStars();
   initFileUpload();
 
-  document.querySelectorAll(".input-icon-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      const targetId = button.getAttribute("data-target");
-      if (!targetId) return;
-      const input = document.getElementById(targetId);
-      if (!input) return;
-      if (typeof input.showPicker === "function") {
-        input.showPicker();
-        return;
-      }
-      input.focus();
-      input.click();
-    });
-  });
-
   const planPrev = document.getElementById("planCalendarPrev");
   const planNext = document.getElementById("planCalendarNext");
   if (planPrev && planNext) {
