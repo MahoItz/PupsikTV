@@ -7,6 +7,21 @@ function searchMovies(query) {
 
 const debouncedSearchMovies = debounce(searchMovies, 300);
 
+function capitalizeWords(value) {
+  return String(value || "")
+    .trim()
+    .split(/\s+/)
+    .map((word) => {
+      if (!word) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
+function hasUppercaseLetters(value) {
+  return /[A-ZА-ЯЁ]/.test(String(value || ""));
+}
+
 function createAutocompleteFetcher({
   source,
   resultsVar,
@@ -16,6 +31,8 @@ function createAutocompleteFetcher({
   onPreview,
   onReset,
 }) {
+  let activeRequestId = 0;
+
   const clearState = () => {
     resultsVar.set([]);
     selectedVar.set(null);
@@ -32,64 +49,115 @@ function createAutocompleteFetcher({
     container.style.display = isVisible ? "block" : "none";
   };
 
-  return debounce(async (query) => {
-    if (!query) {
+  const runSearch = async (query) => {
+    const trimmedQuery = (query || "").trim();
+    const requestId = ++activeRequestId;
+
+    if (!trimmedQuery) {
+      if (requestId !== activeRequestId) return;
       toggleContainer(false);
       clearState();
       if (onPreview) onPreview();
       return;
     }
 
-    const { url, options, mapResults, formatItem, handleError } = source(query);
+    const sourceConfig = source(trimmedQuery) || {};
+    const {
+      url,
+      options,
+      mapResults,
+      formatItem,
+      handleError,
+      fallbackQueries,
+    } = sourceConfig;
+
+    const fallbackList = Array.isArray(fallbackQueries)
+      ? fallbackQueries
+      : typeof fallbackQueries === "function"
+      ? fallbackQueries(trimmedQuery)
+      : [];
+
+    const queries = [trimmedQuery, ...(fallbackList || [])]
+      .map((item) => String(item || "").trim())
+      .filter(Boolean)
+      .filter((item, idx, arr) => arr.indexOf(item) === idx);
 
     try {
-      const res = await fetch(url, options);
-      if (!res.ok) {
-        if (handleError) {
-          await handleError(res);
+      for (const nextQuery of queries) {
+        if (requestId !== activeRequestId) return;
+        const nextConfig = source(nextQuery) || {};
+        const nextUrl = nextConfig.url || url;
+        const nextOptions = nextConfig.options || options;
+        const nextMapResults = nextConfig.mapResults || mapResults;
+        const nextFormatItem = nextConfig.formatItem || formatItem;
+        const nextHandleError = nextConfig.handleError || handleError;
+
+        const res = await fetch(nextUrl, nextOptions);
+        if (requestId !== activeRequestId) return;
+        if (!res.ok) {
+          if (nextHandleError) {
+            await nextHandleError(res);
+          }
+          if (requestId !== activeRequestId) return;
+          toggleContainer(false);
+          clearState();
+          if (onPreview) onPreview();
+          return;
         }
-        toggleContainer(false);
-        clearState();
-        if (onPreview) onPreview();
+
+        const data = await res.json();
+        if (requestId !== activeRequestId) return;
+        const results = (nextMapResults ? nextMapResults(data) : data) || [];
+        resultsVar.set(results);
+
+        if (!results.length) {
+          continue;
+        }
+
+        const list = document.getElementById(listId);
+        if (!list) return;
+
+        list.innerHTML = "";
+        results.forEach((item, idx) => {
+          const div = document.createElement("div");
+          div.className = "autocomplete-option";
+          div.dataset.index = idx;
+          div.textContent = nextFormatItem
+            ? nextFormatItem(item)
+            : item?.name || "";
+          list.appendChild(div);
+        });
+
+        if (requestId !== activeRequestId) return;
+        toggleContainer(true);
         return;
       }
 
-      const data = await res.json();
-      const results = (mapResults ? mapResults(data) : data) || [];
-      resultsVar.set(results);
-
-      if (!results.length) {
-        toggleContainer(false);
-        clearState();
-        if (onPreview) onPreview();
-        return;
-      }
-
-      const list = document.getElementById(listId);
-      if (!list) return;
-
-      list.innerHTML = "";
-      results.forEach((item, idx) => {
-        const div = document.createElement("div");
-        div.className = "autocomplete-option";
-        div.dataset.index = idx;
-        div.textContent = formatItem ? formatItem(item) : item?.name || "";
-        list.appendChild(div);
-      });
-
-      toggleContainer(true);
+      toggleContainer(false);
+      clearState();
+      if (onPreview) onPreview();
+      return;
     } catch (err) {
+      if (requestId !== activeRequestId) return;
       console.error("Autocomplete fetch error", err);
       toggleContainer(false);
       clearState();
       if (onPreview) onPreview();
     }
-  }, 100);
+  };
+
+  return debounce((query) => runSearch(query), 100);
 }
 
 const debouncedKPSearch = createAutocompleteFetcher({
   source: (query) => ({
     url: `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`,
+    fallbackQueries: () => {
+      const trimmed = String(query || "").trim();
+      if (!trimmed) return [];
+      if (hasUppercaseLetters(trimmed)) return [];
+      return [capitalizeWords(trimmed)];
+    },
     options: {
       headers: {
         "X-API-KEY": KINOPOISK_API_KEY,
@@ -114,6 +182,12 @@ const debouncedKPSearch = createAutocompleteFetcher({
 const debouncedWatchlistKPSearch = createAutocompleteFetcher({
   source: (query) => ({
     url: `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`,
+    fallbackQueries: () => {
+      const trimmed = String(query || "").trim();
+      if (!trimmed) return [];
+      if (hasUppercaseLetters(trimmed)) return [];
+      return [capitalizeWords(trimmed)];
+    },
     options: {
       headers: {
         "X-API-KEY": KINOPOISK_API_KEY,
@@ -214,6 +288,26 @@ async function handleKPSearch() {
     }
     const data = await res.json();
     kpResults = data.films || [];
+    if (!kpResults.length && !hasUppercaseLetters(title)) {
+      const altTitle = capitalizeWords(title);
+      if (altTitle && altTitle !== title) {
+        const altRes = await fetch(
+          `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+            altTitle
+          )}&page=1`,
+          {
+            headers: {
+              "X-API-KEY": KINOPOISK_API_KEY,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (altRes.ok) {
+          const altData = await altRes.json();
+          kpResults = altData.films || [];
+        }
+      }
+    }
     list.innerHTML = "";
     kpResults.forEach((m, idx) => {
       const div = document.createElement("div");
@@ -276,6 +370,26 @@ async function handleWatchlistSearch() {
     }
     const data = await res.json();
     kpOrderResults = data.films || [];
+    if (!kpOrderResults.length && !hasUppercaseLetters(title)) {
+      const altTitle = capitalizeWords(title);
+      if (altTitle && altTitle !== title) {
+        const altRes = await fetch(
+          `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+            altTitle
+          )}&page=1`,
+          {
+            headers: {
+              "X-API-KEY": KINOPOISK_API_KEY,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (altRes.ok) {
+          const altData = await altRes.json();
+          kpOrderResults = altData.films || [];
+        }
+      }
+    }
     list.innerHTML = "";
     kpOrderResults.forEach((m, idx) => {
       const div = document.createElement("div");
