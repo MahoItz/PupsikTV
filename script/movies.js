@@ -75,6 +75,151 @@ function getFilteredSortedMovies() {
 
 const MOVIE_RENDER_KEY_DELIMITER = "\u001F";
 
+const kpFallbackCache = new Map();
+let kpFallbackRequestId = 0;
+const KP_FALLBACK_POSTER_PLACEHOLDER =
+  "https://via.placeholder.com/120x180?text=Нет+постера";
+
+function buildKinopoiskSearchLink(query) {
+  return `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(
+    query
+  )}`;
+}
+
+function createKpFallbackCard(film) {
+  const card = document.createElement("div");
+  card.className = "kp-fallback-card";
+
+  const poster = document.createElement("img");
+  const title = film?.nameRu || film?.nameEn || "Без названия";
+  poster.src =
+    film?.posterUrlPreview || film?.posterUrl || KP_FALLBACK_POSTER_PLACEHOLDER;
+  poster.alt = title;
+  poster.loading = "lazy";
+  poster.className = "kp-fallback-poster";
+  poster.onerror = () => {
+    poster.src = KP_FALLBACK_POSTER_PLACEHOLDER;
+  };
+
+  const info = document.createElement("div");
+  info.className = "kp-fallback-info";
+
+  const nameEl = document.createElement("div");
+  nameEl.className = "kp-fallback-title";
+  nameEl.textContent = title;
+
+  const meta = document.createElement("div");
+  meta.className = "kp-fallback-meta";
+  const year = film?.year ? String(film.year) : "";
+  meta.textContent = year;
+
+  const genres = document.createElement("div");
+  genres.className = "kp-fallback-genres";
+  genres.textContent = film?.genres?.map((g) => g.genre).join(", ") || "";
+
+  const ratingRow = document.createElement("div");
+  ratingRow.className = "kp-fallback-kp-rating";
+  const kpImg = document.createElement("img");
+  kpImg.src = "images/kp_icon.webp";
+  kpImg.alt = "KP Rate";
+  const ratingText = document.createElement("span");
+  ratingText.textContent = film?.rating ? String(film.rating) : "-";
+  ratingRow.append(kpImg, ratingText);
+
+  info.append(nameEl, meta, genres, ratingRow);
+
+  const link = document.createElement("a");
+  link.className = "kp-fallback-open";
+  link.textContent = "Открыть на КП";
+  if (film?.filmId) {
+    link.href = `https://www.kinopoisk.ru/film/${film.filmId}/`;
+  } else {
+    link.href = buildKinopoiskSearchLink(title);
+  }
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+
+  card.append(poster, info, link);
+  return card;
+}
+
+function renderKpFallbackResults(listEl, results) {
+  listEl.innerHTML = "";
+  results
+    .slice(0, 6)
+    .forEach((film) => listEl.appendChild(createKpFallbackCard(film)));
+}
+
+async function loadKpFallbackResults(query, sectionEl) {
+  if (!sectionEl) return;
+  const listEl = sectionEl.querySelector(".kp-fallback-list");
+  const statusEl = sectionEl.querySelector(".kp-fallback-status");
+  const linkEl = sectionEl.querySelector(".kp-fallback-link");
+  const normalizedQuery = query.trim();
+  if (linkEl) linkEl.href = buildKinopoiskSearchLink(normalizedQuery);
+  if (!listEl || !statusEl || !normalizedQuery) return;
+
+  if (!KINOPOISK_API_KEY) {
+    statusEl.textContent =
+      "Чтобы показать результаты Кинопоиска, нужен API-ключ.";
+    listEl.innerHTML = "";
+    return;
+  }
+
+  const cached = kpFallbackCache.get(normalizedQuery);
+  if (cached) {
+    if (cached.length === 0) {
+      statusEl.textContent = "На Кинопоиске тоже ничего не найдено.";
+      listEl.innerHTML = "";
+      return;
+    }
+    statusEl.textContent = `Найдено на Кинопоиске: ${cached.length}`;
+    renderKpFallbackResults(listEl, cached);
+    return;
+  }
+
+  const requestId = ++kpFallbackRequestId;
+  statusEl.textContent = "Ищем на Кинопоиске...";
+  listEl.innerHTML = "";
+
+  try {
+    const res = await fetch(
+      `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+        normalizedQuery
+      )}&page=1`,
+      {
+        headers: {
+          "X-API-KEY": KINOPOISK_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!res.ok) {
+      const handled = await handleKinopoiskErrorResponse(res);
+      if (!handled) {
+        statusEl.textContent = "Не удалось получить результаты Кинопоиска.";
+      }
+      return;
+    }
+    const data = await res.json();
+    if (requestId !== kpFallbackRequestId) return;
+    const results = data.films || [];
+    kpFallbackCache.set(normalizedQuery, results);
+    if (!results.length) {
+      statusEl.textContent = "На Кинопоиске тоже ничего не найдено.";
+      listEl.innerHTML = "";
+      return;
+    }
+    const shown = Math.min(results.length, 6);
+    statusEl.textContent = `Найдено на Кинопоиске: ${results.length}. Показано: ${shown}`;
+    renderKpFallbackResults(listEl, results);
+  } catch (err) {
+    console.error("Kinopoisk fallback search error", err);
+    if (requestId !== kpFallbackRequestId) return;
+    statusEl.textContent = "Не удалось получить результаты Кинопоиска.";
+  }
+}
+
 // Movie cards depend on the following fields plus admin/user rating flags:
 // id, poster, title, originalTitle, genre, year, rating, kpRating, userRating,
 // ratingCount, dateAdded, orderBy, orderType.
@@ -120,6 +265,7 @@ function renderMovies() {
     return;
   }
 
+  const normalizedQuery = normalizeSearchText(currentSearchQuery);
   const filtered = getFilteredSortedMovies();
   totalMovies = filtered.length;
   const countEl = document.getElementById("moviesCount");
@@ -143,7 +289,39 @@ function renderMovies() {
 
     emptyState.append(message, image);
 
-    grid.replaceChildren(emptyState);
+    if (normalizedQuery) {
+      const kpSection = document.createElement("div");
+      kpSection.className = "kp-fallback";
+      kpSection.style.gridColumn = "1 / -1";
+
+      const header = document.createElement("div");
+      header.className = "kp-fallback-header";
+
+      const title = document.createElement("div");
+      title.className = "kp-fallback-heading";
+      title.textContent = "Найдено на Кинопоиске";
+
+      const status = document.createElement("div");
+      status.className = "kp-fallback-status";
+
+      header.append(title, status);
+
+      const list = document.createElement("div");
+      list.className = "kp-fallback-list";
+
+      const link = document.createElement("a");
+      link.className = "kp-fallback-link";
+      link.textContent = "Открыть поиск Кинопоиска";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+
+      kpSection.append(header, list, link);
+
+      grid.replaceChildren(emptyState, kpSection);
+      loadKpFallbackResults(normalizedQuery, kpSection);
+    } else {
+      grid.replaceChildren(emptyState);
+    }
     movieCardElements = new Map();
     movieDataMap = new Map();
     hasRenderedMovies = false;

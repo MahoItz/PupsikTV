@@ -175,6 +175,136 @@
 }
 
 /* Стили для заглушки когда нет постера */
+.kp-fallback {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: var(--border-radius);
+    background: var(--glass-bg);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+.kp-fallback-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.kp-fallback-heading {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.kp-fallback-status {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.kp-fallback-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.kp-fallback-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 10px;
+    padding-bottom: 42px;
+    border-radius: var(--border-radius-small);
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kp-fallback-poster {
+    width: 80px;
+    height: 120px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    grid-column: 1;
+    grid-row: 1 / span 2;
+}
+
+.kp-fallback-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    grid-column: 2;
+}
+
+.kp-fallback-title {
+    font-weight: 800;
+    color: var(--text-primary);
+    font-size: 0.98rem;
+}
+
+.kp-fallback-meta {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.kp-fallback-genres {
+    color: #a0a0a0;
+    font-size: 0.8rem;
+}
+
+.kp-fallback-kp-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.kp-fallback-kp-rating img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.kp-fallback-open {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(0, 212, 255, 0.15);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 1px solid rgba(0, 212, 255, 0.35);
+    transition: var(--transition);
+}
+
+.kp-fallback-open:hover {
+    background: rgba(0, 212, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.kp-fallback-link {
+    display: inline-flex;
+    margin-top: 12px;
+    color: var(--text-accent);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.kp-fallback-link:hover {
+    text-decoration: underline;
+}
+
 .movie-poster-placeholder {
     width: 100%;
     height: 300px;
