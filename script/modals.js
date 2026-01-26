@@ -498,8 +498,7 @@ function openGameDetailsModal(id) {
   modal.style.display = "block";
 }
 
-function openOrderDetailsModal(id) {
-  const order = watchlist.find((o) => o.id === id);
+function renderOrderDetailsModal(order) {
   const modal = document.getElementById("orderDetailsModal");
   if (!order || !modal) return;
 
@@ -617,6 +616,16 @@ function openOrderDetailsModal(id) {
   }
 
   modal.style.display = "block";
+}
+
+function openOrderDetailsModal(id) {
+  const order = watchlist.find((o) => o.id === id);
+  if (!order) return;
+  renderOrderDetailsModal(order);
+}
+
+function openOrderDetailsModalFromData(order) {
+  renderOrderDetailsModal(order);
 }
 
 function openGameOrderDetailsModal(id) {

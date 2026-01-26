@@ -169,6 +169,7 @@ let orderParentGuideRequestId = 0;
 let orderCurrentParentGuideData = null;
 let orderTimingsRequestId = 0;
 let activeOrderDetailsId = null;
+let activeOrderDetailsOverride = null;
 
 function escapeRegExp(str = "") {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1761,6 +1762,9 @@ function setOrderMetadata(order, metadata = {}) {
 }
 
 function getActiveOrderDetails() {
+  if (activeOrderDetailsOverride) {
+    return activeOrderDetailsOverride;
+  }
   if (!activeOrderDetailsId || !Array.isArray(watchlist)) {
     return null;
   }
@@ -2514,6 +2518,7 @@ function updateOrderDetailsExtras(order) {
   }
 
   activeOrderDetailsId = order?.id ?? null;
+  activeOrderDetailsOverride = order?.__virtual ? order : null;
   resetOrderParentGuide();
   resetOrderTimings();
 

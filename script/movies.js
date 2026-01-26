@@ -79,6 +79,9 @@ const kpFallbackCache = new Map();
 let kpFallbackRequestId = 0;
 const KP_FALLBACK_POSTER_PLACEHOLDER =
   "https://via.placeholder.com/120x180?text=Нет+постера";
+const kpFallbackDetailsCache = new Map();
+const kpFallbackStaffCache = new Map();
+const kpFallbackOrderCache = new Map();
 
 function buildKinopoiskSearchLink(query) {
   return `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(
@@ -139,7 +142,20 @@ function createKpFallbackCard(film) {
   link.target = "_blank";
   link.rel = "noopener noreferrer";
 
-  card.append(poster, info, link);
+  const infoBtn = document.createElement("button");
+  infoBtn.type = "button";
+  infoBtn.className = "kp-fallback-info-btn";
+  infoBtn.textContent = "Инфо";
+  infoBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    openKpFallbackDetailsModal(film);
+  });
+
+  const actions = document.createElement("div");
+  actions.className = "kp-fallback-actions";
+  actions.append(infoBtn, link);
+
+  card.append(poster, info, actions);
   return card;
 }
 
@@ -217,6 +233,132 @@ async function loadKpFallbackResults(query, sectionEl) {
     console.error("Kinopoisk fallback search error", err);
     if (requestId !== kpFallbackRequestId) return;
     statusEl.textContent = "Не удалось получить результаты Кинопоиска.";
+  }
+}
+
+async function fetchKpFallbackDetails(filmId) {
+  if (!filmId || !KINOPOISK_API_KEY) return null;
+  if (kpFallbackDetailsCache.has(filmId)) {
+    return kpFallbackDetailsCache.get(filmId);
+  }
+  try {
+    const res = await fetch(`${KINOPOISK_FILM_URL}/${encodeURIComponent(filmId)}`, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      return null;
+    }
+    const data = await res.json();
+    kpFallbackDetailsCache.set(filmId, data || null);
+    return data || null;
+  } catch (err) {
+    console.error("Kinopoisk details error", err);
+    return null;
+  }
+}
+
+async function fetchKpFallbackStaff(filmId) {
+  if (!filmId || !KINOPOISK_API_KEY) return { actors: [], directors: [] };
+  if (kpFallbackStaffCache.has(filmId)) {
+    return kpFallbackStaffCache.get(filmId);
+  }
+  const staff = await fetchKPFilmStaff(filmId);
+  kpFallbackStaffCache.set(filmId, staff);
+  return staff;
+}
+
+function buildKpFallbackOrder(film, details, staff) {
+  const title =
+    details?.nameRu || film?.nameRu || details?.nameEn || film?.nameEn || "";
+  const originalTitle =
+    details?.nameOriginal || details?.nameEn || film?.nameEn || "";
+  const poster =
+    details?.posterUrlPreview ||
+    details?.posterUrl ||
+    film?.posterUrlPreview ||
+    film?.posterUrl ||
+    KP_FALLBACK_POSTER_PLACEHOLDER;
+  const genres = details?.genres || film?.genres || [];
+  const countries = details?.countries || [];
+  const genreText = Array.isArray(genres)
+    ? genres.map((g) => g.genre).filter(Boolean).join(", ")
+    : "";
+  const countryText = Array.isArray(countries)
+    ? countries.map((c) => c.country).filter(Boolean).join(", ")
+    : "";
+  const kpRating =
+    details?.ratingKinopoisk || details?.ratingImdb || film?.rating || "-";
+  const length = details?.filmLength || "";
+  const staffData = staff || { actors: [], directors: [] };
+  const directorText = Array.isArray(staffData.directors)
+    ? staffData.directors.join(", ")
+    : "";
+
+  return {
+    id: film?.filmId ? `kp-${film.filmId}` : `kp-${Date.now()}`,
+    __virtual: true,
+    title: title || "Без названия",
+    originalTitle: originalTitle || "",
+    year: details?.year || film?.year || "",
+    genres: genreText,
+    length,
+    kpRating,
+    poster,
+    description: details?.description || details?.shortDescription || "",
+    country: countryText,
+    director: directorText,
+    actors: staffData.actors || [],
+    kinopoiskId: film?.filmId || null,
+    imdbId: details?.imdbId || null,
+  };
+}
+
+async function openKpFallbackDetailsModal(film) {
+  if (!film) return;
+  const filmId = film?.filmId || null;
+  if (filmId && kpFallbackOrderCache.has(filmId)) {
+    const cachedOrder = kpFallbackOrderCache.get(filmId);
+    if (typeof openOrderDetailsModalFromData === "function") {
+      openOrderDetailsModalFromData(cachedOrder);
+    }
+    if (
+      typeof fetchOrderParentGuideForOrder === "function" &&
+      cachedOrder.kinopoiskId &&
+      KINOPOISK_API_KEY &&
+      !cachedOrder.parentGuideStatus
+    ) {
+      fetchOrderParentGuideForOrder(cachedOrder);
+    }
+    return;
+  }
+  let details = null;
+  let staff = null;
+  if (filmId && KINOPOISK_API_KEY) {
+    [details, staff] = await Promise.all([
+      fetchKpFallbackDetails(filmId),
+      fetchKpFallbackStaff(filmId),
+    ]);
+  }
+
+  const order = buildKpFallbackOrder(film, details, staff);
+  if (filmId) {
+    kpFallbackOrderCache.set(filmId, order);
+  }
+
+  if (typeof openOrderDetailsModalFromData === "function") {
+    openOrderDetailsModalFromData(order);
+  }
+
+  if (
+    typeof fetchOrderParentGuideForOrder === "function" &&
+    order.kinopoiskId &&
+    KINOPOISK_API_KEY
+  ) {
+    fetchOrderParentGuideForOrder(order);
   }
 }
 
