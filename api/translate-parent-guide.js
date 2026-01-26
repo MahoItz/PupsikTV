@@ -98,7 +98,7 @@ async function handler(req, res) {
     {
       role: "system",
       content:
-        "Translate the provided IMDb parents guide entries into Russian. Respond with JSON only using the key sexAndNudity. Preserve bullet order and number of items.",
+        "Переведи это руководство для родителей на русский язык. Отправь ответ только в формате JSON, используя ключ sexAndNudity. Сохрани порядок пунктов списка и их количество.",
     },
     {
       role: "user",

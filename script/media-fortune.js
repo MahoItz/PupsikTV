@@ -177,6 +177,8 @@ function escapeRegExp(str = "") {
 let fortuneBanwordRegex = null;
 let fortuneBanwordHighlightRegex = null;
 let fortuneBanwordsLoadPromise = null;
+const FORTUNE_WORD_TOKEN_REGEX =
+  /(^|[^\p{L}\p{N}])([\p{L}\p{N}]+(?:[-'’/][\p{L}\p{N}]+)*)/gu;
 
 function normalizeFortuneBanwords(words = []) {
   return Array.isArray(words)
@@ -296,8 +298,14 @@ function highlightFortuneBanwords(text = "") {
   }
 
   return safeText.replace(
-    fortuneBanwordHighlightRegex,
-    '<span class="fortune-banword">$1</span>'
+    FORTUNE_WORD_TOKEN_REGEX,
+    (match, boundary, token) => {
+      if (!token || !fortuneBanwordRegex?.test(token)) {
+        return match;
+      }
+
+      return `${boundary}<span class="fortune-banword">${token}</span>`;
+    }
   );
 }
 
@@ -1865,7 +1873,7 @@ function renderOrderParentGuide(data) {
   if (translationStatus === "pending") {
     setOrderParentGuideStatus("Переводим информацию...", { spinner: true });
   } else if (translationStatus === "ready") {
-    setOrderParentGuideStatus("Перевод готов");
+    setOrderParentGuideStatus("Переведено");
   } else if (translationStatus === "error") {
     setOrderParentGuideStatus("Ошибка перевода");
   } else {
