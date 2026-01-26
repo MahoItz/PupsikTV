@@ -1017,7 +1017,6 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     ratingTooltip.style.display = "none";
   });
   meta.appendChild(kpRating);
-  info.appendChild(meta);
 
   const footer = document.createElement("div");
   footer.className = "order-footer";
@@ -1032,11 +1031,9 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     footer.appendChild(ribbon);
   }
 
-  const row = document.createElement("div");
-  row.className = "order-footer-row";
-
+  let actions = null;
   if (showActions) {
-    const actions = document.createElement("div");
+    actions = document.createElement("div");
     actions.className = "order-actions";
     const menuBtn = document.createElement("button");
     menuBtn.type = "button";
@@ -1109,13 +1106,19 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     actions.appendChild(doneBtn);
     actions.appendChild(menuBtn);
     actions.appendChild(menu);
-    row.appendChild(actions);
   }
 
-  footer.appendChild(row);
+  footer.appendChild(meta);
   info.appendChild(footer);
   card.appendChild(info);
   wrapper.appendChild(card);
+
+  if (showActions && actions) {
+    const actionsRow = document.createElement("div");
+    actionsRow.className = "order-actions-below";
+    actionsRow.appendChild(actions);
+    wrapper.appendChild(actionsRow);
+  }
 
   return wrapper;
 }

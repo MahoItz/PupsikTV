@@ -101,7 +101,7 @@
     align-items: stretch;
     border-radius: var(--border-radius-small);
     overflow: hidden;
-    margin-bottom: 12px;
+    margin-bottom: 18px;
 }
 
 .order-plan-banner {
@@ -111,7 +111,7 @@
     padding: 6px 12px;
     margin-bottom: 0;
     border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
-    background:var(--glass-bg);
+    background:linear-gradient(135deg, rgba(0, 212, 255, 0.14), rgba(0, 128, 255, 0.16));
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-bottom: transparent;
     color: var(--text-primary);
@@ -174,7 +174,7 @@
     width: 140px;
     height: 34px;
     padding: 0;
-    background: rgba(0, 212, 255, 0.12);
+    background: rgba(161, 161, 161, 0.12);
     color: #eafff4;
     border: none;
     cursor: pointer;
@@ -317,6 +317,28 @@
     gap: 8px;
     margin-left: auto;
     position: relative;
+}
+
+.order-actions-below {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2px;
+    padding: 8px;
+    background: var(--glass-bg);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0 0 var(--border-radius-small) var(--border-radius-small);
+    position: relative;
+}
+
+.order-actions-below .order-actions {
+    margin-left: 0;
+    width: 100%;
+    align-items: center;
+}
+
+.order-actions-below .watch-complete-btn {
+    flex: 1;
+    width: 100%;
 }
 
 .order-menu-button {
