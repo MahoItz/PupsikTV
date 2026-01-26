@@ -2092,6 +2092,14 @@ async function readRemoteImageAsOptimizedDataURL(url) {
     return url;
   }
   try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (host.includes("steamgriddb.com")) {
+      return url;
+    }
+  } catch {
+    return url;
+  }
+  try {
     const res = await fetch(url, { mode: "cors", credentials: "omit" });
     if (!res.ok) return url;
     const blob = await res.blob();
