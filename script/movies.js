@@ -1253,9 +1253,7 @@ function createGameCard(game, showActions = isAdmin) {
   poster.alt = game.title;
   poster.className = "order-poster";
   poster.loading = "lazy";
-  poster.onerror = () => {
-    poster.style.display = "none";
-  };
+  setupPosterLoading(poster, { hideOnFail: true });
   card.appendChild(poster);
 
   const info = document.createElement("div");
@@ -1450,10 +1448,7 @@ function createPlayedGameCard(
   const placeholderText = document.createElement("span");
   placeholderText.textContent = "Нет постера";
   placeholder.appendChild(placeholderText);
-  poster.onerror = () => {
-    poster.style.display = "none";
-    placeholder.style.display = "flex";
-  };
+  setupPosterLoading(poster, { placeholder });
 
   const orderByText =
     game.orderBy && game.orderBy !== "null" ? game.orderBy : "";

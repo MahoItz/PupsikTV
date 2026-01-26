@@ -2008,6 +2008,9 @@ const SUPPORTS_WEBP = (() => {
   }
 })();
 
+const POSTER_LOAD_TIMEOUT_MS = 12000;
+const POSTER_MAX_RETRIES = 2;
+
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -2156,6 +2159,78 @@ function getRawgOptimizedPosterFor(url) {
     return rawgOptimizedPoster;
   }
   return null;
+}
+
+function withCacheBuster(url, attempt) {
+  if (!url) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}retry=${attempt}_${Date.now()}`;
+}
+
+function setupPosterLoading(img, options = {}) {
+  if (!img) return;
+  const { placeholder, hideOnFail = true } = options;
+  const src = img.getAttribute("src");
+  if (!src || !/^https?:\/\//i.test(src)) return;
+
+  img.decoding = "async";
+  img.fetchPriority = "low";
+  img.referrerPolicy = "no-referrer";
+
+  let retries = 0;
+  let timeoutId = null;
+
+  const clearTimer = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+  };
+
+  const showFallback = () => {
+    if (placeholder) {
+      img.style.display = "none";
+      placeholder.style.display = "flex";
+    } else if (hideOnFail) {
+      img.style.display = "none";
+    }
+  };
+
+  const scheduleTimeout = () => {
+    clearTimer();
+    timeoutId = setTimeout(() => {
+      if (img.complete && img.naturalWidth) {
+        clearTimer();
+        return;
+      }
+      handleRetry();
+    }, POSTER_LOAD_TIMEOUT_MS);
+  };
+
+  const handleRetry = () => {
+    if (retries >= POSTER_MAX_RETRIES) {
+      clearTimer();
+      showFallback();
+      return;
+    }
+    retries += 1;
+    img.src = withCacheBuster(src, retries);
+    scheduleTimeout();
+  };
+
+  img.addEventListener("load", () => {
+    clearTimer();
+    if (placeholder) {
+      placeholder.style.display = "none";
+      img.style.display = "";
+    }
+  });
+
+  img.addEventListener("error", () => {
+    handleRetry();
+  });
+
+  scheduleTimeout();
 }
 
 function renderEmptyState(container, message) {
