@@ -49,6 +49,21 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.order-plan-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 77, 79, 0.18), rgba(255, 77, 79, 0));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.order-plan-banner.is-plan-remove-hover::after {
+    opacity: 1;
+}
+
 .order-info-button {
     position: absolute;
     top: 8px;
@@ -93,15 +108,17 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 10px;
-    margin-bottom: 6px;
-    border-radius: var(--border-radius-small);
-    background: linear-gradient(135deg, rgba(0, 212, 255, 0.14), rgba(0, 128, 255, 0.16));
-    border: 1px solid rgba(0, 212, 255, 0.25);
+    padding: 6px 12px;
+    margin-bottom: 0;
+    border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
+    background:var(--glass-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: transparent;
     color: var(--text-primary);
     font-size: 0.9rem;
     letter-spacing: 0.01em;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    position: relative;
+    z-index: 1;
 }
 
 .order-plan-icon {
@@ -133,6 +150,24 @@
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-primary);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.order-plan-banner + .order-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: none;
+    position: relative;
+}
+
+.order-plan-banner + .order-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+    background: var(--glass-bg);
+    pointer-events: none;
 }
 
 .watch-complete-btn {

@@ -890,15 +890,11 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     const planBanner = document.createElement("div");
     planBanner.className = "order-plan-banner";
 
-    const planIcon = document.createElement("span");
-    planIcon.className = "order-plan-icon";
-    planIcon.textContent = "⏰";
-
     const planText = document.createElement("span");
     planText.className = "order-plan-text";
     planText.textContent = `Запланировано: ${formatDateTime(order.planDate)}`;
 
-    planBanner.append(planIcon, planText);
+    planBanner.append(planText);
 
     if (isAdmin) {
       const clearBtn = document.createElement("button");
@@ -906,6 +902,18 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
       clearBtn.className = "order-plan-remove btn-icon";
       clearBtn.title = "Удалить запланированное время";
       clearBtn.textContent = "✕";
+      clearBtn.addEventListener("mouseenter", () => {
+        planBanner.classList.add("is-plan-remove-hover");
+      });
+      clearBtn.addEventListener("mouseleave", () => {
+        planBanner.classList.remove("is-plan-remove-hover");
+      });
+      clearBtn.addEventListener("focus", () => {
+        planBanner.classList.add("is-plan-remove-hover");
+      });
+      clearBtn.addEventListener("blur", () => {
+        planBanner.classList.remove("is-plan-remove-hover");
+      });
       clearBtn.onclick = () => clearPlanDate(order.id);
       planBanner.appendChild(clearBtn);
     }
@@ -1209,15 +1217,11 @@ function createGameCard(game, showActions = isAdmin) {
     const planBanner = document.createElement("div");
     planBanner.className = "order-plan-banner";
 
-    const planIcon = document.createElement("span");
-    planIcon.className = "order-plan-icon";
-    planIcon.textContent = "⏰";
-
     const planText = document.createElement("span");
     planText.className = "order-plan-text";
     planText.textContent = `Запланировано: ${formatDateTime(game.planDate)}`;
 
-    planBanner.append(planIcon, planText);
+    planBanner.append(planText);
 
     if (isAdmin) {
       const clearBtn = document.createElement("button");
@@ -1225,6 +1229,18 @@ function createGameCard(game, showActions = isAdmin) {
       clearBtn.className = "order-plan-remove btn-icon";
       clearBtn.title = "Удалить запланированное время";
       clearBtn.textContent = "✕";
+      clearBtn.addEventListener("mouseenter", () => {
+        planBanner.classList.add("is-plan-remove-hover");
+      });
+      clearBtn.addEventListener("mouseleave", () => {
+        planBanner.classList.remove("is-plan-remove-hover");
+      });
+      clearBtn.addEventListener("focus", () => {
+        planBanner.classList.add("is-plan-remove-hover");
+      });
+      clearBtn.addEventListener("blur", () => {
+        planBanner.classList.remove("is-plan-remove-hover");
+      });
       clearBtn.onclick = () => clearGamePlanDate(game.id);
       planBanner.appendChild(clearBtn);
     }
