@@ -16,6 +16,7 @@ function createAutocompleteFetcher({
   onPreview,
   onReset,
 }) {
+  let latestQuery = "";
   const clearState = () => {
     resultsVar.set([]);
     selectedVar.set(null);
@@ -33,7 +34,10 @@ function createAutocompleteFetcher({
   };
 
   return debounce(async (query) => {
+    latestQuery = query;
+    const activeQuery = query;
     if (!query) {
+      if (latestQuery !== activeQuery) return;
       toggleContainer(false);
       clearState();
       if (onPreview) onPreview();
@@ -44,10 +48,12 @@ function createAutocompleteFetcher({
 
     try {
       const res = await fetch(url, options);
+      if (latestQuery !== activeQuery) return;
       if (!res.ok) {
         if (handleError) {
           await handleError(res);
         }
+        if (latestQuery !== activeQuery) return;
         toggleContainer(false);
         clearState();
         if (onPreview) onPreview();
@@ -55,10 +61,12 @@ function createAutocompleteFetcher({
       }
 
       const data = await res.json();
+      if (latestQuery !== activeQuery) return;
       const results = (mapResults ? mapResults(data) : data) || [];
       resultsVar.set(results);
 
       if (!results.length) {
+        if (latestQuery !== activeQuery) return;
         toggleContainer(false);
         clearState();
         if (onPreview) onPreview();
@@ -80,6 +88,7 @@ function createAutocompleteFetcher({
       toggleContainer(true);
     } catch (err) {
       console.error("Autocomplete fetch error", err);
+      if (latestQuery !== activeQuery) return;
       toggleContainer(false);
       clearState();
       if (onPreview) onPreview();
@@ -612,4 +621,3 @@ function showPlayedGamePreview() {
   );
   preview.style.display = "block";
 }
-
