@@ -931,6 +931,106 @@ async function confirmDeleteGameOrder() {
   closeModal("confirmDeleteGameOrderModal");
 }
 
+const PLAN_MONTH_NAMES = [
+  "Январь",
+  "Февраль",
+  "Март",
+  "Апрель",
+  "Май",
+  "Июнь",
+  "Июль",
+  "Август",
+  "Сентябрь",
+  "Октябрь",
+  "Ноябрь",
+  "Декабрь",
+];
+
+let planCalendarYear = null;
+let planCalendarMonth = null;
+
+function formatPlanDateDisplay(date) {
+  return date.toLocaleDateString("ru-RU", {
+    weekday: "short",
+    day: "2-digit",
+    month: "long",
+  });
+}
+
+function renderPlanCalendar(selectedDateStr = "") {
+  const grid = document.getElementById("planCalendarGrid");
+  const label = document.getElementById("planCalendarMonthLabel");
+  const display = document.getElementById("planDateDisplay");
+  const dateInput = document.getElementById("planDateInput");
+  if (!grid || planCalendarYear === null || planCalendarMonth === null) return;
+
+  const today = new Date();
+  const selectedDate = selectedDateStr ? new Date(selectedDateStr) : null;
+
+  const firstDay = new Date(planCalendarYear, planCalendarMonth, 1);
+  const daysInMonth = new Date(planCalendarYear, planCalendarMonth + 1, 0).getDate();
+  const monthName = PLAN_MONTH_NAMES[planCalendarMonth];
+  if (label) {
+    label.textContent = `${monthName} ${planCalendarYear}`;
+  }
+
+  grid.innerHTML = "";
+
+  const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+  weekdays.forEach((name) => {
+    const cell = document.createElement("div");
+    cell.className = "plan-calendar-weekday";
+    cell.textContent = name;
+    grid.appendChild(cell);
+  });
+
+  const firstWeekday = (firstDay.getDay() + 6) % 7;
+  for (let i = 0; i < firstWeekday; i += 1) {
+    const empty = document.createElement("div");
+    empty.className = "plan-calendar-day is-outside";
+    grid.appendChild(empty);
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "plan-calendar-day";
+    cell.textContent = String(day);
+
+    const cellDate = new Date(planCalendarYear, planCalendarMonth, day);
+    const cellDateStr = formatDateLocal(cellDate);
+
+    if (
+      cellDate.getFullYear() === today.getFullYear() &&
+      cellDate.getMonth() === today.getMonth() &&
+      cellDate.getDate() === today.getDate()
+    ) {
+      cell.classList.add("is-today");
+    }
+
+    if (selectedDate && formatDateLocal(selectedDate) === cellDateStr) {
+      cell.classList.add("is-selected");
+    }
+
+    cell.addEventListener("click", () => {
+      if (dateInput) {
+        dateInput.value = cellDateStr;
+      }
+      if (display) {
+        display.textContent = formatPlanDateDisplay(cellDate);
+      }
+      renderPlanCalendar(cellDateStr);
+    });
+
+    grid.appendChild(cell);
+  }
+
+  if (display) {
+    const displayDate = selectedDate || new Date(planCalendarYear, planCalendarMonth, 1);
+    display.textContent = formatPlanDateDisplay(displayDate);
+  }
+}
+
 function openPlanDateModal(id, type = "movie") {
   planDateOrderId = id;
   planDateOrderType = type;
@@ -990,12 +1090,29 @@ function openPlanDateModal(id, type = "movie") {
     }
   }
 
+  if (!dateValue) {
+    dateValue = formatDateLocal(new Date());
+  }
+  if (!timeValue) {
+    const now = new Date();
+    const minutes = now.getMinutes();
+    const rounded = minutes % 5 === 0 ? minutes : minutes + (5 - (minutes % 5));
+    now.setMinutes(rounded);
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+    timeValue = formatTimeLocal(now);
+  }
+
   if (dateEl) {
     dateEl.value = dateValue;
   }
   if (timeEl) {
     timeEl.value = timeValue;
   }
+  const baseDate = dateValue ? new Date(dateValue) : new Date();
+  planCalendarYear = baseDate.getFullYear();
+  planCalendarMonth = baseDate.getMonth();
+  renderPlanCalendar(dateValue);
   document.getElementById("planDateModal").style.display = "block";
 }
 
