@@ -130,8 +130,28 @@ async function handler(req, res) {
       return;
     }
 
-    const completionText = await response.text();
-    const completion = safeJsonParse(completionText, "completion response");
+    const responseClone = response.clone();
+    let completion;
+
+    try {
+      completion = await response.json();
+    } catch (err) {
+      const fallbackText = await responseClone.text();
+      console.warn(
+        "[translate-parent-guide] Response was not valid JSON, attempting to parse as text",
+        err
+      );
+      completion = safeJsonParse(fallbackText, "completion response");
+    }
+
+    if (typeof completion === "string") {
+      completion = safeJsonParse(completion, "completion response");
+    }
+
+    console.info("[translate-parent-guide] completion format", {
+      type: typeof completion,
+      hasChoices: Array.isArray(completion?.choices),
+    });
 
     if (!completion) {
       res
@@ -144,9 +164,19 @@ async function handler(req, res) {
     }
 
     const content = completion?.choices?.[0]?.message?.content || "";
+    let contentText = content;
+
+    if (
+      Array.isArray(content) &&
+      content.every((item) => item && typeof item.text === "string")
+    ) {
+      contentText = content.map((item) => item.text).join("");
+    } else if (content && typeof content === "object" && typeof content.text === "string") {
+      contentText = content.text;
+    }
 
     let parsed;
-    parsed = safeJsonParse(content, "message content");
+    parsed = safeJsonParse(contentText, "message content");
 
     if (!parsed) {
       res
