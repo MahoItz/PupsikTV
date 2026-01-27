@@ -125,6 +125,115 @@ async function deleteGamePosterFromStorage(posterUrl) {
   }
 }
 
+function setGamePosterSyncState(isSyncing, progressTitle) {
+  if (!syncGamePostersButton) return;
+  syncGamePostersButton.disabled = isSyncing;
+  syncGamePostersButton.classList.toggle("is-loading", isSyncing);
+  syncGamePostersButton.setAttribute("aria-busy", isSyncing ? "true" : "false");
+  if (progressTitle) {
+    syncGamePostersButton.setAttribute("title", progressTitle);
+  } else {
+    syncGamePostersButton.setAttribute(
+      "title",
+      "Загрузить постеры игр в storage"
+    );
+  }
+}
+
+async function syncPlayedGamePostersToStorage() {
+  if (!supabaseClient || !supabaseClient.storage) {
+    alert("Supabase не настроен, загрузка постеров недоступна.");
+    return;
+  }
+  if (!isAdmin) {
+    alert("Сначала войдите как админ с паролем.");
+    return;
+  }
+  if (syncGamePostersButton?.dataset.syncing === "true") return;
+
+  const candidates = allPlayedGames.filter((game) => {
+    const poster = game?.poster;
+    if (!poster || typeof poster !== "string") return false;
+    if (poster.includes(PLACEHOLDER_POSTER_HOST)) return false;
+    return !getGamePosterStoragePath(poster);
+  });
+
+  if (!candidates.length) {
+    if (typeof showToastNotification === "function") {
+      showToastNotification("Все постеры уже в storage.", "success");
+      return;
+    }
+    alert("Все постеры уже в storage.");
+    return;
+  }
+
+  const shouldContinue = window.confirm(
+    `Загрузить ${candidates.length} постеров пройденных игр в storage?`
+  );
+  if (!shouldContinue) return;
+
+  syncGamePostersButton.dataset.syncing = "true";
+  try {
+    setGamePosterSyncState(true, "Загружаем постеры игр...");
+    if (typeof showToastNotification === "function") {
+      showToastNotification("Загружаем постеры игр...", "warning");
+    }
+
+    let successCount = 0;
+    let failureCount = 0;
+    const total = candidates.length;
+
+    for (let i = 0; i < total; i += 1) {
+      const game = candidates[i];
+      setGamePosterSyncState(
+        true,
+        `Загружаем постеры игр: ${i + 1}/${total}`
+      );
+      try {
+        const uploadedPoster = await uploadGamePosterToStorage({
+          poster: game.poster,
+          title: game.title,
+          folder: "played",
+        });
+
+        if (!getGamePosterStoragePath(uploadedPoster)) {
+          throw new Error("Не удалось сохранить постер в storage.");
+        }
+
+        const { error } = await supabaseClient
+          .from("games")
+          .update({ poster: uploadedPoster })
+          .eq("id", game.id);
+
+        if (error) throw error;
+
+        game.poster = uploadedPoster;
+        successCount += 1;
+      } catch (err) {
+        failureCount += 1;
+        console.error("Error syncing played game poster", err, game);
+      }
+    }
+
+    if (successCount > 0) {
+      localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+      renderPlayedGames();
+    }
+
+    if (typeof showToastNotification === "function") {
+      showToastNotification(
+        `Загружено: ${successCount}, ошибок: ${failureCount}.`,
+        failureCount ? "warning" : "success"
+      );
+    } else {
+      alert(`Загружено: ${successCount}, ошибок: ${failureCount}.`);
+    }
+  } finally {
+    syncGamePostersButton.dataset.syncing = "false";
+    setGamePosterSyncState(false);
+  }
+}
+
 const TWITCH_REDIRECT_URI = buildAbsoluteApiUrl("/twitch-connect");
 const TWITCH_AUTH_SCOPES = ["user:read:chat", "user:bot", "channel:bot"];
 let TWITCH_CLIENT_ID = null;
@@ -141,6 +250,7 @@ let rouletteLastWinnerPendingValue = null;
 let rouletteLastWinnerHasPendingSync = false;
 let settingsPanel;
 let settingsToggleButton;
+let syncGamePostersButton;
 let settingsPanelCloseButton;
 let aiModelSelect;
 let aiModelStatus;
