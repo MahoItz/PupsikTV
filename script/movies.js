@@ -1760,6 +1760,8 @@ async function deletePlayedGame(id) {
       throw new Error("Played game delete was blocked by security rules.");
     }
 
+    await deleteGamePosterFromStorage(removedGame.poster);
+
     if (hadUserRating) {
       delete ratedGames[id];
       localStorage.setItem("ratedGames", JSON.stringify(ratedGames));
@@ -1779,4 +1781,3 @@ async function deletePlayedGame(id) {
     );
   }
 }
-

@@ -794,6 +794,7 @@ async function performDeleteGameOrder(id) {
     if (!data) {
       throw new Error("Game order delete was blocked by security rules.");
     }
+    await deleteGamePosterFromStorage(removedOrder.poster);
   } catch (err) {
     console.error("Error deleting game order from Supabase", err);
     gameOrders.splice(index, 0, removedOrder);
@@ -1356,4 +1357,3 @@ function getRatingValue(inputId) {
   const el = document.getElementById(inputId);
   return el ? parseFloat(el.value.replace(/,/, ".")) : NaN;
 }
-

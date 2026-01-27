@@ -15,6 +15,116 @@ function buildAbsoluteApiUrl(path) {
   return apiPath;
 }
 
+const GAME_POSTER_BUCKET = "game-posters";
+const PLACEHOLDER_POSTER_HOST = "via.placeholder.com";
+
+function buildGamePosterFileName(title) {
+  const safeTitle = (title || "game")
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${safeTitle || "game"}-${suffix}`;
+}
+
+function getGamePosterStoragePath(posterUrl) {
+  if (!posterUrl || typeof posterUrl !== "string") return null;
+  try {
+    const url = new URL(posterUrl);
+    const marker = `/storage/v1/object/public/${GAME_POSTER_BUCKET}/`;
+    const idx = url.pathname.indexOf(marker);
+    if (idx === -1) return null;
+    const path = url.pathname.slice(idx + marker.length);
+    return path.replace(/^\/+/, "") || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+async function uploadGamePosterToStorage({
+  poster,
+  file,
+  title,
+  folder = "orders",
+}) {
+  if (!supabaseClient || !supabaseClient.storage) return poster;
+
+  if (
+    !file &&
+    (!poster ||
+      (typeof poster === "string" &&
+        poster.includes(PLACEHOLDER_POSTER_HOST)))
+  ) {
+    return poster;
+  }
+
+  let blob;
+  let contentType;
+
+  if (file instanceof File) {
+    blob = file;
+    contentType = file.type;
+  } else if (typeof poster === "string") {
+    try {
+      const fetchUrl = poster.startsWith("http")
+        ? buildApiPath(`/poster-proxy?url=${encodeURIComponent(poster)}`)
+        : poster;
+      const response = await fetch(fetchUrl);
+      if (!response.ok) {
+        throw new Error(`Poster fetch failed with ${response.status}`);
+      }
+      blob = await response.blob();
+      contentType = blob.type;
+    } catch (err) {
+      console.error("Error fetching poster for upload", err);
+      return poster;
+    }
+  } else {
+    return poster;
+  }
+
+  const ext =
+    contentType && contentType.includes("/")
+      ? contentType.split("/")[1]
+      : "jpg";
+  const fileName = buildGamePosterFileName(title);
+  const path = `${folder}/${fileName}.${ext}`;
+
+  const { error: uploadError } = await supabaseClient.storage
+    .from(GAME_POSTER_BUCKET)
+    .upload(path, blob, {
+      contentType: contentType || "image/jpeg",
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("Error uploading game poster", uploadError);
+    return poster;
+  }
+
+  const { data } = supabaseClient.storage
+    .from(GAME_POSTER_BUCKET)
+    .getPublicUrl(path);
+
+  return data?.publicUrl || poster;
+}
+
+async function deleteGamePosterFromStorage(posterUrl) {
+  if (!supabaseClient || !supabaseClient.storage) return;
+  const path = getGamePosterStoragePath(posterUrl);
+  if (!path) return;
+
+  const { error } = await supabaseClient.storage
+    .from(GAME_POSTER_BUCKET)
+    .remove([path]);
+
+  if (error) {
+    console.error("Error deleting game poster from storage", error);
+  }
+}
+
 const TWITCH_REDIRECT_URI = buildAbsoluteApiUrl("/twitch-connect");
 const TWITCH_AUTH_SCOPES = ["user:read:chat", "user:bot", "channel:bot"];
 let TWITCH_CLIENT_ID = null;

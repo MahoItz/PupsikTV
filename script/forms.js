@@ -13,88 +13,6 @@ function normalizeActorsForStorage(value, limit = 15) {
   return "";
 }
 
-const GAME_POSTER_BUCKET = "game-posters";
-const PLACEHOLDER_POSTER_HOST = "via.placeholder.com";
-
-function buildGamePosterFileName(title) {
-  const safeTitle = (title || "game")
-    .toString()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  return `${safeTitle || "game"}-${suffix}`;
-}
-
-async function uploadGamePosterToStorage({
-  poster,
-  file,
-  title,
-  folder = "orders",
-}) {
-  if (!supabaseClient || !supabaseClient.storage) return poster;
-
-  if (
-    !file &&
-    (!poster ||
-      (typeof poster === "string" &&
-        poster.includes(PLACEHOLDER_POSTER_HOST)))
-  ) {
-    return poster;
-  }
-
-  let blob;
-  let contentType;
-
-  if (file instanceof File) {
-    blob = file;
-    contentType = file.type;
-  } else if (typeof poster === "string") {
-    try {
-      const fetchUrl = poster.startsWith("http")
-        ? buildApiPath(`/poster-proxy?url=${encodeURIComponent(poster)}`)
-        : poster;
-      const response = await fetch(fetchUrl);
-      if (!response.ok) {
-        throw new Error(`Poster fetch failed with ${response.status}`);
-      }
-      blob = await response.blob();
-      contentType = blob.type;
-    } catch (err) {
-      console.error("Error fetching poster for upload", err);
-      return poster;
-    }
-  } else {
-    return poster;
-  }
-
-  const ext =
-    contentType && contentType.includes("/")
-      ? contentType.split("/")[1]
-      : "jpg";
-  const fileName = buildGamePosterFileName(title);
-  const path = `${folder}/${fileName}.${ext}`;
-
-  const { error: uploadError } = await supabaseClient.storage
-    .from(GAME_POSTER_BUCKET)
-    .upload(path, blob, {
-      contentType: contentType || "image/jpeg",
-      upsert: false,
-    });
-
-  if (uploadError) {
-    console.error("Error uploading game poster", uploadError);
-    return poster;
-  }
-
-  const { data } = supabaseClient.storage
-    .from(GAME_POSTER_BUCKET)
-    .getPublicUrl(path);
-
-  return data?.publicUrl || poster;
-}
-
 document
   .getElementById("addMovieForm")
   .addEventListener("submit", async function (e) {
@@ -1236,6 +1154,7 @@ document
     const game = gameOrders.find((g) => g.id === editingGameId);
     if (!game) return;
 
+    const previousPoster = game.poster;
     const updatedGame = {
       title: document.getElementById("editGameTitle").value,
       year: document.getElementById("editGameYear").value,
@@ -1246,6 +1165,23 @@ document
     };
 
     try {
+      let shouldDeletePreviousPoster = false;
+      if (editGamePosterData && editGamePosterData !== previousPoster) {
+        const uploadedPoster = await uploadGamePosterToStorage({
+          poster: editGamePosterData,
+          title: updatedGame.title,
+          folder: "orders",
+        });
+        if (!getGamePosterStoragePath(uploadedPoster)) {
+          throw new Error("Не удалось сохранить постер в storage.");
+        }
+        updatedGame.poster = uploadedPoster;
+        shouldDeletePreviousPoster =
+          previousPoster &&
+          previousPoster !== updatedGame.poster &&
+          Boolean(getGamePosterStoragePath(previousPoster));
+      }
+
       const { error } = await supabaseClient
         .from("Game_Orders")
         .update({
@@ -1260,6 +1196,9 @@ document
 
       if (error) throw error;
 
+      if (shouldDeletePreviousPoster) {
+        await deleteGamePosterFromStorage(previousPoster);
+      }
       Object.assign(game, updatedGame);
       renderGames();
       editGamePosterData = null;
@@ -1278,6 +1217,7 @@ document
     const game = allPlayedGames.find((g) => g.id === editingPlayedGameId);
     if (!game) return;
 
+    const previousPoster = game.poster;
     const rating = getRatingValue("editPlayedGameRatingInput");
     if (!isRatingValid(rating)) {
       alert("Неверная оценка");
@@ -1296,6 +1236,26 @@ document
     };
 
     try {
+      let shouldDeletePreviousPoster = false;
+      if (
+        editPlayedGamePosterData &&
+        editPlayedGamePosterData !== previousPoster
+      ) {
+        const uploadedPoster = await uploadGamePosterToStorage({
+          poster: editPlayedGamePosterData,
+          title: updatedGame.title,
+          folder: "played",
+        });
+        if (!getGamePosterStoragePath(uploadedPoster)) {
+          throw new Error("Не удалось сохранить постер в storage.");
+        }
+        updatedGame.poster = uploadedPoster;
+        shouldDeletePreviousPoster =
+          previousPoster &&
+          previousPoster !== updatedGame.poster &&
+          Boolean(getGamePosterStoragePath(previousPoster));
+      }
+
       const { error } = await supabaseClient
         .from("games")
         .update({
@@ -1311,6 +1271,9 @@ document
 
       if (error) throw error;
 
+      if (shouldDeletePreviousPoster) {
+        await deleteGamePosterFromStorage(previousPoster);
+      }
       Object.assign(game, updatedGame);
       localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
       renderPlayedGames();
