@@ -673,6 +673,7 @@ async function submitRating() {
       country: source.country || "",
       actors: source.actors || [],
       director: source.director || "",
+      studios: source.studios || null,
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
     };
@@ -697,6 +698,7 @@ async function submitRating() {
           country: watchedMovie.country,
           actors: normalizeActorsForStorage(watchedMovie.actors),
           director: watchedMovie.director,
+          studios: serializeStudiosValue(watchedMovie.studios),
         })
         .select()
         .single();
@@ -719,6 +721,7 @@ async function submitRating() {
         country: watchedMovie.country,
         actors: watchedMovie.actors,
         director: watchedMovie.director,
+        studios: watchedMovie.studios,
       };
 
       const { error: deleteError } = await supabaseClient

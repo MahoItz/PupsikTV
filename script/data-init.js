@@ -144,6 +144,9 @@ function computeMoviesSignature(list) {
     const actorsHash = stringHash(
       Array.isArray(movie?.actors) ? movie.actors.join(",") : movie?.actors ?? ""
     );
+    const studiosHash = stringHash(
+      JSON.stringify(normalizeStudiosValue(movie?.studios) || "")
+    );
 
     hash = (hash * 31 + Number(movie?.id ?? 0)) >>> 0;
     hash = (hash * 31 + Math.round(rating * 10)) >>> 0;
@@ -155,6 +158,7 @@ function computeMoviesSignature(list) {
     hash = (hash * 31 + countryHash) >>> 0;
     hash = (hash * 31 + directorHash) >>> 0;
     hash = (hash * 31 + actorsHash) >>> 0;
+    hash = (hash * 31 + studiosHash) >>> 0;
   }
 
   return hash >>> 0;
@@ -293,7 +297,7 @@ async function loadMoviesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director"
+        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, studios"
       )
       .order("id", { ascending: false });
 
@@ -325,6 +329,7 @@ async function loadMoviesFromSupabase() {
         country: item.country || "",
         actors: normalizeActorsValue(item.actors),
         director: item.director || "",
+        studios: item.studios || null,
       };
     });
 
@@ -361,7 +366,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director"
+        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, studios"
       )
       .order("id", { ascending: true });
 
@@ -398,6 +403,7 @@ async function loadWatchlistFromSupabase() {
       country: item.country || "",
       actors: normalizeActorsValue(item.actors),
       director: item.director || "",
+      studios: item.studios || null,
       };
     });
   } catch (err) {

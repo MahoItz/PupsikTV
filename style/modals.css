@@ -539,6 +539,29 @@
     font-weight: 600;
 }
 
+#movieDetailsModal .movie-details-studios-value,
+#orderDetailsModal .movie-details-studios-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#movieDetailsModal .movie-details-studios-status,
+#orderDetailsModal .movie-details-studios-status {
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+#movieDetailsModal .movie-details-studios-badges,
+#orderDetailsModal .movie-details-studios-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
 #movieDetailsModal .movie-details-section-title,
 #gameDetailsModal .movie-details-section-title,
 #orderDetailsModal .movie-details-section-title,

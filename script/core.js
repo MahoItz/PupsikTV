@@ -1646,6 +1646,63 @@ function getKinopoiskIdFromMovie(candidate) {
   return null;
 }
 
+function normalizeStudiosValue(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (Array.isArray(value)) {
+    const studios = value
+      .map((item) => String(item || "").trim())
+      .filter(Boolean);
+    return studios.length ? { studios } : { studios: [] };
+  }
+
+  if (typeof value === "object") {
+    const studios = Array.isArray(value.studios)
+      ? value.studios.map((item) => String(item || "").trim()).filter(Boolean)
+      : [];
+    const homepage =
+      typeof value.homepage === "string" && value.homepage.trim()
+        ? value.homepage.trim()
+        : null;
+    if (studios.length || homepage) {
+      return { studios, homepage };
+    }
+    return { studios: [] };
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(trimmed);
+      return normalizeStudiosValue(parsed);
+    } catch (err) {
+      const studios = trimmed
+        .split(/[,;|]+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+      return studios.length ? { studios } : null;
+    }
+  }
+
+  return null;
+}
+
+function serializeStudiosValue(value) {
+  const normalized = normalizeStudiosValue(value);
+  if (!normalized) {
+    return null;
+  }
+  return JSON.stringify({
+    studios: Array.isArray(normalized.studios) ? normalized.studios : [],
+    homepage: normalized.homepage || null,
+  });
+}
+
 function buildFortuneWinnerMovie(label) {
   const parsed = parseFortuneLabel(label);
   const match = findFortuneMovieMatch(parsed);

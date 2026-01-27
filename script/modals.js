@@ -166,6 +166,161 @@ function renderActorsList(listId, sectionId, actorsValue) {
   sectionEl.style.display = "block";
 }
 
+const detailsStudiosLoads = new Map();
+
+function createDetailsStudioBadge(studioName) {
+  if (typeof createFortuneStudioBadge === "function") {
+    return createFortuneStudioBadge(studioName);
+  }
+
+  const badge = document.createElement("span");
+  badge.className = "fortune-studio-badge";
+  badge.textContent = (studioName || "").toString().trim() || "-";
+  return badge;
+}
+
+function renderDetailsStudiosBadges(listEl, studios = []) {
+  if (!listEl) {
+    return;
+  }
+
+  listEl.innerHTML = "";
+  studios.forEach((studio) => {
+    listEl.appendChild(createDetailsStudioBadge(studio));
+  });
+}
+
+function setDetailsStudiosStatus(statusId, listId, message) {
+  const statusEl = document.getElementById(statusId);
+  const listEl = document.getElementById(listId);
+
+  if (listEl) {
+    listEl.innerHTML = "";
+    listEl.style.display = "none";
+  }
+
+  if (statusEl) {
+    statusEl.textContent = message;
+    statusEl.style.display = "inline";
+    statusEl.classList.toggle("movie-details-muted", message === "—");
+  }
+}
+
+function renderDetailsStudiosSection(statusId, listId, studioInfo) {
+  const statusEl = document.getElementById(statusId);
+  const listEl = document.getElementById(listId);
+  const studios = studioInfo?.studios || [];
+
+  if (!Array.isArray(studios) || studios.length === 0) {
+    setDetailsStudiosStatus(statusId, listId, "Студия не указана.");
+    return;
+  }
+
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.style.display = "none";
+  }
+
+  if (listEl) {
+    listEl.style.display = "flex";
+    renderDetailsStudiosBadges(listEl, studios);
+  }
+}
+
+async function ensureDetailsStudiosInfo(options = {}) {
+  const { item, statusId, listId, table } = options;
+  if (!item || !statusId || !listId) {
+    return;
+  }
+
+  const rawStudiosValue = item.studios;
+  const normalizedStudios = normalizeStudiosValue(rawStudiosValue);
+  renderDetailsStudiosSection(statusId, listId, normalizedStudios);
+
+  if (normalizedStudios?.studios?.length) {
+    return;
+  }
+
+  if (rawStudiosValue !== null && rawStudiosValue !== undefined && rawStudiosValue !== "") {
+    return;
+  }
+
+  const key = `${table || "details"}-${item.id || item.title || "unknown"}`;
+  if (detailsStudiosLoads.has(key)) {
+    return;
+  }
+  detailsStudiosLoads.set(key, true);
+
+  try {
+    let imdbId = item.imdbId || null;
+    const kinopoiskId =
+      item.kinopoiskId ||
+      (typeof getKinopoiskIdFromMovie === "function"
+        ? getKinopoiskIdFromMovie(item)
+        : null);
+
+    if (!imdbId && kinopoiskId && typeof fetchFortuneImdbId === "function" && KINOPOISK_API_KEY) {
+      setDetailsStudiosStatus(
+        statusId,
+        listId,
+        "Ищем IMDb ID на Кинопоиске..."
+      );
+      imdbId = await fetchFortuneImdbId(kinopoiskId);
+      if (imdbId) {
+        item.imdbId = imdbId;
+      }
+    }
+
+    if (!imdbId) {
+      setDetailsStudiosStatus(
+        statusId,
+        listId,
+        "Для выбранного фильма нет IMDb ID."
+      );
+      return;
+    }
+
+    if (!TMDB_ENABLED || typeof fetchFortuneTmdbStudioInfo !== "function") {
+      setDetailsStudiosStatus(statusId, listId, "TMDB API недоступен.");
+      return;
+    }
+
+    setDetailsStudiosStatus(statusId, listId, "Загружаем данные о студии...");
+    const studioInfo = await fetchFortuneTmdbStudioInfo(imdbId);
+    const normalized = normalizeStudiosValue(studioInfo) || { studios: [] };
+
+    renderDetailsStudiosSection(statusId, listId, normalized);
+
+    if (!supabaseClient || !table || !item.id || item.__virtual) {
+      item.studios = normalized;
+      return;
+    }
+
+    const storedValue = serializeStudiosValue(normalized);
+    const { error } = await supabaseClient
+      .from(table)
+      .update({ studios: storedValue })
+      .eq("id", item.id);
+    if (error) {
+      throw error;
+    }
+
+    item.studios = normalized;
+    if (table === "movies") {
+      localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+    }
+  } catch (err) {
+    console.error("Failed to load studios info", err);
+    setDetailsStudiosStatus(
+      statusId,
+      listId,
+      "Не удалось загрузить данные о студии."
+    );
+  } finally {
+    detailsStudiosLoads.delete(key);
+  }
+}
+
 function setDetailsSectionLabels(options = {}) {
   const { descriptionId, countryId, directorId, actorsSectionId } = options;
 
@@ -289,7 +444,17 @@ function moveMetaItems(target, ids = []) {
 function reorderDetailsLayout(modal, config) {
   const {
     key,
-    ids: { year, genre, country, director, orderBy, orderType, date, extra = [] },
+    ids: {
+      year,
+      genre,
+      studios,
+      country,
+      director,
+      orderBy,
+      orderType,
+      date,
+      extra = [],
+    },
     actorsSectionId,
   } = config;
 
@@ -301,6 +466,9 @@ function reorderDetailsLayout(modal, config) {
   const meta = infoColumn?.querySelector(".movie-details-meta");
   const ratingsSection = infoColumn?.querySelector(".movie-details-section");
   const genreItem = document.getElementById(genre)?.closest(".movie-details-meta-item");
+  const studiosItem = studios
+    ? document.getElementById(studios)?.closest(".movie-details-meta-item")
+    : null;
 
   const countryEl = document.getElementById(country);
   const directorEl = document.getElementById(director);
@@ -313,11 +481,18 @@ function reorderDetailsLayout(modal, config) {
   const directorItem = directorEl?.closest(".movie-details-meta-item");
 
   if (meta && genreItem) {
+    if (studiosItem) {
+      meta.insertBefore(studiosItem, genreItem.nextSibling);
+    }
+    const anchor = studiosItem || genreItem;
     if (countryItem) {
-      meta.insertBefore(countryItem, genreItem.nextSibling);
+      meta.insertBefore(countryItem, anchor.nextSibling);
     }
     if (directorItem) {
-      meta.insertBefore(directorItem, countryItem ? countryItem.nextSibling : genreItem.nextSibling);
+      meta.insertBefore(
+        directorItem,
+        countryItem ? countryItem.nextSibling : anchor.nextSibling
+      );
     }
   }
 
@@ -386,6 +561,11 @@ function openMovieDetailsModal(id) {
 
   setMovieDetailsText("movieDetailsYear", movie.year);
   setMovieDetailsText("movieDetailsGenre", genreValue);
+  renderDetailsStudiosSection(
+    "movieDetailsStudiosStatus",
+    "movieDetailsStudios",
+    normalizeStudiosValue(movie.studios)
+  );
   setMovieDetailsText(
     "movieDetailsDate",
     movie.dateAdded ? formatDateTime(movie.dateAdded) : ""
@@ -419,6 +599,7 @@ function openMovieDetailsModal(id) {
     ids: {
       year: "movieDetailsYear",
       genre: "movieDetailsGenre",
+      studios: "movieDetailsStudios",
       country: "movieDetailsCountry",
       director: "movieDetailsDirector",
       orderBy: "movieDetailsOrderBy",
@@ -446,6 +627,13 @@ function openMovieDetailsModal(id) {
     votesEl.textContent = `Голосов: ${votes}`;
     votesEl.classList.toggle("movie-details-muted", votes === 0);
   }
+
+  ensureDetailsStudiosInfo({
+    item: movie,
+    statusId: "movieDetailsStudiosStatus",
+    listId: "movieDetailsStudios",
+    table: "movies",
+  });
 
   alignDetailsPoster(modal);
   modal.style.display = "block";
@@ -536,6 +724,11 @@ function renderOrderDetailsModal(order) {
 
   setMovieDetailsText("orderDetailsYear", order.year);
   setMovieDetailsText("orderDetailsGenre", genreValue);
+  renderDetailsStudiosSection(
+    "orderDetailsStudiosStatus",
+    "orderDetailsStudios",
+    normalizeStudiosValue(order.studios)
+  );
   setMovieDetailsText(
     "orderDetailsDate",
     order.dateAdded ? formatDateTime(order.dateAdded) : ""
@@ -577,6 +770,7 @@ function renderOrderDetailsModal(order) {
     ids: {
       year: "orderDetailsYear",
       genre: "orderDetailsGenre",
+      studios: "orderDetailsStudios",
       country: "orderDetailsCountry",
       director: "orderDetailsDirector",
       orderBy: "orderDetailsOrderBy",
@@ -614,6 +808,13 @@ function renderOrderDetailsModal(order) {
   if (typeof updateOrderDetailsExtras === "function") {
     updateOrderDetailsExtras(order);
   }
+
+  ensureDetailsStudiosInfo({
+    item: order,
+    statusId: "orderDetailsStudiosStatus",
+    listId: "orderDetailsStudios",
+    table: "Movie_Orders",
+  });
 
   modal.style.display = "block";
 }
