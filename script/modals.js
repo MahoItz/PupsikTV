@@ -253,13 +253,39 @@ async function ensureDetailsStudiosInfo(options = {}) {
 
   try {
     let imdbId = item.imdbId || null;
-    const kinopoiskId =
+    let kinopoiskId =
       item.kinopoiskId ||
       (typeof getKinopoiskIdFromMovie === "function"
         ? getKinopoiskIdFromMovie(item)
         : null);
 
-    if (!imdbId && kinopoiskId && typeof fetchFortuneImdbId === "function" && KINOPOISK_API_KEY) {
+    if (
+      !kinopoiskId &&
+      KINOPOISK_API_KEY &&
+      typeof fetchKinopoiskFilm === "function"
+    ) {
+      setDetailsStudiosStatus(
+        statusId,
+        listId,
+        "Ищем фильм на Кинопоиске..."
+      );
+      const film = await fetchKinopoiskFilm(
+        item.title || "",
+        item.year || "",
+        item.originalTitle || ""
+      );
+      kinopoiskId = extractKinopoiskIdFromValue(film?.filmId);
+      if (kinopoiskId) {
+        item.kinopoiskId = kinopoiskId;
+      }
+    }
+
+    if (
+      !imdbId &&
+      kinopoiskId &&
+      typeof fetchFortuneImdbId === "function" &&
+      KINOPOISK_API_KEY
+    ) {
       setDetailsStudiosStatus(
         statusId,
         listId,
