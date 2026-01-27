@@ -575,7 +575,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   settingsPanel = document.getElementById("settingsPanel");
   settingsToggleButton = document.getElementById("settingsToggleButton");
-  syncGamePostersButton = document.getElementById("syncGamePostersButton");
   settingsPanelCloseButton = document.getElementById("settingsPanelCloseButton");
   aiModelSelect = document.getElementById("aiModelSelect");
   aiModelStatus = document.getElementById("aiModelStatus");
@@ -595,12 +594,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (settingsToggleButton && settingsPanel) {
     settingsToggleButton.addEventListener("click", () => toggleSettingsPanel());
     settingsToggleButton.setAttribute("aria-expanded", "false");
-  }
-  if (syncGamePostersButton) {
-    syncGamePostersButton.addEventListener(
-      "click",
-      syncPlayedGamePostersToStorage
-    );
   }
   if (settingsPanelCloseButton) {
     settingsPanelCloseButton.addEventListener("click", closeSettingsPanel);
