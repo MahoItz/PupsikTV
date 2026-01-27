@@ -52,7 +52,10 @@ async function uploadGamePosterToStorage({
     contentType = file.type;
   } else if (typeof poster === "string") {
     try {
-      const response = await fetch(poster);
+      const fetchUrl = poster.startsWith("http")
+        ? buildApiPath(`/poster-proxy?url=${encodeURIComponent(poster)}`)
+        : poster;
+      const response = await fetch(fetchUrl);
       if (!response.ok) {
         throw new Error(`Poster fetch failed with ${response.status}`);
       }
