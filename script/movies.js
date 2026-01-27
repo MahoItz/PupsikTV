@@ -1290,7 +1290,6 @@ function createGameCard(game, showActions = isAdmin) {
   year.className = "order-year";
   year.textContent = game.year || "";
   meta.appendChild(year);
-  info.appendChild(meta);
 
   const footer = document.createElement("div");
   footer.className = "order-footer";
@@ -1305,42 +1304,83 @@ function createGameCard(game, showActions = isAdmin) {
     footer.appendChild(ribbon);
   }
 
-  const row = document.createElement("div");
-  row.className = "order-footer-row";
-
-  const dateDiv = document.createElement("div");
-  dateDiv.className = "order-date";
-  dateDiv.textContent = formatDate(game.dateAdded);
-  row.appendChild(dateDiv);
+  footer.appendChild(meta);
+  info.appendChild(footer);
+  card.appendChild(info);
+  wrapper.appendChild(card);
 
   if (showActions) {
     const actions = document.createElement("div");
     actions.className = "order-actions";
-    const planBtn = document.createElement("button");
-    planBtn.className = "btn btn-plan btn-icon";
-    planBtn.textContent = "⏰";
-    planBtn.title = "Запланировать игру";
-    planBtn.onclick = () => openPlanDateModal(game.id, "game");
-    const editBtn = document.createElement("button");
-    editBtn.className = "btn btn-edit btn-icon";
-    editBtn.textContent = "✏️";
-    editBtn.onclick = () => openEditGameModal(game.id);
+
     const doneBtn = document.createElement("button");
     doneBtn.className = "watch-complete-btn";
-    doneBtn.textContent = "Просмотрено ✓";
-    doneBtn.title = "Просмотрено";
+    doneBtn.textContent = "Пройдено ✓";
+    doneBtn.title = "Пройдено";
     doneBtn.onclick = () => markGameDone(game.id);
 
-    actions.appendChild(doneBtn);
-    actions.appendChild(planBtn);
-    actions.appendChild(editBtn);
-    row.appendChild(actions);
-  }
+    const menuBtn = document.createElement("button");
+    menuBtn.type = "button";
+    menuBtn.className = "btn btn-icon order-menu-button";
+    menuBtn.title = "Действия";
+    menuBtn.setAttribute("aria-haspopup", "true");
+    menuBtn.setAttribute("aria-expanded", "false");
 
-  footer.appendChild(row);
-  info.appendChild(footer);
-  card.appendChild(info);
-  wrapper.appendChild(card);
+    const menuIcon = document.createElement("span");
+    menuIcon.className = "order-menu-icon";
+    for (let i = 0; i < 3; i += 1) {
+      const line = document.createElement("span");
+      line.className = "order-menu-line";
+      menuIcon.appendChild(line);
+    }
+    menuBtn.appendChild(menuIcon);
+
+    const menu = document.createElement("div");
+    menu.className = "order-actions-menu";
+    menu.setAttribute("role", "menu");
+
+    const planItem = document.createElement("button");
+    planItem.type = "button";
+    planItem.className = "order-actions-item";
+    planItem.innerHTML = "<span>Запланировать</span><span aria-hidden=\"true\">⏰</span>";
+    planItem.onclick = () => {
+      closeOrderActionsMenu();
+      openPlanDateModal(game.id, "game");
+    };
+
+    const editItem = document.createElement("button");
+    editItem.type = "button";
+    editItem.className = "order-actions-item";
+    editItem.innerHTML = "<span>Редактировать</span><span aria-hidden=\"true\">✏️</span>";
+    editItem.onclick = () => {
+      closeOrderActionsMenu();
+      openEditGameModal(game.id);
+    };
+
+    const deleteItem = document.createElement("button");
+    deleteItem.type = "button";
+    deleteItem.className = "order-actions-item order-actions-item--danger";
+    deleteItem.innerHTML = "<span>Удалить</span><span aria-hidden=\"true\">🗑️</span>";
+    deleteItem.onclick = () => {
+      closeOrderActionsMenu();
+      openConfirmDeleteGameOrderModal(game.id);
+    };
+
+    menu.append(planItem, editItem, deleteItem);
+    menuBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleOrderActionsMenu(menu, menuBtn);
+    });
+
+    actions.appendChild(doneBtn);
+    actions.appendChild(menuBtn);
+    actions.appendChild(menu);
+
+    const actionsRow = document.createElement("div");
+    actionsRow.className = "order-actions-below";
+    actionsRow.appendChild(actions);
+    wrapper.appendChild(actionsRow);
+  }
 
   return wrapper;
 }
