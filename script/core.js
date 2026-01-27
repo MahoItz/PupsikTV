@@ -1596,6 +1596,7 @@ function getKinopoiskIdFromMovie(candidate) {
     "kp_url",
     "url",
     "link",
+    "poster",
     "kpLink",
     "kp_link",
     "kinopoiskLink",

@@ -330,6 +330,7 @@ async function loadMoviesFromSupabase() {
         actors: normalizeActorsValue(item.actors),
         director: item.director || "",
         studios: item.studios || null,
+        kinopoiskId: extractKinopoiskIdFromValue(item.poster),
       };
     });
 

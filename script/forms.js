@@ -674,6 +674,8 @@ async function submitRating() {
       actors: source.actors || [],
       director: source.director || "",
       studios: source.studios || null,
+      kinopoiskId: source.kinopoiskId || null,
+      imdbId: source.imdbId || null,
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
     };
@@ -722,6 +724,8 @@ async function submitRating() {
         actors: watchedMovie.actors,
         director: watchedMovie.director,
         studios: watchedMovie.studios,
+        kinopoiskId: watchedMovie.kinopoiskId,
+        imdbId: watchedMovie.imdbId,
       };
 
       const { error: deleteError } = await supabaseClient
