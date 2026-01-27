@@ -176,6 +176,7 @@ function computeGamesSignature(list) {
     const ratingCount = Number(game?.ratingCount ?? 0);
     const orderByHash = stringHash(game?.orderBy ?? "");
     const orderTypeHash = stringHash(game?.orderType ?? "");
+    const posterHash = stringHash(game?.poster ?? "");
 
     hash = (hash * 31 + Number(game?.id ?? 0)) >>> 0;
     hash = (hash * 31 + Math.round(rating * 10)) >>> 0;
@@ -183,6 +184,7 @@ function computeGamesSignature(list) {
     hash = (hash * 31 + ratingCount) >>> 0;
     hash = (hash * 31 + orderByHash) >>> 0;
     hash = (hash * 31 + orderTypeHash) >>> 0;
+    hash = (hash * 31 + posterHash) >>> 0;
   }
 
   return hash >>> 0;
