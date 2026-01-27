@@ -13,6 +13,85 @@ function normalizeActorsForStorage(value, limit = 15) {
   return "";
 }
 
+const GAME_POSTER_BUCKET = "game-posters";
+const PLACEHOLDER_POSTER_HOST = "via.placeholder.com";
+
+function buildGamePosterFileName(title) {
+  const safeTitle = (title || "game")
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${safeTitle || "game"}-${suffix}`;
+}
+
+async function uploadGamePosterToStorage({
+  poster,
+  file,
+  title,
+  folder = "orders",
+}) {
+  if (!supabaseClient || !supabaseClient.storage) return poster;
+
+  if (
+    !file &&
+    (!poster ||
+      (typeof poster === "string" &&
+        poster.includes(PLACEHOLDER_POSTER_HOST)))
+  ) {
+    return poster;
+  }
+
+  let blob;
+  let contentType;
+
+  if (file instanceof File) {
+    blob = file;
+    contentType = file.type;
+  } else if (typeof poster === "string") {
+    try {
+      const response = await fetch(poster);
+      if (!response.ok) {
+        throw new Error(`Poster fetch failed with ${response.status}`);
+      }
+      blob = await response.blob();
+      contentType = blob.type;
+    } catch (err) {
+      console.error("Error fetching poster for upload", err);
+      return poster;
+    }
+  } else {
+    return poster;
+  }
+
+  const ext =
+    contentType && contentType.includes("/")
+      ? contentType.split("/")[1]
+      : "jpg";
+  const fileName = buildGamePosterFileName(title);
+  const path = `${folder}/${fileName}.${ext}`;
+
+  const { error: uploadError } = await supabaseClient.storage
+    .from(GAME_POSTER_BUCKET)
+    .upload(path, blob, {
+      contentType: contentType || "image/jpeg",
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("Error uploading game poster", uploadError);
+    return poster;
+  }
+
+  const { data } = supabaseClient.storage
+    .from(GAME_POSTER_BUCKET)
+    .getPublicUrl(path);
+
+  return data?.publicUrl || poster;
+}
+
 document
   .getElementById("addMovieForm")
   .addEventListener("submit", async function (e) {
@@ -392,6 +471,7 @@ document
     const orderBy = document.getElementById("gameOrderBy").value;
 
     let gameData;
+    let posterFile = null;
 
     if (currentGameMode === "auto") {
       const titleInput = document.getElementById("gameAutoTitle").value;
@@ -434,10 +514,11 @@ document
       }
     } else {
       const fileInput = document.getElementById("gamePoster");
+      posterFile = fileInput.files?.[0] || null;
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
-      if (fileInput.files && fileInput.files[0]) {
+      if (posterFile) {
         try {
-          poster = await readFileAsDataURL(fileInput.files[0]);
+          poster = await readFileAsDataURL(posterFile);
         } catch (err) {
           console.error("Error reading file", err);
         }
@@ -454,6 +535,13 @@ document
     }
 
     try {
+      gameData.poster = await uploadGamePosterToStorage({
+        poster: gameData.poster,
+        file: posterFile,
+        title: gameData.title,
+        folder: "orders",
+      });
+
       const { data, error } = await supabaseClient
         .from("Game_Orders")
         .insert({
@@ -510,6 +598,7 @@ document
     }
 
     let gameData;
+    let posterFile = null;
 
     if (currentPlayedGameMode === "auto") {
       const titleInput = document.getElementById("playedGameAutoTitle").value;
@@ -547,10 +636,11 @@ document
       };
     } else {
       const fileInput = document.getElementById("playedGamePoster");
+      posterFile = fileInput.files?.[0] || null;
       let poster = "https://via.placeholder.com/300x400?text=Нет+постера";
-      if (fileInput.files && fileInput.files[0]) {
+      if (posterFile) {
         try {
-          poster = await readFileAsDataURL(fileInput.files[0]);
+          poster = await readFileAsDataURL(posterFile);
         } catch (err) {
           console.error("Error reading file", err);
         }
@@ -577,6 +667,13 @@ document
     }
 
     try {
+      gameData.poster = await uploadGamePosterToStorage({
+        poster: gameData.poster,
+        file: posterFile,
+        title: gameData.title,
+        folder: "played",
+      });
+
       const { data, error } = await supabaseClient
         .from("games")
         .insert({
@@ -1481,4 +1578,3 @@ function updateListVisibility() {
 }
 
 window.addEventListener("resize", updateTabVisibility);
-
