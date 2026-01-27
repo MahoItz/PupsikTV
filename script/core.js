@@ -43,6 +43,25 @@ function getGamePosterStoragePath(posterUrl) {
   }
 }
 
+function isPosterProxyUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  return url.includes("/api/poster-proxy?url=");
+}
+
+function proxyPosterUrl(url) {
+  if (!url || typeof url !== "string") return url;
+  if (url.startsWith("data:") || isPosterProxyUrl(url)) return url;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (host.includes("steamgriddb.com")) {
+      return buildApiPath(`/poster-proxy?url=${encodeURIComponent(url)}`);
+    }
+  } catch (err) {
+    return url;
+  }
+  return url;
+}
+
 async function uploadGamePosterToStorage({
   poster,
   file,
@@ -2205,15 +2224,8 @@ async function readRemoteImageAsOptimizedDataURL(url) {
     return url;
   }
   try {
-    const host = new URL(url).hostname.toLowerCase();
-    if (host.includes("steamgriddb.com")) {
-      return url;
-    }
-  } catch {
-    return url;
-  }
-  try {
-    const res = await fetch(url, { mode: "cors", credentials: "omit" });
+    const fetchUrl = proxyPosterUrl(url);
+    const res = await fetch(fetchUrl, { mode: "cors", credentials: "omit" });
     if (!res.ok) return url;
     const blob = await res.blob();
     if (!blob.type || !blob.type.startsWith("image/")) return url;
@@ -2448,15 +2460,21 @@ async function fetchSteamGridPosters(title) {
     steamGridPosters = posters
       .map((g) => {
         if (typeof g === "string") {
-          return { url: g, thumb: g };
+          const proxied = proxyPosterUrl(g);
+          return { url: proxied, thumb: proxied };
         }
         if (!g) return null;
         const url = g.url || g.thumb || null;
         const thumb = g.thumb || g.url || url;
-        return url ? { url, thumb } : null;
+        if (!url) return null;
+        return {
+          url: proxyPosterUrl(url),
+          thumb: proxyPosterUrl(thumb),
+        };
       })
       .filter(Boolean);
-    steamGridPoster = steamGridPosters[0]?.thumb || steamGridPosters[0]?.url || null;
+    steamGridPoster =
+      steamGridPosters[0]?.thumb || steamGridPosters[0]?.url || null;
   } catch (err) {
     console.error("SteamGridDB fetch error", err);
   }
