@@ -49,20 +49,25 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+@keyframes planRemoveIn {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(0.35); }
+  }
+
 .order-plan-banner::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255, 77, 79, 0.18), rgba(255, 77, 79, 0));
-    opacity: 0;
-    transition: opacity 0.2s ease;
+    background: linear-gradient(270deg, rgba(246, 49, 53, 0.45), rgba(255, 77, 79, 0));
+    transform: scaleX(0);
+    transform-origin: right;
     pointer-events: none;
     border-radius: inherit;
-}
+  }
 
-.order-plan-banner.is-plan-remove-hover::after {
-    opacity: 1;
-}
+  .order-plan-banner.is-plan-remove-hover::after {
+    animation: planRemoveIn 0.25s ease forwards;
+  }
 
 .order-info-button {
     position: absolute;
