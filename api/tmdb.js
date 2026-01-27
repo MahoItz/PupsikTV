@@ -1,5 +1,3 @@
-const { createNetlifyHandler } = require("./_netlify-wrapper.js");
-
 const TMDB_API_BASE_URL = "https://api.themoviedb.org/3";
 
 function normalizeImdbId(id) {
@@ -76,4 +74,3 @@ async function handler(req, res) {
 }
 
 module.exports = handler;
-module.exports.handler = createNetlifyHandler(handler);

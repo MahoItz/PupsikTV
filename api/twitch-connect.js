@@ -1,5 +1,4 @@
 const { createClient } = require("@supabase/supabase-js");
-const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const EVENTSUB_SECRET = process.env.TWITCH_EVENTSUB_SECRET || "";
@@ -586,5 +585,4 @@ async function ensureChatSubscription({
 }
 
 module.exports = handler;
-module.exports.handler = createNetlifyHandler(handler);
 module.exports.refreshTwitchToken = refreshTwitchToken;

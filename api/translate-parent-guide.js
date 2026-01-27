@@ -1,5 +1,3 @@
-const { createNetlifyHandler } = require("./_netlify-wrapper.js");
-
 const PARENT_GUIDE_KEYS = ["sexAndNudity"];
 
 function normalizeSections(sections = {}) {
@@ -197,4 +195,3 @@ async function handler(req, res) {
 }
 
 module.exports = handler;
-module.exports.handler = createNetlifyHandler(handler);

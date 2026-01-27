@@ -1,5 +1,3 @@
-const { createNetlifyHandler } = require("./_netlify-wrapper.js");
-
 async function handler(req, res) {
   const search = req.query.search || '';
   if (!search) {
@@ -45,4 +43,3 @@ async function handler(req, res) {
 }
 
 module.exports = handler;
-module.exports.handler = createNetlifyHandler(handler);

@@ -1,5 +1,4 @@
 const { createClient } = require("@supabase/supabase-js");
-const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const COMMAND_PREFIX = "!кино";
@@ -131,5 +130,3 @@ async function handler(req, res) {
 }
 
 module.exports = handler;
-module.exports.handler = createNetlifyHandler(handler);
-

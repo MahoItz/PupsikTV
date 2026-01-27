@@ -1,5 +1,3 @@
-const { createNetlifyHandler } = require("./_netlify-wrapper.js");
-
 const SECTION_MARKERS = {
   sexAndNudity: [
     'data-testid="sub-section-nudity"',
@@ -144,4 +142,3 @@ async function handler(req, res) {
 }
 
 module.exports = handler;
-module.exports.handler = createNetlifyHandler(handler);

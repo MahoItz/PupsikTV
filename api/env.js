@@ -1,5 +1,4 @@
 const { extractBearerToken, verifyAdminToken } = require("./_admin-session.js");
-const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
 function handler(req, res) {
   let password;
@@ -74,4 +73,3 @@ function handler(req, res) {
 }
 
 module.exports = handler;
-module.exports.handler = createNetlifyHandler(handler);

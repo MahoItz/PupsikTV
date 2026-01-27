@@ -3,7 +3,6 @@ const {
   issueAdminToken,
   verifyAdminToken,
 } = require("./_admin-session.js");
-const { createNetlifyHandler } = require("./_netlify-wrapper.js");
 
 const ALLOWED_METHODS = ["GET", "POST"];
 
@@ -88,4 +87,3 @@ function handler(req, res) {
 }
 
 module.exports = handler;
-module.exports.handler = createNetlifyHandler(handler);
