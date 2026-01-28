@@ -605,26 +605,17 @@
 
 #sortOrderBtn,
 .btn-sort-toggle {
-    border: 2px solid rgba(0, 212, 255, 0.4);
-    background: rgba(0, 212, 255, 0.1);
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    background: var(--glass-bg);
     color: var(--text-primary);
-    box-shadow: 0 0 10px rgba(0, 212, 255, 0.25);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
     width: 48px;
     height: 48px;
     padding: 0;
 }
 
-/* Убираем нижний отступ, чтобы кнопка была на одной линии с выпадающим меню */
-#sortOrderBtn {
-    margin-bottom: 0;
-}
-
 #sortOrderBtn:hover,
 .btn-sort-toggle:hover {
     background: rgba(0, 212, 255, 0.2);
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
     transform: translateY(-2px);
 }
 

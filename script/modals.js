@@ -365,7 +365,7 @@ function openMovieDetailsModal(id) {
   const originalEl = document.getElementById("movieDetailsOriginal");
   if (originalEl) {
     if (originalTitle) {
-      originalEl.textContent = `Оригинальное название: ${originalTitle}`;
+      originalEl.textContent = originalTitle;
       originalEl.style.display = "block";
     } else {
       originalEl.textContent = "";
