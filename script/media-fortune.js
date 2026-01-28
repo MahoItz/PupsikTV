@@ -3599,6 +3599,8 @@ function initFortuneWheel() {
   let fortunePointerWidth = null;
   let lastPointerGap = null;
   let lastPointerRightValue = null;
+  let lastCanvasSize = { width: 0, height: 0, dpr: 1 };
+  let needsCanvasResize = true;
 
   const measurePointerWidth = () => {
     if (!fortunePointerEl) {
@@ -4629,16 +4631,38 @@ function initFortuneWheel() {
 
   function dprScaleCanvas(cnv) {
     const rect = cnv.getBoundingClientRect();
-    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
     const width = Math.max(1, Math.round(rect.width || cnv.width || 1));
     const height = Math.max(1, Math.round(rect.height || cnv.height || 1));
-    cnv.width = width * dpr;
-    cnv.height = height * dpr;
-    const context = cnv.getContext("2d");
-    if (context) {
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const sizeChanged =
+      width !== lastCanvasSize.width ||
+      height !== lastCanvasSize.height ||
+      dpr !== lastCanvasSize.dpr;
+
+    if (sizeChanged) {
+      cnv.width = width * dpr;
+      cnv.height = height * dpr;
+      const context = cnv.getContext("2d");
+      if (context) {
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      lastCanvasSize = { width, height, dpr };
     }
-    return { width, height };
+
+    return lastCanvasSize;
+  }
+
+  function ensureCanvasSize() {
+    if (
+      !needsCanvasResize &&
+      lastCanvasSize.width > 0 &&
+      lastCanvasSize.height > 0
+    ) {
+      return lastCanvasSize;
+    }
+    const size = dprScaleCanvas(canvas);
+    needsCanvasResize = false;
+    return size;
   }
 
   function parseInput(text) {
@@ -4663,7 +4687,7 @@ function initFortuneWheel() {
   }
 
   function drawWheel() {
-    const { width: w, height: h } = dprScaleCanvas(canvas);
+    const { width: w, height: h } = ensureCanvasSize();
     const size = Math.min(w, h);
     const cx = w / 2;
     const cy = h / 2;
@@ -5043,11 +5067,15 @@ function initFortuneWheel() {
 
   if (typeof ResizeObserver === "function") {
     const resizeObserver = new ResizeObserver(() => {
+      needsCanvasResize = true;
       drawWheel();
     });
     resizeObserver.observe(canvas);
   } else {
-    window.addEventListener("resize", drawWheel);
+    window.addEventListener("resize", () => {
+      needsCanvasResize = true;
+      drawWheel();
+    });
   }
 
   canvas.addEventListener("click", spin);
