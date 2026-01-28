@@ -13,6 +13,16 @@ function normalizeActorsForStorage(value, limit = 15) {
   return "";
 }
 
+async function resolveKinopoiskImdbId(kinopoiskId, currentImdbId) {
+  if (currentImdbId || !kinopoiskId) {
+    return currentImdbId || null;
+  }
+  if (typeof fetchKinopoiskImdbId !== "function" || !KINOPOISK_API_KEY) {
+    return currentImdbId || null;
+  }
+  return fetchKinopoiskImdbId(kinopoiskId);
+}
+
 document
   .getElementById("addMovieForm")
   .addEventListener("submit", async function (e) {
@@ -141,6 +151,11 @@ document
       showDuplicateModal();
       return;
     }
+
+    movieData.imdbId = await resolveKinopoiskImdbId(
+      movieData.kinopoiskId,
+      movieData.imdbId
+    );
 
     const shouldClearRouletteWinner =
       Boolean(rouletteLastWinner) &&
@@ -333,6 +348,11 @@ document
       showDuplicateModal();
       return;
     }
+
+    orderData.imdbId = await resolveKinopoiskImdbId(
+      orderData.kinopoiskId,
+      orderData.imdbId
+    );
 
     try {
       const { data, error } = await supabaseClient
@@ -707,6 +727,10 @@ async function submitRating() {
     isSubmittingRating = true;
     if (confirmBtn) confirmBtn.disabled = true;
     try {
+      watchedMovie.imdbId = await resolveKinopoiskImdbId(
+        watchedMovie.kinopoiskId,
+        watchedMovie.imdbId
+      );
       const { data, error } = await supabaseClient
         .from("movies")
         .insert({
