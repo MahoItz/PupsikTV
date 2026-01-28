@@ -293,7 +293,7 @@ async function loadMoviesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director"
+        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, kp_id, imdb_id"
       )
       .order("id", { ascending: false });
 
@@ -312,6 +312,8 @@ async function loadMoviesFromSupabase() {
         year: item.year,
         rating: item.rating_numeric,
         kpRating: item.rating_OMDB,
+        kinopoiskId: item.kp_id || null,
+        imdbId: item.imdb_id || null,
         ratingSum,
         ratingCount,
         userRating:
@@ -361,7 +363,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director"
+        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, kp_id, imdb_id"
       )
       .order("id", { ascending: true });
 
@@ -378,26 +380,28 @@ async function loadWatchlistFromSupabase() {
       }
 
       return {
-      id: item.id,
-      title: item.order_title,
-      originalTitle: item.order_origin_title,
-      genres: item.order_genres,
-      poster: item.order_poster,
-      year: item.order_year || "",
-      length: item.order_length || null,
-      planDate: item.plan_date || null,
-      kpRating: item.kinopoisk_rate,
-      kinopoiskId: extractKinopoiskIdFromValue(item.order_poster),
-      orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
-      orderType: item.order_type,
-      dateAdded: item.created_at,
-      parentGuide,
-      parentGuideStatus: parentGuide ? "ready" : null,
-      parentGuideError: null,
-      description: item.description || "",
-      country: item.country || "",
-      actors: normalizeActorsValue(item.actors),
-      director: item.director || "",
+        id: item.id,
+        title: item.order_title,
+        originalTitle: item.order_origin_title,
+        genres: item.order_genres,
+        poster: item.order_poster,
+        year: item.order_year || "",
+        length: item.order_length || null,
+        planDate: item.plan_date || null,
+        kpRating: item.kinopoisk_rate,
+        kinopoiskId:
+          item.kp_id || extractKinopoiskIdFromValue(item.order_poster),
+        imdbId: item.imdb_id || null,
+        orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
+        orderType: item.order_type,
+        dateAdded: item.created_at,
+        parentGuide,
+        parentGuideStatus: parentGuide ? "ready" : null,
+        parentGuideError: null,
+        description: item.description || "",
+        country: item.country || "",
+        actors: normalizeActorsValue(item.actors),
+        director: item.director || "",
       };
     });
   } catch (err) {

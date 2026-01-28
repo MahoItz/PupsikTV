@@ -694,7 +694,7 @@ function createMovieCard(
     ratingItem2.appendChild(icon2);
     ratingItem2.appendChild(span2);
     ratingItem2.addEventListener("click", () =>
-      openKinopoiskPage(movie.title, movie.year, movie.originalTitle)
+      openKinopoiskPageForRecord({ item: movie, table: "movies" })
     );
     ratingItem2.addEventListener("mouseenter", (e) => {
       if (!ratingTooltip) return;
@@ -998,7 +998,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   kpRating.appendChild(kpImg);
   kpRating.appendChild(document.createTextNode(` ${order.kpRating ?? "-"}`));
   kpRating.addEventListener("click", () =>
-    openKinopoiskPage(order.title, order.year, order.originalTitle)
+    openKinopoiskPageForRecord({ item: order, table: "Movie_Orders" })
   );
   kpRating.addEventListener("mouseenter", (e) => {
     if (!ratingTooltip) return;

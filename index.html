@@ -1376,6 +1376,20 @@
             <p>Сначала найдите фильм через поиск.</p>
         </div>
     </div>
+    <div id="kpSelectModal" class="modal">
+        <div class="modal-content kp-select-modal">
+            <span class="close" onclick="closeModal('kpSelectModal')">&times;</span>
+            <h2>Выберите фильм на Кинопоиске</h2>
+            <p id="kpSelectStatus" class="kp-select-status">Ищем варианты на Кинопоиске...</p>
+            <div id="kpSelectList" class="kp-select-list"></div>
+            <a id="kpSelectSearchLink" class="kp-select-link" target="_blank" rel="noopener">
+                Открыть поиск Кинопоиска
+            </a>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal('kpSelectModal')">Закрыть</button>
+            </div>
+        </div>
+    </div>
     <!-- Модальное окно подтверждения удаления фильма -->
     <div id="confirmDeleteMovieModal" class="modal">
         <div class="modal-content">

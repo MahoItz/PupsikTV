@@ -563,6 +563,171 @@ async function openKinopoiskPage(title, year, originalTitle = "") {
   );
 }
 
+const KP_SELECTION_LIMIT = 6;
+let kpSelectionContext = null;
+
+function buildKinopoiskSearchUrl(query) {
+  const normalizedQuery = (query || "").trim();
+  if (typeof buildKinopoiskSearchLink === "function") {
+    return buildKinopoiskSearchLink(normalizedQuery);
+  }
+  return `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(
+    normalizedQuery
+  )}`;
+}
+
+async function fetchKinopoiskCandidates(query) {
+  const normalizedQuery = (query || "").trim();
+  if (!normalizedQuery || !KINOPOISK_API_KEY) {
+    return [];
+  }
+  try {
+    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
+      normalizedQuery
+    )}&page=1`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      return [];
+    }
+    const data = await res.json();
+    return (data?.films || []).slice(0, KP_SELECTION_LIMIT);
+  } catch (err) {
+    console.error("Kinopoisk candidates error", err);
+    return [];
+  }
+}
+
+function updateLocalKinopoiskMetadata(item, kinopoiskId, imdbId, table) {
+  if (!item) return;
+  item.kinopoiskId = kinopoiskId;
+  if (imdbId !== undefined) {
+    item.imdbId = imdbId;
+  }
+  if (table === "movies") {
+    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+  }
+}
+
+async function persistKinopoiskMetadata({ table, itemId, kinopoiskId, imdbId }) {
+  if (!table || !itemId || !kinopoiskId) {
+    return;
+  }
+  try {
+    const { error } = await supabaseClient
+      .from(table)
+      .update({
+        kp_id: kinopoiskId,
+        imdb_id: imdbId || null,
+      })
+      .eq("id", itemId);
+    if (error) {
+      throw error;
+    }
+  } catch (err) {
+    console.error("Failed to persist Kinopoisk IDs", err);
+  }
+}
+
+async function handleKinopoiskSelection(film) {
+  const filmId = extractKinopoiskIdFromValue(film?.filmId);
+  if (!kpSelectionContext || !filmId) return;
+  const { item, table } = kpSelectionContext;
+  await persistKinopoiskMetadata({
+    table,
+    itemId: item?.id,
+    kinopoiskId: filmId,
+    imdbId: film?.imdbId || null,
+  });
+  updateLocalKinopoiskMetadata(item, filmId, film?.imdbId || null, table);
+  closeModal("kpSelectModal");
+  window.open(`https://www.kinopoisk.ru/film/${filmId}/`, "_blank");
+}
+
+function renderKinopoiskSelectionResults(results) {
+  const listEl = document.getElementById("kpSelectList");
+  if (!listEl) return;
+  listEl.innerHTML = "";
+  results.forEach((film) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "kp-select-option";
+    const title = film?.nameRu || film?.nameEn || "Без названия";
+    const year = film?.year ? ` (${film.year})` : "";
+    const rating = film?.rating ? ` • ${film.rating}` : "";
+    btn.textContent = `${title}${year}${rating}`;
+    btn.addEventListener("click", () => handleKinopoiskSelection(film));
+    listEl.appendChild(btn);
+  });
+}
+
+async function openKinopoiskSelectionModal({ item, table, title, originalTitle }) {
+  const modal = document.getElementById("kpSelectModal");
+  const statusEl = document.getElementById("kpSelectStatus");
+  const linkEl = document.getElementById("kpSelectSearchLink");
+  const query = (originalTitle || title || "").trim();
+  if (!modal || !query) {
+    return;
+  }
+  kpSelectionContext = { item, table };
+  if (linkEl) {
+    linkEl.href = buildKinopoiskSearchUrl(query);
+  }
+  if (statusEl) {
+    statusEl.textContent = "Ищем варианты на Кинопоиске...";
+  }
+  modal.style.display = "block";
+  const results = await fetchKinopoiskCandidates(query);
+  if (statusEl) {
+    statusEl.textContent = results.length
+      ? `Найдено вариантов: ${results.length}`
+      : "Не удалось найти подходящие фильмы.";
+  }
+  renderKinopoiskSelectionResults(results);
+}
+
+async function openKinopoiskPageForRecord({ item, table }) {
+  if (!item) return;
+  const kinopoiskId = item.kinopoiskId || item.kpId || item.kp_id || null;
+  const title = item.title || "";
+  const originalTitle = item.originalTitle || "";
+  const year = item.year || "";
+
+  if (kinopoiskId) {
+    window.open(`https://www.kinopoisk.ru/film/${kinopoiskId}/`, "_blank");
+    return;
+  }
+
+  const query = (originalTitle || title || "").trim();
+  if (!query) return;
+
+  if (!KINOPOISK_API_KEY) {
+    window.open(buildKinopoiskSearchUrl(query), "_blank");
+    return;
+  }
+
+  const film = await fetchKinopoiskFilm(title, year, originalTitle);
+  const filmId = extractKinopoiskIdFromValue(film?.filmId);
+  if (filmId) {
+    await persistKinopoiskMetadata({
+      table,
+      itemId: item.id,
+      kinopoiskId: filmId,
+      imdbId: film?.imdbId || null,
+    });
+    updateLocalKinopoiskMetadata(item, filmId, film?.imdbId || null, table);
+    window.open(`https://www.kinopoisk.ru/film/${filmId}/`, "_blank");
+    return;
+  }
+
+  await openKinopoiskSelectionModal({ item, table, title, originalTitle });
+}
+
 async function handleGameSearch() {
   const btn = document.getElementById("gameAutoSearchBtn");
   const loader = document.getElementById("gameAutoSearchLoading");
@@ -756,4 +921,3 @@ function showPlayedGamePreview() {
   );
   preview.style.display = "block";
 }
-
