@@ -152,6 +152,15 @@ const DETAILS_SPECIAL_STUDIOS = [
 
 const detailsStudioLoads = new Map();
 
+function normalizeImdbId(value) {
+  if (value === null || value === undefined) return null;
+  const text = value.toString().trim();
+  if (!text) return null;
+  const lowered = text.toLowerCase();
+  if (lowered === "null" || lowered === "n/a") return null;
+  return text;
+}
+
 function normalizeStudioName(name = "") {
   return name.toString().trim();
 }
@@ -293,11 +302,12 @@ function buildDetailsStudioList(details = {}) {
 }
 
 async function fetchDetailsStudiosFromTmdb(imdbId) {
-  if (!imdbId || !TMDB_ENABLED) {
+  const normalizedImdbId = normalizeImdbId(imdbId);
+  if (!normalizedImdbId) {
     return [];
   }
 
-  const params = new URLSearchParams({ imdbId });
+  const params = new URLSearchParams({ imdbId: normalizedImdbId });
   const tmdbUrl = `${buildApiPath("/tmdb")}?${params.toString()}`;
   const response = await fetch(tmdbUrl);
 
@@ -339,19 +349,22 @@ async function ensureDetailsStudios(item, options = {}) {
     return;
   }
 
-  if (!item.imdbId || !TMDB_ENABLED) {
+  const imdbId = normalizeImdbId(item.imdbId ?? item.imdb_id ?? item.imdb);
+  if (!imdbId) {
     renderDetailsStudios(containerId, []);
     return;
   }
+  item.imdbId = imdbId;
 
-  const loadKey = `${table || "item"}:${item.imdbId}`;
+  const loadKey = `${table || "item"}:${imdbId}`;
   if (detailsStudioLoads.has(loadKey)) {
+    setDetailsStudiosLoading(containerId);
     return;
   }
 
   setDetailsStudiosLoading(containerId);
 
-  const loadPromise = fetchDetailsStudiosFromTmdb(item.imdbId)
+  const loadPromise = fetchDetailsStudiosFromTmdb(imdbId)
     .then((fetchedStudios) => {
       const normalized = normalizeStudiosList(fetchedStudios);
       item.studios = normalized;
