@@ -96,14 +96,13 @@
 .search-input:focus {
     outline: none;
     border-color: var(--secondary-color);
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
     background: rgba(0, 212, 255, 0.1);
 }
 
 .admin-divider {
     width: 100%;
     height: 2px;
-    margin: 6px 0 14px;
+    margin: 0px 0 14px;
     border-radius: 999px;
     background: linear-gradient(90deg, rgba(0, 212, 255, 0) 0%, rgba(139, 139, 139, 0.55) 50%, rgba(0, 212, 255, 0) 100%);
 }
@@ -115,7 +114,8 @@
 
 .admin-action-button {
     width: 100%;
-    padding: 6px 20px;
+    height: 40px;
+    padding: 6px 16px;
     border: 2px solid rgba(0, 212, 255, 0.3);
     border-radius: var(--border-radius-small);
     font-size: 1rem;
@@ -132,7 +132,42 @@
     outline: none;
     border-color: var(--secondary-color);
     background: rgba(0, 212, 255, 0.1);
-    transform: translateY(-2px);
+}
+
+.admin-action-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+.admin-action-divider {
+    width: 2px;
+    height: 40px;
+    background: rgba(0, 212, 255, 0.4);
+}
+
+.admin-action-main {
+    flex: 1 1 90%;
+    border-right: 0;
+    border-radius: var(--border-radius-small) 0 0 var(--border-radius-small);
+}
+
+.admin-action-icon {
+    flex: 0 0 10%;
+    min-width: 56px;
+    border-left: 0;
+    border-radius: 0 var(--border-radius-small) var(--border-radius-small) 0;
+    background: #7c4dff29;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-action-icon:hover,
+.admin-action-icon:focus-visible {
+    border-color: #7c4dff;
+    background: #7c4dff67;
 }
 
 /* Input field with search button inside */

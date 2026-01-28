@@ -141,11 +141,14 @@
                     <div class="watchlist-section">
                         <div class="watchlist-header">
                             <h3>Заказанные фильмы</h3>
-                            <button class="btn btn-secondary btn-icon admin-only"
-                                onclick="openAddToWatchlistModal()">+</button>
-                            <button class="btn btn-tertiary btn-icon admin-only"
-                                onclick="copyScheduledMoviesToClipboard()"
-                                title="Скопировать список запланированных фильмов">📋</button>
+                        </div>
+                        <div class="admin-divider admin-only" aria-hidden="true"></div>
+                        <div class="admin-actions admin-only">
+                            <div class="admin-action-group">
+                                <button class="admin-action-button admin-action-main" onclick="openAddToWatchlistModal()">Добавить фильм</button>
+                                <span class="admin-action-divider" aria-hidden="true"></span>
+                                <button class="admin-action-button admin-action-icon" onclick="copyScheduledMoviesToClipboard()" title="Скопировать список запланированных фильмов">📋</button>
+                            </div>
                         </div>
                         <div id="watchlistContainer">
                             <!-- Список заказанных фильмов-->
@@ -156,8 +159,10 @@
                     <div class="watchlist-section">
                         <div class="watchlist-header">
                             <h3>Заказанные игры</h3>
-                            <button class="btn btn-secondary btn-icon admin-only"
-                                onclick="openAddGameModal()">+</button>
+                        </div>
+                        <div class="admin-divider admin-only" aria-hidden="true"></div>
+                        <div class="admin-actions admin-only">
+                            <button class="admin-action-button" onclick="openAddGameModal()">Добавить игру</button>
                         </div>
                         <div id="gamesContainer">
                             <!-- Список заказанных игр -->
