@@ -547,6 +547,21 @@
     align-items: center;
 }
 
+#movieDetailsModal .movie-details-studio-wrap,
+#orderDetailsModal .movie-details-studio-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+#movieDetailsModal .movie-details-studio-btn,
+#orderDetailsModal .movie-details-studio-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
 #movieDetailsModal .movie-details-section-title,
 #gameDetailsModal .movie-details-section-title,
 #orderDetailsModal .movie-details-section-title,

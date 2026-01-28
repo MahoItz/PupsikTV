@@ -239,7 +239,7 @@ function createDetailsStudioBadge(studioName) {
   return badge;
 }
 
-function renderDetailsStudios(containerId, studiosValue) {
+function renderDetailsStudios(containerId, studiosValue, buttonId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -249,6 +249,10 @@ function renderDetailsStudios(containerId, studiosValue) {
   if (!studios.length) {
     container.textContent = "—";
     container.classList.add("movie-details-muted");
+    const button = buttonId ? document.getElementById(buttonId) : null;
+    if (button) {
+      button.style.display = "inline-flex";
+    }
     return;
   }
 
@@ -256,6 +260,10 @@ function renderDetailsStudios(containerId, studiosValue) {
   studios.forEach((studio) => {
     container.appendChild(createDetailsStudioBadge(studio));
   });
+  const button = buttonId ? document.getElementById(buttonId) : null;
+  if (button) {
+    button.style.display = "none";
+  }
 }
 
 function setDetailsStudiosLoading(containerId) {
@@ -340,18 +348,32 @@ async function persistStudiosToSupabase(table, id, studios) {
   }
 }
 
+function setupDetailsStudiosSearchButton(item, options = {}) {
+  const { containerId, buttonId } = options;
+  const button = buttonId ? document.getElementById(buttonId) : null;
+  if (!button) return;
+
+  const studios = normalizeStudiosList(item?.studios);
+  button.style.display = studios.length ? "none" : "inline-flex";
+  button.disabled = false;
+
+  button.onclick = () => {
+    ensureDetailsStudios(item, options);
+  };
+}
+
 async function ensureDetailsStudios(item, options = {}) {
   if (!item) return;
-  const { containerId, table, cacheKey } = options;
+  const { containerId, table, cacheKey, buttonId } = options;
   const studios = normalizeStudiosList(item.studios);
   if (studios.length) {
-    renderDetailsStudios(containerId, studios);
+    renderDetailsStudios(containerId, studios, buttonId);
     return;
   }
 
   const imdbId = normalizeImdbId(item.imdbId ?? item.imdb_id ?? item.imdb);
   if (!imdbId) {
-    renderDetailsStudios(containerId, []);
+    renderDetailsStudios(containerId, [], buttonId);
     return;
   }
   item.imdbId = imdbId;
@@ -359,16 +381,24 @@ async function ensureDetailsStudios(item, options = {}) {
   const loadKey = `${table || "item"}:${imdbId}`;
   if (detailsStudioLoads.has(loadKey)) {
     setDetailsStudiosLoading(containerId);
+    const button = buttonId ? document.getElementById(buttonId) : null;
+    if (button) {
+      button.style.display = "none";
+    }
     return;
   }
 
   setDetailsStudiosLoading(containerId);
+  const button = buttonId ? document.getElementById(buttonId) : null;
+  if (button) {
+    button.style.display = "none";
+  }
 
   const loadPromise = fetchDetailsStudiosFromTmdb(imdbId)
     .then((fetchedStudios) => {
       const normalized = normalizeStudiosList(fetchedStudios);
       item.studios = normalized;
-      renderDetailsStudios(containerId, normalized);
+      renderDetailsStudios(containerId, normalized, buttonId);
       if (table) {
         persistStudiosToSupabase(table, item.id, normalized);
       }
@@ -378,7 +408,7 @@ async function ensureDetailsStudios(item, options = {}) {
     })
     .catch((err) => {
       console.error("Failed to load studios for details modal", err);
-      renderDetailsStudios(containerId, []);
+      renderDetailsStudios(containerId, [], buttonId);
     })
     .finally(() => {
       detailsStudioLoads.delete(loadKey);
@@ -643,7 +673,17 @@ function openMovieDetailsModal(id) {
   setMovieDetailsText("movieDetailsDescription", movie.description, "—");
   setMovieDetailsText("movieDetailsCountry", movie.country, "—");
   setMovieDetailsText("movieDetailsDirector", movie.director, "—");
-  renderDetailsStudios("movieDetailsStudios", movie.studios);
+  renderDetailsStudios(
+    "movieDetailsStudios",
+    movie.studios,
+    "movieDetailsStudiosSearch"
+  );
+  setupDetailsStudiosSearchButton(movie, {
+    containerId: "movieDetailsStudios",
+    table: "movies",
+    cacheKey: "moviesCache",
+    buttonId: "movieDetailsStudiosSearch",
+  });
   renderActorsList(
     "movieDetailsActorsList",
     "movieDetailsActorsSection",
@@ -697,6 +737,7 @@ function openMovieDetailsModal(id) {
     containerId: "movieDetailsStudios",
     table: "movies",
     cacheKey: "moviesCache",
+    buttonId: "movieDetailsStudiosSearch",
   });
 
   alignDetailsPoster(modal);
@@ -806,7 +847,16 @@ function renderOrderDetailsModal(order) {
   setMovieDetailsText("orderDetailsDescription", order.description, "—");
   setMovieDetailsText("orderDetailsCountry", order.country, "—");
   setMovieDetailsText("orderDetailsDirector", order.director, "—");
-  renderDetailsStudios("orderDetailsStudios", order.studios);
+  renderDetailsStudios(
+    "orderDetailsStudios",
+    order.studios,
+    "orderDetailsStudiosSearch"
+  );
+  setupDetailsStudiosSearchButton(order, {
+    containerId: "orderDetailsStudios",
+    table: "Movie_Orders",
+    buttonId: "orderDetailsStudiosSearch",
+  });
   renderActorsList(
     "orderDetailsActorsList",
     "orderDetailsActorsSection",
@@ -871,6 +921,7 @@ function renderOrderDetailsModal(order) {
   ensureDetailsStudios(order, {
     containerId: "orderDetailsStudios",
     table: "Movie_Orders",
+    buttonId: "orderDetailsStudiosSearch",
   });
 
   modal.style.display = "block";
