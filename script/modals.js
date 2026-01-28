@@ -142,6 +142,235 @@ function normalizeActorsList(value, limit = 15) {
   return [];
 }
 
+const DETAILS_SPECIAL_STUDIOS = [
+  { keyword: "netflix", className: "netflix", label: "Netflix" },
+  { keyword: "warner bros. pictures", className: "warner", label: "Warner Bros. Pictures" },
+  { keyword: "warner", className: "warner", label: "Warner Bros" },
+  { keyword: "disney company", className: "disney", label: "Disney Company" },
+  { keyword: "disney", className: "disney", label: "Disney" },
+];
+
+const detailsStudioLoads = new Map();
+
+function normalizeStudioName(name = "") {
+  return name.toString().trim();
+}
+
+function normalizeStudiosList(value, limit = 15) {
+  if (typeof normalizeStudiosValue === "function") {
+    return normalizeStudiosValue(value, limit);
+  }
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalizeStudioName(item))
+      .filter(Boolean)
+      .slice(0, limit);
+  }
+  if (typeof value === "object" && Array.isArray(value.studios)) {
+    return value.studios
+      .map((item) => normalizeStudioName(item))
+      .filter(Boolean)
+      .slice(0, limit);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => normalizeStudioName(item))
+          .filter(Boolean)
+          .slice(0, limit);
+      }
+      if (parsed && Array.isArray(parsed.studios)) {
+        return parsed.studios
+          .map((item) => normalizeStudioName(item))
+          .filter(Boolean)
+          .slice(0, limit);
+      }
+    } catch (err) {
+      // Fallback to delimiter parsing.
+    }
+    return trimmed
+      .split(/[,;|]+/)
+      .map((item) => normalizeStudioName(item))
+      .filter(Boolean)
+      .slice(0, limit);
+  }
+  return [];
+}
+
+function getDetailsSpecialStudioClass(studioName = "") {
+  const normalized = studioName.toLowerCase();
+  const match = DETAILS_SPECIAL_STUDIOS.find(({ keyword }) =>
+    normalized.includes(keyword)
+  );
+  return match ? match.className : null;
+}
+
+function createDetailsStudioBadge(studioName) {
+  if (typeof createFortuneStudioBadge === "function") {
+    return createFortuneStudioBadge(studioName);
+  }
+
+  const badge = document.createElement("span");
+  badge.className = "fortune-studio-badge";
+  badge.textContent = normalizeStudioName(studioName) || "-";
+
+  const specialClass = getDetailsSpecialStudioClass(studioName);
+  if (specialClass) {
+    badge.classList.add(`fortune-studio-badge--${specialClass}`);
+  }
+
+  return badge;
+}
+
+function renderDetailsStudios(containerId, studiosValue) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const studios = normalizeStudiosList(studiosValue);
+  container.innerHTML = "";
+
+  if (!studios.length) {
+    container.textContent = "—";
+    container.classList.add("movie-details-muted");
+    return;
+  }
+
+  container.classList.remove("movie-details-muted");
+  studios.forEach((studio) => {
+    container.appendChild(createDetailsStudioBadge(studio));
+  });
+}
+
+function setDetailsStudiosLoading(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = "";
+  container.textContent = "Загружаем...";
+  container.classList.add("movie-details-muted");
+}
+
+function buildDetailsStudioList(details = {}) {
+  const studios = new Set();
+  const homepage = normalizeStudioName(details?.homepage);
+
+  const addStudio = (name) => {
+    const normalizedName = normalizeStudioName(name);
+    if (normalizedName) {
+      studios.add(normalizedName);
+    }
+  };
+
+  if (Array.isArray(details?.production_companies)) {
+    details.production_companies.forEach((company) => {
+      addStudio(company?.name || "");
+    });
+  }
+
+  const homepageLower = homepage.toLowerCase();
+  DETAILS_SPECIAL_STUDIOS.forEach(({ keyword, label }) => {
+    if (homepageLower.includes(keyword)) {
+      addStudio(label);
+    }
+  });
+
+  Array.from(studios).forEach((studioName) => {
+    DETAILS_SPECIAL_STUDIOS.forEach(({ keyword, label }) => {
+      if (studioName.toLowerCase().includes(keyword)) {
+        addStudio(label);
+      }
+    });
+  });
+
+  return Array.from(studios);
+}
+
+async function fetchDetailsStudiosFromTmdb(imdbId) {
+  if (!imdbId || !TMDB_ENABLED) {
+    return [];
+  }
+
+  const params = new URLSearchParams({ imdbId });
+  const tmdbUrl = `${buildApiPath("/tmdb")}?${params.toString()}`;
+  const response = await fetch(tmdbUrl);
+
+  if (!response.ok) {
+    throw new Error(`TMDB request failed: ${response.status}`);
+  }
+
+  const payload = await response.json();
+  if (payload?.details) {
+    return buildDetailsStudioList(payload.details);
+  }
+
+  if (payload?.studios) {
+    return normalizeStudiosList(payload.studios);
+  }
+
+  return [];
+}
+
+async function persistStudiosToSupabase(table, id, studios) {
+  if (!supabaseClient || !table || !id) return;
+  try {
+    const { error } = await supabaseClient
+      .from(table)
+      .update({ studios: JSON.stringify(studios) })
+      .eq("id", id);
+    if (error) throw error;
+  } catch (err) {
+    console.error("Failed to save studios to Supabase", err);
+  }
+}
+
+async function ensureDetailsStudios(item, options = {}) {
+  if (!item) return;
+  const { containerId, table, cacheKey } = options;
+  const studios = normalizeStudiosList(item.studios);
+  if (studios.length) {
+    renderDetailsStudios(containerId, studios);
+    return;
+  }
+
+  if (!item.imdbId || !TMDB_ENABLED) {
+    renderDetailsStudios(containerId, []);
+    return;
+  }
+
+  const loadKey = `${table || "item"}:${item.imdbId}`;
+  if (detailsStudioLoads.has(loadKey)) {
+    return;
+  }
+
+  setDetailsStudiosLoading(containerId);
+
+  const loadPromise = fetchDetailsStudiosFromTmdb(item.imdbId)
+    .then((fetchedStudios) => {
+      const normalized = normalizeStudiosList(fetchedStudios);
+      item.studios = normalized;
+      renderDetailsStudios(containerId, normalized);
+      if (table) {
+        persistStudiosToSupabase(table, item.id, normalized);
+      }
+      if (cacheKey && Array.isArray(allMovies)) {
+        localStorage.setItem(cacheKey, JSON.stringify(allMovies));
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to load studios for details modal", err);
+      renderDetailsStudios(containerId, []);
+    })
+    .finally(() => {
+      detailsStudioLoads.delete(loadKey);
+    });
+
+  detailsStudioLoads.set(loadKey, loadPromise);
+}
+
 function renderActorsList(listId, sectionId, actorsValue) {
   const listEl = document.getElementById(listId);
   const sectionEl = document.getElementById(sectionId);
@@ -398,6 +627,7 @@ function openMovieDetailsModal(id) {
   setMovieDetailsText("movieDetailsDescription", movie.description, "—");
   setMovieDetailsText("movieDetailsCountry", movie.country, "—");
   setMovieDetailsText("movieDetailsDirector", movie.director, "—");
+  renderDetailsStudios("movieDetailsStudios", movie.studios);
   renderActorsList(
     "movieDetailsActorsList",
     "movieDetailsActorsSection",
@@ -446,6 +676,12 @@ function openMovieDetailsModal(id) {
     votesEl.textContent = `Голосов: ${votes}`;
     votesEl.classList.toggle("movie-details-muted", votes === 0);
   }
+
+  ensureDetailsStudios(movie, {
+    containerId: "movieDetailsStudios",
+    table: "movies",
+    cacheKey: "moviesCache",
+  });
 
   alignDetailsPoster(modal);
   modal.style.display = "block";
@@ -554,6 +790,7 @@ function renderOrderDetailsModal(order) {
   setMovieDetailsText("orderDetailsDescription", order.description, "—");
   setMovieDetailsText("orderDetailsCountry", order.country, "—");
   setMovieDetailsText("orderDetailsDirector", order.director, "—");
+  renderDetailsStudios("orderDetailsStudios", order.studios);
   renderActorsList(
     "orderDetailsActorsList",
     "orderDetailsActorsSection",
@@ -614,6 +851,11 @@ function renderOrderDetailsModal(order) {
   if (typeof updateOrderDetailsExtras === "function") {
     updateOrderDetailsExtras(order);
   }
+
+  ensureDetailsStudios(order, {
+    containerId: "orderDetailsStudios",
+    table: "Movie_Orders",
+  });
 
   modal.style.display = "block";
 }

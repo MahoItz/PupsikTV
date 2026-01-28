@@ -281,6 +281,49 @@ function normalizeActorsValue(value, limit = 15) {
   return [];
 }
 
+function normalizeStudiosValue(value, limit = 15) {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (item || "").toString().trim())
+      .filter(Boolean)
+      .slice(0, limit);
+  }
+  if (typeof value === "object" && Array.isArray(value.studios)) {
+    return value.studios
+      .map((item) => (item || "").toString().trim())
+      .filter(Boolean)
+      .slice(0, limit);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => (item || "").toString().trim())
+          .filter(Boolean)
+          .slice(0, limit);
+      }
+      if (parsed && Array.isArray(parsed.studios)) {
+        return parsed.studios
+          .map((item) => (item || "").toString().trim())
+          .filter(Boolean)
+          .slice(0, limit);
+      }
+    } catch (err) {
+      // Fallback to delimiter parsing.
+    }
+    return trimmed
+      .split(/[,;|]+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, limit);
+  }
+  return [];
+}
+
 // Загрузка фильмов из Supabase
 async function loadMoviesFromSupabase() {
   const grid = document.getElementById("moviesGrid");
@@ -293,7 +336,7 @@ async function loadMoviesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, kp_id, imdb_id"
+        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, kp_id, imdb_id, studios"
       )
       .order("id", { ascending: false });
 
@@ -327,6 +370,7 @@ async function loadMoviesFromSupabase() {
         country: item.country || "",
         actors: normalizeActorsValue(item.actors),
         director: item.director || "",
+        studios: normalizeStudiosValue(item.studios),
       };
     });
 
@@ -363,7 +407,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, kp_id, imdb_id"
+        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, kp_id, imdb_id, studios"
       )
       .order("id", { ascending: true });
 
@@ -402,6 +446,7 @@ async function loadWatchlistFromSupabase() {
         country: item.country || "",
         actors: normalizeActorsValue(item.actors),
         director: item.director || "",
+        studios: normalizeStudiosValue(item.studios),
       };
     });
   } catch (err) {

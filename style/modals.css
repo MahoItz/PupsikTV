@@ -539,6 +539,14 @@
     font-weight: 600;
 }
 
+#movieDetailsModal .movie-details-studio-list,
+#orderDetailsModal .movie-details-studio-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
 #movieDetailsModal .movie-details-section-title,
 #gameDetailsModal .movie-details-section-title,
 #orderDetailsModal .movie-details-section-title,
