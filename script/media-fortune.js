@@ -1235,6 +1235,12 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     rulesPanelManuallyCollapsed = false;
     rulesPanelStandaloneOpen = false;
     updateRulesPanelState();
+    if (
+      fortuneWheelApi &&
+      typeof fortuneWheelApi.stopIdleAnimation === "function"
+    ) {
+      fortuneWheelApi.stopIdleAnimation();
+    }
     stopFortuneSuggestionsPolling();
     closeFortuneSuggestionsDropdown();
     if (audioPlayer) audioPlayer.pause();
@@ -1259,6 +1265,12 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     ) {
       fortuneWheelApi.handleMenuOpen();
     }
+    if (
+      fortuneWheelApi &&
+      typeof fortuneWheelApi.updateIdleAnimation === "function"
+    ) {
+      fortuneWheelApi.updateIdleAnimation();
+    }
     startFortuneSuggestionsPolling();
   });
 
@@ -1270,6 +1282,14 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
     collapseMusicMenuButton.addEventListener("click", () => {
       const shouldCollapse = !musicMenu.classList.contains("collapsed");
       setMenuCollapsed(shouldCollapse);
+      if (shouldCollapse) {
+        if (
+          fortuneWheelApi &&
+          typeof fortuneWheelApi.stopIdleAnimation === "function"
+        ) {
+          fortuneWheelApi.stopIdleAnimation();
+        }
+      }
       if (!shouldCollapse) {
         rulesPanelManuallyCollapsed = false;
       }
@@ -1279,6 +1299,13 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
         typeof fortuneWheelApi.handleMenuOpen === "function"
       ) {
         fortuneWheelApi.handleMenuOpen();
+      }
+      if (
+        !shouldCollapse &&
+        fortuneWheelApi &&
+        typeof fortuneWheelApi.updateIdleAnimation === "function"
+      ) {
+        fortuneWheelApi.updateIdleAnimation();
       }
     });
   }
@@ -4598,6 +4625,20 @@ function initFortuneWheel() {
     idleLastTimestamp = null;
   }
 
+  let isCanvasInView = true;
+  const isMenuVisible = () =>
+    !musicMenu ||
+    (musicMenu.classList.contains("open") &&
+      !musicMenu.classList.contains("collapsed"));
+
+  function syncIdleAnimation() {
+    if (isCanvasInView && isMenuVisible() && items.length === 0) {
+      startIdleAnimation();
+    } else {
+      stopIdleAnimation();
+    }
+  }
+
   function easeOutCubic(t) {
     const clamped = Math.min(1, Math.max(0, t));
     return 1 - Math.pow(1 - clamped, 3);
@@ -4979,11 +5020,7 @@ function initFortuneWheel() {
       }
     });
 
-    if (items.length === 0) {
-      startIdleAnimation();
-    } else {
-      stopIdleAnimation();
-    }
+    syncIdleAnimation();
     drawWheel();
     hideResultOverlay();
 
@@ -5078,6 +5115,22 @@ function initFortuneWheel() {
     });
   }
 
+  if (typeof IntersectionObserver === "function") {
+    const visibilityObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.target !== canvas) {
+          return;
+        }
+        const nextInView = entry.isIntersecting;
+        if (nextInView !== isCanvasInView) {
+          isCanvasInView = nextInView;
+          syncIdleAnimation();
+        }
+      });
+    });
+    visibilityObserver.observe(canvas);
+  }
+
   canvas.addEventListener("click", spin);
   if (clearBtn) {
     clearBtn.addEventListener("click", clearInput);
@@ -5092,14 +5145,19 @@ function initFortuneWheel() {
   input.value = items.join("\n");
   drawWheel();
   renderFortuneItemsList();
-  if (items.length === 0) {
-    startIdleAnimation();
-  }
+  syncIdleAnimation();
 
   return {
     handleMenuOpen() {
       drawWheel();
       setTimeout(drawWheel, 320);
+      syncIdleAnimation();
+    },
+    updateIdleAnimation() {
+      syncIdleAnimation();
+    },
+    stopIdleAnimation() {
+      stopIdleAnimation();
     },
     addItem(label, options) {
       addFortuneItem(label, options);
