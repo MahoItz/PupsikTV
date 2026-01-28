@@ -144,6 +144,12 @@ function computeMoviesSignature(list) {
     const actorsHash = stringHash(
       Array.isArray(movie?.actors) ? movie.actors.join(",") : movie?.actors ?? ""
     );
+    const imdbHash = stringHash(movie?.imdbId ?? movie?.imdb_id ?? "");
+    const studiosHash = stringHash(
+      Array.isArray(movie?.studios)
+        ? movie.studios.join(",")
+        : movie?.studios ?? ""
+    );
 
     hash = (hash * 31 + Number(movie?.id ?? 0)) >>> 0;
     hash = (hash * 31 + Math.round(rating * 10)) >>> 0;
@@ -155,6 +161,8 @@ function computeMoviesSignature(list) {
     hash = (hash * 31 + countryHash) >>> 0;
     hash = (hash * 31 + directorHash) >>> 0;
     hash = (hash * 31 + actorsHash) >>> 0;
+    hash = (hash * 31 + imdbHash) >>> 0;
+    hash = (hash * 31 + studiosHash) >>> 0;
   }
 
   return hash >>> 0;
