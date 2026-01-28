@@ -1,0 +1,220 @@
+const USER_LIST_LIMIT = 30;
+let usersList = [];
+let usersLoaded = false;
+let usersLoadingPromise = null;
+
+const USER_PICKER_INPUTS = [
+  { id: "watchOrderBy", type: "movies" },
+  { id: "editOrderBy", type: "movies" },
+  { id: "gameOrderBy", type: "games" },
+  { id: "editGameOrderBy", type: "games" },
+  { id: "playedGameOrderBy", type: "games" },
+  { id: "editPlayedGameOrderBy", type: "games" },
+];
+
+function normalizeUserName(name) {
+  return (name || "").trim();
+}
+
+async function waitForSupabaseClientForUsers(timeoutMs = 10000) {
+  if (supabaseClient && typeof supabaseClient.from === "function") {
+    return supabaseClient;
+  }
+  if (usersLoadingPromise) return usersLoadingPromise;
+  const start = Date.now();
+  usersLoadingPromise = new Promise((resolve, reject) => {
+    const interval = setInterval(() => {
+      if (supabaseClient && typeof supabaseClient.from === "function") {
+        clearInterval(interval);
+        usersLoadingPromise = null;
+        resolve(supabaseClient);
+        return;
+      }
+      if (Date.now() - start >= timeoutMs) {
+        clearInterval(interval);
+        usersLoadingPromise = null;
+        reject(new Error("Supabase client is not ready"));
+      }
+    }, 200);
+  });
+  return usersLoadingPromise;
+}
+
+async function loadUsersFromSupabase({ force = false } = {}) {
+  if (usersLoaded && !force) return usersList;
+  try {
+    const client = await waitForSupabaseClientForUsers();
+    const { data, error } = await client
+      .from("users")
+      .select("user, movies, games");
+    if (error) throw error;
+    usersList = Array.isArray(data)
+      ? data.map((row) => ({
+          user: row.user,
+          movies: Number(row.movies ?? 0) || 0,
+          games: Number(row.games ?? 0) || 0,
+        }))
+      : [];
+    usersLoaded = true;
+    return usersList;
+  } catch (err) {
+    console.error("Failed to load users list", err);
+    return [];
+  }
+}
+
+function sortUsersForType(type) {
+  const key = type === "games" ? "games" : "movies";
+  return [...usersList]
+    .sort((a, b) => {
+      const countDiff = (b[key] || 0) - (a[key] || 0);
+      if (countDiff !== 0) return countDiff;
+      return (a.user || "")
+        .localeCompare(b.user || "", "ru", { sensitivity: "base" });
+    })
+    .slice(0, USER_LIST_LIMIT);
+}
+
+function getPickerDropdown(input) {
+  if (!input) return null;
+  const container = input.closest(".user-picker-input");
+  if (!container) return null;
+  return container.querySelector(".user-picker-dropdown");
+}
+
+function renderUserSuggestions(input, type) {
+  const dropdown = getPickerDropdown(input);
+  if (!dropdown) return;
+  const searchValue = normalizeUserName(input.value).toLowerCase();
+  loadUsersFromSupabase().then(() => {
+    const sorted = sortUsersForType(type);
+    const filtered = sorted.filter((item) =>
+      item.user.toLowerCase().includes(searchValue)
+    );
+    dropdown.innerHTML = "";
+    if (!filtered.length) {
+      dropdown.classList.remove("is-visible");
+      return;
+    }
+    filtered.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "user-picker-item";
+      row.dataset.userName = item.user;
+
+      const nameWrap = document.createElement("div");
+      nameWrap.className = "user-picker-name";
+      nameWrap.textContent = item.user;
+
+      const count = document.createElement("span");
+      count.className = "user-picker-count";
+      count.textContent = String(type === "games" ? item.games : item.movies);
+      nameWrap.appendChild(count);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "user-picker-delete";
+      deleteBtn.textContent = "×";
+      deleteBtn.title = "Удалить пользователя";
+      deleteBtn.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        await deleteUserFromSupabase(item.user);
+        renderUserSuggestions(input, type);
+      });
+
+      row.appendChild(nameWrap);
+      row.appendChild(deleteBtn);
+
+      row.addEventListener("click", () => {
+        input.value = item.user;
+        dropdown.classList.remove("is-visible");
+        input.focus();
+      });
+
+      dropdown.appendChild(row);
+    });
+    dropdown.classList.add("is-visible");
+  });
+}
+
+function setupUserPickerField(inputId, type) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const dropdown = getPickerDropdown(input);
+  const showSuggestions = () => renderUserSuggestions(input, type);
+  input.addEventListener("input", showSuggestions);
+  input.addEventListener("focus", showSuggestions);
+  input.addEventListener("blur", () => {
+    const dropdownElem = getPickerDropdown(input);
+    if (!dropdownElem) return;
+    setTimeout(() => dropdownElem.classList.remove("is-visible"), 200);
+  });
+  if (dropdown) {
+    dropdown.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+    });
+  }
+}
+
+async function deleteUserFromSupabase(name) {
+  const normalized = normalizeUserName(name);
+  if (!normalized) return;
+  try {
+    const client = await waitForSupabaseClientForUsers();
+    const { error } = await client.from("users").delete().eq("user", normalized);
+    if (error) throw error;
+    usersList = usersList.filter((item) => item.user !== normalized);
+    usersLoaded = false;
+  } catch (err) {
+    console.error("Failed to delete user", err);
+  }
+}
+
+async function recordUserOrder({ userName, type }) {
+  const normalized = normalizeUserName(userName);
+  if (!normalized) return;
+  const key = type === "games" ? "games" : "movies";
+  try {
+    const client = await waitForSupabaseClientForUsers();
+    const { data, error } = await client
+      .from("users")
+      .select("user, movies, games")
+      .ilike("user", normalized)
+      .limit(1);
+    if (error) throw error;
+    const existing = Array.isArray(data) ? data[0] : null;
+    if (existing) {
+      const payload = {
+        movies: Number(existing.movies ?? 0) || 0,
+        games: Number(existing.games ?? 0) || 0,
+      };
+      payload[key] = (payload[key] || 0) + 1;
+      const { error: updateError } = await client
+        .from("users")
+        .update(payload)
+        .eq("user", existing.user);
+      if (updateError) throw updateError;
+      usersList = usersList.filter((item) => item.user !== existing.user);
+      usersList.push({
+        user: existing.user,
+        movies: payload.movies,
+        games: payload.games,
+      });
+    } else {
+      const payload = {
+        user: normalized,
+        movies: type === "movies" ? 1 : 0,
+        games: type === "games" ? 1 : 0,
+      };
+      const { error: insertError } = await client.from("users").insert(payload);
+      if (insertError) throw insertError;
+      usersList.push(payload);
+    }
+    usersLoaded = true;
+  } catch (err) {
+    console.error("Failed to update user stats", err);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  USER_PICKER_INPUTS.forEach(({ id, type }) => setupUserPickerField(id, type));
+});

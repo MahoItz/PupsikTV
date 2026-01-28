@@ -342,9 +342,12 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group user-picker-group">
                     <label for="watchOrderBy">Кто заказал:</label>
-                    <input type="text" id="watchOrderBy" placeholder="Ник" required>
+                    <div class="user-picker-input">
+                        <input type="text" autocomplete="off" id="watchOrderBy" placeholder="Ник" required>
+                        <div class="user-picker-dropdown" data-user-type="movies"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -440,6 +443,16 @@
             </div>
             <button onclick="submitGameRating()" class="btn btn-primary" style="width:100%;">Оценить и
                 переместить</button>
+        </div>
+    </div>
+
+    <!-- Окно выбора пользователя -->
+    <div id="userPickerModal" class="modal">
+        <div class="modal-content user-picker-modal">
+            <span class="close" onclick="closeModal('userPickerModal')">&times;</span>
+            <h2 id="userPickerTitle">Выбор пользователя</h2>
+            <div id="userPickerEmpty" class="user-picker-empty">Пользователи не найдены</div>
+            <div id="userPickerList" class="user-picker-list"></div>
         </div>
     </div>
 
@@ -611,10 +624,13 @@
                     <label for="editOrderGenre">Жанр:</label>
                     <input type="text" id="editOrderGenre">
                 </div>
-                <div class="form-group">
-                    <label for="editOrderBy">Кто заказал:</label>
-                    <input type="text" id="editOrderBy">
-                </div>
+                    <div class="form-group user-picker-group">
+                        <label for="editOrderBy">Кто заказал:</label>
+                        <div class="user-picker-input">
+                            <input type="text" id="editOrderBy">
+                            <div class="user-picker-dropdown" data-user-type="movies"></div>
+                        </div>
+                    </div>
                 <div class="form-group">
                     <label for="editOrderType">Способ заказа:</label>
                     <select id="editOrderType">
@@ -719,9 +735,12 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group user-picker-group">
                     <label for="gameOrderBy">Кто заказал:</label>
-                    <input type="text" id="gameOrderBy" placeholder="Ник">
+                    <div class="user-picker-input">
+                        <input type="text" autocomplete="off" id="gameOrderBy" placeholder="Ник">
+                        <div class="user-picker-dropdown" data-user-type="games"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -821,10 +840,13 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="playedGameOrderBy">Кто заказал:</label>
-                    <input type="text" id="playedGameOrderBy">
-                </div>
+                    <div class="form-group user-picker-group">
+                        <label for="playedGameOrderBy">Кто заказал:</label>
+                        <div class="user-picker-input">
+                            <input type="text" autocomplete="off" id="playedGameOrderBy">
+                            <div class="user-picker-dropdown" data-user-type="games"></div>
+                        </div>
+                    </div>
                 <div class="form-group">
                     <label for="playedGameOrderType">Способ заказа:</label>
                     <select id="playedGameOrderType">
@@ -865,10 +887,13 @@
                     <label for="editGameGenres">Жанр:</label>
                     <input type="text" id="editGameGenres">
                 </div>
-                <div class="form-group">
-                    <label for="editGameOrderBy">Кто заказал:</label>
-                    <input type="text" id="editGameOrderBy">
-                </div>
+                    <div class="form-group user-picker-group">
+                        <label for="editGameOrderBy">Кто заказал:</label>
+                        <div class="user-picker-input">
+                            <input type="text" autocomplete="off" id="editGameOrderBy">
+                            <div class="user-picker-dropdown" data-user-type="games"></div>
+                        </div>
+                    </div>
                 <div class="form-group">
                     <label for="editGameOrderType">Способ заказа:</label>
                     <select id="editGameOrderType">
@@ -932,10 +957,13 @@
                         <span class="rating-max">/10</span>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="editPlayedGameOrderBy">Кто заказал:</label>
-                    <input type="text" id="editPlayedGameOrderBy">
-                </div>
+                    <div class="form-group user-picker-group">
+                        <label for="editPlayedGameOrderBy">Кто заказал:</label>
+                        <div class="user-picker-input">
+                            <input type="text" autocomplete="off" id="editPlayedGameOrderBy">
+                            <div class="user-picker-dropdown" data-user-type="games"></div>
+                        </div>
+                    </div>
                 <div class="form-group">
                     <label for="editPlayedGameOrderType">Способ заказа:</label>
                     <select id="editPlayedGameOrderType">
@@ -1675,6 +1703,7 @@
     <script src="script/data-init.js" defer></script>
     <script src="script/movies.js" defer></script>
     <script src="script/search.js" defer></script>
+    <script src="script/users.js" defer></script>
     <script src="script/modals.js" defer></script>
     <script src="script/forms.js" defer></script>
     <script src="script/media-fortune.js" defer></script>

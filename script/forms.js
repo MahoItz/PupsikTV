@@ -372,6 +372,10 @@ document
       if (typeof prefetchOrderParentGuideForOrder === "function") {
         prefetchOrderParentGuideForOrder(newOrder);
       }
+
+      if (typeof recordUserOrder === "function") {
+        await recordUserOrder({ userName: orderData.orderBy, type: "movies" });
+      }
     } catch (err) {
       console.error("Error adding order", err);
     }
@@ -490,6 +494,10 @@ document
         dateAdded: data.created_at,
       });
       renderGames();
+
+      if (typeof recordUserOrder === "function") {
+        await recordUserOrder({ userName: gameData.orderBy, type: "games" });
+      }
     } catch (err) {
       console.error("Error adding game", err);
     }
