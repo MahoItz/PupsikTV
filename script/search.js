@@ -603,6 +603,32 @@ async function fetchKinopoiskCandidates(query) {
   }
 }
 
+async function fetchKinopoiskImdbId(filmId) {
+  if (!filmId || !KINOPOISK_API_KEY) {
+    return null;
+  }
+  try {
+    const res = await fetch(
+      `${KINOPOISK_FILM_URL}/${encodeURIComponent(filmId)}`,
+      {
+        headers: {
+          "X-API-KEY": KINOPOISK_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!res.ok) {
+      await handleKinopoiskErrorResponse(res);
+      return null;
+    }
+    const data = await res.json();
+    return data?.imdbId || null;
+  } catch (err) {
+    console.error("Kinopoisk IMDb fetch error", err);
+    return null;
+  }
+}
+
 function updateLocalKinopoiskMetadata(item, kinopoiskId, imdbId, table) {
   if (!item) return;
   item.kinopoiskId = kinopoiskId;
@@ -638,13 +664,14 @@ async function handleKinopoiskSelection(film) {
   const filmId = extractKinopoiskIdFromValue(film?.filmId);
   if (!kpSelectionContext || !filmId) return;
   const { item, table } = kpSelectionContext;
+  const imdbId = film?.imdbId || (await fetchKinopoiskImdbId(filmId));
   await persistKinopoiskMetadata({
     table,
     itemId: item?.id,
     kinopoiskId: filmId,
-    imdbId: film?.imdbId || null,
+    imdbId,
   });
-  updateLocalKinopoiskMetadata(item, filmId, film?.imdbId || null, table);
+  updateLocalKinopoiskMetadata(item, filmId, imdbId, table);
   closeModal("kpSelectModal");
   window.open(`https://www.kinopoisk.ru/film/${filmId}/`, "_blank");
 }
@@ -714,13 +741,14 @@ async function openKinopoiskPageForRecord({ item, table }) {
   const film = await fetchKinopoiskFilm(title, year, originalTitle);
   const filmId = extractKinopoiskIdFromValue(film?.filmId);
   if (filmId) {
+    const imdbId = film?.imdbId || (await fetchKinopoiskImdbId(filmId));
     await persistKinopoiskMetadata({
       table,
       itemId: item.id,
       kinopoiskId: filmId,
-      imdbId: film?.imdbId || null,
+      imdbId,
     });
-    updateLocalKinopoiskMetadata(item, filmId, film?.imdbId || null, table);
+    updateLocalKinopoiskMetadata(item, filmId, imdbId, table);
     window.open(`https://www.kinopoisk.ru/film/${filmId}/`, "_blank");
     return;
   }
