@@ -734,7 +734,7 @@ async function openKinopoiskPageForRecord({ item, table }) {
   if (!query) return;
 
   if (!KINOPOISK_API_KEY) {
-    alert("Для этого фильма нет ID Кинопоиска в базе данных.");
+    window.open(buildKinopoiskSearchUrl(query), "_blank");
     return;
   }
 
