@@ -77,15 +77,18 @@
                     <div class="sort-row">
                         <div class="sort-controls">
                             
-                            <select onchange="sortMovies(this.value)">
-                                <option value="date">Сортировка: По дате</option>
-                                <option value="title">По названию</option>
-                                <option value="year">По году</option>
-                                <option value="rating">По оценке</option>
-                            </select>
-                            <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleSortOrder()">
-                                <img src="images/down-arrow.webp" alt="arrow" class="sort-arrow">
-                            </button>
+                            <div class="sort-merge">
+                                <select onchange="sortMovies(this.value)">
+                                    <option value="date">Сортировка: По дате</option>
+                                    <option value="title">По названию</option>
+                                    <option value="year">По году</option>
+                                    <option value="rating">По оценке</option>
+                                </select>
+                                <span class="sort-divider" aria-hidden="true"></span>
+                                <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleSortOrder()">
+                                    <img src="images/down-arrow.webp" alt="arrow" class="sort-arrow">
+                                </button>
+                            </div>
                         </div>
                         <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
                     </div>
@@ -110,16 +113,19 @@
                             <button class="btn btn-primary admin-only" onclick="openAddPlayedGameModal()">
                                 ➕
                             </button>
-                            <select onchange="sortPlayedGames(this.value)">
-                                <option value="date">Сортировка: По дате</option>
-                                <option value="title">По названию</option>
-                                <option value="year">По году</option>
-                                <option value="rating">По оценке</option>
-                            </select>
-                            <button id="gameSortOrderBtn" class="btn btn-icon btn-sort-toggle"
-                                onclick="toggleGameSortOrder()">
-                                <img src="images/down-arrow.webp" alt="arrow" class="sort-arrow">
-                            </button>
+                            <div class="sort-merge">
+                                <select onchange="sortPlayedGames(this.value)">
+                                    <option value="date">Сортировка: По дате</option>
+                                    <option value="title">По названию</option>
+                                    <option value="year">По году</option>
+                                    <option value="rating">По оценке</option>
+                                </select>
+                                <span class="sort-divider" aria-hidden="true"></span>
+                                <button id="gameSortOrderBtn" class="btn btn-icon btn-sort-toggle"
+                                    onclick="toggleGameSortOrder()">
+                                    <img src="images/down-arrow.webp" alt="arrow" class="sort-arrow">
+                                </button>
+                            </div>
                         </div>
                         <div class="movies-count">Всего игр: <span id="gamesCount">0</span></div>
                     </div>

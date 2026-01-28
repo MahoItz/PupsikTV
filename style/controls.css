@@ -26,6 +26,25 @@
     gap: 15px;
 }
 
+.sort-merge {
+    display: flex;
+    align-items: center;
+}
+
+.sort-merge select {
+    border-right: 0;
+    border-radius: var(--border-radius-small) 0 0 var(--border-radius-small);
+}
+
+.sort-divider {
+    width: 2px;
+}
+
+.sort-merge .btn-sort-toggle {
+    border-left: 0;
+    border-radius: 0 var(--border-radius-small) var(--border-radius-small) 0;
+}
+
 .sort-controls select {
     padding: 12px 20px;
     height: 48px;
