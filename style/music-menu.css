@@ -44,6 +44,12 @@
     backdrop-filter: blur(10px);
 }
 
+/* TEMP DIAGNOSTICS START */
+.diagnostics-button {
+    top: 128px;
+}
+/* TEMP DIAGNOSTICS END */
+
 .settings-button:hover,
 .settings-button.is-active {
     transform: translateY(-1px) scale(1.03);
@@ -416,6 +422,32 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 212, 255, 0.6) rgba(255, 255, 255, 0.04);
 }
+
+/* TEMP DIAGNOSTICS START */
+.diagnostics-panel .settings-panel__content {
+    gap: 16px;
+}
+
+.diagnostics-output {
+    width: 100%;
+    min-height: 220px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(9, 12, 26, 0.85);
+    color: #e9f7ff;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.diagnostics-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+/* TEMP DIAGNOSTICS END */
 
 .settings-panel__content::-webkit-scrollbar {
     width: 8px;

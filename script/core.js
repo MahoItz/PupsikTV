@@ -161,6 +161,14 @@ let rouletteLastWinnerHasPendingSync = false;
 let settingsPanel;
 let settingsToggleButton;
 let settingsPanelCloseButton;
+// TEMP DIAGNOSTICS START
+let diagnosticsPanel;
+let diagnosticsToggleButton;
+let diagnosticsPanelCloseButton;
+let diagnosticsOutput;
+let diagnosticsRefreshButton;
+let diagnosticsCopyButton;
+// TEMP DIAGNOSTICS END
 let aiModelSelect;
 let aiModelStatus;
 let aiModelOptions = [];
@@ -322,6 +330,118 @@ function toggleSettingsPanel(forceState) {
 function closeSettingsPanel() {
   toggleSettingsPanel(false);
 }
+
+// TEMP DIAGNOSTICS START
+function toggleDiagnosticsPanel(forceState) {
+  if (!diagnosticsPanel) return;
+
+  const isOpen = diagnosticsPanel.classList.contains("open");
+  const nextState =
+    typeof forceState === "boolean" ? forceState : !isOpen;
+
+  diagnosticsPanel.classList.toggle("open", nextState);
+  diagnosticsPanel.setAttribute("aria-hidden", nextState ? "false" : "true");
+  diagnosticsPanel.toggleAttribute("inert", !nextState);
+
+  if (!nextState && diagnosticsPanel.contains(document.activeElement)) {
+    if (diagnosticsToggleButton) {
+      diagnosticsToggleButton.focus();
+    } else if (document.activeElement) {
+      document.activeElement.blur();
+    }
+  }
+  if (diagnosticsToggleButton) {
+    diagnosticsToggleButton.classList.toggle("is-active", nextState);
+    diagnosticsToggleButton.setAttribute(
+      "aria-expanded",
+      nextState ? "true" : "false"
+    );
+  }
+
+  if (nextState) {
+    updateDiagnosticsOutput();
+  }
+}
+
+function closeDiagnosticsPanel() {
+  toggleDiagnosticsPanel(false);
+}
+
+function formatDiagnosticsLine(label, value) {
+  const safeValue =
+    value === null || value === undefined || value === "" ? "—" : value;
+  return `${label}: ${safeValue}`;
+}
+
+async function measureApproxFps(sampleMs = 1000) {
+  return new Promise((resolve) => {
+    let frames = 0;
+    const start = performance.now();
+    function tick(now) {
+      frames += 1;
+      if (now - start >= sampleMs) {
+        const seconds = (now - start) / 1000;
+        resolve(Math.round(frames / Math.max(0.1, seconds)));
+        return;
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+async function updateDiagnosticsOutput() {
+  if (!diagnosticsOutput) {
+    diagnosticsOutput = document.getElementById("diagnosticsOutput");
+  }
+  if (!diagnosticsOutput) return;
+
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")
+    ? "reduce"
+    : "no-preference";
+  const memory = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : null;
+  const cpu = navigator.hardwareConcurrency
+    ? `${navigator.hardwareConcurrency} потоков`
+    : null;
+  const dpr = window.devicePixelRatio || 1;
+  const screenInfo = `${window.screen?.width || "?"}x${window.screen?.height || "?"}`;
+  const viewportInfo = `${window.innerWidth}x${window.innerHeight}`;
+  const fps = await measureApproxFps();
+
+  const lines = [
+    formatDiagnosticsLine("Дата/время", new Date().toLocaleString()),
+    formatDiagnosticsLine("User Agent", navigator.userAgent),
+    formatDiagnosticsLine("Платформа", navigator.platform),
+    formatDiagnosticsLine("Ядра CPU", cpu),
+    formatDiagnosticsLine("Память устройства", memory),
+    formatDiagnosticsLine("Screen", screenInfo),
+    formatDiagnosticsLine("Viewport", viewportInfo),
+    formatDiagnosticsLine("Device Pixel Ratio", dpr),
+    formatDiagnosticsLine("Предпочтение анимаций", prefersReducedMotion),
+    formatDiagnosticsLine("Сеть (тип)", connection?.effectiveType),
+    formatDiagnosticsLine("Сеть (downlink)", connection?.downlink ? `${connection.downlink} Mbps` : null),
+    formatDiagnosticsLine("Save-Data", connection?.saveData ? "on" : "off"),
+    formatDiagnosticsLine("Оценка FPS", `${fps} fps`),
+    formatDiagnosticsLine("Вкладка активна", document.visibilityState),
+  ];
+
+  diagnosticsOutput.textContent = lines.join("\n");
+}
+
+async function copyDiagnosticsOutput() {
+  if (!diagnosticsOutput) return;
+  const text = diagnosticsOutput.textContent || "";
+  if (!text.trim()) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToastNotification("Диагностика скопирована", "success");
+  } catch (err) {
+    console.error("Failed to copy diagnostics", err);
+    showToastNotification("Не удалось скопировать диагностику", "error");
+  }
+}
+// TEMP DIAGNOSTICS END
 
 function setAiModelStatus(message) {
   if (!aiModelStatus) {

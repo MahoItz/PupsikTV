@@ -582,6 +582,18 @@ document.addEventListener("DOMContentLoaded", async function () {
   settingsPanel = document.getElementById("settingsPanel");
   settingsToggleButton = document.getElementById("settingsToggleButton");
   settingsPanelCloseButton = document.getElementById("settingsPanelCloseButton");
+  // TEMP DIAGNOSTICS START
+  diagnosticsPanel = document.getElementById("diagnosticsPanel");
+  diagnosticsToggleButton = document.getElementById("diagnosticsToggleButton");
+  diagnosticsPanelCloseButton = document.getElementById(
+    "diagnosticsPanelCloseButton"
+  );
+  diagnosticsOutput = document.getElementById("diagnosticsOutput");
+  diagnosticsRefreshButton = document.getElementById(
+    "diagnosticsRefreshButton"
+  );
+  diagnosticsCopyButton = document.getElementById("diagnosticsCopyButton");
+  // TEMP DIAGNOSTICS END
   aiModelSelect = document.getElementById("aiModelSelect");
   aiModelStatus = document.getElementById("aiModelStatus");
   kpApiSelect = document.getElementById("kpApiSelect");
@@ -604,6 +616,23 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (settingsPanelCloseButton) {
     settingsPanelCloseButton.addEventListener("click", closeSettingsPanel);
   }
+  // TEMP DIAGNOSTICS START
+  if (diagnosticsToggleButton && diagnosticsPanel) {
+    diagnosticsToggleButton.addEventListener("click", () =>
+      toggleDiagnosticsPanel()
+    );
+    diagnosticsToggleButton.setAttribute("aria-expanded", "false");
+  }
+  if (diagnosticsPanelCloseButton) {
+    diagnosticsPanelCloseButton.addEventListener("click", closeDiagnosticsPanel);
+  }
+  if (diagnosticsRefreshButton) {
+    diagnosticsRefreshButton.addEventListener("click", updateDiagnosticsOutput);
+  }
+  if (diagnosticsCopyButton) {
+    diagnosticsCopyButton.addEventListener("click", copyDiagnosticsOutput);
+  }
+  // TEMP DIAGNOSTICS END
   if (aiModelSelect) {
     aiModelSelect.addEventListener("change", handleAiModelChange);
   }

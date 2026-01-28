@@ -36,6 +36,12 @@
             aria-label="Открыть настройки" aria-expanded="false">
             <i class="fa-solid fa-gear" aria-hidden="true"></i>
         </button>
+        <!-- TEMP DIAGNOSTICS START -->
+        <button id="diagnosticsToggleButton" class="settings-button diagnostics-button admin-only" type="button"
+            aria-label="Открыть диагностику" aria-expanded="false">
+            <i class="fa-solid fa-stethoscope" aria-hidden="true"></i>
+        </button>
+        <!-- TEMP DIAGNOSTICS END -->
         <button id="rulesPanelToggleButton" class="rules-panel-toggle" type="button" aria-label="Показать правила"
             aria-pressed="false" title="Показать правила">
             <i class="fa-solid fa-scroll" aria-hidden="true"></i>
@@ -1684,6 +1690,44 @@
             </div>
         </div>
     </aside>
+
+    <!-- TEMP DIAGNOSTICS START -->
+    <aside id="diagnosticsPanel" class="settings-panel diagnostics-panel admin-only" aria-hidden="true" inert>
+        <div class="settings-panel__header">
+            <h2>Диагностика</h2>
+            <button id="diagnosticsPanelCloseButton" class="settings-panel__close" type="button"
+                aria-label="Скрыть диагностику">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="settings-panel__content">
+            <div class="settings-panel__section">
+                <div class="settings-panel__section-header">
+                    <p class="settings-panel__section-title">Сводка устройства и браузера</p>
+                    <p class="settings-panel__section-hint">
+                        Быстрый отчёт, который поможет понять, почему может падать FPS.
+                    </p>
+                </div>
+                <div class="settings-panel__field">
+                    <pre id="diagnosticsOutput" class="diagnostics-output" aria-live="polite"></pre>
+                </div>
+                <div class="settings-panel__field diagnostics-actions">
+                    <button id="diagnosticsRefreshButton" class="admin-action-button" type="button">
+                        Обновить диагностику
+                    </button>
+                    <button id="diagnosticsCopyButton" class="admin-action-button admin-action-icon" type="button"
+                        title="Скопировать диагностику">
+                        📋
+                    </button>
+                </div>
+                <p class="settings-panel__note">
+                    Рекомендации: проверить загрузку GPU/CPU, вкладку Performance, наличие фоновых вкладок и
+                    расширений, а также попробовать включить prefers-reduced-motion.
+                </p>
+            </div>
+        </div>
+    </aside>
+    <!-- TEMP DIAGNOSTICS END -->
 
     <aside id="rulesPanel" class="rules-panel" aria-hidden="true">
         <div class="rules-panel__content">
