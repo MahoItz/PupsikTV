@@ -175,9 +175,12 @@ function normalizeStudiosList(value, limit = 15) {
   }
   if (typeof value === "string") {
     const trimmed = value.trim();
-    if (!trimmed) return [];
+    if (!trimmed || trimmed.toLowerCase() === "null") return [];
     try {
       const parsed = JSON.parse(trimmed);
+      if (parsed === null) {
+        return [];
+      }
       if (Array.isArray(parsed)) {
         return parsed
           .map((item) => normalizeStudioName(item))
