@@ -792,9 +792,7 @@ function createMovieCard(
 function deriveKinopoiskIdFromOrder(order) {
   if (!order) return null;
 
-  return (
-    getKinopoiskIdFromMovie(order) || extractKinopoiskIdFromValue(order.poster)
-  );
+  return order.kinopoiskId || null;
 }
 
 function buildReyohohoUrlForOrder(order) {
