@@ -370,7 +370,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, kp_id, imdb_id"
+        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, kp_id, imdb_id, studios"
       )
       .order("id", { ascending: true });
 
@@ -409,6 +409,7 @@ async function loadWatchlistFromSupabase() {
         country: item.country || "",
         actors: normalizeActorsValue(item.actors),
         director: item.director || "",
+        studios: item.studios || null,
       };
     });
   } catch (err) {

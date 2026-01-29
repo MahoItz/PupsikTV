@@ -261,7 +261,12 @@ function insertMovieStudiosSection(modal, section) {
   const meta = modal.querySelector(".movie-details-meta");
   if (!meta) return;
 
-  const directorItem = meta.querySelector("#movieDetailsDirector")?.closest(".movie-details-meta-item");
+  let directorItem = meta.querySelector("#movieDetailsDirector")?.closest(".movie-details-meta-item");
+  
+  if (!directorItem) {
+    directorItem = meta.querySelector("#orderDetailsDirector")?.closest(".movie-details-meta-item");
+  }
+
   if (directorItem && directorItem.parentElement === meta) {
     meta.insertBefore(section, directorItem.nextSibling);
   } else {
@@ -398,33 +403,34 @@ async function fetchStudiosFromTmdb(imdbId) {
   }
 }
 
-async function saveMovieStudiosToDb(movieId, studiosData) {
-  if (!movieId || !studiosData || !supabaseClient) return;
+async function saveStudiosToDb(id, studiosData, tableName = "movies") {
+  if (!id || !studiosData || !supabaseClient) return;
 
   try {
     const studiosJson = JSON.stringify(studiosData);
     const { error } = await supabaseClient
-      .from("movies")
+      .from(tableName)
       .update({ studios: studiosJson })
-      .eq("id", movieId);
+      .eq("id", id);
 
     if (error) {
-      console.error("Failed to save studios to database", error);
+      console.error(`Failed to save studios to ${tableName}`, error);
     }
   } catch (err) {
-    console.error("Error saving studios to database", err);
+    console.error(`Error saving studios to ${tableName}`, err);
   }
 }
 
-async function loadMovieStudios(movie, section, requestId) {
-  if (!movie || !section) return;
+async function loadStudios(item, section, requestId, tableName = "movies") {
+  if (!item || !section) return;
 
-  const movieId = movie.id;
-  const title = movie.title;
-  const year = movie.year;
+  const id = item.id;
+  const title = item.title;
+  const year = item.year;
+  const cacheKey = `${tableName}_${id}`;
 
-  if (movieStudiosLoadCache.has(movieId)) {
-    const cached = movieStudiosLoadCache.get(movieId);
+  if (movieStudiosLoadCache.has(cacheKey)) {
+    const cached = movieStudiosLoadCache.get(cacheKey);
     if (requestId === movieStudiosRequestId) {
       renderMovieStudios(section, cached);
     }
@@ -466,14 +472,14 @@ async function loadMovieStudios(movie, section, requestId) {
       return;
     }
 
-    movieStudiosLoadCache.set(movieId, studiosData);
+    movieStudiosLoadCache.set(cacheKey, studiosData);
     renderMovieStudios(section, studiosData);
 
-    await saveMovieStudiosToDb(movieId, studiosData);
+    await saveStudiosToDb(id, studiosData, tableName);
 
-    movie.studios = JSON.stringify(studiosData);
+    item.studios = JSON.stringify(studiosData);
   } catch (err) {
-    console.error("Error loading movie studios", err);
+    console.error("Error loading studios", err);
     if (requestId === movieStudiosRequestId) {
       setMovieStudiosStatus(section, "Ошибка загрузки");
     }
@@ -493,12 +499,34 @@ function handleMovieDetailsStudios(movie, modal) {
   if (studiosData && Array.isArray(studiosData.studios) && studiosData.studios.length > 0) {
     renderMovieStudios(section, studiosData);
   } else {
-    // Clear previous content to avoid stale data
     renderMovieStudios(section, { studios: [] });
     
     movieStudiosRequestId++;
     const currentRequestId = movieStudiosRequestId;
-    loadMovieStudios(movie, section, currentRequestId);
+    loadStudios(movie, section, currentRequestId, "movies");
+  }
+}
+
+function handleOrderDetailsStudios(order, modal) {
+  if (!order || !modal) return;
+
+  const section = ensureMovieStudiosSection(modal);
+  if (!section) return;
+
+  // Insert logic might be same or slightly different for orders?
+  // Use generic insert
+  insertMovieStudiosSection(modal, section);
+
+  const studiosData = parseMovieStudiosData(order.studios);
+
+  if (studiosData && Array.isArray(studiosData.studios) && studiosData.studios.length > 0) {
+    renderMovieStudios(section, studiosData);
+  } else {
+    renderMovieStudios(section, { studios: [] });
+
+    movieStudiosRequestId++;
+    const currentRequestId = movieStudiosRequestId;
+    loadStudios(order, section, currentRequestId, "Movie_Orders");
   }
 }
 
@@ -942,6 +970,8 @@ function renderOrderDetailsModal(order) {
       }
     };
   }
+
+  handleOrderDetailsStudios(order, modal);
 
   alignDetailsPoster(modal);
 
