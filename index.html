@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="/style/tabs.css">
     <link rel="stylesheet" href="/style/autocomplete.css">
     <link rel="stylesheet" href="/style/music-menu.css">
+    <link rel="stylesheet" href="/style/diagnostic.css" data-essential="true">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -35,6 +36,10 @@
         <button id="settingsToggleButton" class="settings-button admin-only" type="button"
             aria-label="Открыть настройки" aria-expanded="false">
             <i class="fa-solid fa-gear" aria-hidden="true"></i>
+        </button>
+        <button id="diagnosticToggleButton" class="diagnostic-button" type="button"
+            aria-label="Диагностика производительности" title="Диагностика производительности">
+            <i class="fa-solid fa-microchip" aria-hidden="true"></i>
         </button>
         <button id="rulesPanelToggleButton" class="rules-panel-toggle" type="button" aria-label="Показать правила"
             aria-pressed="false" title="Показать правила">
@@ -1779,6 +1784,7 @@
     <script src="script/forms.js" defer></script>
     <script src="script/media-fortune.js" defer></script>
     <script src="script/copy-scheduled.js" defer></script>
+    <script src="script/diagnostic.js" defer></script>
 </body>
 
 </html>

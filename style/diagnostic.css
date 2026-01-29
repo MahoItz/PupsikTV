@@ -1,0 +1,302 @@
+/* Diagnostic Interface Styles */
+:root {
+    --diag-bg: rgba(10, 10, 20, 0.95);
+    --diag-accent: #00d4ff;
+    --diag-danger: #ff4757;
+    --diag-warning: #ffa502;
+    --diag-success: #2ed573;
+    --diag-glass: blur(16px) saturate(180%);
+}
+
+.diagnostic-button {
+    position: fixed;
+    top: 100px;
+    /* Below settings button */
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background: var(--glass-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    transition: var(--transition);
+    backdrop-filter: blur(8px);
+}
+
+.diagnostic-button:hover {
+    background: var(--primary-purple);
+    box-shadow: 0 0 15px var(--primary-purple);
+    transform: scale(1.05);
+}
+
+.diagnostic-button.active {
+    color: var(--diag-accent);
+    border-color: var(--diag-accent);
+    box-shadow: 0 0 10px var(--diag-accent);
+}
+
+/* Diagnostic Panel */
+.diagnostic-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 380px;
+    height: 100vh;
+    background: var(--diag-bg);
+    backdrop-filter: var(--diag-glass);
+    border-left: 1px solid var(--border-color);
+    z-index: 10001;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    color: #eee;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 13px;
+    padding: 20px;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.diagnostic-panel.visible {
+    transform: translateX(-400px);
+}
+
+.diagnostic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.diagnostic-header h2 {
+    font-size: 18px;
+    color: var(--diag-accent);
+    margin: 0;
+}
+
+.diagnostic-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.diagnostic-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.diagnostic-section {
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.diagnostic-section-title {
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    font-size: 11px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.metric-card {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border-radius: 4px;
+    border-left: 3px solid #444;
+}
+
+.metric-card.good {
+    border-left-color: var(--diag-success);
+}
+
+.metric-card.warning {
+    border-left-color: var(--diag-warning);
+}
+
+.metric-card.danger {
+    border-left-color: var(--diag-danger);
+}
+
+.metric-label {
+    font-size: 10px;
+    color: #888;
+}
+
+.metric-value {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Toggles */
+.toggle-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 18px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #333;
+    transition: .4s;
+    border-radius: 18px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--diag-accent);
+}
+
+input:checked+.slider:before {
+    transform: translateX(16px);
+}
+
+/* Buttons */
+.diagnostic-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.diag-btn {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    cursor: pointer;
+    font-family: inherit;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.diag-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.diag-btn.primary {
+    background: var(--diag-accent);
+    color: #000;
+    font-weight: bold;
+}
+
+.diag-btn.danger {
+    color: var(--diag-danger);
+    border-color: var(--diag-danger);
+}
+
+/* Long Tasks List */
+.long-tasks-list {
+    max-height: 100px;
+    overflow-y: auto;
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+.long-task-item {
+    padding: 2px 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Panic Banner */
+.panic-banner {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--diag-danger);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 30px;
+    z-index: 10002;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    font-weight: bold;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100%);
+    }
+
+    to {
+        transform: translate(-50%, 0);
+    }
+}
+
+/* Feature Overrides */
+body.diag-no-blur * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+body.diag-no-shadow * {
+    box-shadow: none !important;
+}
+
+body.diag-no-anim * {
+    animation: none !important;
+    transition: none !important;
+}
+
+body.diag-no-particles .rats-video {
+    display: none !important;
+}
