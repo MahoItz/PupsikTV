@@ -76,7 +76,7 @@
                     </div>
                     <div class="sort-row">
                         <div class="sort-controls">
-                            
+
                             <div class="sort-merge">
                                 <select onchange="sortMovies(this.value)">
                                     <option value="date">Сортировка: По дате</option>
@@ -85,7 +85,8 @@
                                     <option value="rating">По оценке</option>
                                 </select>
                                 <span class="sort-divider" aria-hidden="true"></span>
-                                <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle" onclick="toggleSortOrder()">
+                                <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle"
+                                    onclick="toggleSortOrder()">
                                     <img src="images/down-arrow.webp" alt="arrow" class="sort-arrow">
                                 </button>
                             </div>
@@ -145,9 +146,12 @@
                         <div class="admin-divider admin-only" aria-hidden="true"></div>
                         <div class="admin-actions admin-only">
                             <div class="admin-action-group">
-                                <button class="admin-action-button admin-action-main" onclick="openAddToWatchlistModal()">Добавить фильм</button>
+                                <button class="admin-action-button admin-action-main"
+                                    onclick="openAddToWatchlistModal()">Добавить фильм</button>
                                 <span class="admin-action-divider" aria-hidden="true"></span>
-                                <button class="admin-action-button admin-action-icon" onclick="copyScheduledMoviesToClipboard()" title="Скопировать список запланированных фильмов">📋</button>
+                                <button class="admin-action-button admin-action-icon"
+                                    onclick="copyScheduledMoviesToClipboard()"
+                                    title="Скопировать список запланированных фильмов">📋</button>
                             </div>
                         </div>
                         <div id="watchlistContainer">
@@ -624,13 +628,13 @@
                     <label for="editOrderGenre">Жанр:</label>
                     <input type="text" id="editOrderGenre">
                 </div>
-                    <div class="form-group user-picker-group">
-                        <label for="editOrderBy">Кто заказал:</label>
-                        <div class="user-picker-input">
-                            <input type="text" id="editOrderBy">
-                            <div class="user-picker-dropdown" data-user-type="movies"></div>
-                        </div>
+                <div class="form-group user-picker-group">
+                    <label for="editOrderBy">Кто заказал:</label>
+                    <div class="user-picker-input">
+                        <input type="text" id="editOrderBy">
+                        <div class="user-picker-dropdown" data-user-type="movies"></div>
                     </div>
+                </div>
                 <div class="form-group">
                     <label for="editOrderType">Способ заказа:</label>
                     <select id="editOrderType">
@@ -659,9 +663,11 @@
                         <input type="date" id="planDateInput" class="plan-date-input" aria-hidden="true" tabindex="-1">
                         <div class="plan-calendar" aria-label="Календарь">
                             <div class="plan-calendar-header">
-                                <button type="button" class="plan-calendar-nav" id="planCalendarPrev" aria-label="Предыдущий месяц">‹</button>
+                                <button type="button" class="plan-calendar-nav" id="planCalendarPrev"
+                                    aria-label="Предыдущий месяц">‹</button>
                                 <div id="planCalendarMonthLabel" class="plan-calendar-month"></div>
-                                <button type="button" class="plan-calendar-nav" id="planCalendarNext" aria-label="Следующий месяц">›</button>
+                                <button type="button" class="plan-calendar-nav" id="planCalendarNext"
+                                    aria-label="Следующий месяц">›</button>
                             </div>
                             <div class="plan-calendar-grid" id="planCalendarGrid" role="grid"></div>
                         </div>
@@ -840,13 +846,13 @@
                     </div>
                 </div>
 
-                    <div class="form-group user-picker-group">
-                        <label for="playedGameOrderBy">Кто заказал:</label>
-                        <div class="user-picker-input">
-                            <input type="text" autocomplete="off" id="playedGameOrderBy">
-                            <div class="user-picker-dropdown" data-user-type="games"></div>
-                        </div>
+                <div class="form-group user-picker-group">
+                    <label for="playedGameOrderBy">Кто заказал:</label>
+                    <div class="user-picker-input">
+                        <input type="text" autocomplete="off" id="playedGameOrderBy">
+                        <div class="user-picker-dropdown" data-user-type="games"></div>
                     </div>
+                </div>
                 <div class="form-group">
                     <label for="playedGameOrderType">Способ заказа:</label>
                     <select id="playedGameOrderType">
@@ -856,7 +862,8 @@
                         <option value="Шары">Шары</option>
                         <option value="Рулетка">Рулетка</option>
                     </select>
-                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 10px;">Добавить игру</button>
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 10px;">Добавить
+                        игру</button>
                 </div>
             </form>
         </div>
@@ -887,13 +894,13 @@
                     <label for="editGameGenres">Жанр:</label>
                     <input type="text" id="editGameGenres">
                 </div>
-                    <div class="form-group user-picker-group">
-                        <label for="editGameOrderBy">Кто заказал:</label>
-                        <div class="user-picker-input">
-                            <input type="text" autocomplete="off" id="editGameOrderBy">
-                            <div class="user-picker-dropdown" data-user-type="games"></div>
-                        </div>
+                <div class="form-group user-picker-group">
+                    <label for="editGameOrderBy">Кто заказал:</label>
+                    <div class="user-picker-input">
+                        <input type="text" autocomplete="off" id="editGameOrderBy">
+                        <div class="user-picker-dropdown" data-user-type="games"></div>
                     </div>
+                </div>
                 <div class="form-group">
                     <label for="editGameOrderType">Способ заказа:</label>
                     <select id="editGameOrderType">
@@ -957,13 +964,13 @@
                         <span class="rating-max">/10</span>
                     </div>
                 </div>
-                    <div class="form-group user-picker-group">
-                        <label for="editPlayedGameOrderBy">Кто заказал:</label>
-                        <div class="user-picker-input">
-                            <input type="text" autocomplete="off" id="editPlayedGameOrderBy">
-                            <div class="user-picker-dropdown" data-user-type="games"></div>
-                        </div>
+                <div class="form-group user-picker-group">
+                    <label for="editPlayedGameOrderBy">Кто заказал:</label>
+                    <div class="user-picker-input">
+                        <input type="text" autocomplete="off" id="editPlayedGameOrderBy">
+                        <div class="user-picker-dropdown" data-user-type="games"></div>
                     </div>
+                </div>
                 <div class="form-group">
                     <label for="editPlayedGameOrderType">Способ заказа:</label>
                     <select id="editPlayedGameOrderType">
@@ -1029,10 +1036,12 @@
             <span id="fortuneMovieClose" class="close" tabindex="0" role="button">&times;</span>
             <div id="fortuneMoviePreview" class="fortune-movie-preview"></div>
             <div id="fortuneStudio" class="fortune-studio fortune-studio--inline">
-                <span id="fortuneStudioStatus" class="fortune-studio__status">Выберите фильм, чтобы увидеть студию</span>
+                <span id="fortuneStudioStatus" class="fortune-studio__status">Выберите фильм, чтобы увидеть
+                    студию</span>
                 <div class="fortune-studio__content">
                     <div id="fortuneStudioList" class="fortune-studio__badges"></div>
-                    <a id="fortuneStudioLink" class="fortune-studio__link" href="#" target="_blank" rel="noopener" style="display: none;"></a>
+                    <a id="fortuneStudioLink" class="fortune-studio__link" href="#" target="_blank" rel="noopener"
+                        style="display: none;"></a>
                 </div>
             </div>
             <div id="fortuneParentGuide" class="fortune-parent-guide">
@@ -1049,7 +1058,8 @@
                     </div>
                 </div>
                 <div id="fortuneParentGuideContent" class="fortune-parent-guide__content" style="display: none;">
-                    <details id="fortuneParentGuideSexSection" class="fortune-parent-guide__category fortune-parent-guide__spoiler">
+                    <details id="fortuneParentGuideSexSection"
+                        class="fortune-parent-guide__category fortune-parent-guide__spoiler">
                         <summary class="fortune-parent-guide__spoiler-summary">
                             <h4>Секс и нагота</h4>
                         </summary>
@@ -1061,7 +1071,8 @@
                 <div class="fortune-timings__header">
                     <h3>Timings</h3>
                     <div class="fortune-timings__meta">
-                        <span id="fortuneTimingsStatus" class="fortune-timings__status">Выберите фильм, чтобы увидеть тайминги</span>
+                        <span id="fortuneTimingsStatus" class="fortune-timings__status">Выберите фильм, чтобы увидеть
+                            тайминги</span>
                     </div>
                 </div>
                 <ul id="fortuneTimingsList" class="fortune-timings__list"></ul>
@@ -1110,43 +1121,50 @@
                             <span class="movie-details-meta-label">Способ заказа</span>
                             <span id="movieDetailsOrderType" class="movie-details-meta-value"></span>
                         </div>
-                    </div>
-                    <div class="movie-details-section">
-                        <div class="movie-details-section-title">Оценки</div>
-                        <div class="movie-details-ratings">
-                            <div class="movie-details-rating">
-                                <img src="images/Pupsik_TV_Icon.webp" alt="Pupsik Rate">
-                                <span id="movieDetailsPupsikRating"></span>
-                            </div>
-                            <div class="movie-details-rating">
-                                <img src="images/kp_icon.webp" alt="KP Rate">
-                                <span id="movieDetailsKpRating"></span>
-                            </div>
-                            <div class="movie-details-rating">
-                                <i class="fa-solid fa-star" aria-hidden="true"></i>
-                                <span id="movieDetailsUserRating"></span>
-                                <span id="movieDetailsVotes" class="movie-details-votes"></span>
+
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Оценки</span>
+                            <div class="movie-details-ratings">
+                                <div class="movie-details-rating">
+                                    <img src="images/Pupsik_TV_Icon.webp" alt="Pupsik Rate">
+                                    <span id="movieDetailsPupsikRating"></span>
+                                </div>
+                                <div class="movie-details-rating">
+                                    <img src="images/kp_icon.webp" alt="KP Rate">
+                                    <span id="movieDetailsKpRating"></span>
+                                </div>
+                                <div class="movie-details-rating">
+                                    <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                    <span id="movieDetailsUserRating"></span>
+                                    <span id="movieDetailsVotes" class="movie-details-votes"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="movie-details-section">
-                        <div class="movie-details-section-title">&#1054;&#1087;&#1080;&#1089;&#1072;&#1085;&#1080;&#1077;</div>
+                        <div class="movie-details-section-title">
+                            &#1054;&#1087;&#1080;&#1089;&#1072;&#1085;&#1080;&#1077;
+                        </div>
                         <div id="movieDetailsDescription" class="movie-details-description"></div>
                     </div>
                     <div class="movie-details-section">
-                        <div class="movie-details-section-title">&#1048;&#1085;&#1092;&#1086;&#1088;&#1084;&#1072;&#1094;&#1080;&#1103;</div>
+                        <div class="movie-details-section-title">
+                            &#1048;&#1085;&#1092;&#1086;&#1088;&#1084;&#1072;&#1094;&#1080;&#1103;</div>
                         <div class="movie-details-extra">
                             <div class="movie-details-meta-item">
                                 <span class="movie-details-meta-label">&#1057;&#1090;&#1088;&#1072;&#1085;&#1072;</span>
                                 <span id="movieDetailsCountry" class="movie-details-meta-value"></span>
                             </div>
                             <div class="movie-details-meta-item">
-                                <span class="movie-details-meta-label">&#1056;&#1077;&#1078;&#1080;&#1089;&#1089;&#1105;&#1088;</span>
+                                <span
+                                    class="movie-details-meta-label">&#1056;&#1077;&#1078;&#1080;&#1089;&#1089;&#1105;&#1088;</span>
                                 <span id="movieDetailsDirector" class="movie-details-meta-value"></span>
                             </div>
                         </div>
                         <details id="movieDetailsActorsSection" class="movie-details-actors">
-                            <summary class="movie-details-actors-summary">&#1043;&#1083;&#1072;&#1074;&#1085;&#1099;&#1077; &#1088;&#1086;&#1083;&#1080;</summary>
+                            <summary class="movie-details-actors-summary">
+                                &#1043;&#1083;&#1072;&#1074;&#1085;&#1099;&#1077;
+                                &#1088;&#1086;&#1083;&#1080;</summary>
                             <ul id="movieDetailsActorsList" class="movie-details-actors-list"></ul>
                         </details>
                     </div>
@@ -1187,18 +1205,19 @@
                             <span class="movie-details-meta-label">Способ заказа</span>
                             <span id="gameDetailsOrderType" class="movie-details-meta-value"></span>
                         </div>
-                    </div>
-                    <div class="movie-details-section">
-                        <div class="movie-details-section-title">Оценки</div>
-                        <div class="movie-details-ratings">
-                            <div class="movie-details-rating">
-                                <img src="images/Pupsik_TV_Icon.webp" alt="Pupsik Rate">
-                                <span id="gameDetailsPupsikRating"></span>
-                            </div>
-                            <div class="movie-details-rating">
-                                <i class="fa-solid fa-star" aria-hidden="true"></i>
-                                <span id="gameDetailsUserRating"></span>
-                                <span id="gameDetailsVotes" class="movie-details-votes"></span>
+
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Оценки</span>
+                            <div class="movie-details-ratings">
+                                <div class="movie-details-rating">
+                                    <img src="images/Pupsik_TV_Icon.webp" alt="Pupsik Rate">
+                                    <span id="gameDetailsPupsikRating"></span>
+                                </div>
+                                <div class="movie-details-rating">
+                                    <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                    <span id="gameDetailsUserRating"></span>
+                                    <span id="gameDetailsVotes" class="movie-details-votes"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1209,12 +1228,12 @@
     <div id="orderDetailsModal" class="modal">
         <div class="modal-content order-details-modal">
             <span class="close" onclick="closeModal('orderDetailsModal')">&times;</span>
-              <div class="movie-details-body">
-                  <div class="movie-details-poster-wrap">
-                      <img id="orderDetailsPoster" class="movie-details-poster"
-                          src="https://via.placeholder.com/300x450?text=Нет+постера" alt="Постер фильма" loading="lazy">
-                  </div>
-                  <div class="movie-details-info">
+            <div class="movie-details-body">
+                <div class="movie-details-poster-wrap">
+                    <img id="orderDetailsPoster" class="movie-details-poster"
+                        src="https://via.placeholder.com/300x450?text=Нет+постера" alt="Постер фильма" loading="lazy">
+                </div>
+                <div class="movie-details-info">
                     <div class="movie-details-headings">
                         <h2 id="orderDetailsTitle" class="movie-details-title"></h2>
                         <div id="orderDetailsOriginal" class="movie-details-original"></div>
@@ -1248,84 +1267,85 @@
                             <span class="movie-details-meta-label">Способ заказа</span>
                             <span id="orderDetailsOrderType" class="movie-details-meta-value"></span>
                         </div>
+
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Оценки</span>
+                            <div class="movie-details-ratings">
+                                <div class="movie-details-rating">
+                                    <img src="images/kp_icon.webp" alt="KP Rate">
+                                    <span id="orderDetailsKpRating"></span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                      <div class="movie-details-section">
-                          <div class="movie-details-section-title">Оценки</div>
-                          <div class="movie-details-ratings">
-                              <div class="movie-details-rating">
-                                  <img src="images/kp_icon.webp" alt="KP Rate">
-                                  <span id="orderDetailsKpRating"></span>
-                              </div>
-                          </div>
-                      </div>
-                      <div class="movie-details-section">
-                          <div class="movie-details-section-title">РћРїРёСЃР°РЅРёРµ</div>
-                          <div id="orderDetailsDescription" class="movie-details-description"></div>
-                      </div>
-                      <div class="movie-details-section">
-                          <div class="movie-details-section-title">РРЅС„РѕСЂРјР°С†РёСЏ</div>
-                          <div class="movie-details-extra">
-                              <div class="movie-details-meta-item">
-                                  <span class="movie-details-meta-label">РЎС‚СЂР°РЅР°</span>
-                                  <span id="orderDetailsCountry" class="movie-details-meta-value"></span>
-                              </div>
-                              <div class="movie-details-meta-item">
-                                  <span class="movie-details-meta-label">Р РµР¶РёСЃСЃС‘СЂ</span>
-                                  <span id="orderDetailsDirector" class="movie-details-meta-value"></span>
-                              </div>
-                          </div>
-                          <details id="orderDetailsActorsSection" class="movie-details-actors">
-                              <summary class="movie-details-actors-summary">Р“Р»Р°РІРЅС‹Рµ СЂРѕР»Рё</summary>
-                              <ul id="orderDetailsActorsList" class="movie-details-actors-list"></ul>
-                          </details>
-                      </div>
-                  </div>
-              </div>
-              <div class="order-details-divider" aria-hidden="true"></div>
-              <div id="orderParentGuide" class="fortune-parent-guide">
-                  <div class="fortune-parent-guide__header">
-                      <h3>Parents Guide</h3>
-                      <div class="fortune-parent-guide__actions">
-                          <div id="orderParentGuideStatus" class="fortune-parent-guide__status">
-                              Выберите фильм, чтобы увидеть содержание руководства
-                          </div>
-                          <button id="orderParentGuideTranslate" type="button"
-                              class="btn btn-secondary fortune-parent-guide__translate" disabled>
-                              Google Translate
-                          </button>
-                      </div>
-                  </div>
-                  <div id="orderParentGuideContent" class="fortune-parent-guide__content" style="display: none;">
-                      <details id="orderParentGuideSexSection"
-                          class="fortune-parent-guide__category fortune-parent-guide__spoiler">
-                          <summary class="fortune-parent-guide__spoiler-summary">
-                              <h4>Секс и нагота</h4>
-                          </summary>
-                          <ul id="orderParentGuideSex" class="fortune-parent-guide__list"></ul>
-                      </details>
-                  </div>
-              </div>
-              <div id="orderTimings" class="fortune-timings">
-                  <div class="fortune-timings__header">
-                      <h3>Timings</h3>
-                      <div class="fortune-timings__meta">
-                          <span id="orderTimingsStatus" class="fortune-timings__status">Выберите фильм, чтобы увидеть
-                              тайминги</span>
-                      </div>
-                  </div>
-                  <ul id="orderTimingsList" class="fortune-timings__list"></ul>
-                  <div class="fortune-timings__source">Источник таймингов: Reyohoho</div>
-              </div>
-              <div class="order-details-actions">
-                  <button id="orderDetailsExit" type="button" class="btn btn-secondary">
-                      Выход
-                  </button>
-                  <button id="orderDetailsWatch" type="button" class="btn btn-primary">
-                      Смотреть
-                  </button>
-              </div>
-          </div>
-      </div>
+                    <div class="movie-details-section">
+                        <div class="movie-details-section-title">РћРїРёСЃР°РЅРёРµ</div>
+                        <div id="orderDetailsDescription" class="movie-details-description"></div>
+                    </div>
+                    <div class="movie-details-section">
+                        <div class="movie-details-section-title">РРЅС„РѕСЂРјР°С†РёСЏ</div>
+                        <div class="movie-details-extra">
+                            <div class="movie-details-meta-item">
+                                <span class="movie-details-meta-label">РЎС‚СЂР°РЅР°</span>
+                                <span id="orderDetailsCountry" class="movie-details-meta-value"></span>
+                            </div>
+                            <div class="movie-details-meta-item">
+                                <span class="movie-details-meta-label">Р РµР¶РёСЃСЃС‘СЂ</span>
+                                <span id="orderDetailsDirector" class="movie-details-meta-value"></span>
+                            </div>
+                        </div>
+                        <details id="orderDetailsActorsSection" class="movie-details-actors">
+                            <summary class="movie-details-actors-summary">Р“Р»Р°РІРЅС‹Рµ СЂРѕР»Рё</summary>
+                            <ul id="orderDetailsActorsList" class="movie-details-actors-list"></ul>
+                        </details>
+                    </div>
+                </div>
+            </div>
+            <div class="order-details-divider" aria-hidden="true"></div>
+            <div id="orderParentGuide" class="fortune-parent-guide">
+                <div class="fortune-parent-guide__header">
+                    <h3>Parents Guide</h3>
+                    <div class="fortune-parent-guide__actions">
+                        <div id="orderParentGuideStatus" class="fortune-parent-guide__status">
+                            Выберите фильм, чтобы увидеть содержание руководства
+                        </div>
+                        <button id="orderParentGuideTranslate" type="button"
+                            class="btn btn-secondary fortune-parent-guide__translate" disabled>
+                            Google Translate
+                        </button>
+                    </div>
+                </div>
+                <div id="orderParentGuideContent" class="fortune-parent-guide__content" style="display: none;">
+                    <details id="orderParentGuideSexSection"
+                        class="fortune-parent-guide__category fortune-parent-guide__spoiler">
+                        <summary class="fortune-parent-guide__spoiler-summary">
+                            <h4>Секс и нагота</h4>
+                        </summary>
+                        <ul id="orderParentGuideSex" class="fortune-parent-guide__list"></ul>
+                    </details>
+                </div>
+            </div>
+            <div id="orderTimings" class="fortune-timings">
+                <div class="fortune-timings__header">
+                    <h3>Timings</h3>
+                    <div class="fortune-timings__meta">
+                        <span id="orderTimingsStatus" class="fortune-timings__status">Выберите фильм, чтобы увидеть
+                            тайминги</span>
+                    </div>
+                </div>
+                <ul id="orderTimingsList" class="fortune-timings__list"></ul>
+                <div class="fortune-timings__source">Источник таймингов: Reyohoho</div>
+            </div>
+            <div class="order-details-actions">
+                <button id="orderDetailsExit" type="button" class="btn btn-secondary">
+                    Выход
+                </button>
+                <button id="orderDetailsWatch" type="button" class="btn btn-primary">
+                    Смотреть
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="gameOrderDetailsModal" class="modal">
         <div class="modal-content game-order-details-modal">
             <span class="close" onclick="closeModal('gameOrderDetailsModal')">&times;</span>
@@ -1448,14 +1468,14 @@
                         alt="Постер выигравшего фильма" loading="lazy">
                     <span class="fortune-winner-chip">Победитель рулетки</span>
                 </div>
-                    <div class="fortune-winner-details">
-                        <p id="fortuneWinnerFilmName" class="modal-film-name"></p>
-                        <p id="fortuneWinnerOriginalTitle" class="fortune-winner-original"></p>
-                        <div class="fortune-winner-meta">
-                            <span id="fortuneWinnerYear" class="fortune-winner-badge"></span>
-                        </div>
+                <div class="fortune-winner-details">
+                    <p id="fortuneWinnerFilmName" class="modal-film-name"></p>
+                    <p id="fortuneWinnerOriginalTitle" class="fortune-winner-original"></p>
+                    <div class="fortune-winner-meta">
+                        <span id="fortuneWinnerYear" class="fortune-winner-badge"></span>
                     </div>
                 </div>
+            </div>
             <div class="fortune-winner-actions">
                 <button id="fortuneWinnerWatch" class="btn btn-primary">Смотреть</button>
                 <button id="fortuneWinnerCancel" class="btn btn-secondary">Закрыть</button>

@@ -777,7 +777,7 @@ function openMovieDetailsModal(id) {
   setMetaLabel("movieDetailsOrderBy", "Кто заказал");
   setMetaLabel("movieDetailsOrderType", "Способ заказа");
   setMetaLabel("movieDetailsDate", "Дата добавления");
-  setSectionTitleByValueId("movieDetailsPupsikRating", "Оценки");
+  // setSectionTitleByValueId("movieDetailsPupsikRating", "Оценки");
 
   reorderDetailsLayout(modal, {
     key: "movie",
@@ -937,7 +937,7 @@ function renderOrderDetailsModal(order) {
   setMetaLabel("orderDetailsDate", "Дата добавления");
   setMetaLabel("orderDetailsPlanDate", "Запланировано");
   setMetaLabel("orderDetailsLength", "Длительность");
-  setSectionTitleByValueId("orderDetailsKpRating", "Оценки");
+  // setSectionTitleByValueId("orderDetailsKpRating", "Оценки");
 
   reorderDetailsLayout(modal, {
     key: "order",
