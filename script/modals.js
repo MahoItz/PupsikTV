@@ -1035,6 +1035,18 @@ function openGameOrderDetailsModal(id) {
   setMovieDetailsText("gameOrderDetailsOrderBy", orderByValue);
   setMovieDetailsText("gameOrderDetailsOrderType", orderTypeValue);
 
+  setMovieDetailsText("gameOrderDetailsDescription", game.description, "—");
+  setMovieDetailsText("gameOrderDetailsMetacritic", game.metacritic, "—");
+  setMovieDetailsText("gameOrderDetailsRawgRating", game.rating, "—");
+  setMovieDetailsText("gameOrderDetailsReleased", game.released, "—");
+  setMovieDetailsText(
+    "gameOrderDetailsPlaytime",
+    game.playtime ? `${game.playtime} ч.` : "—"
+  );
+  setMovieDetailsText("gameOrderDetailsPlatforms", game.platforms, "—");
+  setMovieDetailsText("gameOrderDetailsDevelopers", game.developers, "—");
+  setMovieDetailsText("gameOrderDetailsPublishers", game.publishers, "—");
+
   alignDetailsPoster(modal);
   modal.style.display = "block";
 }

@@ -436,7 +436,7 @@ async function loadGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Game_Orders")
       .select(
-        "id, created_at, game_title, game_order_type, game_order_by, game_genres, game_poster, game_year, game_plan_date"
+        "id, created_at, game_title, game_order_type, game_order_by, game_genres, game_poster, game_year, game_plan_date, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
       )
       .order("id", { ascending: true });
 
@@ -455,6 +455,15 @@ async function loadGamesFromSupabase() {
           : "",
       orderType: item.game_order_type,
       dateAdded: item.created_at,
+      description: item.description || "",
+      rating: item.rawg_rating || null, // Using 'rating' to align with movie structure for generic usage if needed
+      metacritic: item.metacritic || null,
+      released: item.released || null,
+      playtime: item.playtime || null,
+      platforms: item.platforms || "",
+      developers: item.developers || "",
+      publishers: item.publishers || "",
+      rawgId: item.rawg_id || null,
     }));
 
   } catch (err) {

@@ -451,6 +451,20 @@ document
         const optimizedRawgPoster = !steamGridPoster && rawgPosterUrl
           ? await ensureRawgOptimizedPoster(rawgPosterUrl)
           : null;
+
+        // Fetch full game details for description and extra info
+        let fullGameDetails = null;
+        if (g.id) {
+            try {
+                const detailsRes = await fetch(`https://api.rawg.io/api/games/${g.id}?key=${RAWG_API_KEY}`);
+                 if (detailsRes.ok) {
+                     fullGameDetails = await detailsRes.json();
+                 }
+            } catch (err) {
+                console.error("Error fetching full game details", err);
+            }
+        }
+
         gameData = {
           title: g.name || titleInput,
           year: g.released ? g.released.split("-")[0] : "",
@@ -463,6 +477,16 @@ document
             "https://via.placeholder.com/300x400?text=Нет+постера",
           orderBy: orderBy,
           orderType: orderType,
+          // New fields
+          description: fullGameDetails?.description_raw || fullGameDetails?.description || "",
+          rating: fullGameDetails?.rating || g.rating || null,
+          metacritic: fullGameDetails?.metacritic || g.metacritic || null,
+          released: fullGameDetails?.released || g.released || null,
+          playtime: fullGameDetails?.playtime || g.playtime || null,
+          platforms: fullGameDetails?.platforms?.map(p => p.platform.name).join(", ") || g.platforms?.map(p => p.platform.name).join(", ") || "",
+          developers: fullGameDetails?.developers?.map(d => d.name).join(", ") || "",
+          publishers: fullGameDetails?.publishers?.map(p => p.name).join(", ") || "",
+          rawgId: g.id || null
         };
       } else {
         gameData = {
@@ -472,6 +496,15 @@ document
           poster: "https://via.placeholder.com/300x400?text=Нет+постера",
           orderBy: orderBy,
           orderType: orderType,
+          description: "",
+          rating: null,
+          metacritic: null,
+          released: null,
+          playtime: null,
+          platforms: "",
+          developers: "",
+          publishers: "",
+          rawgId: null
         };
       }
     } else {
@@ -493,6 +526,15 @@ document
         poster: poster,
         orderBy: orderBy,
         orderType: orderType,
+        description: "",
+        rating: null,
+        metacritic: null,
+        released: null,
+        playtime: null,
+        platforms: "",
+        developers: "",
+        publishers: "",
+        rawgId: null
       };
     }
 
@@ -513,6 +555,15 @@ document
           game_poster: gameData.poster,
           game_order_by: gameData.orderBy,
           game_order_type: gameData.orderType,
+          description: gameData.description,
+          rawg_rating: gameData.rating,
+          metacritic: gameData.metacritic,
+          released: gameData.released,
+          playtime: gameData.playtime,
+          platforms: gameData.platforms,
+          developers: gameData.developers,
+          publishers: gameData.publishers,
+          rawg_id: gameData.rawgId
         })
         .select()
         .single();
@@ -529,6 +580,15 @@ document
         orderBy: data.game_order_by,
         orderType: data.game_order_type,
         dateAdded: data.created_at,
+        description: data.description || "",
+        rating: data.rawg_rating || null,
+        metacritic: data.metacritic || null,
+        released: data.released || null,
+        playtime: data.playtime || null,
+        platforms: data.platforms || "",
+        developers: data.developers || "",
+        publishers: data.publishers || "",
+        rawgId: data.rawg_id || null
       });
       renderGames();
 
