@@ -166,7 +166,344 @@ function renderActorsList(listId, sectionId, actorsValue) {
   sectionEl.style.display = "block";
 }
 
+// ====================== Студии ======================
+
+const MOVIE_DETAILS_SPECIAL_STUDIOS = [
+  { keyword: "netflix", className: "netflix", label: "Netflix" },
+  { keyword: "warner bros. pictures", className: "warner", label: "Warner Bros. Pictures" },
+  { keyword: "warner", className: "warner", label: "Warner Bros" },
+  { keyword: "disney company", className: "disney", label: "Disney Company" },
+  { keyword: "disney", className: "disney", label: "Disney" },
+];
+
+function normalizeMovieStudioName(name = "") {
+  return name.toString().trim();
+}
+
+function getMovieSpecialStudioClass(studioName = "") {
+  const normalized = studioName.toLowerCase();
+  const match = MOVIE_DETAILS_SPECIAL_STUDIOS.find(({ keyword }) =>
+    normalized.includes(keyword)
+  );
+  return match ? match.className : null;
+}
+
+function createMovieStudioBadge(studioName) {
+  const badge = document.createElement("span");
+  badge.className = "fortune-studio-badge";
+  badge.textContent = normalizeMovieStudioName(studioName) || "-";
+
+  const specialClass = getMovieSpecialStudioClass(studioName);
+  if (specialClass) {
+    badge.classList.add(`fortune-studio-badge--${specialClass}`);
+  }
+
+  return badge;
+}
+
+function parseMovieStudiosData(studiosRaw) {
+  if (!studiosRaw) return null;
+
+  if (typeof studiosRaw === "object" && !Array.isArray(studiosRaw)) {
+    return studiosRaw;
+  }
+
+  if (typeof studiosRaw === "string") {
+    try {
+      const parsed = JSON.parse(studiosRaw);
+      if (typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed;
+      }
+      if (Array.isArray(parsed)) {
+        return { studios: parsed, homepage: "" };
+      }
+    } catch (e) {
+      const studios = studiosRaw.split(",").map((s) => s.trim()).filter(Boolean);
+      return studios.length > 0 ? { studios, homepage: "" } : null;
+    }
+  }
+
+  return null;
+}
+
+function ensureMovieStudiosSection(modal) {
+  if (!modal) return null;
+
+  let section = modal.querySelector(".movie-details-studios-section");
+  if (section) return section;
+
+  section = document.createElement("div");
+  section.className = "movie-details-meta-item movie-details-studios-section";
+
+  const label = document.createElement("span");
+  label.className = "movie-details-meta-label";
+  label.textContent = "Студии";
+
+  const content = document.createElement("div");
+  content.className = "movie-details-studios-content";
+
+  const status = document.createElement("span");
+  status.className = "movie-details-studios-status";
+  status.textContent = "";
+
+  const badges = document.createElement("div");
+  badges.className = "movie-details-studios-badges";
+
+  content.append(status, badges);
+  section.append(label, content);
+
+  return section;
+}
+
+function insertMovieStudiosSection(modal, section) {
+  if (!modal || !section) return;
+
+  const meta = modal.querySelector(".movie-details-meta");
+  if (!meta) return;
+
+  const directorItem = meta.querySelector("#movieDetailsDirector")?.closest(".movie-details-meta-item");
+  if (directorItem && directorItem.parentElement === meta) {
+    meta.insertBefore(section, directorItem.nextSibling);
+  } else {
+    meta.appendChild(section);
+  }
+}
+
+function setMovieStudiosStatus(section, message) {
+  if (!section) return;
+  const statusEl = section.querySelector(".movie-details-studios-status");
+  if (statusEl) {
+    statusEl.textContent = message;
+  }
+}
+
+function renderMovieStudios(section, studiosData) {
+  if (!section) return;
+
+  const badgesEl = section.querySelector(".movie-details-studios-badges");
+  const statusEl = section.querySelector(".movie-details-studios-status");
+
+  if (!studiosData || !Array.isArray(studiosData.studios) || studiosData.studios.length === 0) {
+    if (badgesEl) badgesEl.innerHTML = "";
+    if (statusEl) statusEl.textContent = "Нет данных";
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = "";
+  if (badgesEl) {
+    badgesEl.innerHTML = "";
+    studiosData.studios.forEach((studio) => {
+      badgesEl.appendChild(createMovieStudioBadge(studio));
+    });
+  }
+}
+
+let movieStudiosRequestId = 0;
+const movieStudiosLoadCache = new Map();
+
+async function searchKinopoiskByTitleYear(title, year) {
+  if (!title || !KINOPOISK_API_KEY) return null;
+
+  const keyword = year ? `${title} ${year}` : title;
+  try {
+    const response = await fetch(
+      `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(keyword)}`,
+      {
+        headers: {
+          "X-API-KEY": KINOPOISK_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      await handleKinopoiskErrorResponse(response);
+      return null;
+    }
+
+    const data = await response.json();
+    const films = data?.films || [];
+
+    if (films.length === 0) return null;
+
+    if (year) {
+      const yearNum = parseInt(year, 10);
+      const exactMatch = films.find((f) => {
+        const filmYear = parseInt(f.year, 10);
+        return filmYear === yearNum;
+      });
+      if (exactMatch) return exactMatch;
+    }
+
+    return films[0];
+  } catch (err) {
+    console.error("Failed to search Kinopoisk by title", err);
+    return null;
+  }
+}
+
+async function fetchImdbIdFromKinopoiskFilm(kinopoiskId) {
+  if (!kinopoiskId || !KINOPOISK_API_KEY) return null;
+
+  try {
+    const response = await fetch(
+      `${KINOPOISK_FILM_URL}/${encodeURIComponent(kinopoiskId)}`,
+      {
+        headers: {
+          "X-API-KEY": KINOPOISK_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      await handleKinopoiskErrorResponse(response);
+      return null;
+    }
+
+    const data = await response.json();
+    return data?.imdbId || null;
+  } catch (err) {
+    console.error("Failed to fetch IMDb ID from Kinopoisk", err);
+    return null;
+  }
+}
+
+async function fetchStudiosFromTmdb(imdbId) {
+  if (!imdbId || !TMDB_ENABLED) return null;
+
+  try {
+    const params = new URLSearchParams({ imdbId });
+    const tmdbUrl = `${buildApiPath("/tmdb")}?${params.toString()}`;
+    const response = await fetch(tmdbUrl);
+
+    if (!response.ok) {
+      throw new Error(`TMDB request failed: ${response.status}`);
+    }
+
+    const payload = await response.json();
+
+    if (payload?.details?.production_companies) {
+      const studios = payload.details.production_companies
+        .map((c) => c?.name)
+        .filter(Boolean);
+      const homepage = payload.details.homepage || "";
+      return { studios, homepage };
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Failed to fetch studios from TMDB", err);
+    return null;
+  }
+}
+
+async function saveMovieStudiosToDb(movieId, studiosData) {
+  if (!movieId || !studiosData || !supabaseClient) return;
+
+  try {
+    const studiosJson = JSON.stringify(studiosData);
+    const { error } = await supabaseClient
+      .from("movies")
+      .update({ studios: studiosJson })
+      .eq("id", movieId);
+
+    if (error) {
+      console.error("Failed to save studios to database", error);
+    }
+  } catch (err) {
+    console.error("Error saving studios to database", err);
+  }
+}
+
+async function loadMovieStudios(movie, section, requestId) {
+  if (!movie || !section) return;
+
+  const movieId = movie.id;
+  const title = movie.title;
+  const year = movie.year;
+
+  if (movieStudiosLoadCache.has(movieId)) {
+    const cached = movieStudiosLoadCache.get(movieId);
+    if (requestId === movieStudiosRequestId) {
+      renderMovieStudios(section, cached);
+    }
+    return;
+  }
+
+  setMovieStudiosStatus(section, "Загружаем...");
+
+  try {
+    setMovieStudiosStatus(section, "Ищем на Кинопоиске...");
+    const kpFilm = await searchKinopoiskByTitleYear(title, year);
+
+    if (requestId !== movieStudiosRequestId) return;
+
+    if (!kpFilm) {
+      setMovieStudiosStatus(section, "Фильм не найден на Кинопоиске");
+      return;
+    }
+
+    const kinopoiskId = kpFilm.filmId || kpFilm.kinopoiskId || kpFilm.id;
+
+    setMovieStudiosStatus(section, "Получаем IMDb ID...");
+    const imdbId = await fetchImdbIdFromKinopoiskFilm(kinopoiskId);
+
+    if (requestId !== movieStudiosRequestId) return;
+
+    if (!imdbId) {
+      setMovieStudiosStatus(section, "IMDb ID не найден");
+      return;
+    }
+
+    setMovieStudiosStatus(section, "Загружаем студии...");
+    const studiosData = await fetchStudiosFromTmdb(imdbId);
+
+    if (requestId !== movieStudiosRequestId) return;
+
+    if (!studiosData || studiosData.studios.length === 0) {
+      setMovieStudiosStatus(section, "Студии не найдены");
+      return;
+    }
+
+    movieStudiosLoadCache.set(movieId, studiosData);
+    renderMovieStudios(section, studiosData);
+
+    await saveMovieStudiosToDb(movieId, studiosData);
+
+    movie.studios = JSON.stringify(studiosData);
+  } catch (err) {
+    console.error("Error loading movie studios", err);
+    if (requestId === movieStudiosRequestId) {
+      setMovieStudiosStatus(section, "Ошибка загрузки");
+    }
+  }
+}
+
+function handleMovieDetailsStudios(movie, modal) {
+  if (!movie || !modal) return;
+
+  const section = ensureMovieStudiosSection(modal);
+  if (!section) return;
+
+  insertMovieStudiosSection(modal, section);
+
+  const studiosData = parseMovieStudiosData(movie.studios);
+
+  if (studiosData && Array.isArray(studiosData.studios) && studiosData.studios.length > 0) {
+    renderMovieStudios(section, studiosData);
+  } else {
+    // Clear previous content to avoid stale data
+    renderMovieStudios(section, { studios: [] });
+    
+    movieStudiosRequestId++;
+    const currentRequestId = movieStudiosRequestId;
+    loadMovieStudios(movie, section, currentRequestId);
+  }
+}
+
 function setDetailsSectionLabels(options = {}) {
+
   const { descriptionId, countryId, directorId, actorsSectionId } = options;
 
   if (descriptionId) {
@@ -446,6 +783,8 @@ function openMovieDetailsModal(id) {
     votesEl.textContent = `Голосов: ${votes}`;
     votesEl.classList.toggle("movie-details-muted", votes === 0);
   }
+
+  handleMovieDetailsStudios(movie, modal);
 
   alignDetailsPoster(modal);
   modal.style.display = "block";

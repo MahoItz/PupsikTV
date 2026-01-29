@@ -144,6 +144,11 @@ function computeMoviesSignature(list) {
     const actorsHash = stringHash(
       Array.isArray(movie?.actors) ? movie.actors.join(",") : movie?.actors ?? ""
     );
+    const studiosHash = stringHash(
+      typeof movie?.studios === "object"
+        ? JSON.stringify(movie.studios)
+        : movie?.studios ?? ""
+    );
 
     hash = (hash * 31 + Number(movie?.id ?? 0)) >>> 0;
     hash = (hash * 31 + Math.round(rating * 10)) >>> 0;
@@ -155,6 +160,7 @@ function computeMoviesSignature(list) {
     hash = (hash * 31 + countryHash) >>> 0;
     hash = (hash * 31 + directorHash) >>> 0;
     hash = (hash * 31 + actorsHash) >>> 0;
+    hash = (hash * 31 + studiosHash) >>> 0;
   }
 
   return hash >>> 0;
@@ -293,7 +299,7 @@ async function loadMoviesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, kp_id, imdb_id"
+        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, kp_id, imdb_id, studios"
       )
       .order("id", { ascending: false });
 
@@ -327,6 +333,7 @@ async function loadMoviesFromSupabase() {
         country: item.country || "",
         actors: normalizeActorsValue(item.actors),
         director: item.director || "",
+        studios: item.studios || null,
       };
     });
 

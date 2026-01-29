@@ -539,6 +539,42 @@
     font-weight: 600;
 }
 
+/* Студии в модальных окнах */
+#movieDetailsModal .movie-details-studios-content,
+#gameDetailsModal .movie-details-studios-content,
+#orderDetailsModal .movie-details-studios-content,
+#gameOrderDetailsModal .movie-details-studios-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+
+#movieDetailsModal .movie-details-studios-status,
+#gameDetailsModal .movie-details-studios-status,
+#orderDetailsModal .movie-details-studios-status,
+#gameOrderDetailsModal .movie-details-studios-status {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+#movieDetailsModal .movie-details-studios-badges,
+#gameDetailsModal .movie-details-studios-badges,
+#orderDetailsModal .movie-details-studios-badges,
+#gameOrderDetailsModal .movie-details-studios-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+#movieDetailsModal .movie-details-studios-section,
+#gameDetailsModal .movie-details-studios-section,
+#orderDetailsModal .movie-details-studios-section,
+#gameOrderDetailsModal .movie-details-studios-section {
+    align-items: flex-start;
+}
+
 #movieDetailsModal .movie-details-section-title,
 #gameDetailsModal .movie-details-section-title,
 #orderDetailsModal .movie-details-section-title,
@@ -695,8 +731,7 @@
     gap: 8px;
 }
 
-#fortuneMovieModal
-    .fortune-parent-guide__status.fortune-parent-guide__status--loading::after {
+#fortuneMovieModal .fortune-parent-guide__status.fortune-parent-guide__status--loading::after {
     content: "";
     width: 14px;
     height: 14px;
@@ -961,8 +996,7 @@
     gap: 8px;
 }
 
-#orderDetailsModal
-    .fortune-parent-guide__status.fortune-parent-guide__status--loading::after {
+#orderDetailsModal .fortune-parent-guide__status.fortune-parent-guide__status--loading::after {
     content: "";
     width: 14px;
     height: 14px;
