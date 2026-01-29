@@ -8,36 +8,41 @@
     --diag-glass: blur(16px) saturate(180%);
 }
 
-.diagnostic-button {
-    position: fixed;
-    top: 100px;
-    /* Below settings button */
-    right: 20px;
-    width: 44px;
-    height: 44px;
-    background: var(--glass-bg);
+.diag-menu-btn {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
-    border-radius: 50%;
+    border-radius: var(--border-radius-small);
     color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
     cursor: pointer;
-    z-index: 1000;
     transition: var(--transition);
-    backdrop-filter: blur(8px);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
 }
 
-.diagnostic-button:hover {
-    background: var(--primary-purple);
-    box-shadow: 0 0 15px var(--primary-purple);
-    transform: scale(1.05);
-}
-
-.diagnostic-button.active {
+.diag-menu-btn i {
     color: var(--diag-accent);
+}
+
+.diag-menu-btn:hover {
+    background: rgba(0, 212, 255, 0.1);
     border-color: var(--diag-accent);
-    box-shadow: 0 0 10px var(--diag-accent);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.diag-menu-btn.active {
+    background: var(--diag-accent);
+    color: #000;
+}
+
+.diag-menu-btn.active i {
+    color: #000;
 }
 
 /* Diagnostic Panel */
