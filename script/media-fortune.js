@@ -2013,7 +2013,7 @@ async function startOrderParentGuideTranslation(order, data, options = {}) {
   );
 
   try {
-    const translatedSections = await translateParentGuideSections(
+    const translatedSections = await translateParentGuideSectionsWithFallback(
       originalSections,
       selectedTranslationModel
     );
@@ -2253,7 +2253,7 @@ async function prefetchOrderParentGuideForOrder(order, options = {}) {
       let translationStatus = "ready";
 
       try {
-        translated = await translateParentGuideSections(
+        translated = await translateParentGuideSectionsWithFallback(
           normalizedGuideData.original,
           selectedTranslationModel
         );
@@ -2988,6 +2988,51 @@ async function translateParentGuideSections(originalSections, modelValue) {
   return normalizeParentGuideSections(translated || {});
 }
 
+async function translateParentGuideSectionsWithFallback(
+  originalSections,
+  primaryModel
+) {
+  // 1. Try primary model
+  try {
+    return await translateParentGuideSections(originalSections, primaryModel);
+  } catch (err) {
+    console.warn(`Primary translation model [${primaryModel}] failed:`, err);
+  }
+
+  // 2. Fallback to other active models
+  if (typeof aiModelOptions === "undefined" || !aiModelOptions.length) {
+    throw new Error("No fallback models available");
+  }
+
+  // Filter models that are marked as 'active' and are NOT the primary model
+  const activeFallbackModels = aiModelOptions
+    .filter(
+      (opt) =>
+        opt.ai_model !== primaryModel &&
+        aiModelStatuses[opt.ai_model]?.status === "active"
+    )
+    .map((opt) => opt.ai_model);
+
+  for (const fallbackModel of activeFallbackModels) {
+    try {
+      console.log(`Attempting fallback translation with model: ${fallbackModel}`);
+      const result = await translateParentGuideSections(
+        originalSections,
+        fallbackModel
+      );
+      // Auto-switch to this working model for future calls
+      if (typeof updateActiveAiModel === "function") {
+        updateActiveAiModel(fallbackModel);
+      }
+      return result;
+    } catch (err) {
+      console.warn(`Fallback model [${fallbackModel}] failed:`, err);
+    }
+  }
+
+  throw new Error("All translation models failed (including fallback)");
+}
+
 async function startFortuneParentGuideTranslation(label, data, options = {}) {
   const { requestId = null, force = false } = options;
   const translationStatus = data?.translationStatus || null;
@@ -3021,7 +3066,7 @@ async function startFortuneParentGuideTranslation(label, data, options = {}) {
   );
 
   try {
-    const translatedSections = await translateParentGuideSections(
+    const translatedSections = await translateParentGuideSectionsWithFallback(
       originalSections,
       selectedTranslationModel
     );

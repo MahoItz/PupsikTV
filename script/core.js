@@ -552,12 +552,20 @@ async function handleAiModelChange(event) {
   if (!selectEl) return;
 
   const modelValue = selectEl.value || null;
+  await updateActiveAiModel(modelValue);
+}
+
+async function updateActiveAiModel(modelValue) {
   const option = aiModelOptions.find((item) => item.ai_model === modelValue);
   const modelName = option?.ai_model_name || modelValue;
 
   selectedAiModelValue = modelValue;
 
-  selectEl.disabled = true;
+  // Update dropdown if it exists
+  if (aiModelSelect) {
+    aiModelSelect.value = modelValue || "";
+  }
+
   setAiModelStatus("Сохраняем выбранную модель...");
 
   try {
@@ -567,11 +575,10 @@ async function handleAiModelChange(event) {
     } else {
       setAiModelStatus("Модель обновлена.");
     }
+    console.log(`AI system successfully switched to: ${modelName}`);
   } catch (err) {
-    console.error("Failed to save OpenRouter model", err);
+    console.error("Failed to persist model switch", err);
     setAiModelStatus("Не удалось сохранить модель. Попробуйте ещё раз.");
-  } finally {
-    selectEl.disabled = false;
   }
 }
 
