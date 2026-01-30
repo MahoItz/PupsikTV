@@ -164,6 +164,7 @@ let settingsPanelCloseButton;
 let aiModelSelect;
 let aiModelStatus;
 let aiModelOptions = [];
+let aiModelStatuses = {}; // { modelId: { status, http_status, provider, raw } }
 let selectedAiModelValue = null;
 let kpApiSelect;
 let kpApiStatus;
@@ -339,9 +340,7 @@ function renderAiModelOptions(options = [], selectedValue = null) {
   if (!aiModelSelect) return;
 
   const validOptions = Array.isArray(options)
-    ? options.filter(
-        (option) => option?.ai_model && option?.ai_model_name
-      )
+    ? options.filter((option) => option?.ai_model && option?.ai_model_name)
     : [];
 
   aiModelOptions = validOptions;
@@ -361,7 +360,22 @@ function renderAiModelOptions(options = [], selectedValue = null) {
   validOptions.forEach((option) => {
     const el = document.createElement("option");
     el.value = option.ai_model;
-    el.textContent = option.ai_model_name;
+
+    const statusInfo = aiModelStatuses[option.ai_model];
+    let indicator = "";
+    let tooltip = "";
+
+    if (statusInfo) {
+      if (statusInfo.status === "active") indicator = "🟢 ";
+      else if (statusInfo.status === "rate_limited") indicator = "🟠 ";
+      else indicator = "🔴 ";
+
+      tooltip = `Status: ${statusInfo.status}\nHTTP: ${statusInfo.http_status}\nProvider: ${statusInfo.provider}\nRaw: ${statusInfo.raw}`;
+    }
+
+    el.textContent = `${indicator}${option.ai_model_name}`;
+    if (tooltip) el.title = tooltip;
+
     aiModelSelect.appendChild(el);
   });
 
@@ -382,6 +396,74 @@ function renderAiModelOptions(options = [], selectedValue = null) {
     setAiModelStatus(
       `Текущая модель: ${selectedOption.ai_model_name || selectedOption.ai_model}`
     );
+  }
+}
+
+async function checkAiModelsStatus() {
+  const btn = document.getElementById("checkAiModelsBtn");
+  const label = document.getElementById("aiModelStatusLabel");
+
+  if (!btn || !aiModelOptions.length) return;
+
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  if (label) label.textContent = "Проверка моделей...";
+
+  const concurrencyLimit = 3;
+  const queue = [...aiModelOptions];
+  const results = [];
+
+  async function runWorker() {
+    while (queue.length > 0) {
+      const modelInfo = queue.shift();
+      try {
+        const response = await fetch(buildApiPath("/check-model"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: modelInfo.ai_model }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          aiModelStatuses[modelInfo.ai_model] = data;
+          console.log(`Model Check [${modelInfo.ai_model_name}]:`, data);
+        } else {
+          aiModelStatuses[modelInfo.ai_model] = {
+            status: "error",
+            http_status: response.status,
+            provider: "Proxy",
+            raw: "Failed to reach check API",
+          };
+        }
+      } catch (err) {
+        aiModelStatuses[modelInfo.ai_model] = {
+          status: "error",
+          http_status: 0,
+          provider: "Network",
+          raw: err.message,
+        };
+      }
+      // Re-render after each check to show progress
+      renderAiModelOptions(aiModelOptions, selectedAiModelValue);
+    }
+  }
+
+  const workers = Array(Math.min(concurrencyLimit, queue.length))
+    .fill(null)
+    .map(() => runWorker());
+
+  await Promise.all(workers);
+
+  btn.disabled = false;
+  btn.innerHTML = originalHtml;
+
+  if (label) {
+    const now = new Date().toLocaleTimeString();
+    label.textContent = `Обновлено только что (${now})`;
+    setTimeout(() => {
+      label.textContent = "Обновлено только что";
+    }, 5000);
   }
 }
 
@@ -2115,6 +2197,12 @@ if (rouletteAutofillClearBtn) {
     clearRouletteLastWinner();
   });
 }
+
+document.addEventListener("click", (e) => {
+  if (e.target && (e.target.id === "checkAiModelsBtn" || e.target.closest("#checkAiModelsBtn"))) {
+    checkAiModelsStatus();
+  }
+});
 
 // Pagination
 let currentPage = 1;

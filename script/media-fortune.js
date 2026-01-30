@@ -117,6 +117,7 @@ const fortuneParentGuideStatus = document.getElementById(
 const fortuneParentGuideTranslate = document.getElementById(
   "fortuneParentGuideTranslate"
 );
+const fortuneParentGuideAI = document.getElementById("fortuneParentGuideAI");
 const fortuneParentGuideContent = document.getElementById(
   "fortuneParentGuideContent"
 );
@@ -147,6 +148,7 @@ const orderParentGuideStatus = document.getElementById("orderParentGuideStatus")
 const orderParentGuideTranslate = document.getElementById(
   "orderParentGuideTranslate"
 );
+const orderParentGuideAI = document.getElementById("orderParentGuideAI");
 const orderParentGuideContent = document.getElementById(
   "orderParentGuideContent"
 );
@@ -1813,12 +1815,14 @@ function setOrderParentGuideStatus(message, options = {}) {
 }
 
 function updateOrderTranslateButton(isEnabled) {
-  if (!orderParentGuideTranslate) {
-    return;
+  if (orderParentGuideTranslate) {
+    orderParentGuideTranslate.disabled = !isEnabled;
+    orderParentGuideTranslate.classList.toggle("btn-disabled", !isEnabled);
   }
-
-  orderParentGuideTranslate.disabled = !isEnabled;
-  orderParentGuideTranslate.classList.toggle("btn-disabled", !isEnabled);
+  if (orderParentGuideAI) {
+    orderParentGuideAI.disabled = !isEnabled;
+    orderParentGuideAI.classList.toggle("btn-disabled", !isEnabled);
+  }
 }
 
 function setCurrentOrderParentGuideData(data) {
@@ -1956,10 +1960,10 @@ function applyOrderParentGuideTranslationState(
 }
 
 async function startOrderParentGuideTranslation(order, data, options = {}) {
-  const { requestId = null } = options;
+  const { requestId = null, force = false } = options;
   const translationStatus = data?.translationStatus || null;
 
-  if (translationStatus === "pending" || translationStatus === "ready") {
+  if (!force && (translationStatus === "pending" || translationStatus === "ready")) {
     return;
   }
 
@@ -2332,6 +2336,18 @@ async function openOrderGuideInGoogleTranslate() {
   window.open(initialUrl, "_blank", "noopener,noreferrer");
 }
 
+async function startOrderParentGuideManualTranslation() {
+  const activeOrder = getActiveOrderDetails();
+  if (!activeOrder?.parentGuide) {
+    setOrderParentGuideStatus("Нет данных для перевода.");
+    return;
+  }
+  await startOrderParentGuideTranslation(activeOrder, activeOrder.parentGuide, {
+    requestId: orderParentGuideRequestId,
+    force: true,
+  });
+}
+
 function setOrderTimingsStatus(message) {
   if (orderTimingsStatus) {
     orderTimingsStatus.textContent = message;
@@ -2694,12 +2710,48 @@ async function openFortuneGuideInGoogleTranslate() {
   window.open(initialUrl, "_blank", "noopener,noreferrer");
 }
 
+async function startFortuneParentGuideManualTranslation() {
+  if (!selectedFortuneLabel) {
+    setFortuneParentGuideStatus("Нет данных для перевода.");
+    return;
+  }
+  const metadata = fortuneItemMetadata.get(selectedFortuneLabel) || {};
+  if (!metadata.parentGuide) {
+    setFortuneParentGuideStatus("Нет данных для перевода.");
+    return;
+  }
+  await startFortuneParentGuideTranslation(
+    selectedFortuneLabel,
+    metadata.parentGuide,
+    {
+      requestId: fortuneParentGuideRequestId,
+      force: true,
+    }
+  );
+}
+
 function resetFortuneParentGuideSections() {
   Object.entries(fortuneParentGuideSections).forEach(([key, section]) => {
     if (!section) return;
 
     section.open = key === "sexAndNudity";
   });
+}
+
+function updateFortuneTranslateButton(isEnabled) {
+  if (fortuneParentGuideTranslate) {
+    fortuneParentGuideTranslate.disabled = !isEnabled;
+    fortuneParentGuideTranslate.classList.toggle("btn-disabled", !isEnabled);
+  }
+  if (fortuneParentGuideAI) {
+    fortuneParentGuideAI.disabled = !isEnabled;
+    fortuneParentGuideAI.classList.toggle("btn-disabled", !isEnabled);
+  }
+}
+
+function setCurrentFortuneParentGuideData(data) {
+  fortuneCurrentParentGuideData = data || null;
+  updateFortuneTranslateButton(Boolean(data));
 }
 
 function resetFortuneParentGuide(
@@ -2748,9 +2800,7 @@ function renderFortuneParentGuide(data) {
   setCurrentFortuneParentGuideData(normalized);
 
   const useTranslated =
-    translationStatus === "ready" &&
-    translated &&
-    hasParentGuideContent(translated);
+    translated && hasParentGuideContent(translated);
 
   const sections = useTranslated ? translated : original;
 
@@ -2936,10 +2986,10 @@ async function translateParentGuideSections(originalSections, modelValue) {
 }
 
 async function startFortuneParentGuideTranslation(label, data, options = {}) {
-  const { requestId = null } = options;
+  const { requestId = null, force = false } = options;
   const translationStatus = data?.translationStatus || null;
 
-  if (translationStatus === "pending" || translationStatus === "ready") {
+  if (!force && (translationStatus === "pending" || translationStatus === "ready")) {
     return;
   }
 
@@ -5140,6 +5190,34 @@ function initFortuneWheel() {
   }
   if (shuffleBtn) {
     shuffleBtn.addEventListener("click", reshuffle);
+  }
+
+  if (fortuneParentGuideAI) {
+    fortuneParentGuideAI.addEventListener(
+      "click",
+      startFortuneParentGuideManualTranslation
+    );
+  }
+
+  if (orderParentGuideAI) {
+    orderParentGuideAI.addEventListener(
+      "click",
+      startOrderParentGuideManualTranslation
+    );
+  }
+
+  if (fortuneParentGuideAI) {
+    fortuneParentGuideAI.addEventListener(
+      "click",
+      startFortuneParentGuideManualTranslation
+    );
+  }
+
+  if (orderParentGuideAI) {
+    orderParentGuideAI.addEventListener(
+      "click",
+      startOrderParentGuideManualTranslation
+    );
   }
 
   input.value = items.join("\n");

@@ -129,6 +129,45 @@ body {
     }
 }
 
+.settings-panel__field {
+    margin-bottom: 24px;
+}
+
+.settings-panel__ai-control {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.settings-panel__select {
+    flex: 1;
+}
+
+.settings-panel__status-text {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--text-color-muted, #a0a0c0);
+    min-height: 1.2em;
+    transition: opacity 0.3s ease;
+}
+
+.btn-small {
+    padding: 8px 12px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-small i {
+    font-size: 0.9rem;
+}
+
+/* Animations for buttons */
+#checkAiModelsBtn:disabled i {
+    animation: fa-spin 1s infinite linear;
+}
+
 .toast-container {
     position: fixed;
     top: 18px;
@@ -189,4 +228,3 @@ body {
     border-color: rgba(255, 108, 66, 0.5);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), 0 0 24px rgba(255, 108, 66, 0.45);
 }
-

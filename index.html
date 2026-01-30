@@ -1056,6 +1056,10 @@
                             class="btn btn-secondary fortune-parent-guide__translate" disabled>
                             Google Translate
                         </button>
+                        <button id="fortuneParentGuideAI" type="button"
+                            class="btn btn-primary fortune-parent-guide__translate" disabled>
+                            Translate (AI)
+                        </button>
                     </div>
                 </div>
                 <div id="fortuneParentGuideContent" class="fortune-parent-guide__content" style="display: none;">
@@ -1313,6 +1317,10 @@
                         <button id="orderParentGuideTranslate" type="button"
                             class="btn btn-secondary fortune-parent-guide__translate" disabled>
                             Google Translate
+                        </button>
+                        <button id="orderParentGuideAI" type="button"
+                            class="btn btn-primary fortune-parent-guide__translate" disabled>
+                            Translate (AI)
                         </button>
                     </div>
                 </div>
@@ -1685,9 +1693,16 @@
                 </div>
                 <div class="settings-panel__field">
                     <label for="aiModelSelect" class="settings-panel__label">Модель для перевода</label>
-                    <select id="aiModelSelect" class="settings-panel__select" disabled>
-                        <option value="">Загружаем модели...</option>
-                    </select>
+                    <div class="settings-panel__ai-control">
+                        <select id="aiModelSelect" class="settings-panel__select" disabled>
+                            <option value="">Загружаем модели...</option>
+                        </select>
+                        <button id="checkAiModelsBtn" class="btn btn-secondary btn-small" type="button"
+                            title="Проверить статус моделей">
+                            <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <p id="aiModelStatusLabel" class="settings-panel__status-text"></p>
                 </div>
             </div>
             <div class="settings-panel__section admin-only">

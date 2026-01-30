@@ -741,7 +741,7 @@
     animation: spin 0.9s linear infinite;
 }
 
-#fortuneMovieModal .fortune-parent-guide__translate {
+.fortune-parent-guide__translate {
     padding: 6px 12px;
     font-size: 14px;
     white-space: nowrap;
