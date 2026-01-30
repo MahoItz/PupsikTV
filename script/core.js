@@ -455,6 +455,9 @@ async function checkAiModelsStatus() {
 
   await Promise.all(workers);
 
+  // Persist to Supabase after all checks are done
+  await persistAiModelStatuses();
+
   btn.disabled = false;
   btn.innerHTML = originalHtml;
 
@@ -464,6 +467,25 @@ async function checkAiModelsStatus() {
     setTimeout(() => {
       label.textContent = "Обновлено только что";
     }, 5000);
+  }
+}
+
+async function persistAiModelStatuses() {
+  if (!supabaseClient || !settingsRowId) {
+    console.warn("Cannot persist AI statuses: Supabase client or settingsRowId missing");
+    return;
+  }
+
+  try {
+    const { error } = await supabaseClient
+      .from("settings")
+      .update({ ai_model_statuses: aiModelStatuses })
+      .eq("id", settingsRowId);
+
+    if (error) throw error;
+    console.log("AI model statuses persisted to Supabase");
+  } catch (err) {
+    console.error("Failed to persist AI statuses", err);
   }
 }
 

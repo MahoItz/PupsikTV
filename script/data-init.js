@@ -209,7 +209,7 @@ async function loadSettingsFromSupabase() {
     const { data, error } = await supabaseClient
       .from("settings")
       .select(
-        "id, roulette_last_winner, ai_model_name, ai_model, selected_ai_model, selected_ai_model_name, kp_api, victory_volume, lose_volume, spin_volume"
+        "id, roulette_last_winner, ai_model_name, ai_model, selected_ai_model, selected_ai_model_name, kp_api, victory_volume, lose_volume, spin_volume, ai_model_statuses"
       )
       .order("id", { ascending: true });
 
@@ -222,6 +222,13 @@ async function loadSettingsFromSupabase() {
       (rows.length > 0 ? rows[0] : null);
 
     settingsRowId = settingsRow?.id ?? settingsRowId;
+
+    // Load AI Model Statuses if they exist
+    if (settingsRow?.ai_model_statuses) {
+      aiModelStatuses = settingsRow.ai_model_statuses;
+      console.log("AI model statuses loaded from database:", aiModelStatuses);
+    }
+
     const remoteValue = (settingsRow?.roulette_last_winner || "").trim();
     const remoteVictoryVolume =
       clampVictoryVolume(settingsRow?.victory_volume) ?? DEFAULT_VICTORY_VOLUME;
