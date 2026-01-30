@@ -1790,6 +1790,23 @@ function setOrderMetadata(order, metadata = {}) {
   });
 }
 
+async function persistOrderParentGuide(orderId, guide) {
+  if (!orderId || !supabaseClient || String(orderId).startsWith("kp-")) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("Movie_Orders")
+    .update({ parents_guide: guide })
+    .eq("id", orderId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to store parent guide for order", error);
+  }
+}
+
 function getActiveOrderDetails() {
   if (activeOrderDetailsOverride) {
     return activeOrderDetailsOverride;
@@ -1945,6 +1962,10 @@ function applyOrderParentGuideTranslationState(
   });
 
   setOrderMetadata(order, { parentGuide: updatedGuide });
+
+  if (translationStatus === "ready" && order?.id) {
+    persistOrderParentGuide(order.id, updatedGuide);
+  }
 
   const shouldRender =
     order &&
@@ -2222,16 +2243,7 @@ async function prefetchOrderParentGuideForOrder(order, options = {}) {
         renderOrderParentGuide(baseGuide);
       }
 
-      const { error: baseError } = await supabaseClient
-        .from("Movie_Orders")
-        .update({ parents_guide: baseGuide })
-        .eq("id", order.id)
-        .select("id")
-        .maybeSingle();
-
-      if (baseError) {
-        console.error("Failed to store parent guide for order", baseError);
-      }
+      await persistOrderParentGuide(order.id, baseGuide);
 
       if (initialTranslationStatus !== "pending") {
         return baseGuide;
@@ -2268,16 +2280,7 @@ async function prefetchOrderParentGuideForOrder(order, options = {}) {
         renderOrderParentGuide(storedGuide);
       }
 
-      const { error } = await supabaseClient
-        .from("Movie_Orders")
-        .update({ parents_guide: storedGuide })
-        .eq("id", order.id)
-        .select("id")
-        .maybeSingle();
-
-      if (error) {
-        console.error("Failed to store parent guide for order", error);
-      }
+      await persistOrderParentGuide(order.id, storedGuide);
 
       return storedGuide;
     } catch (err) {
