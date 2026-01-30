@@ -1712,11 +1712,24 @@
                 </div>
                 <div class="settings-panel__field">
                     <label for="kpApiSelect" class="settings-panel__label">API Кинопоиска</label>
-                    <select id="kpApiSelect" class="settings-panel__select" disabled>
-                        <option value="API 1">API 1</option>
-                        <option value="API 2">API 2</option>
-                        <option value="API 3">API 3</option>
-                    </select>
+                    <div class="settings-panel__ai-control">
+                        <select id="kpApiSelect" class="settings-panel__select" disabled>
+                            <option value="API 1">API 1</option>
+                            <option value="API 2">API 2</option>
+                            <option value="API 3">API 3</option>
+                        </select>
+                        <button id="refreshKpQuotaBtn" class="btn btn-secondary btn-small" type="button"
+                            title="Обновить статистику квот">
+                            <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div id="kpQuotaInfo" class="settings-panel__quota-info" style="display: none;">
+                        <div class="settings-panel__quota-item">
+                            <span class="settings-panel__quota-label">Лимит (день):</span>
+                            <span id="kpDailyQuota" class="settings-panel__quota-value">- / -</span>
+                        </div>
+                    </div>
+                    <p id="kpApiStatus" class="settings-panel__status-text"></p>
                 </div>
             </div>
             <div class="settings-panel__section settings-panel__section--audio">

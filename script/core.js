@@ -172,6 +172,10 @@ let selectedKpApiValue = "API 1";
 let kpApiPrimaryKey = null;
 let kpApiSecondaryKey = null;
 let kpApiTertiaryKey = null;
+let refreshKpQuotaBtn;
+let kpQuotaInfo;
+let kpDailyQuota;
+
 let victoryVolumeSlider;
 let victoryVolumeValue;
 let victoryVolume = 0.5;
@@ -595,6 +599,48 @@ function setKpApiStatus(message) {
   }
 }
 
+async function refreshKpQuota() {
+  if (!KINOPOISK_API_KEY) {
+    if (kpQuotaInfo) kpQuotaInfo.style.display = "none";
+    return;
+  }
+
+  const btn = document.getElementById("refreshKpQuotaBtn");
+  const icon = btn?.querySelector("i");
+  const originalHtml = btn?.innerHTML;
+
+  if (btn) btn.disabled = true;
+  if (icon) icon.classList.add("fa-spin");
+
+  try {
+    const url = `https://kinopoiskapiunofficial.tech/api/v1/api_keys/${KINOPOISK_API_KEY}`;
+    const res = await fetch(url, {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Quota fetch failed with ${res.status}`);
+    }
+
+    const data = await res.json();
+    
+    if (kpQuotaInfo) kpQuotaInfo.style.display = "flex";
+    if (kpDailyQuota) {
+      const daily = data.dailyQuota || { value: 0, used: 0 };
+      kpDailyQuota.textContent = `${daily.value - daily.used} / ${daily.value}`;
+    }
+  } catch (err) {
+    console.error("Error refreshing Kinopoisk quota", err);
+    if (kpQuotaInfo) kpQuotaInfo.style.display = "none";
+  } finally {
+    if (btn) btn.disabled = false;
+    if (icon) icon.classList.remove("fa-spin");
+  }
+}
+
 function applyKpApiSelection(value) {
   selectedKpApiValue = normalizeKpApiValue(value);
 
@@ -616,6 +662,9 @@ function applyKpApiSelection(value) {
     ? `Используется ${selectedKpApiValue}.`
     : `Используется ${selectedKpApiValue}, ключ не найден.`;
   setKpApiStatus(statusMessage);
+
+  // Refresh quota statistics
+  refreshKpQuota();
 }
 
 async function persistKpApiSelection(value) {

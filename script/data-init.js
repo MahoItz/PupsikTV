@@ -610,6 +610,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   aiModelStatus = document.getElementById("aiModelStatus");
   kpApiSelect = document.getElementById("kpApiSelect");
   kpApiStatus = document.getElementById("kpApiStatus");
+  refreshKpQuotaBtn = document.getElementById("refreshKpQuotaBtn");
+  kpQuotaInfo = document.getElementById("kpQuotaInfo");
+  kpDailyQuota = document.getElementById("kpDailyQuota");
+
   victoryVolumeSlider = document.getElementById("victoryVolumeSlider");
   victoryVolumeValue = document.getElementById("victoryVolumeValue");
   loseVolumeSlider = document.getElementById("loseVolumeSlider");
@@ -634,6 +638,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (kpApiSelect) {
     kpApiSelect.addEventListener("change", handleKpApiChange);
   }
+  if (refreshKpQuotaBtn) {
+    refreshKpQuotaBtn.addEventListener("click", () => refreshKpQuota());
+  }
+
   applyVictoryVolume(victoryVolume);
   if (victoryVolumeSlider) {
     victoryVolumeSlider.addEventListener("input", handleVictoryVolumeInput);
