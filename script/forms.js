@@ -1,4 +1,4 @@
-﻿// Обработка форм
+// Обработка форм
 function normalizeActorsForStorage(value, limit = 15) {
   if (Array.isArray(value)) {
     return value
@@ -546,6 +546,11 @@ document
         folder: "orders",
       });
 
+      const descriptionValue =
+        gameData.description && String(gameData.description).trim()
+          ? { original: gameData.description, translated: null }
+          : null;
+
       const { data, error } = await supabaseClient
         .from("Game_Orders")
         .insert({
@@ -555,7 +560,7 @@ document
           game_poster: gameData.poster,
           game_order_by: gameData.orderBy,
           game_order_type: gameData.orderType,
-          description: gameData.description,
+          description: descriptionValue,
           rawg_rating: gameData.rating,
           metacritic: gameData.metacritic,
           released: gameData.released,
@@ -570,7 +575,7 @@ document
 
       if (error) throw error;
 
-      gameOrders.push({
+      const newGameOrder = {
         id: data.id,
         title: data.game_title,
         genres: data.game_genres,
@@ -589,8 +594,13 @@ document
         developers: data.developers || "",
         publishers: data.publishers || "",
         rawgId: data.rawg_id || null
-      });
+      };
+      gameOrders.push(newGameOrder);
       renderGames();
+
+      if (typeof prefetchOrderGameDescriptionForOrder === "function" && descriptionValue) {
+        prefetchOrderGameDescriptionForOrder(newGameOrder);
+      }
 
       if (typeof recordUserOrder === "function") {
         await recordUserOrder({ userName: gameData.orderBy, type: "games" });

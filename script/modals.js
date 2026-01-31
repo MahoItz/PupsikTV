@@ -1,4 +1,4 @@
-﻿// Сортировка фильмов
+// Сортировка фильмов
 function sortMovies(criteria) {
   currentSort = criteria;
   currentPage = 1;
@@ -1002,6 +1002,10 @@ function openGameOrderDetailsModal(id) {
   const modal = document.getElementById("gameOrderDetailsModal");
   if (!game || !modal) return;
 
+  if (typeof setActiveGameOrderDetailsId === "function") {
+    setActiveGameOrderDetailsId(id);
+  }
+
   const title = formatMovieDetailsValue(game.title, "Без названия");
   const genreValue = game.genres || "";
   const orderByValue =
@@ -1035,7 +1039,22 @@ function openGameOrderDetailsModal(id) {
   setMovieDetailsText("gameOrderDetailsOrderBy", orderByValue);
   setMovieDetailsText("gameOrderDetailsOrderType", orderTypeValue);
 
-  setMovieDetailsText("gameOrderDetailsDescription", game.description, "—");
+  const descText =
+    typeof getGameDescriptionDisplayText === "function"
+      ? getGameDescriptionDisplayText(game.description)
+      : game.description || "";
+  setMovieDetailsText("gameOrderDetailsDescription", descText, "—");
+
+  const isTranslating =
+    typeof isGameDescriptionTranslating === "function" &&
+    isGameDescriptionTranslating(game.id);
+  if (typeof setGameOrderDescriptionStatus === "function") {
+    setGameOrderDescriptionStatus(
+      isTranslating ? "Переводим..." : "",
+      { spinner: isTranslating, gameOrderId: game.id }
+    );
+  }
+
   setMovieDetailsText("gameOrderDetailsMetacritic", game.metacritic, "—");
   setMovieDetailsText("gameOrderDetailsRawgRating", game.rating, "—");
   setMovieDetailsText("gameOrderDetailsReleased", game.released, "—");
@@ -1526,6 +1545,14 @@ function openEditOrderModal(id) {
 
 function closeModal(modalId, shouldReset = false) {
   document.getElementById(modalId).style.display = "none";
+  if (modalId === "gameOrderDetailsModal") {
+    if (typeof clearActiveGameOrderDetailsId === "function") {
+      clearActiveGameOrderDetailsId();
+    }
+    if (typeof setGameOrderDescriptionStatus === "function") {
+      setGameOrderDescriptionStatus("");
+    }
+  }
   if (shouldReset) {
     resetForm();
   }

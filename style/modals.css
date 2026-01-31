@@ -586,6 +586,35 @@
     margin-bottom: 10px;
 }
 
+#gameOrderDetailsModal .game-order-description-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#gameOrderDetailsModal .game-order-description-header .movie-details-section-title {
+    margin-bottom: 0;
+}
+
+#gameOrderDetailsModal .game-order-description-status {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#gameOrderDetailsModal .game-order-description-status.game-order-description-status--loading::after {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.28);
+    border-top-color: var(--primary-color);
+    animation: spin 0.9s linear infinite;
+}
+
 #movieDetailsModal .movie-details-description,
 #orderDetailsModal .movie-details-description {
     color: var(--text-secondary);

@@ -1,4 +1,4 @@
-﻿// Play header video on load and then at random intervals
+// Play header video on load and then at random intervals
 window.addEventListener("load", () => {
   const headerVideos = document.querySelectorAll(".rats-video");
   if (headerVideos.length === 0) return;
@@ -158,6 +158,18 @@ const orderParentGuideSections = {
 const orderParentGuideLists = {
   sexAndNudity: document.getElementById("orderParentGuideSex"),
 };
+const gameOrderDetailsDescriptionStatus =
+  document.getElementById("gameOrderDetailsDescriptionStatus");
+let activeGameOrderDetailsId = null;
+function setActiveGameOrderDetailsId(id) {
+  activeGameOrderDetailsId = id;
+}
+function clearActiveGameOrderDetailsId() {
+  activeGameOrderDetailsId = null;
+}
+function isGameDescriptionTranslating(gameOrderId) {
+  return orderGameDescriptionPrefetches.has(gameOrderId);
+}
 const orderTimings = document.getElementById("orderTimings");
 const orderTimingsStatus = document.getElementById("orderTimingsStatus");
 const orderTimingsList = document.getElementById("orderTimingsList");
@@ -1805,6 +1817,214 @@ async function persistOrderParentGuide(orderId, guide) {
   if (error) {
     console.error("Failed to store parent guide for order", error);
   }
+}
+
+async function persistOrderGameDescription(gameOrderId, descriptionData) {
+  if (!gameOrderId || !supabaseClient || !descriptionData) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("Game_Orders")
+    .update({ description: descriptionData })
+    .eq("id", gameOrderId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to store game description for order", error);
+  }
+}
+
+const orderGameDescriptionPrefetches = new Map();
+
+async function translateGameDescription(text, modelValue) {
+  if (!text || typeof text !== "string" || !text.trim()) {
+    return "";
+  }
+
+  const response = await fetch("/api/translate-description", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      text: text.trim(),
+      model: modelValue,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Game description translation failed: ${response.status}`);
+  }
+
+  const payload = await response.json();
+  return payload?.translated || "";
+}
+
+async function translateGameDescriptionWithFallback(text, primaryModel) {
+  try {
+    return await translateGameDescription(text, primaryModel);
+  } catch (err) {
+    console.warn(
+      `[translateGameDescription] Primary model [${primaryModel}] failed:`,
+      err
+    );
+  }
+
+  if (typeof aiModelOptions === "undefined" || !aiModelOptions.length) {
+    throw new Error("No fallback models available");
+  }
+
+  const activeFallbackModels = aiModelOptions
+    .filter(
+      (opt) =>
+        opt.ai_model !== primaryModel &&
+        (aiModelStatuses[opt.ai_model]?.status === "active" ||
+          aiModelStatuses[opt.ai_model]?.http_status === 200)
+    )
+    .map((opt) => opt.ai_model);
+
+  for (const fallbackModel of activeFallbackModels) {
+    try {
+      console.log(
+        `[translateGameDescription] Attempting fallback with model: ${fallbackModel}`
+      );
+      const result = await translateGameDescription(text, fallbackModel);
+      if (typeof updateActiveAiModel === "function") {
+        updateActiveAiModel(fallbackModel);
+      }
+      return result;
+    } catch (err) {
+      console.warn(`[translateGameDescription] Fallback [${fallbackModel}] failed:`, err);
+    }
+  }
+
+  throw new Error("All translation models failed (including fallback)");
+}
+
+async function prefetchOrderGameDescriptionForOrder(gameOrder, options = {}) {
+  const { force = false } = options;
+  if (!gameOrder || !gameOrder.id || !supabaseClient) {
+    return null;
+  }
+
+  const desc = gameOrder.description;
+  const originalText =
+    typeof desc === "string"
+      ? desc
+      : desc && typeof desc === "object" && typeof desc.original === "string"
+        ? desc.original
+        : "";
+  const hasTranslated =
+    desc &&
+    typeof desc === "object" &&
+    typeof desc.translated === "string" &&
+    desc.translated.trim();
+
+  if (!force && hasTranslated) {
+    return desc;
+  }
+
+  if (!originalText || !originalText.trim()) {
+    return null;
+  }
+
+  if (!force && orderGameDescriptionPrefetches.has(gameOrder.id)) {
+    return orderGameDescriptionPrefetches.get(gameOrder.id);
+  }
+
+  const loadPromise = (async () => {
+    const { model: selectedModel } =
+      (await loadFortuneTranslationModel()) || {};
+
+    if (!selectedModel) {
+      console.warn(
+        "[prefetchOrderGameDescription] No translation model configured"
+      );
+      return desc;
+    }
+
+    setGameOrderDescriptionStatus("Переводим...", {
+      spinner: true,
+      gameOrderId: gameOrder.id,
+    });
+
+    try {
+      const translated = await translateGameDescriptionWithFallback(
+        originalText,
+        selectedModel
+      );
+      const descriptionData = {
+        original: originalText,
+        translated: translated || null,
+      };
+
+      gameOrder.description = descriptionData;
+      setGameOrderDescriptionStatus("", { gameOrderId: gameOrder.id });
+
+      if (typeof renderGames === "function") {
+        renderGames();
+      }
+
+      await persistOrderGameDescription(gameOrder.id, descriptionData);
+
+      if (
+        activeGameOrderDetailsId === gameOrder.id &&
+        typeof setMovieDetailsText === "function"
+      ) {
+        const descText = getGameDescriptionDisplayText(descriptionData);
+        setMovieDetailsText(
+          "gameOrderDetailsDescription",
+          descText,
+          "—"
+        );
+      }
+
+      return descriptionData;
+    } catch (err) {
+      console.error("Failed to translate game description for order", err);
+      setGameOrderDescriptionStatus("", { gameOrderId: gameOrder.id });
+      return desc;
+    }
+  })();
+
+  orderGameDescriptionPrefetches.set(gameOrder.id, loadPromise);
+
+  try {
+    return await loadPromise;
+  } finally {
+    orderGameDescriptionPrefetches.delete(gameOrder.id);
+  }
+}
+
+function getGameDescriptionDisplayText(desc) {
+  if (!desc) return "";
+  if (typeof desc === "string") return desc;
+  if (desc.translated && typeof desc.translated === "string") {
+    return desc.translated.trim() || desc.original || "";
+  }
+  return desc.original || "";
+}
+
+function setGameOrderDescriptionStatus(message, options = {}) {
+  if (!gameOrderDetailsDescriptionStatus) return;
+  const { spinner = false, gameOrderId = null } = options;
+  if (
+    gameOrderId != null &&
+    activeGameOrderDetailsId != null &&
+    String(gameOrderId) !== String(activeGameOrderDetailsId)
+  ) {
+    return;
+  }
+  gameOrderDetailsDescriptionStatus.textContent = message || "";
+  gameOrderDetailsDescriptionStatus.classList.toggle(
+    "game-order-description-status--loading",
+    spinner
+  );
+  gameOrderDetailsDescriptionStatus.style.display = message
+    ? "inline-flex"
+    : "none";
 }
 
 function getActiveOrderDetails() {
