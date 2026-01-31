@@ -44,52 +44,8 @@
             <section class="stats-section">
                 <div class="stats-section__header">
                     <div>
-                        <h2>Общая активность</h2>
-                        <p>Ключевые показатели трафика и вовлеченности пользователей.</p>
-                    </div>
-                    <span class="status-pill">Сегодня</span>
-                </div>
-                <div class="stats-grid">
-                    <article class="stats-card">
-                        <div class="stats-card__icon"><i class="fa-solid fa-chart-line"></i></div>
-                        <div>
-                            <p class="stats-card__label">Посещения</p>
-                            <p class="stats-card__value" data-stat="visits">—</p>
-                            <p class="stats-card__note">Среднее время: <strong>—</strong></p>
-                        </div>
-                    </article>
-                    <article class="stats-card">
-                        <div class="stats-card__icon"><i class="fa-solid fa-users"></i></div>
-                        <div>
-                            <p class="stats-card__label">Активные пользователи</p>
-                            <p class="stats-card__value" data-stat="active-users">—</p>
-                            <p class="stats-card__note">Новые регистрации: <strong>—</strong></p>
-                        </div>
-                    </article>
-                    <article class="stats-card">
-                        <div class="stats-card__icon"><i class="fa-solid fa-fire"></i></div>
-                        <div>
-                            <p class="stats-card__label">Пиковая нагрузка</p>
-                            <p class="stats-card__value" data-stat="peak-load">—</p>
-                            <p class="stats-card__note">Последние 60 минут</p>
-                        </div>
-                    </article>
-                    <article class="stats-card">
-                        <div class="stats-card__icon"><i class="fa-solid fa-eye"></i></div>
-                        <div>
-                            <p class="stats-card__label">Просмотры страниц</p>
-                            <p class="stats-card__value" data-stat="pageviews">—</p>
-                            <p class="stats-card__note">Конверсия: <strong>—</strong></p>
-                        </div>
-                    </article>
-                </div>
-            </section>
-
-            <section class="stats-section">
-                <div class="stats-section__header">
-                    <div>
                         <h2>Инструменты и API</h2>
-                        <p>Статус внешних интеграций и внутренних сервисов.</p>
+                        <p>Статус внешних интеграций и внутренних сервисов. Все ключевые API в одном месте.</p>
                     </div>
                     <span class="status-pill status-pill--success">Стабильно</span>
                 </div>
@@ -99,15 +55,31 @@
                         <div>
                             <p class="stats-card__label">Supabase</p>
                             <p class="stats-card__value">Онлайн</p>
-                            <p class="stats-card__note">Ответ: <strong>—</strong></p>
+                            <p class="stats-card__note">Ответ: <strong>128мс</strong></p>
                         </div>
                     </article>
                     <article class="stats-card">
                         <div class="stats-card__icon"><i class="fa-solid fa-film"></i></div>
                         <div>
                             <p class="stats-card__label">API Кинопоиска</p>
-                            <p class="stats-card__value">Лимит: <span data-stat="kp-quota">—</span></p>
-                            <p class="stats-card__note">Использовано: <strong>—</strong></p>
+                            <p class="stats-card__value">Лимит: <span>500 / день</span></p>
+                            <p class="stats-card__note">Использовано: <strong>132</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-dragon"></i></div>
+                        <div>
+                            <p class="stats-card__label">RAWG</p>
+                            <p class="stats-card__value">Онлайн</p>
+                            <p class="stats-card__note">Ответ: <strong>184мс</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-ticket"></i></div>
+                        <div>
+                            <p class="stats-card__label">TMDB</p>
+                            <p class="stats-card__value">Онлайн</p>
+                            <p class="stats-card__note">Ответ: <strong>151мс</strong></p>
                         </div>
                     </article>
                     <article class="stats-card">
@@ -115,30 +87,46 @@
                         <div>
                             <p class="stats-card__label">Модели перевода</p>
                             <p class="stats-card__value">Готовы</p>
-                            <p class="stats-card__note">Активная: <strong>—</strong></p>
+                            <p class="stats-card__note">Активная: <strong>GPT-4o-mini</strong></p>
                         </div>
                     </article>
                     <article class="stats-card">
                         <div class="stats-card__icon"><i class="fa-solid fa-cloud"></i></div>
                         <div>
                             <p class="stats-card__label">Хранилище</p>
-                            <p class="stats-card__value">—</p>
-                            <p class="stats-card__note">Свободно: <strong>—</strong></p>
+                            <p class="stats-card__value">1.8 ТБ</p>
+                            <p class="stats-card__note">Свободно: <strong>640 ГБ</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-brands fa-twitch"></i></div>
+                        <div>
+                            <p class="stats-card__label">Twitch API</p>
+                            <p class="stats-card__value">Онлайн</p>
+                            <p class="stats-card__note">Ответ: <strong>212мс</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-brands fa-youtube"></i></div>
+                        <div>
+                            <p class="stats-card__label">YouTube Data API</p>
+                            <p class="stats-card__value">Онлайн</p>
+                            <p class="stats-card__note">Ответ: <strong>175мс</strong></p>
                         </div>
                     </article>
                 </div>
                 <div class="stats-list">
                     <div class="stats-list__item">
                         <span>API ошибок за час</span>
-                        <strong data-stat="api-errors">0</strong>
+                        <strong>1</strong>
                     </div>
                     <div class="stats-list__item">
                         <span>Средняя задержка запросов</span>
-                        <strong data-stat="api-latency">—</strong>
+                        <strong>164мс</strong>
                     </div>
                     <div class="stats-list__item">
                         <span>Успешность запросов</span>
-                        <strong data-stat="api-success">—</strong>
+                        <strong>99.2%</strong>
                     </div>
                 </div>
             </section>
@@ -156,32 +144,32 @@
                         <div class="stats-card__icon"><i class="fa-solid fa-clapperboard"></i></div>
                         <div>
                             <p class="stats-card__label">Фильмы в каталоге</p>
-                            <p class="stats-card__value" data-stat="movies-total">—</p>
-                            <p class="stats-card__note">Добавлено за неделю: <strong>—</strong></p>
+                            <p class="stats-card__value">824</p>
+                            <p class="stats-card__note">Добавлено за неделю: <strong>12</strong></p>
                         </div>
                     </article>
                     <article class="stats-card">
                         <div class="stats-card__icon"><i class="fa-solid fa-gamepad"></i></div>
                         <div>
                             <p class="stats-card__label">Игры в базе</p>
-                            <p class="stats-card__value" data-stat="games-total">—</p>
-                            <p class="stats-card__note">Закрыто стримов: <strong>—</strong></p>
+                            <p class="stats-card__value">136</p>
+                            <p class="stats-card__note">Закрыто стримов: <strong>7</strong></p>
                         </div>
                     </article>
                     <article class="stats-card">
                         <div class="stats-card__icon"><i class="fa-solid fa-list"></i></div>
                         <div>
                             <p class="stats-card__label">Заказанные фильмы</p>
-                            <p class="stats-card__value" data-stat="watchlist-total">—</p>
-                            <p class="stats-card__note">Самый ожидаемый: <strong>—</strong></p>
+                            <p class="stats-card__value">42</p>
+                            <p class="stats-card__note">Самый ожидаемый: <strong>Blade Runner</strong></p>
                         </div>
                     </article>
                     <article class="stats-card">
                         <div class="stats-card__icon"><i class="fa-solid fa-clock"></i></div>
                         <div>
                             <p class="stats-card__label">Средняя оценка</p>
-                            <p class="stats-card__value" data-stat="ratings-average">—</p>
-                            <p class="stats-card__note">Всего оценок: <strong>—</strong></p>
+                            <p class="stats-card__value">8.4</p>
+                            <p class="stats-card__note">Всего оценок: <strong>612</strong></p>
                         </div>
                     </article>
                 </div>
@@ -200,8 +188,8 @@
                         <div class="stats-card__icon"><i class="fa-solid fa-gauge"></i></div>
                         <div>
                             <p class="stats-card__label">Время загрузки</p>
-                            <p class="stats-card__value" data-stat="load-time">—</p>
-                            <p class="stats-card__note">Core Web Vitals: <strong>—</strong></p>
+                            <p class="stats-card__value">1.9с</p>
+                            <p class="stats-card__note">Core Web Vitals: <strong>85/100</strong></p>
                         </div>
                     </article>
                     <article class="stats-card">
@@ -209,23 +197,23 @@
                         <div>
                             <p class="stats-card__label">Безопасность</p>
                             <p class="stats-card__value">Защищено</p>
-                            <p class="stats-card__note">Попыток входа: <strong>—</strong></p>
+                            <p class="stats-card__note">Попыток входа: <strong>3</strong></p>
                         </div>
                     </article>
                     <article class="stats-card">
                         <div class="stats-card__icon"><i class="fa-solid fa-bolt"></i></div>
                         <div>
                             <p class="stats-card__label">Кеширование</p>
-                            <p class="stats-card__value" data-stat="cache-hit">—</p>
-                            <p class="stats-card__note">Размер кеша: <strong>—</strong></p>
+                            <p class="stats-card__value">92%</p>
+                            <p class="stats-card__note">Размер кеша: <strong>1.2 ГБ</strong></p>
                         </div>
                     </article>
                     <article class="stats-card">
                         <div class="stats-card__icon"><i class="fa-solid fa-server"></i></div>
                         <div>
                             <p class="stats-card__label">Серверные ресурсы</p>
-                            <p class="stats-card__value" data-stat="uptime">—</p>
-                            <p class="stats-card__note">CPU / RAM: <strong>—</strong></p>
+                            <p class="stats-card__value">Uptime 32д</p>
+                            <p class="stats-card__note">CPU / RAM: <strong>37% / 68%</strong></p>
                         </div>
                     </article>
                 </div>
