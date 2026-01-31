@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статистика сайта — Pupsik TV</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=carter-one:400" rel="stylesheet" />
+    <link rel="icon" href="images/Pupsik_TV_Icon.webp">
+    <link rel="stylesheet" href="/style/base.css">
+    <link rel="stylesheet" href="/style/layout.css">
+    <link rel="stylesheet" href="/style/buttons.css">
+    <link rel="stylesheet" href="/style/diagnostic.css">
+    <link rel="stylesheet" href="/style/stats.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="stats-page">
+        <header class="stats-hero">
+            <a class="stats-back" href="index.html">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                <span>Назад на главную</span>
+            </a>
+            <div class="stats-hero__content">
+                <p class="stats-hero__eyebrow">Панель мониторинга</p>
+                <h1>Полная статистика сайта и API</h1>
+                <p class="stats-hero__subtitle">
+                    Сводка по трафику, состоянию сервисов, производительности и контенту. Все ключевые метрики
+                    сгруппированы по блокам для быстрого контроля.
+                </p>
+            </div>
+            <div class="stats-hero__status">
+                <div class="status-pill status-pill--success">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Все системы онлайн</span>
+                </div>
+                <div class="stats-updated">Обновлено: <span>в реальном времени</span></div>
+            </div>
+        </header>
+
+        <main class="stats-content">
+            <section class="stats-section">
+                <div class="stats-section__header">
+                    <div>
+                        <h2>Общая активность</h2>
+                        <p>Ключевые показатели трафика и вовлеченности пользователей.</p>
+                    </div>
+                    <span class="status-pill">Сегодня</span>
+                </div>
+                <div class="stats-grid">
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-chart-line"></i></div>
+                        <div>
+                            <p class="stats-card__label">Посещения</p>
+                            <p class="stats-card__value" data-stat="visits">—</p>
+                            <p class="stats-card__note">Среднее время: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-users"></i></div>
+                        <div>
+                            <p class="stats-card__label">Активные пользователи</p>
+                            <p class="stats-card__value" data-stat="active-users">—</p>
+                            <p class="stats-card__note">Новые регистрации: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-fire"></i></div>
+                        <div>
+                            <p class="stats-card__label">Пиковая нагрузка</p>
+                            <p class="stats-card__value" data-stat="peak-load">—</p>
+                            <p class="stats-card__note">Последние 60 минут</p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-eye"></i></div>
+                        <div>
+                            <p class="stats-card__label">Просмотры страниц</p>
+                            <p class="stats-card__value" data-stat="pageviews">—</p>
+                            <p class="stats-card__note">Конверсия: <strong>—</strong></p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="stats-section">
+                <div class="stats-section__header">
+                    <div>
+                        <h2>Инструменты и API</h2>
+                        <p>Статус внешних интеграций и внутренних сервисов.</p>
+                    </div>
+                    <span class="status-pill status-pill--success">Стабильно</span>
+                </div>
+                <div class="stats-grid stats-grid--wide">
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-plug"></i></div>
+                        <div>
+                            <p class="stats-card__label">Supabase</p>
+                            <p class="stats-card__value">Онлайн</p>
+                            <p class="stats-card__note">Ответ: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-film"></i></div>
+                        <div>
+                            <p class="stats-card__label">API Кинопоиска</p>
+                            <p class="stats-card__value">Лимит: <span data-stat="kp-quota">—</span></p>
+                            <p class="stats-card__note">Использовано: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-language"></i></div>
+                        <div>
+                            <p class="stats-card__label">Модели перевода</p>
+                            <p class="stats-card__value">Готовы</p>
+                            <p class="stats-card__note">Активная: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-cloud"></i></div>
+                        <div>
+                            <p class="stats-card__label">Хранилище</p>
+                            <p class="stats-card__value">—</p>
+                            <p class="stats-card__note">Свободно: <strong>—</strong></p>
+                        </div>
+                    </article>
+                </div>
+                <div class="stats-list">
+                    <div class="stats-list__item">
+                        <span>API ошибок за час</span>
+                        <strong data-stat="api-errors">0</strong>
+                    </div>
+                    <div class="stats-list__item">
+                        <span>Средняя задержка запросов</span>
+                        <strong data-stat="api-latency">—</strong>
+                    </div>
+                    <div class="stats-list__item">
+                        <span>Успешность запросов</span>
+                        <strong data-stat="api-success">—</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="stats-section">
+                <div class="stats-section__header">
+                    <div>
+                        <h2>Контент и медиатека</h2>
+                        <p>Статистика по фильмам, играм и спискам для просмотра.</p>
+                    </div>
+                    <span class="status-pill">Обновляется</span>
+                </div>
+                <div class="stats-grid">
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-clapperboard"></i></div>
+                        <div>
+                            <p class="stats-card__label">Фильмы в каталоге</p>
+                            <p class="stats-card__value" data-stat="movies-total">—</p>
+                            <p class="stats-card__note">Добавлено за неделю: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-gamepad"></i></div>
+                        <div>
+                            <p class="stats-card__label">Игры в базе</p>
+                            <p class="stats-card__value" data-stat="games-total">—</p>
+                            <p class="stats-card__note">Закрыто стримов: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-list"></i></div>
+                        <div>
+                            <p class="stats-card__label">Заказанные фильмы</p>
+                            <p class="stats-card__value" data-stat="watchlist-total">—</p>
+                            <p class="stats-card__note">Самый ожидаемый: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-clock"></i></div>
+                        <div>
+                            <p class="stats-card__label">Средняя оценка</p>
+                            <p class="stats-card__value" data-stat="ratings-average">—</p>
+                            <p class="stats-card__note">Всего оценок: <strong>—</strong></p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="stats-section">
+                <div class="stats-section__header">
+                    <div>
+                        <h2>Производительность и безопасность</h2>
+                        <p>Метрики скорости, кеширования и защиты сайта.</p>
+                    </div>
+                    <span class="status-pill status-pill--warning">Нужно внимание</span>
+                </div>
+                <div class="stats-grid">
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-gauge"></i></div>
+                        <div>
+                            <p class="stats-card__label">Время загрузки</p>
+                            <p class="stats-card__value" data-stat="load-time">—</p>
+                            <p class="stats-card__note">Core Web Vitals: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-shield"></i></div>
+                        <div>
+                            <p class="stats-card__label">Безопасность</p>
+                            <p class="stats-card__value">Защищено</p>
+                            <p class="stats-card__note">Попыток входа: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-bolt"></i></div>
+                        <div>
+                            <p class="stats-card__label">Кеширование</p>
+                            <p class="stats-card__value" data-stat="cache-hit">—</p>
+                            <p class="stats-card__note">Размер кеша: <strong>—</strong></p>
+                        </div>
+                    </article>
+                    <article class="stats-card">
+                        <div class="stats-card__icon"><i class="fa-solid fa-server"></i></div>
+                        <div>
+                            <p class="stats-card__label">Серверные ресурсы</p>
+                            <p class="stats-card__value" data-stat="uptime">—</p>
+                            <p class="stats-card__note">CPU / RAM: <strong>—</strong></p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>
