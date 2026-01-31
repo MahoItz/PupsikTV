@@ -1,4 +1,4 @@
-﻿// Supabase
+// Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const API_BASE_PATH = "/api";
 
@@ -321,6 +321,9 @@ function toggleSettingsPanel(forceState) {
       "aria-expanded",
       nextState ? "true" : "false"
     );
+  }
+  if (nextState) {
+    refreshKpQuota();
   }
 }
 
