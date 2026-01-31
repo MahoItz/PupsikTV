@@ -1,4 +1,30 @@
 // Обработка форм
+// form submit guards
+let isSubmittingWatchlistOrder = false;
+let isSubmittingGameOrder = false;
+
+function toggleSubmitLoading(button, isLoading, label) {
+  if (!button) return;
+  if (isLoading) {
+    if (!button.dataset.originalHtml) {
+      button.dataset.originalHtml = button.innerHTML;
+    }
+    const safeLabel = label || "Добавляем...";
+    button.innerHTML = `<span class="loading-spinner" aria-hidden="true"></span><span>${safeLabel}</span>`;
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    button.classList.add("is-loading");
+  } else {
+    if (button.dataset.originalHtml) {
+      button.innerHTML = button.dataset.originalHtml;
+      delete button.dataset.originalHtml;
+    }
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+    button.classList.remove("is-loading");
+  }
+}
+
 function normalizeActorsForStorage(value, limit = 15) {
   if (Array.isArray(value)) {
     return value
@@ -236,14 +262,21 @@ document
   .addEventListener("submit", async function (e) {
     e.preventDefault();
 
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (isSubmittingWatchlistOrder) return;
+
     const orderBy = document.getElementById("watchOrderBy").value;
     const orderType = document.getElementById("watchOrderType").value;
 
     let orderData;
     let filmLength = null;
 
+    const titleInput =
+      currentWatchlistMode === "auto"
+        ? document.getElementById("watchAutoTitle").value
+        : "";
+
     if (currentWatchlistMode === "auto") {
-      const titleInput = document.getElementById("watchAutoTitle").value;
       if (!titleInput) {
         alert("Введите название фильма");
         return;
@@ -253,7 +286,13 @@ document
         showSearchReminderModal();
         return;
       }
+    }
 
+    isSubmittingWatchlistOrder = true;
+    toggleSubmitLoading(submitBtn, true, "Добавляем заказ...");
+
+    try {
+    if (currentWatchlistMode === "auto") {
       if (selectedKPOrderMovie) {
         const sel = selectedKPOrderMovie;
         if (sel.filmLength === undefined && sel.filmId) {
@@ -422,6 +461,10 @@ document
     selectedKPOrderMovie = null;
     kpOrderResults = [];
     showWatchlistKPPreview();
+    } finally {
+      isSubmittingWatchlistOrder = false;
+      toggleSubmitLoading(submitBtn, false);
+    }
   });
 
 document
@@ -429,19 +472,32 @@ document
   ?.addEventListener("submit", async function (e) {
     e.preventDefault();
 
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (isSubmittingGameOrder) return;
+
     const orderType = document.getElementById("gameOrderType").value;
     const orderBy = document.getElementById("gameOrderBy").value;
 
     let gameData;
     let posterFile = null;
 
+    const titleInput =
+      currentGameMode === "auto"
+        ? document.getElementById("gameAutoTitle").value
+        : "";
+
     if (currentGameMode === "auto") {
-      const titleInput = document.getElementById("gameAutoTitle").value;
       if (!titleInput) {
         alert("Введите название игры");
         return;
       }
+    }
 
+    isSubmittingGameOrder = true;
+    toggleSubmitLoading(submitBtn, true, "Добавляем игру...");
+
+    try {
+    if (currentGameMode === "auto") {
       if (selectedRAWGGame) {
         const g = selectedRAWGGame;
         const rawgPosterUrl = g.background_image || "";
@@ -617,6 +673,10 @@ document
     resetRawgPosterCache();
     rawgResults = [];
     showRAWGPreview();
+    } finally {
+      isSubmittingGameOrder = false;
+      toggleSubmitLoading(submitBtn, false);
+    }
   });
 
 document
