@@ -1169,14 +1169,29 @@ function renderWatchlistPagination(totalPages) {
     if (opts.active) btn.classList.add("active");
     if (page) {
       btn.onclick = () => {
-        watchlistPage = page;
+        const targetPage = page;
+        const shouldScroll = targetPage > watchlistPage;
+        watchlistPage = targetPage;
         renderWatchlist();
+        if (shouldScroll) {
+          const watchlistSection = document.getElementById("watchlistSection");
+          if (watchlistSection && typeof watchlistSection.scrollIntoView === "function") {
+            watchlistSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }
       };
     }
     container.appendChild(btn);
     if (containerTop) {
       const clone = btn.cloneNode(true);
-      clone.onclick = btn.onclick;
+      if (page) {
+        clone.onclick = () => {
+          watchlistPage = page;
+          renderWatchlist();
+        };
+      }
       containerTop.appendChild(clone);
     }
   };
