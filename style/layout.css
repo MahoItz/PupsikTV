@@ -108,6 +108,11 @@ header img {
     width: 100%;
     pointer-events: none;
     z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.rats-video.is-active {
     opacity: 0.2;
 }
 
@@ -182,4 +187,3 @@ header img {
     gap: 30px;
     grid-column: 2;
 }
-

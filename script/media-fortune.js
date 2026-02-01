@@ -16,20 +16,37 @@ window.addEventListener("load", () => {
     return headerVideos[randomIndex];
   }
 
+  function stopVideo(videoElement) {
+    videoElement.pause();
+    videoElement.currentTime = 0;
+    videoElement.classList.remove("is-active");
+  }
+
+  function activateVideo(videoElement) {
+    headerVideos.forEach((item) => {
+      stopVideo(item);
+    });
+    videoElement.classList.add("is-active");
+    videoElement.currentTime = 0;
+    videoElement.play().catch(() => {});
+  }
+
   // Function to schedule next play for a random video
   function scheduleNextPlay(videoElement) {
     setTimeout(() => {
-      videoElement.play().catch(() => {});
+      activateVideo(videoElement);
     }, getRandomDelay());
   }
 
   // Start playing a random video on page load
   const firstVideo = getRandomVideo();
-  firstVideo.play().catch(() => {});
+  activateVideo(firstVideo);
 
   // Add event listener to all videos to schedule the next random video
   headerVideos.forEach((video) => {
     video.addEventListener("ended", () => {
+      video.pause();
+      video.currentTime = 0;
       const nextVideo = getRandomVideo();
       scheduleNextPlay(nextVideo);
     });
