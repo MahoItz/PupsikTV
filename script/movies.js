@@ -1311,7 +1311,7 @@ function createGameCard(game, showActions = isAdmin) {
   metacriticRating.className = "order-game-rating order-game-rating--metacritic";
   const metacriticIcon = document.createElement("img");
   metacriticIcon.className = "order-game-rating-icon order-game-rating-icon--metacritic";
-  metacriticIcon.src = "/images/Metacritic.svg";
+  metacriticIcon.src = "images/Metacritic.svg";
   metacriticIcon.alt = "Metacritic";
   metacriticRating.appendChild(metacriticIcon);
   metacriticRating.appendChild(
@@ -1324,6 +1324,7 @@ function createGameCard(game, showActions = isAdmin) {
   const rawgIcon = document.createElement("span");
   rawgIcon.className = "order-game-rating-icon order-game-rating-icon--rawg";
   rawgIcon.setAttribute("aria-hidden", "true");
+  rawgIcon.textContent = "RAWG";
   rawgRating.appendChild(rawgIcon);
   rawgRating.appendChild(
     document.createTextNode(` ${game.rating ?? "-"}`)
