@@ -1170,7 +1170,7 @@ function renderWatchlistPagination(totalPages) {
     if (page) {
       btn.onclick = () => {
         const targetPage = page;
-        const shouldScroll = targetPage > watchlistPage;
+        const shouldScroll = targetPage !== watchlistPage;
         watchlistPage = targetPage;
         renderWatchlist();
         if (shouldScroll) {
