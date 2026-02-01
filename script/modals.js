@@ -853,24 +853,9 @@ function getGameDetailsDescriptionText(game) {
   return typeof game.description === "string" ? game.description : "";
 }
 
-function hasGameDetailsInfo(game) {
+function hasGameDetailsPlatforms(game) {
   if (!game) return false;
-  const descriptionText = getGameDetailsDescriptionText(game);
-  const values = [
-    descriptionText,
-    game.rawgRating,
-    game.metacritic,
-    game.released,
-    game.playtime,
-    game.platforms,
-    game.developers,
-    game.publishers,
-  ];
-  return values.some((value) => {
-    if (value === null || value === undefined) return false;
-    if (typeof value === "string") return value.trim() !== "";
-    return true;
-  });
+  return typeof game.platforms === "string" && game.platforms.trim() !== "";
 }
 
 function renderGameDetailsModal(game, modal) {
@@ -960,17 +945,67 @@ async function fetchPlayedGameDetailsFromRawg(game) {
   return { rawgId, details };
 }
 
+async function fetchPlayedGameDetailsFromDb(game) {
+  if (!game || !supabaseClient) return null;
+  const { data, error } = await supabaseClient
+    .from("games")
+    .select(
+      "description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
+    )
+    .eq("id", game.id)
+    .single();
+  if (error) {
+    throw error;
+  }
+  return data;
+}
+
+function applyGameDetails(game, details) {
+  if (!game || !details) return game;
+  return {
+    ...game,
+    description: details.description ?? game.description,
+    rawgRating: details.rawg_rating ?? game.rawgRating,
+    metacritic: details.metacritic ?? game.metacritic,
+    released: details.released ?? game.released,
+    playtime: details.playtime ?? game.playtime,
+    platforms: details.platforms ?? game.platforms,
+    developers: details.developers ?? game.developers,
+    publishers: details.publishers ?? game.publishers,
+    rawgId: details.rawg_id ?? game.rawgId,
+  };
+}
+
+function updateLocalPlayedGame(game) {
+  const idx = allPlayedGames.findIndex((g) => g.id === game.id);
+  if (idx !== -1) {
+    allPlayedGames[idx] = game;
+  }
+  localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+}
+
 async function prefetchPlayedGameDetails(game) {
   if (!game || !supabaseClient) return null;
-  if (hasGameDetailsInfo(game)) return game;
+  if (hasGameDetailsPlatforms(game)) return game;
   if (playedGameDetailsPrefetches.has(game.id)) {
     return playedGameDetailsPrefetches.get(game.id);
   }
 
   const loadPromise = (async () => {
     try {
-      const rawgPayload = await fetchPlayedGameDetailsFromRawg(game);
-      if (!rawgPayload) return game;
+      let updatedGame = game;
+      const dbDetails = await fetchPlayedGameDetailsFromDb(game);
+      if (dbDetails) {
+        updatedGame = applyGameDetails(updatedGame, dbDetails);
+        updateLocalPlayedGame(updatedGame);
+      }
+
+      if (hasGameDetailsPlatforms(updatedGame)) {
+        return updatedGame;
+      }
+
+      const rawgPayload = await fetchPlayedGameDetailsFromRawg(updatedGame);
+      if (!rawgPayload) return updatedGame;
 
       const { rawgId, details } = rawgPayload;
       const descriptionText =
@@ -1000,27 +1035,11 @@ async function prefetchPlayedGameDetails(game) {
       const { error } = await supabaseClient
         .from("games")
         .update(payload)
-        .eq("id", game.id);
+        .eq("id", updatedGame.id);
       if (error) throw error;
 
-      const updatedGame = {
-        ...game,
-        description: payload.description ?? game.description,
-        rawgRating: payload.rawg_rating,
-        metacritic: payload.metacritic,
-        released: payload.released,
-        playtime: payload.playtime,
-        platforms: payload.platforms,
-        developers: payload.developers,
-        publishers: payload.publishers,
-        rawgId: payload.rawg_id,
-      };
-
-      const idx = allPlayedGames.findIndex((g) => g.id === game.id);
-      if (idx !== -1) {
-        allPlayedGames[idx] = updatedGame;
-      }
-      localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+      updatedGame = applyGameDetails(updatedGame, payload);
+      updateLocalPlayedGame(updatedGame);
       return updatedGame;
     } catch (err) {
       console.error("Failed to load RAWG details for played game", err);
@@ -1045,7 +1064,7 @@ async function openGameDetailsModal(id) {
   renderGameDetailsModal(game, modal);
   modal.style.display = "block";
 
-  if (!hasGameDetailsInfo(game)) {
+  if (!hasGameDetailsPlatforms(game)) {
     setMovieDetailsText("gameDetailsDescription", "Загружаем...", "—");
     const updatedGame = await prefetchPlayedGameDetails(game);
     if (activeGameDetailsId === id) {
