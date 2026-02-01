@@ -911,6 +911,14 @@ function renderGameDetailsModal(game, modal) {
     votesEl.classList.toggle("movie-details-muted", votes === 0);
   }
 
+  const gameDescriptionEl = document.getElementById("gameDetailsDescription");
+  const gameDescriptionSection = gameDescriptionEl?.closest(".movie-details-section");
+  const gameBody = modal.querySelector(".movie-details-body");
+  if (gameDescriptionSection && gameBody?.parentElement) {
+    gameDescriptionSection.classList.add("game-order-description-block");
+    gameBody.parentElement.insertBefore(gameDescriptionSection, gameBody.nextSibling);
+  }
+
   alignDetailsPoster(modal);
 }
 
