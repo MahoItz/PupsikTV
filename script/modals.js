@@ -1066,6 +1066,14 @@ function openGameOrderDetailsModal(id) {
   setMovieDetailsText("gameOrderDetailsDevelopers", game.developers, "—");
   setMovieDetailsText("gameOrderDetailsPublishers", game.publishers, "—");
 
+  const gameDescriptionEl = document.getElementById("gameOrderDetailsDescription");
+  const gameDescriptionSection = gameDescriptionEl?.closest(".movie-details-section");
+  const gameBody = modal.querySelector(".movie-details-body");
+  if (gameDescriptionSection && gameBody?.parentElement) {
+    gameDescriptionSection.classList.add("game-order-description-block");
+    gameBody.parentElement.insertBefore(gameDescriptionSection, gameBody.nextSibling);
+  }
+
   alignDetailsPoster(modal);
   modal.style.display = "block";
 }

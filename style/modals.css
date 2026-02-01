@@ -626,7 +626,8 @@
 }
 
 #movieDetailsModal .movie-details-description,
-#orderDetailsModal .movie-details-description {
+#orderDetailsModal .movie-details-description,
+#gameOrderDetailsModal .movie-details-description {
     color: var(--text-secondary);
     line-height: 1.45;
     font-size: 0.95rem;
@@ -1156,6 +1157,11 @@
 }
 
 #orderDetailsModal .order-details-description-block {
+    width: 100%;
+    margin: 8px 0 6px;
+}
+
+#gameOrderDetailsModal .game-order-description-block {
     width: 100%;
     margin: 8px 0 6px;
 }
