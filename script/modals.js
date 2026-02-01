@@ -1285,6 +1285,15 @@ function openGameOrderDetailsModal(id) {
   setMovieDetailsText("gameOrderDetailsDevelopers", game.developers, "—");
   setMovieDetailsText("gameOrderDetailsPublishers", game.publishers, "—");
 
+  attachRatingTooltip(
+    modal.querySelector(".order-game-rating--metacritic"),
+    "Оценка Metacritic"
+  );
+  attachRatingTooltip(
+    modal.querySelector(".order-game-rating--rawg"),
+    "Оценка RAWG"
+  );
+
   const gameDescriptionEl = document.getElementById("gameOrderDetailsDescription");
   const gameDescriptionSection = gameDescriptionEl?.closest(".movie-details-section");
   const gameBody = modal.querySelector(".movie-details-body");
@@ -1879,6 +1888,19 @@ function showRatingValueTooltip(event, value) {
 function hideRatingValueTooltip() {
   if (!ratingTooltip) return;
   ratingTooltip.style.display = "none";
+}
+
+function attachRatingTooltip(target, text) {
+  if (!target || target.dataset.tooltipBound === "true") return;
+  target.dataset.tooltipBound = "true";
+  target.addEventListener("mouseenter", (event) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = text;
+    ratingTooltip.style.display = "block";
+    updateRatingTooltipPosition(event);
+  });
+  target.addEventListener("mousemove", updateRatingTooltipPosition);
+  target.addEventListener("mouseleave", hideRatingValueTooltip);
 }
 
 // Настройка звездного рейтинга
