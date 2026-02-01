@@ -1317,6 +1317,22 @@ function createGameCard(game, showActions = isAdmin) {
   metacriticRating.appendChild(
     document.createTextNode(` ${game.metacritic ?? "-"}`)
   );
+  metacriticRating.addEventListener("mouseenter", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = "Оценка Metacritic";
+    ratingTooltip.style.display = "block";
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  metacriticRating.addEventListener("mousemove", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  metacriticRating.addEventListener("mouseleave", () => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.display = "none";
+  });
   ratings.appendChild(metacriticRating);
 
   const rawgRating = document.createElement("span");
@@ -1329,6 +1345,22 @@ function createGameCard(game, showActions = isAdmin) {
   rawgRating.appendChild(
     document.createTextNode(` ${game.rating ?? "-"}`)
   );
+  rawgRating.addEventListener("mouseenter", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = "Оценка RAWG";
+    ratingTooltip.style.display = "block";
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  rawgRating.addEventListener("mousemove", (e) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.left = e.pageX + 10 + "px";
+    ratingTooltip.style.top = e.pageY + 10 + "px";
+  });
+  rawgRating.addEventListener("mouseleave", () => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.display = "none";
+  });
   ratings.appendChild(rawgRating);
 
   meta.appendChild(ratings);
