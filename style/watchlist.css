@@ -251,6 +251,22 @@
     margin-bottom: 12px;
 }
 
+.order-game-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.order-game-release,
+.order-game-playtime {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .order-meta {
     display: flex;
     align-items: center;
@@ -288,6 +304,26 @@
     transform: translateY(-2px);
     scale: 1.15;
     transition: var(--transition);
+}
+
+.order-game-ratings {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.order-game-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
+.order-game-rating-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    display: inline-block;
 }
 
 .order-date {

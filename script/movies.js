@@ -1282,12 +1282,55 @@ function createGameCard(game, showActions = isAdmin) {
   genres.textContent = game.genres || "";
   info.appendChild(genres);
 
+  const extraInfo = document.createElement("div");
+  extraInfo.className = "order-game-extra";
+
+  const releaseDate = document.createElement("span");
+  releaseDate.className = "order-game-release";
+  releaseDate.textContent = `Релиз: ${game.released ? formatDate(game.released) : "—"}`;
+  extraInfo.appendChild(releaseDate);
+
+  const playtime = document.createElement("span");
+  playtime.className = "order-game-playtime";
+  playtime.textContent = `Время прохождения: ${game.playtime ? `${game.playtime} ч` : "—"}`;
+  extraInfo.appendChild(playtime);
+
+  info.appendChild(extraInfo);
+
   const meta = document.createElement("div");
   meta.className = "order-meta";
   const year = document.createElement("span");
   year.className = "order-year";
   year.textContent = game.year || "";
   meta.appendChild(year);
+
+  const ratings = document.createElement("div");
+  ratings.className = "order-game-ratings";
+
+  const metacriticRating = document.createElement("span");
+  metacriticRating.className = "order-game-rating order-game-rating--metacritic";
+  const metacriticIcon = document.createElement("img");
+  metacriticIcon.className = "order-game-rating-icon order-game-rating-icon--metacritic";
+  metacriticIcon.src = "/images/Metacritic.svg";
+  metacriticIcon.alt = "Metacritic";
+  metacriticRating.appendChild(metacriticIcon);
+  metacriticRating.appendChild(
+    document.createTextNode(` ${game.metacritic ?? "-"}`)
+  );
+  ratings.appendChild(metacriticRating);
+
+  const rawgRating = document.createElement("span");
+  rawgRating.className = "order-game-rating order-game-rating--rawg";
+  const rawgIcon = document.createElement("span");
+  rawgIcon.className = "order-game-rating-icon order-game-rating-icon--rawg";
+  rawgIcon.setAttribute("aria-hidden", "true");
+  rawgRating.appendChild(rawgIcon);
+  rawgRating.appendChild(
+    document.createTextNode(` ${game.rating ?? "-"}`)
+  );
+  ratings.appendChild(rawgRating);
+
+  meta.appendChild(ratings);
 
   const footer = document.createElement("div");
   footer.className = "order-footer";
