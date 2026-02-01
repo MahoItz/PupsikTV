@@ -620,7 +620,10 @@ function alignDetailsPoster(modal) {
   const headingsEl = modal.querySelector(".movie-details-headings");
   const infoEl = modal.querySelector(".movie-details-info");
 
-  if (!posterWrap || !headingsEl || !infoEl) {
+  const headingsInsideInfo =
+    headingsEl && infoEl && infoEl.contains(headingsEl);
+
+  if (!posterWrap || !headingsEl || !infoEl || !headingsInsideInfo) {
     if (posterWrap) {
       posterWrap.style.setProperty("--details-poster-offset", "0px");
     }
