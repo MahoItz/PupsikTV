@@ -511,6 +511,15 @@
     gap: 6px;
 }
 
+#orderDetailsModal .movie-details-meta,
+#gameOrderDetailsModal .movie-details-meta {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(12, 18, 30, 0.55);
+    border: 1px solid rgba(0, 212, 255, 0.12);
+    box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.2);
+}
+
 #movieDetailsModal .movie-details-meta-item,
 #gameDetailsModal .movie-details-meta-item,
 #orderDetailsModal .movie-details-meta-item,
@@ -633,6 +642,27 @@
     font-size: 0.95rem;
 }
 
+#orderDetailsModal .movie-details-section[data-details-info="order"] {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(160deg, rgba(20, 28, 44, 0.9), rgba(10, 12, 22, 0.9));
+    border: 1px solid rgba(128, 99, 247, 0.22);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+#gameOrderDetailsModal .movie-details-info > .movie-details-section {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(160deg, rgba(22, 30, 38, 0.9), rgba(10, 12, 22, 0.9));
+    border: 1px solid rgba(0, 212, 255, 0.18);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+#orderDetailsModal .movie-details-section[data-details-info="order"] .movie-details-section-title,
+#gameOrderDetailsModal .movie-details-info > .movie-details-section .movie-details-section-title {
+    color: rgba(255, 255, 255, 0.75);
+}
+
 #movieDetailsModal .movie-details-description-block {
     width: 100%;
     margin: 10px 0 6px;
@@ -643,6 +673,39 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+#movieDetailsModal .movie-details-actors-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 6px 0 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#movieDetailsModal .movie-details-actors-block .movie-details-section-title {
+    margin-bottom: 4px;
+}
+
+#movieDetailsModal .movie-details-actors-select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+#movieDetailsModal .movie-details-actors-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+}
+
+#movieDetailsModal .movie-details-actors-select option {
+    background: #0c1220;
+    color: var(--text-primary);
 }
 
 #movieDetailsModal .movie-details-actors,

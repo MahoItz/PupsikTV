@@ -157,11 +157,27 @@ function renderActorsList(listId, sectionId, actorsValue) {
     return;
   }
 
-  actors.forEach((actor) => {
-    const li = document.createElement("li");
-    li.textContent = actor;
-    listEl.appendChild(li);
-  });
+  if (listEl.tagName === "SELECT") {
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Выберите актера";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    listEl.appendChild(placeholder);
+
+    actors.forEach((actor) => {
+      const option = document.createElement("option");
+      option.value = actor;
+      option.textContent = actor;
+      listEl.appendChild(option);
+    });
+  } else {
+    actors.forEach((actor) => {
+      const li = document.createElement("li");
+      li.textContent = actor;
+      listEl.appendChild(li);
+    });
+  }
 
   sectionEl.style.display = "block";
 }
@@ -566,9 +582,14 @@ function setDetailsSectionLabels(options = {}) {
 
   if (actorsSectionId) {
     const actorsSection = document.getElementById(actorsSectionId);
+    const titleText = "Главные роли";
     const summary = actorsSection?.querySelector(".movie-details-actors-summary");
     if (summary) {
-      summary.textContent = "Главные роли";
+      summary.textContent = titleText;
+    }
+    const titleEl = actorsSection?.querySelector(".movie-details-section-title");
+    if (titleEl) {
+      titleEl.textContent = titleText;
     }
   }
 }
@@ -691,10 +712,13 @@ function reorderDetailsLayout(modal, config) {
   moveMetaItems(infoBody, [orderBy, orderType, date, ...extra]);
 
   const actorsSection = document.getElementById(actorsSectionId);
-  if (actorsSection && legacyInfoSection && legacyInfoSection.contains(actorsSection)) {
-    infoColumn?.insertBefore(actorsSection, ratingsSection?.nextSibling || null);
-  } else if (ratingsSection && actorsSection && actorsSection.parentElement === infoColumn) {
-    infoColumn.insertBefore(actorsSection, ratingsSection.nextSibling);
+  const actorsInMeta = meta?.contains(actorsSection);
+  if (!actorsInMeta) {
+    if (actorsSection && legacyInfoSection && legacyInfoSection.contains(actorsSection)) {
+      infoColumn?.insertBefore(actorsSection, ratingsSection?.nextSibling || null);
+    } else if (ratingsSection && actorsSection && actorsSection.parentElement === infoColumn) {
+      infoColumn.insertBefore(actorsSection, ratingsSection.nextSibling);
+    }
   }
 
   if (
