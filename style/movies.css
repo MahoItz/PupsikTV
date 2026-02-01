@@ -134,6 +134,7 @@
     position: absolute;
     top: -15px;
     left: 50%;
+    z-index: 10;
     transform: translateX(-50%);
     background: linear-gradient(45deg, #ffd000, #ffd94e);
     color: #1a1a1a;
@@ -141,7 +142,6 @@
     border-radius: 20px;
     font-size: 12px;
     font-weight: bold;
-    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
     animation: badgePulse 3s ease-in-out infinite;
 }
 
