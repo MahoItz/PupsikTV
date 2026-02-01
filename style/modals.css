@@ -805,6 +805,20 @@
     border-radius: 12px;
 }
 
+#movieDetailsModal .movie-details-rating.kp-rating-item,
+#orderDetailsModal .movie-details-rating.kp-rating-item {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+#movieDetailsModal .movie-details-rating.kp-rating-item:hover,
+#orderDetailsModal .movie-details-rating.kp-rating-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 #movieDetailsModal .movie-details-rating img,
 #gameDetailsModal .movie-details-rating img,
 #orderDetailsModal .movie-details-rating img,

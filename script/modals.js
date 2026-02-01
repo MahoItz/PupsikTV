@@ -1247,6 +1247,7 @@ function renderOrderDetailsModal(order) {
       }
     });
   }
+  attachRatingTooltip(orderKpRating, "Перейти на Кинопоиск");
 
   handleOrderDetailsStudios(order, modal);
 
