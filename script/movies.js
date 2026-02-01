@@ -1128,14 +1128,90 @@ function renderWatchlist() {
     return;
   }
   container.innerHTML = "";
-  if (watchlist.length === 0) {
+  const paginationEl = document.getElementById("watchlistPagination");
+  const paginationTopEl = document.getElementById("watchlistPaginationTop");
+  const sortedWatchlist = getSortedWatchlist();
+  const totalWatchlist = sortedWatchlist.length;
+  if (totalWatchlist === 0) {
     renderEmptyState(container, "Заказанных фильмов пока нет");
+    if (paginationEl) paginationEl.innerHTML = "";
+    if (paginationTopEl) paginationTopEl.innerHTML = "";
     return;
   }
 
-  getSortedWatchlist().forEach((item) => {
+  const totalPages = Math.ceil(totalWatchlist / watchlistPerPage);
+  if (watchlistPage > totalPages) watchlistPage = totalPages;
+  if (watchlistPage < 1) watchlistPage = 1;
+
+  const start = (watchlistPage - 1) * watchlistPerPage;
+  const pageItems = sortedWatchlist.slice(start, start + watchlistPerPage);
+
+  pageItems.forEach((item) => {
     container.appendChild(createOrderCard(item));
   });
+
+  renderWatchlistPagination(totalPages);
+}
+
+function renderWatchlistPagination(totalPages) {
+  const container = document.getElementById("watchlistPagination");
+  const containerTop = document.getElementById("watchlistPaginationTop");
+  if (!container && !containerTop) return;
+  if (container) container.innerHTML = "";
+  if (containerTop) containerTop.innerHTML = "";
+  if (totalPages <= 1) return;
+
+  const addBtn = (label, page, opts = {}) => {
+    const btn = document.createElement("button");
+    btn.textContent = label;
+    btn.className = opts.class || "page-btn";
+    btn.disabled = opts.disabled || false;
+    if (opts.active) btn.classList.add("active");
+    if (page) {
+      btn.onclick = () => {
+        watchlistPage = page;
+        renderWatchlist();
+      };
+    }
+    container.appendChild(btn);
+    if (containerTop) {
+      const clone = btn.cloneNode(true);
+      clone.onclick = btn.onclick;
+      containerTop.appendChild(clone);
+    }
+  };
+
+  addBtn("«", watchlistPage - 1, { disabled: watchlistPage === 1 });
+  addBtn("1", 1, { active: watchlistPage === 1 });
+
+  let start = Math.max(2, watchlistPage - 1);
+  let end = Math.min(totalPages - 1, watchlistPage + 1);
+
+  if (start > 2) {
+    const span = document.createElement("span");
+    span.textContent = "...";
+    span.className = "ellipsis";
+    container.appendChild(span);
+  }
+
+  for (let i = start; i <= end; i++) {
+    addBtn(String(i), i, { active: i === watchlistPage });
+  }
+
+  if (end < totalPages - 1) {
+    const span = document.createElement("span");
+    span.textContent = "...";
+    span.className = "ellipsis";
+    container.appendChild(span);
+  }
+
+  if (totalPages > 1) {
+    addBtn(String(totalPages), totalPages, {
+      active: watchlistPage === totalPages,
+    });
+  }
+
+  addBtn("»", watchlistPage + 1, { disabled: watchlistPage === totalPages });
 }
 
 function getSortedWatchlist() {

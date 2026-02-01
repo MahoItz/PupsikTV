@@ -1,4 +1,4 @@
-// Supabase
+﻿// Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const API_BASE_PATH = "/api";
 
@@ -987,6 +987,8 @@ let sortAscending = false;
 
 // Список заказанных фильмов
 let watchlist = [];
+let watchlistPage = 1;
+const watchlistPerPage = 9;
 let gameOrders = [];
 let allPlayedGames = [];
 let playedGames = [];
