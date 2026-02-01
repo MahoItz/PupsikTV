@@ -480,6 +480,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
     box-sizing: border-box;
+    cursor: default;
 }
 
 .movie-rating .kp-rating-item {
@@ -490,7 +491,7 @@
     flex-basis: 100%;
 }
 
-.movie-rating .rating-item:hover {
+.movie-rating .kp-rating-item:hover {
     background: rgba(255, 255, 255, 0.08);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
