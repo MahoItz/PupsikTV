@@ -675,13 +675,15 @@
     gap: 4px;
 }
 
-#movieDetailsModal .movie-details-actors-row {
+#movieDetailsModal .movie-details-actors-row,
+#orderDetailsModal .movie-details-actors-row {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
 }
 
-#movieDetailsModal .movie-details-actors-row .movie-details-section-title {
+#movieDetailsModal .movie-details-actors-row .movie-details-section-title,
+#orderDetailsModal .movie-details-actors-row .movie-details-section-title {
     margin: 0;
 }
 
@@ -713,6 +715,12 @@
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#movieDetailsModal .movie-details-actors-row .movie-details-actors,
+#orderDetailsModal .movie-details-actors-row .movie-details-actors {
+    margin-top: 0;
+    padding: 6px 10px;
 }
 
 #movieDetailsModal .movie-details-actors-summary,
