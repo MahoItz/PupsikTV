@@ -2472,6 +2472,8 @@ function setupPosterLoading(img, options = {}) {
 
   let retries = 0;
   let timeoutId = null;
+  let observer = null;
+  let hasStarted = false;
 
   const clearTimer = () => {
     if (timeoutId) {
@@ -2511,19 +2513,63 @@ function setupPosterLoading(img, options = {}) {
     scheduleTimeout();
   };
 
-  img.addEventListener("load", () => {
+  const handleLoad = () => {
     clearTimer();
     if (placeholder) {
       placeholder.style.display = "none";
       img.style.display = "";
     }
-  });
+  };
 
-  img.addEventListener("error", () => {
+  const handleError = () => {
     handleRetry();
-  });
+  };
 
-  scheduleTimeout();
+  const startLoading = () => {
+    if (hasStarted) return;
+    hasStarted = true;
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+    img.addEventListener("load", handleLoad);
+    img.addEventListener("error", handleError);
+    if (img.complete && img.naturalWidth) {
+      handleLoad();
+      return;
+    }
+    scheduleTimeout();
+  };
+
+  const isVisible = () =>
+    img.offsetParent !== null && img.getClientRects().length > 0;
+
+  const checkVisibility = () => {
+    if (isVisible()) {
+      startLoading();
+    }
+  };
+
+  if ("IntersectionObserver" in window) {
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            startLoading();
+            break;
+          }
+        }
+      },
+      { rootMargin: "0px", threshold: 0.01 },
+    );
+    observer.observe(img);
+    checkVisibility();
+  } else {
+    checkVisibility();
+    if (!hasStarted) {
+      requestAnimationFrame(checkVisibility);
+    }
+  }
 }
 
 function renderEmptyState(container, message) {
