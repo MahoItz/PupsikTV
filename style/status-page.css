@@ -194,31 +194,6 @@
     margin-top: auto;
 }
 
-.status-card__field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.status-label {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.65);
-}
-
-.status-input {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 10px;
-    padding: 10px 12px;
-    color: inherit;
-    font-size: 14px;
-}
-
-.status-input:focus {
-    outline: 2px solid rgba(88, 142, 255, 0.5);
-    border-color: rgba(88, 142, 255, 0.8);
-}
-
 @media (max-width: 720px) {
     .status-page {
         padding: 32px 16px 64px;

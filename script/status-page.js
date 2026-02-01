@@ -1,7 +1,5 @@
 const API_BASE_PATH = "/api";
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const TRANSLATION_MODEL_STORAGE_KEY = "status_translation_model";
-
 const checkConfigs = {
   backend: {
     label: "Backend API",
@@ -65,8 +63,6 @@ const checkConfigs = {
   translations: {
     label: "Переводы",
     async run({ updateDetail }) {
-      const input = document.getElementById("translationModel");
-      const model = input?.value.trim();
       const listContainer = document.querySelector("[data-model-list]");
 
       if (listContainer) {
@@ -80,20 +76,11 @@ const checkConfigs = {
         listContainer.textContent = `Ошибка загрузки моделей. ${formatErrorDetails(modelsResponse.error)}`;
       }
 
-      if (!models.length && model) {
-        models.push({ id: model, name: model });
-      }
-
       if (!models.length) {
         if (listContainer) {
-          listContainer.textContent =
-            "Нет списка моделей. Введите модель для проверки.";
+          listContainer.textContent = "Нет списка моделей для проверки.";
         }
-        return { level: "warning", message: "Введите модель перевода." };
-      }
-
-      if (model) {
-        localStorage.setItem(TRANSLATION_MODEL_STORAGE_KEY, model);
+        return { level: "warning", message: "Модели перевода не найдены." };
       }
 
       const results = await checkModelsStatus(models, listContainer);
@@ -516,13 +503,6 @@ function setupChecks() {
     });
   }
 
-  const translationInput = document.getElementById("translationModel");
-  if (translationInput) {
-    const saved = localStorage.getItem(TRANSLATION_MODEL_STORAGE_KEY);
-    if (saved) {
-      translationInput.value = saved;
-    }
-  }
 }
 
 window.addEventListener("DOMContentLoaded", setupChecks);
