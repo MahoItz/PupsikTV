@@ -470,6 +470,13 @@
     flex-wrap: wrap;
 }
 
+#movieDetailsModal .movie-details-poster-wrap,
+#gameDetailsModal .movie-details-poster-wrap,
+#orderDetailsModal .movie-details-poster-wrap,
+#gameOrderDetailsModal .movie-details-poster-wrap {
+    margin-top: var(--details-poster-offset, 0px);
+}
+
 #movieDetailsModal .movie-details-poster,
 #gameDetailsModal .movie-details-poster,
 #orderDetailsModal .movie-details-poster,
@@ -1439,6 +1446,13 @@
         width: 100%;
         max-width: 340px;
         margin: 0 auto;
+    }
+
+    #movieDetailsModal .movie-details-poster-wrap,
+    #gameDetailsModal .movie-details-poster-wrap,
+    #orderDetailsModal .movie-details-poster-wrap,
+    #gameOrderDetailsModal .movie-details-poster-wrap {
+        margin-top: 0;
     }
 
     #movieDetailsModal .movie-details-meta-item,
