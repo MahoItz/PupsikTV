@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статус систем — Pupsik TV</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=carter-one:400" rel="stylesheet" />
+    <link rel="icon" href="images/Pupsik_TV_Icon.webp">
+    <link rel="stylesheet" href="/style/base.css">
+    <link rel="stylesheet" href="/style/buttons.css">
+    <link rel="stylesheet" href="/style/status-page.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="status-body">
+    <div class="status-page">
+        <header class="status-header">
+            <div>
+                <p class="status-kicker">PupsikTV • System Monitor</p>
+                <h1>Статус всех систем сайта</h1>
+                <p class="status-subtitle">Проверьте API, переводы, интеграции и базовые сервисы одним экраном.</p>
+            </div>
+            <div class="status-header__actions">
+                <button id="runAllChecks" class="btn btn-primary" type="button">
+                    <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                    Запустить все проверки
+                </button>
+                <a href="index.html" class="btn btn-secondary">Вернуться на сайт</a>
+            </div>
+        </header>
+
+        <section class="status-section">
+            <h2>Базовая инфраструктура</h2>
+            <div class="status-grid">
+                <article class="status-card" data-check="backend">
+                    <div class="status-card__header">
+                        <h3>Backend API</h3>
+                        <span class="status-badge" data-status>Ожидание</span>
+                    </div>
+                    <p class="status-card__desc">Проверка доступности серверных маршрутов и конфигурации окружения.</p>
+                    <div class="status-card__detail" data-detail>Нажмите «Запустить», чтобы проверить /api/env.</div>
+                    <div class="status-card__meta">
+                        <span data-latency>—</span>
+                        <span data-time>Не запускалось</span>
+                    </div>
+                    <div class="status-card__actions">
+                        <button class="btn btn-secondary" type="button" data-run>Запустить проверку</button>
+                    </div>
+                </article>
+
+                <article class="status-card" data-check="supabase">
+                    <div class="status-card__header">
+                        <h3>Supabase</h3>
+                        <span class="status-badge" data-status>Ожидание</span>
+                    </div>
+                    <p class="status-card__desc">Доступность базы данных и чтение настроек.</p>
+                    <div class="status-card__detail" data-detail>Нужен админ-доступ, чтобы получить ключ.</div>
+                    <div class="status-card__meta">
+                        <span data-latency>—</span>
+                        <span data-time>Не запускалось</span>
+                    </div>
+                    <div class="status-card__actions">
+                        <button class="btn btn-secondary" type="button" data-run>Запустить проверку</button>
+                    </div>
+                </article>
+
+                <article class="status-card" data-check="translations">
+                    <div class="status-card__header">
+                        <h3>Переводы (OpenRouter)</h3>
+                        <span class="status-badge" data-status>Ожидание</span>
+                    </div>
+                    <p class="status-card__desc">Проверка доступности переводческих моделей через /api/check-model.</p>
+                    <div class="status-card__detail" data-detail>Укажите модель перевода для проверки.</div>
+                    <div class="status-card__field">
+                        <label for="translationModel" class="status-label">Модель перевода</label>
+                        <input id="translationModel" class="status-input" type="text" placeholder="openai/gpt-4o-mini">
+                    </div>
+                    <div class="status-card__meta">
+                        <span data-latency>—</span>
+                        <span data-time>Не запускалось</span>
+                    </div>
+                    <div class="status-card__actions">
+                        <button class="btn btn-secondary" type="button" data-run>Запустить проверку</button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="status-section">
+            <h2>Контентные API</h2>
+            <div class="status-grid">
+                <article class="status-card" data-check="tmdb">
+                    <div class="status-card__header">
+                        <h3>TMDB</h3>
+                        <span class="status-badge" data-status>Ожидание</span>
+                    </div>
+                    <p class="status-card__desc">Получение данных о фильмах по IMDb ID.</p>
+                    <div class="status-card__detail" data-detail>Тестовый IMDb ID: tt0133093.</div>
+                    <div class="status-card__meta">
+                        <span data-latency>—</span>
+                        <span data-time>Не запускалось</span>
+                    </div>
+                    <div class="status-card__actions">
+                        <button class="btn btn-secondary" type="button" data-run>Запустить проверку</button>
+                    </div>
+                </article>
+
+                <article class="status-card" data-check="steamgriddb">
+                    <div class="status-card__header">
+                        <h3>SteamGridDB</h3>
+                        <span class="status-badge" data-status>Ожидание</span>
+                    </div>
+                    <p class="status-card__desc">Получение постеров игр для библиотеки заказов.</p>
+                    <div class="status-card__detail" data-detail>Тестовый запрос: Portal.</div>
+                    <div class="status-card__meta">
+                        <span data-latency>—</span>
+                        <span data-time>Не запускалось</span>
+                    </div>
+                    <div class="status-card__actions">
+                        <button class="btn btn-secondary" type="button" data-run>Запустить проверку</button>
+                    </div>
+                </article>
+
+                <article class="status-card" data-check="imdb">
+                    <div class="status-card__header">
+                        <h3>IMDb Parent Guide</h3>
+                        <span class="status-badge" data-status>Ожидание</span>
+                    </div>
+                    <p class="status-card__desc">Парсинг возрастных ограничений для фильма.</p>
+                    <div class="status-card__detail" data-detail>Тестовый IMDb ID: tt0133093.</div>
+                    <div class="status-card__meta">
+                        <span data-latency>—</span>
+                        <span data-time>Не запускалось</span>
+                    </div>
+                    <div class="status-card__actions">
+                        <button class="btn btn-secondary" type="button" data-run>Запустить проверку</button>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+
+    <script src="script/status-page.js" defer></script>
+</body>
+
+</html>
