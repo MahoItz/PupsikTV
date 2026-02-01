@@ -460,6 +460,8 @@
     margin-bottom: 8px;
 }
 
+#movieDetailsModal .movie-details-headings,
+#gameDetailsModal .movie-details-headings,
 #orderDetailsModal .movie-details-headings,
 #gameOrderDetailsModal .movie-details-headings {
     display: flex;
