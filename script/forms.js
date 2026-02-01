@@ -855,6 +855,7 @@ async function submitRating() {
       director: source.director || "",
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
+      studios: source.studios || null,
     };
     const confirmBtn = document.querySelector("#rateMovieModal .btn-primary");
     isSubmittingRating = true;
@@ -883,6 +884,7 @@ async function submitRating() {
           country: watchedMovie.country,
           actors: normalizeActorsForStorage(watchedMovie.actors),
           director: watchedMovie.director,
+          studios: watchedMovie.studios,
         })
         .select()
         .single();
@@ -907,6 +909,7 @@ async function submitRating() {
         country: watchedMovie.country,
         actors: watchedMovie.actors,
         director: watchedMovie.director,
+        studios: data.studios ?? watchedMovie.studios,
       };
 
       const { error: deleteError } = await supabaseClient

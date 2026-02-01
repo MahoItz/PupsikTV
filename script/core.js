@@ -988,7 +988,7 @@ let sortAscending = false;
 // Список заказанных фильмов
 let watchlist = [];
 let watchlistPage = 1;
-const watchlistPerPage = 9;
+const watchlistPerPage = 6;
 let gameOrders = [];
 let allPlayedGames = [];
 let playedGames = [];
