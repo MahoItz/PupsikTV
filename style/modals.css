@@ -636,7 +636,8 @@
 
 #movieDetailsModal .movie-details-description,
 #orderDetailsModal .movie-details-description,
-#gameOrderDetailsModal .movie-details-description {
+#gameOrderDetailsModal .movie-details-description,
+#gameDetailsModal .movie-details-description {
     color: var(--text-secondary);
     line-height: 1.45;
     font-size: 0.95rem;
@@ -669,7 +670,8 @@
 }
 
 #movieDetailsModal .movie-details-extra,
-#orderDetailsModal .movie-details-extra {
+#orderDetailsModal .movie-details-extra,
+#gameDetailsModal .movie-details-extra {
     display: flex;
     flex-direction: column;
     gap: 4px;

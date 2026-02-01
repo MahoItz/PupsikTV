@@ -496,7 +496,7 @@ async function loadPlayedGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("games")
       .select(
-        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type, game_rating_sum, game_rating_count"
+        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type, game_rating_sum, game_rating_count, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
       )
       .order("id", { ascending: false });
 
@@ -516,6 +516,15 @@ async function loadPlayedGamesFromSupabase() {
         dateAdded: item.date,
         orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
         orderType: item.order_type,
+        description: item.description || "",
+        rawgRating: item.rawg_rating ?? null,
+        metacritic: item.metacritic ?? null,
+        released: item.released ?? null,
+        playtime: item.playtime ?? null,
+        platforms: item.platforms || "",
+        developers: item.developers || "",
+        publishers: item.publishers || "",
+        rawgId: item.rawg_id ?? null,
         ratingSum,
         ratingCount,
         userRating:

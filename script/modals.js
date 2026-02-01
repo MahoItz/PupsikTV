@@ -869,6 +869,16 @@ function openGameDetailsModal(id) {
 
   setMovieDetailsText("gameDetailsYear", game.year);
   setMovieDetailsText("gameDetailsGenre", genreValue);
+  setMovieDetailsText("gameDetailsReleased", game.released, "—");
+  setMovieDetailsText(
+    "gameDetailsPlaytime",
+    game.playtime ? `${game.playtime} ч.` : "—"
+  );
+  setMovieDetailsText("gameDetailsMetacritic", game.metacritic, "—");
+  setMovieDetailsText("gameDetailsRawgRating", game.rawgRating, "—");
+  setMovieDetailsText("gameDetailsPlatforms", game.platforms, "—");
+  setMovieDetailsText("gameDetailsDevelopers", game.developers, "—");
+  setMovieDetailsText("gameDetailsPublishers", game.publishers, "—");
   setMovieDetailsText(
     "gameDetailsDate",
     game.dateAdded ? formatDateTime(game.dateAdded) : ""
@@ -877,6 +887,11 @@ function openGameDetailsModal(id) {
   setMovieDetailsText("gameDetailsOrderType", orderTypeValue);
   setMovieDetailsText("gameDetailsPupsikRating", game.rating);
   setMovieDetailsText("gameDetailsUserRating", game.userRating ?? "-");
+  const descText =
+    typeof getGameDescriptionDisplayText === "function"
+      ? getGameDescriptionDisplayText(game.description)
+      : game.description || "";
+  setMovieDetailsText("gameDetailsDescription", descText, "—");
 
   const votes = Math.round(game.ratingCount ?? 0);
   const votesEl = document.getElementById("gameDetailsVotes");
