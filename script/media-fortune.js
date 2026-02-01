@@ -684,7 +684,7 @@ function createFortuneSuggestionSearchLink(
   href,
   ariaLabel,
   extraClass,
-  iconSrc = "images/kp_icon.webp"
+  iconSrc = "/images/kinopoisk-icon-main.svg"
 ) {
   const link = document.createElement("a");
   link.href = href;
@@ -4495,7 +4495,7 @@ function initFortuneWheel() {
       href,
       ariaLabel,
       extraClass,
-      iconSrc = "images/kp_icon.webp"
+      iconSrc = "/images/kinopoisk-icon-main.svg"
     ) => {
       const link = document.createElement("a");
       link.href = href;

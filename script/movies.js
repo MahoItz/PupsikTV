@@ -123,7 +123,7 @@ function createKpFallbackCard(film) {
   const ratingRow = document.createElement("div");
   ratingRow.className = "kp-fallback-kp-rating";
   const kpImg = document.createElement("img");
-  kpImg.src = "images/kp_icon.webp";
+  kpImg.src = "/images/kinopoisk-icon-main.svg";
   kpImg.alt = "KP Rate";
   const ratingText = document.createElement("span");
   ratingText.textContent = film?.rating ? String(film.rating) : "-";
@@ -687,7 +687,7 @@ function createMovieCard(
     const ratingItem2 = document.createElement("div");
     ratingItem2.className = "rating-item kp-rating-item";
     const icon2 = document.createElement("img");
-    icon2.src = "images/kp_icon.webp";
+    icon2.src = "/images/kinopoisk-icon-main.svg";
     icon2.alt = "KP Rate";
     const span2 = document.createElement("span");
     span2.textContent = movie.kpRating ?? "-";
@@ -991,7 +991,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const kpRating = document.createElement("span");
   kpRating.className = "order-kp-rating";
   const kpImg = document.createElement("img");
-  kpImg.src = "images/kp_icon.webp";
+  kpImg.src = "/images/kinopoisk-icon-main.svg";
   kpImg.alt = "KP Rate";
   kpRating.appendChild(kpImg);
   kpRating.appendChild(document.createTextNode(` ${order.kpRating ?? "-"}`));
