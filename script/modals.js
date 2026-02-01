@@ -835,8 +835,35 @@ function openMovieDetailsModal(id) {
   const votes = Math.round(movie.ratingCount ?? 0);
   const votesEl = document.getElementById("movieDetailsVotes");
   if (votesEl) {
-    votesEl.textContent = `Голосов: ${votes}`;
-    votesEl.classList.toggle("movie-details-muted", votes === 0);
+    votesEl.textContent = "";
+    votesEl.classList.remove("movie-details-muted");
+  }
+
+  attachRatingTooltip(
+    document.getElementById("movieDetailsPupsikRating")?.closest(".movie-details-rating"),
+    "Оценка Pupsik_ow"
+  );
+  attachRatingTooltip(
+    document.getElementById("movieDetailsKpRating")?.closest(".movie-details-rating"),
+    "Перейти на Кинопоиск"
+  );
+  attachRatingTooltip(
+    document.getElementById("movieDetailsUserRating")?.closest(".movie-details-rating"),
+    `Оценок: ${votes}`
+  );
+
+  const movieKpRating = document
+    .getElementById("movieDetailsKpRating")
+    ?.closest(".movie-details-rating");
+  if (movieKpRating && movieKpRating.dataset.kpBound !== "true") {
+    movieKpRating.dataset.kpBound = "true";
+    movieKpRating.style.cursor = "pointer";
+    movieKpRating.addEventListener("click", (event) => {
+      event?.stopPropagation?.();
+      if (typeof openKinopoiskPageForRecord === "function") {
+        openKinopoiskPageForRecord({ item: movie, table: "movies" });
+      }
+    });
   }
 
   handleMovieDetailsStudios(movie, modal);
@@ -910,9 +937,26 @@ function renderGameDetailsModal(game, modal) {
   const votes = Math.round(game.ratingCount ?? 0);
   const votesEl = document.getElementById("gameDetailsVotes");
   if (votesEl) {
-    votesEl.textContent = `Голосов: ${votes}`;
-    votesEl.classList.toggle("movie-details-muted", votes === 0);
+    votesEl.textContent = "";
+    votesEl.classList.remove("movie-details-muted");
   }
+
+  attachRatingTooltip(
+    document.getElementById("gameDetailsPupsikRating")?.closest(".movie-details-rating"),
+    "Оценка Pupsik_ow"
+  );
+  attachRatingTooltip(
+    document.getElementById("gameDetailsUserRating")?.closest(".movie-details-rating"),
+    `Оценок: ${votes}`
+  );
+  attachRatingTooltip(
+    modal.querySelector(".order-game-rating--metacritic"),
+    "Оценка Metacritic"
+  );
+  attachRatingTooltip(
+    modal.querySelector(".order-game-rating--rawg"),
+    "Оценка RAWG"
+  );
 
   const gameDescriptionEl = document.getElementById("gameDetailsDescription");
   const gameDescriptionSection = gameDescriptionEl?.closest(".movie-details-section");
@@ -1188,6 +1232,20 @@ function renderOrderDetailsModal(order) {
         openOrderOnReyohoho(order);
       }
     };
+  }
+
+  const orderKpRating = document
+    .getElementById("orderDetailsKpRating")
+    ?.closest(".movie-details-rating");
+  if (orderKpRating && orderKpRating.dataset.kpBound !== "true") {
+    orderKpRating.dataset.kpBound = "true";
+    orderKpRating.style.cursor = "pointer";
+    orderKpRating.addEventListener("click", (event) => {
+      event?.stopPropagation?.();
+      if (typeof openKinopoiskPageForRecord === "function") {
+        openKinopoiskPageForRecord({ item: order, table: "Movie_Orders" });
+      }
+    });
   }
 
   handleOrderDetailsStudios(order, modal);
