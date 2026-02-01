@@ -11,12 +11,12 @@ const checkConfigs = {
         if (envResponse.status === 401) {
           return {
             level: "warning",
-            message: "Нужен админ-доступ для проверки /api/env.",
+            message: `Нужен админ-доступ для проверки /api/env. ${formatErrorDetails(envResponse)}`,
           };
         }
         return {
           level: "error",
-          message: envResponse.message || "Не удалось получить /api/env.",
+          message: `Не удалось получить /api/env. ${formatErrorDetails(envResponse)}`,
         };
       }
       updateDetail(`ENV: OK • TMDB enabled: ${envResponse.data?.TMDB_ENABLED ? "да" : "нет"}`);
@@ -33,7 +33,7 @@ const checkConfigs = {
           message:
             envResponse.status === 401
               ? "Нужен админ-доступ, чтобы получить ключ Supabase."
-              : envResponse.message || "Не удалось получить доступ к ENV.",
+              : `Не удалось получить доступ к ENV. ${formatErrorDetails(envResponse)}`,
         };
       }
 
@@ -55,7 +55,7 @@ const checkConfigs = {
       if (!ok) {
         return {
           level: "error",
-          message: `Supabase недоступен (код ${status}).`,
+          message: `Supabase недоступен. ${formatErrorDetails({ status })}`,
         };
       }
 
@@ -67,47 +67,53 @@ const checkConfigs = {
     async run({ updateDetail }) {
       const input = document.getElementById("translationModel");
       const model = input?.value.trim();
+      const listContainer = document.querySelector("[data-model-list]");
 
-      if (!model) {
+      if (listContainer) {
+        listContainer.textContent = "Загружаем список моделей...";
+      }
+
+      const modelsResponse = await fetchTranslationModels();
+      const models = modelsResponse.models || [];
+
+      if (modelsResponse.error && listContainer) {
+        listContainer.textContent = `Ошибка загрузки моделей. ${formatErrorDetails(modelsResponse.error)}`;
+      }
+
+      if (!models.length && model) {
+        models.push({ id: model, name: model });
+      }
+
+      if (!models.length) {
+        if (listContainer) {
+          listContainer.textContent =
+            "Нет списка моделей. Введите модель для проверки.";
+        }
         return { level: "warning", message: "Введите модель перевода." };
       }
 
-      localStorage.setItem(TRANSLATION_MODEL_STORAGE_KEY, model);
-
-      const { ok, status, json } = await timedFetch(buildApiUrl("/check-model"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model }),
-      });
-
-      if (!ok) {
-        return {
-          level: "error",
-          message: `Сервис перевода недоступен (код ${status}).`,
-        };
+      if (model) {
+        localStorage.setItem(TRANSLATION_MODEL_STORAGE_KEY, model);
       }
 
-      const state = json?.status || "unknown";
-      updateDetail(`Статус модели: ${state} • HTTP ${json?.http_status ?? "-"}`);
+      const results = await checkModelsStatus(models, listContainer);
+      const summary = summarizeModelStatuses(results);
+      updateDetail(summary.detail);
 
-      if (state === "active") {
-        return { level: "ok", message: "Модель доступна." };
-      }
-
-      if (state === "rate_limited") {
-        return { level: "warning", message: "Модель ограничена по лимитам." };
-      }
-
-      return { level: "error", message: "Модель недоступна." };
+      return { level: summary.level, message: summary.message };
     },
   },
   tmdb: {
     label: "TMDB",
     async run() {
       const url = `${buildApiUrl("/tmdb")}?imdbId=tt0133093`;
-      const { ok, status } = await timedFetch(url);
+      const result = await timedFetch(url);
+      const { ok, status } = result;
       if (!ok) {
-        return { level: "error", message: `TMDB недоступен (код ${status}).` };
+        return {
+          level: "error",
+          message: `TMDB недоступен. ${formatErrorDetails({ status, ...result })}`,
+        };
       }
       return { level: "ok", message: "TMDB отвечает." };
     },
@@ -116,11 +122,12 @@ const checkConfigs = {
     label: "SteamGridDB",
     async run() {
       const url = `${buildApiUrl("/steamgriddb")}?search=Portal`;
-      const { ok, status } = await timedFetch(url);
+      const result = await timedFetch(url);
+      const { ok, status } = result;
       if (!ok) {
         return {
           level: "error",
-          message: `SteamGridDB недоступен (код ${status}).`,
+          message: `SteamGridDB недоступен. ${formatErrorDetails({ status, ...result })}`,
         };
       }
       return { level: "ok", message: "Постеры получены." };
@@ -130,11 +137,12 @@ const checkConfigs = {
     label: "IMDb Parent Guide",
     async run() {
       const url = `${buildApiUrl("/imdb-parent-guide")}?id=tt0133093`;
-      const { ok, status } = await timedFetch(url);
+      const result = await timedFetch(url);
+      const { ok, status } = result;
       if (!ok) {
         return {
           level: "error",
-          message: `IMDb Parent Guide недоступен (код ${status}).`,
+          message: `IMDb Parent Guide недоступен. ${formatErrorDetails({ status, ...result })}`,
         };
       }
       return { level: "ok", message: "Данные получены." };
@@ -188,6 +196,25 @@ async function fetchEnv() {
   return { ok: true, status, data: json };
 }
 
+function formatErrorDetails({ status, json, text, message }) {
+  const parts = [];
+  if (status !== undefined) {
+    parts.push(`Код: ${status || "нет ответа"}`);
+  }
+  if (json?.error) {
+    parts.push(`Ошибка: ${json.error}`);
+  } else if (json?.message) {
+    parts.push(`Ошибка: ${json.message}`);
+  }
+  if (text) {
+    parts.push(`Ответ: ${text}`);
+  }
+  if (message && !parts.includes(message)) {
+    parts.push(message);
+  }
+  return parts.length ? `(${parts.join(" • ")})` : "";
+}
+
 async function timedFetch(url, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
@@ -235,6 +262,167 @@ async function timedFetch(url, options = {}) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function fetchTranslationModels() {
+  const envResponse = await fetchEnv();
+  if (!envResponse.ok) {
+    return { models: [], error: envResponse };
+  }
+
+  const key = envResponse.data?.SUPABASE_KEY;
+  if (!key) {
+    return { models: [], error: { message: "SUPABASE_KEY не найден." } };
+  }
+
+  const query = "select=ai_model,ai_model_name&ai_model=not.is.null";
+  const { ok, json } = await timedFetch(
+    `${SUPABASE_URL}/rest/v1/settings?${query}`,
+    {
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+      },
+    }
+  );
+
+  if (!ok || !Array.isArray(json)) {
+    return { models: [], error: { message: "Не удалось получить список моделей." } };
+  }
+
+  const unique = new Map();
+  json.forEach((row) => {
+    const id = row?.ai_model;
+    if (!id) return;
+    unique.set(id, {
+      id,
+      name: row?.ai_model_name || id,
+    });
+  });
+
+  return { models: Array.from(unique.values()) };
+}
+
+async function checkModelsStatus(models, listContainer) {
+  const results = [];
+  const concurrencyLimit = 3;
+  const queue = [...models];
+
+  if (listContainer) {
+    listContainer.innerHTML = "";
+  }
+
+  async function runWorker() {
+    while (queue.length > 0) {
+      const modelInfo = queue.shift();
+      const { ok, status, json, text } = await timedFetch(
+        buildApiUrl("/check-model"),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: modelInfo.id }),
+        }
+      );
+
+      const state = json?.status || (ok ? "unknown" : "error");
+      const detail =
+        state === "error" || !ok
+          ? formatErrorDetails({ status, json, text })
+          : `HTTP ${json?.http_status ?? status}`;
+
+      const entry = {
+        ...modelInfo,
+        ok,
+        status: state,
+        detail,
+      };
+      results.push(entry);
+
+      if (listContainer) {
+        listContainer.appendChild(renderModelItem(entry));
+      }
+    }
+  }
+
+  const workers = Array(Math.min(concurrencyLimit, queue.length))
+    .fill(null)
+    .map(() => runWorker());
+
+  await Promise.all(workers);
+
+  if (listContainer && results.length === 0) {
+    listContainer.textContent = "Не удалось получить список моделей.";
+  }
+
+  return results;
+}
+
+function renderModelItem(model) {
+  const item = document.createElement("div");
+  item.className = "status-models__item";
+
+  const name = document.createElement("div");
+  name.className = "status-models__name";
+  name.textContent = model.name;
+
+  const status = document.createElement("div");
+  const statusClass =
+    model.status === "active"
+      ? "status-models__status--ok"
+      : model.status === "rate_limited"
+      ? "status-models__status--warning"
+      : "status-models__status--error";
+  status.className = `status-models__status ${statusClass}`;
+  status.textContent = model.status;
+
+  item.appendChild(name);
+  item.appendChild(status);
+
+  if (model.detail) {
+    const meta = document.createElement("span");
+    meta.className = "status-models__meta";
+    meta.textContent = model.detail;
+    name.appendChild(meta);
+  }
+
+  return item;
+}
+
+function summarizeModelStatuses(results) {
+  if (!results.length) {
+    return {
+      level: "warning",
+      message: "Нет доступных моделей для проверки.",
+      detail: "Список моделей пуст.",
+    };
+  }
+
+  const errorModels = results.filter((item) => item.status === "error");
+  const limitedModels = results.filter((item) => item.status === "rate_limited");
+  const unavailableModels = results.filter((item) => item.status === "unavailable");
+  const hasError = errorModels.length > 0;
+  const hasLimited = limitedModels.length > 0;
+  const hasUnavailable = unavailableModels.length > 0;
+  const okCount = results.filter((item) => item.status === "active").length;
+
+  let level = "ok";
+  if (hasError || hasUnavailable) {
+    level = "error";
+  } else if (hasLimited) {
+    level = "warning";
+  }
+
+  return {
+    level,
+    message: `Проверено моделей: ${results.length}. Активно: ${okCount}.`,
+    detail: hasError
+      ? `Ошибки у моделей: ${errorModels.map((item) => item.name).join(", ")}.`
+      : hasUnavailable
+      ? `Недоступны модели: ${unavailableModels.map((item) => item.name).join(", ")}.`
+      : hasLimited
+      ? `Ограничены по лимитам: ${limitedModels.map((item) => item.name).join(", ")}.`
+      : "Все модели отвечают.",
+  };
 }
 
 function setBadge(badge, level) {
