@@ -729,6 +729,7 @@ document
         rating: rating,
         orderBy: orderBy,
         orderType: orderType,
+        rawgId: g.id || null,
       };
     } else {
       const fileInput = document.getElementById("playedGamePoster");
@@ -783,6 +784,7 @@ document
           order_type: gameData.orderType,
           game_rating_sum: 0,
           game_rating_count: 0,
+          rawg_id: gameData.rawgId ?? null,
         })
         .select()
         .single();
@@ -799,6 +801,7 @@ document
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        rawgId: data.rawg_id ?? null,
         ratingSum: Number(data.game_rating_sum ?? 0) || 0,
         ratingCount: Number(data.game_rating_count ?? 0) || 0,
         userRating: null,
