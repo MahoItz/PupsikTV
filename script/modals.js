@@ -842,9 +842,23 @@ function openMovieDetailsModal(id) {
   modal.style.display = "block";
 }
 
-function openGameDetailsModal(id) {
-  const game = allPlayedGames.find((g) => g.id === id);
-  const modal = document.getElementById("gameDetailsModal");
+let activeGameDetailsId = null;
+const playedGameDetailsPrefetches = new Map();
+
+function getGameDetailsDescriptionText(game) {
+  if (!game) return "";
+  if (typeof getGameDescriptionDisplayText === "function") {
+    return getGameDescriptionDisplayText(game.description);
+  }
+  return typeof game.description === "string" ? game.description : "";
+}
+
+function hasGameDetailsPlatforms(game) {
+  if (!game) return false;
+  return typeof game.platforms === "string" && game.platforms.trim() !== "";
+}
+
+function renderGameDetailsModal(game, modal) {
   if (!game || !modal) return;
 
   const title = formatMovieDetailsValue(game.title, "Без названия");
@@ -887,10 +901,7 @@ function openGameDetailsModal(id) {
   setMovieDetailsText("gameDetailsOrderType", orderTypeValue);
   setMovieDetailsText("gameDetailsPupsikRating", game.rating);
   setMovieDetailsText("gameDetailsUserRating", game.userRating ?? "-");
-  const descText =
-    typeof getGameDescriptionDisplayText === "function"
-      ? getGameDescriptionDisplayText(game.description)
-      : game.description || "";
+  const descText = getGameDetailsDescriptionText(game);
   setMovieDetailsText("gameDetailsDescription", descText, "—");
 
   const votes = Math.round(game.ratingCount ?? 0);
@@ -901,7 +912,165 @@ function openGameDetailsModal(id) {
   }
 
   alignDetailsPoster(modal);
+}
+
+async function fetchPlayedGameDetailsFromRawg(game) {
+  if (!RAWG_API_KEY) {
+    console.warn("RAWG_API_KEY отсутствует. Нельзя загрузить детали игры.");
+    return null;
+  }
+
+  let rawgId = game.rawgId ?? null;
+  if (!rawgId) {
+    const searchUrl = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
+      game.title
+    )}`;
+    const searchRes = await fetch(searchUrl);
+    if (!searchRes.ok) {
+      throw new Error(`RAWG search failed: ${searchRes.status}`);
+    }
+    const searchData = await searchRes.json();
+    const match = searchData?.results?.[0];
+    if (!match) return null;
+    rawgId = match.id;
+  }
+
+  const detailsRes = await fetch(
+    `${RAWG_SEARCH_URL}/${rawgId}?key=${RAWG_API_KEY}`
+  );
+  if (!detailsRes.ok) {
+    throw new Error(`RAWG details failed: ${detailsRes.status}`);
+  }
+  const details = await detailsRes.json();
+  return { rawgId, details };
+}
+
+async function fetchPlayedGameDetailsFromDb(game) {
+  if (!game || !supabaseClient) return null;
+  const { data, error } = await supabaseClient
+    .from("games")
+    .select(
+      "description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
+    )
+    .eq("id", game.id)
+    .single();
+  if (error) {
+    throw error;
+  }
+  return data;
+}
+
+function applyGameDetails(game, details) {
+  if (!game || !details) return game;
+  return {
+    ...game,
+    description: details.description ?? game.description,
+    rawgRating: details.rawg_rating ?? game.rawgRating,
+    metacritic: details.metacritic ?? game.metacritic,
+    released: details.released ?? game.released,
+    playtime: details.playtime ?? game.playtime,
+    platforms: details.platforms ?? game.platforms,
+    developers: details.developers ?? game.developers,
+    publishers: details.publishers ?? game.publishers,
+    rawgId: details.rawg_id ?? game.rawgId,
+  };
+}
+
+function updateLocalPlayedGame(game) {
+  const idx = allPlayedGames.findIndex((g) => g.id === game.id);
+  if (idx !== -1) {
+    allPlayedGames[idx] = game;
+  }
+  localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+}
+
+async function prefetchPlayedGameDetails(game) {
+  if (!game || !supabaseClient) return null;
+  if (hasGameDetailsPlatforms(game)) return game;
+  if (playedGameDetailsPrefetches.has(game.id)) {
+    return playedGameDetailsPrefetches.get(game.id);
+  }
+
+  const loadPromise = (async () => {
+    try {
+      let updatedGame = game;
+      const dbDetails = await fetchPlayedGameDetailsFromDb(game);
+      if (dbDetails) {
+        updatedGame = applyGameDetails(updatedGame, dbDetails);
+        updateLocalPlayedGame(updatedGame);
+      }
+
+      if (hasGameDetailsPlatforms(updatedGame)) {
+        return updatedGame;
+      }
+
+      const rawgPayload = await fetchPlayedGameDetailsFromRawg(updatedGame);
+      if (!rawgPayload) return updatedGame;
+
+      const { rawgId, details } = rawgPayload;
+      const descriptionText =
+        details?.description_raw || details?.description || "";
+      const descriptionData = descriptionText
+        ? { original: descriptionText, translated: null }
+        : null;
+      const platforms =
+        details?.platforms?.map((p) => p.platform?.name).filter(Boolean) || [];
+      const developers =
+        details?.developers?.map((d) => d.name).filter(Boolean) || [];
+      const publishers =
+        details?.publishers?.map((p) => p.name).filter(Boolean) || [];
+
+      const payload = {
+        description: descriptionData,
+        rawg_rating: details?.rating ?? null,
+        metacritic: details?.metacritic ?? null,
+        released: details?.released ?? null,
+        playtime: details?.playtime ?? null,
+        platforms: platforms.join(", "),
+        developers: developers.join(", "),
+        publishers: publishers.join(", "),
+        rawg_id: rawgId ?? null,
+      };
+
+      const { error } = await supabaseClient
+        .from("games")
+        .update(payload)
+        .eq("id", updatedGame.id);
+      if (error) throw error;
+
+      updatedGame = applyGameDetails(updatedGame, payload);
+      updateLocalPlayedGame(updatedGame);
+      return updatedGame;
+    } catch (err) {
+      console.error("Failed to load RAWG details for played game", err);
+      return game;
+    }
+  })();
+
+  playedGameDetailsPrefetches.set(game.id, loadPromise);
+  try {
+    return await loadPromise;
+  } finally {
+    playedGameDetailsPrefetches.delete(game.id);
+  }
+}
+
+async function openGameDetailsModal(id) {
+  const game = allPlayedGames.find((g) => g.id === id);
+  const modal = document.getElementById("gameDetailsModal");
+  if (!game || !modal) return;
+  activeGameDetailsId = id;
+
+  renderGameDetailsModal(game, modal);
   modal.style.display = "block";
+
+  if (!hasGameDetailsPlatforms(game)) {
+    setMovieDetailsText("gameDetailsDescription", "Загружаем...", "—");
+    const updatedGame = await prefetchPlayedGameDetails(game);
+    if (activeGameDetailsId === id) {
+      renderGameDetailsModal(updatedGame, modal);
+    }
+  }
 }
 
 function renderOrderDetailsModal(order) {
@@ -1592,6 +1761,9 @@ function openEditOrderModal(id) {
 
 function closeModal(modalId, shouldReset = false) {
   document.getElementById(modalId).style.display = "none";
+  if (modalId === "gameDetailsModal") {
+    activeGameDetailsId = null;
+  }
   if (modalId === "gameOrderDetailsModal") {
     if (typeof clearActiveGameOrderDetailsId === "function") {
       clearActiveGameOrderDetailsId();
