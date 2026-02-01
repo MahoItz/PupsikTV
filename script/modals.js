@@ -564,7 +564,7 @@ function setDetailsSectionLabels(options = {}) {
     const section = countryEl?.closest(".movie-details-section");
     const titleEl = section?.querySelector(".movie-details-section-title");
     if (titleEl) {
-      titleEl.textContent = "Информация";
+      titleEl.textContent = "О фильме";
     }
     const labelEl = countryEl?.previousElementSibling;
     if (labelEl) {
@@ -649,7 +649,7 @@ function ensureDetailsInfoSection(infoColumn, key) {
 
     const title = document.createElement("div");
     title.className = "movie-details-section-title";
-    title.textContent = "Информация";
+    title.textContent = "Детали заказа";
 
     const body = document.createElement("div");
     body.className = "movie-details-extra";
@@ -804,7 +804,7 @@ function openMovieDetailsModal(id) {
   // setSectionTitleByValueId("movieDetailsPupsikRating", "Оценки");
 
   reorderDetailsLayout(modal, {
-    key: "movie",
+    key: "order",
     ids: {
       year: "movieDetailsYear",
       genre: "movieDetailsGenre",

@@ -511,6 +511,8 @@
     gap: 6px;
 }
 
+#movieDetailsModal .movie-details-meta,
+#gameDetailsModal .movie-details-meta,
 #orderDetailsModal .movie-details-meta,
 #gameOrderDetailsModal .movie-details-meta {
     padding: 10px 12px;
@@ -605,6 +607,10 @@
     margin-bottom: 10px;
 }
 
+.movie-details-meta-title {
+    margin-bottom: 12px;
+}
+
 #gameOrderDetailsModal .game-order-description-header {
     display: flex;
     align-items: center;
@@ -643,6 +649,8 @@
     font-size: 0.95rem;
 }
 
+#movieDetailsModal .movie-details-section[data-details-info="order"],
+#gameDetailsModal .movie-details-section[data-details-info="order"],
 #orderDetailsModal .movie-details-section[data-details-info="order"] {
     padding: 12px 14px;
     border-radius: 14px;
@@ -659,6 +667,8 @@
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
+#movieDetailsModal .movie-details-section[data-details-info="order"] .movie-details-section-title,
+#gameDetailsModal .movie-details-section[data-details-info="order"] .movie-details-section-title,
 #orderDetailsModal .movie-details-section[data-details-info="order"] .movie-details-section-title,
 #gameOrderDetailsModal .movie-details-info > .movie-details-section .movie-details-section-title {
     color: rgba(255, 255, 255, 0.75);
