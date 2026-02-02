@@ -71,16 +71,16 @@
                 </div>
 
                 <div id="moviesSection" class="list-content">
-                    <div class="search-controls">
-                        <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..."
-                            onkeyup="debouncedSearchMovies(this.value)">
-                    </div>
-                    <div class="sort-row">
+                    <div class="list-toolbar">
+                        <div class="search-controls search-with-count">
+                            <input type="text" class="search-input" placeholder="🔍 Поиск фильмов..."
+                                onkeyup="debouncedSearchMovies(this.value)">
+                            <span class="search-count">Всего: <span id="moviesCount">0</span></span>
+                        </div>
                         <div class="sort-controls">
-
                             <div class="sort-merge">
                                 <select onchange="sortMovies(this.value)">
-                                    <option value="date">Сортировка: По дате</option>
+                                    <option value="date">По дате</option>
                                     <option value="title">По названию</option>
                                     <option value="year">По году</option>
                                     <option value="rating">По оценке</option>
@@ -92,7 +92,6 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="movies-count">Всего фильмов: <span id="moviesCount">0</span></div>
                     </div>
                     <div class="admin-divider admin-only" aria-hidden="true"></div>
                     <div class="admin-actions admin-only">
@@ -106,15 +105,16 @@
                 </div>
 
                 <div id="gamesListSection" class="list-content" style="display:none;">
-                    <div class="search-controls">
-                        <input type="text" class="search-input" placeholder="🔍 Поиск игр..."
-                            onkeyup="debouncedSearchPlayedGames(this.value)">
-                    </div>
-                    <div class="sort-row">
+                    <div class="list-toolbar">
+                        <div class="search-controls search-with-count">
+                            <input type="text" class="search-input" placeholder="🔍 Поиск игр..."
+                                onkeyup="debouncedSearchPlayedGames(this.value)">
+                            <span class="search-count">Всего: <span id="gamesCount">0</span></span>
+                        </div>
                         <div class="sort-controls">
                             <div class="sort-merge">
                                 <select onchange="sortPlayedGames(this.value)">
-                                    <option value="date">Сортировка: По дате</option>
+                                    <option value="date">По дате</option>
                                     <option value="title">По названию</option>
                                     <option value="year">По году</option>
                                     <option value="rating">По оценке</option>
@@ -126,7 +126,6 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="movies-count">Всего игр: <span id="gamesCount">0</span></div>
                     </div>
                     <div class="admin-divider admin-only" aria-hidden="true"></div>
                     <div class="admin-actions admin-only">

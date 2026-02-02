@@ -58,6 +58,19 @@
         margin-left: 0;
     }
 
+    .list-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-controls.search-with-count .search-input {
+        padding-right: 120px;
+    }
+
+    .search-count {
+        font-size: 0.85rem;
+    }
+
     .modal-content {
         margin: 5% auto;
         padding: 30px 25px;

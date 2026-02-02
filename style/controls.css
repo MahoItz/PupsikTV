@@ -12,6 +12,38 @@
     width: 100%;
 }
 
+.list-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.search-controls.search-with-count {
+    position: relative;
+    flex: 1 1 320px;
+    margin-bottom: 0;
+}
+
+.search-controls.search-with-count .search-input {
+    padding-right: 150px;
+}
+
+.search-count {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding-left: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    pointer-events: none;
+    text-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+}
+
 .sort-row {
     display: flex;
     align-items: center;
@@ -24,6 +56,7 @@
     display: flex;
     align-items: center;
     gap: 15px;
+    flex-shrink: 0;
 }
 
 .sort-merge {
