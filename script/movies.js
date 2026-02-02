@@ -758,7 +758,7 @@ function createMovieCard(
   if (showRateButton) {
     const rateBtn = document.createElement("button");
     rateBtn.className = "btn btn-rate btn-icon";
-    rateBtn.textContent = isAdmin ? "" : "Оценить";
+    rateBtn.textContent = "Оценить";
     if (ratedMovies[movie.id]) {
       rateBtn.disabled = true;
       rateBtn.title = "Вы уже оценили";
@@ -1760,7 +1760,7 @@ function createPlayedGameCard(
   if (showRateButton) {
     const rateBtn = document.createElement("button");
     rateBtn.className = "btn btn-rate btn-icon";
-    rateBtn.textContent = isAdmin ? "" : "Оценить";
+    rateBtn.textContent = "Оценить";
     if (hasRatedGame(game.id)) {
       rateBtn.disabled = true;
       rateBtn.title = "Вы уже оценили";
