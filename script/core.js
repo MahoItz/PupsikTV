@@ -1363,12 +1363,8 @@ let ratingTooltip;
 let ratedMovies = JSON.parse(localStorage.getItem("ratedMovies") || "{}");
 let ratedGames = JSON.parse(localStorage.getItem("ratedGames") || "{}");
 let editPosterData = null;
-let editingOrderId = null;
 let planDateOrderId = null;
 let planDateOrderType = "movie";
-let editOrderPosterData = null;
-let editingGameId = null;
-let editGamePosterData = null;
 let editingPlayedGameId = null;
 let editPlayedGamePosterData = null;
 let deletePlayedGameId = null;
@@ -2779,22 +2775,15 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
         steamGridPoster = thumbUrl;
         targetImg.src = steamGridPoster;
         selectedPoster = steamGridPoster;
-        if (targetImg.id === "editGamePosterPreview") {
-          editGamePosterData = steamGridPoster;
-        } else if (targetImg.id === "editPlayedGamePosterPreview") {
+        if (targetImg.id === "editPlayedGamePosterPreview") {
           editPlayedGamePosterData = steamGridPoster;
         }
-        if (
-          targetImg.id === "editGamePosterPreview" ||
-          targetImg.id === "editPlayedGamePosterPreview"
-        ) {
+        if (targetImg.id === "editPlayedGamePosterPreview") {
           const selection = steamGridPoster;
           readRemoteImageAsOptimizedDataURL(selection)
             .then((optimized) => {
               if (!optimized || selection !== selectedPoster) return;
-              if (targetImg.id === "editGamePosterPreview") {
-                editGamePosterData = optimized;
-              } else if (targetImg.id === "editPlayedGamePosterPreview") {
+              if (targetImg.id === "editPlayedGamePosterPreview") {
                 editPlayedGamePosterData = optimized;
               }
               if (targetImg.src === selection) {

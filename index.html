@@ -212,9 +212,12 @@
                     <div class="form-group" id="autoResultsContainer" style="display:none; margin-top:10px;">
                         <div id="autoResults" class="autocomplete-list"></div>
                     </div>
-                    <div class="form-group" id="rouletteOrderGroup" style="display: none;">
+                    <div class="form-group user-picker-group" id="rouletteOrderGroup" style="display: none;">
                         <label for="rouletteOrderBy">Кто заказал:</label>
-                        <input type="text" id="rouletteOrderBy" placeholder="Введите ник заказчика">
+                        <div class="user-picker-input">
+                            <input type="text" id="rouletteOrderBy" placeholder="Введите ник заказчика" autocomplete="off">
+                            <div class="user-picker-dropdown" data-user-type="movies"></div>
+                        </div>
                     </div>
                     <span id="autoSearchLoading" class="loading-spinner" style="display:none;"></span>
                     <div id="autoPreview" style="display:none; margin-top:15px;"></div>
@@ -605,56 +608,6 @@
             </form>
         </div>
     </div>
-    <!-- Модальное окно редактирования заказа -->
-    <div id="editOrderModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('editOrderModal')">&times;</span>
-            <h2>Редактировать заказ</h2>
-            <form id="editOrderForm">
-                <div class="poster-upload">
-                    <img id="editOrderPosterPreview" class="movie-poster"
-                        src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
-                    <input type="file" id="editOrderPoster" accept="image/*" style="display:none">
-                </div>
-                <div class="form-group">
-                    <label for="editOrderTitle">Название:</label>
-                    <input type="text" id="editOrderTitle" required>
-                </div>
-                <div class="form-group">
-                    <label for="editOrderOriginTitle">Оригинальное название:</label>
-                    <input type="text" id="editOrderOriginTitle">
-                </div>
-                <div class="form-group">
-                    <label for="editOrderYear">Год:</label>
-                    <input type="number" id="editOrderYear">
-                </div>
-                <div class="form-group">
-                    <label for="editOrderGenre">Жанр:</label>
-                    <input type="text" id="editOrderGenre">
-                </div>
-                <div class="form-group user-picker-group">
-                    <label for="editOrderBy">Кто заказал:</label>
-                    <div class="user-picker-input">
-                        <input type="text" id="editOrderBy">
-                        <div class="user-picker-dropdown" data-user-type="movies"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="editOrderType">Способ заказа:</label>
-                    <select id="editOrderType">
-                        <option value="">Не указано</option>
-                        <option value="Донат">Донат</option>
-                        <option value="Баллы канала">Баллы канала</option>
-                        <option value="Шары">Шары</option>
-                        <option value="Рулетка">Рулетка</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Сохранить</button>
-                <button type="button" id="deleteOrderBtn" class="btn-text-delete">Удалить заказ</button>
-            </form>
-        </div>
-    </div>
-    <!-- Модальное окно планирования просмотра -->
     <div id="planDateModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('planDateModal')">&times;</span>
@@ -873,55 +826,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно редактирования игры -->
-    <div id="editGameModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('editGameModal')">&times;</span>
-            <h2>Редактировать игру</h2>
-            <form id="editGameForm">
-                <div class="poster-upload">
-                    <button type="button" id="editGamePosterBtn" class="btn btn-secondary"
-                        style="width:100%; margin-bottom:10px;">Редактировать постер</button>
-                    <img id="editGamePosterPreview" class="movie-poster"
-                        src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
-                    <input type="file" id="editGamePoster" accept="image/*" style="display:none">
-                </div>
-                <div class="form-group">
-                    <label for="editGameTitle">Название:</label>
-                    <input type="text" id="editGameTitle" required>
-                </div>
-                <div class="form-group">
-                    <label for="editGameYear">Год:</label>
-                    <input type="number" id="editGameYear">
-                </div>
-                <div class="form-group">
-                    <label for="editGameGenres">Жанр:</label>
-                    <input type="text" id="editGameGenres">
-                </div>
-                <div class="form-group user-picker-group">
-                    <label for="editGameOrderBy">Кто заказал:</label>
-                    <div class="user-picker-input">
-                        <input type="text" autocomplete="off" id="editGameOrderBy">
-                        <div class="user-picker-dropdown" data-user-type="games"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="editGameOrderType">Способ заказа:</label>
-                    <select id="editGameOrderType">
-                        <option value="">Не указано</option>
-                        <option value="Донат">Донат</option>
-                        <option value="Баллы канала">Баллы канала</option>
-                        <option value="Шары">Шары</option>
-                        <option value="Рулетка">Рулетка</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;">Сохранить</button>
-                <button type="button" id="deleteGameBtn" class="btn-text-delete">Удалить игру</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Модальное окно редактирования пройденной игры -->
     <div id="editPlayedGameModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('editPlayedGameModal')">&times;</span>

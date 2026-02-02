@@ -1273,49 +1273,6 @@ document
     }
   });
 
-document
-  .getElementById("editOrderForm")
-  .addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const order = watchlist.find((o) => o.id === editingOrderId);
-    if (!order) return;
-
-    const updatedOrder = {
-      title: document.getElementById("editOrderTitle").value,
-      originalTitle: document.getElementById("editOrderOriginTitle").value,
-      year: document.getElementById("editOrderYear").value,
-      genres: document.getElementById("editOrderGenre").value,
-      orderBy: document.getElementById("editOrderBy").value,
-      orderType: document.getElementById("editOrderType").value,
-      poster: editOrderPosterData || order.poster,
-    };
-
-    try {
-      const { error } = await supabaseClient
-        .from("Movie_Orders")
-        .update({
-          order_title: updatedOrder.title,
-          order_origin_title: updatedOrder.originalTitle,
-          order_year: updatedOrder.year,
-          order_genres: updatedOrder.genres,
-          order_poster: updatedOrder.poster,
-          order_by: updatedOrder.orderBy,
-          order_type: updatedOrder.orderType,
-        })
-        .eq("id", editingOrderId);
-
-      if (error) throw error;
-
-      Object.assign(order, updatedOrder);
-      renderWatchlist();
-      editOrderPosterData = null;
-      closeModal("editOrderModal", true);
-    } catch (err) {
-      console.error("Error updating order in Supabase", err);
-      alert("Не удалось сохранить изменения заказа. Попробуйте ещё раз.");
-    }
-  });
 
 document
   .getElementById("planDateForm")
@@ -1386,70 +1343,6 @@ document
       planDateOrderType = "movie";
     }
   });
-
-document
-  .getElementById("editGameForm")
-  ?.addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const game = gameOrders.find((g) => g.id === editingGameId);
-    if (!game) return;
-
-    const previousPoster = game.poster;
-    const updatedGame = {
-      title: document.getElementById("editGameTitle").value,
-      year: document.getElementById("editGameYear").value,
-      genres: document.getElementById("editGameGenres").value,
-      orderBy: document.getElementById("editGameOrderBy").value,
-      orderType: document.getElementById("editGameOrderType").value,
-      poster: editGamePosterData || game.poster,
-    };
-
-    try {
-      let shouldDeletePreviousPoster = false;
-      if (editGamePosterData && editGamePosterData !== previousPoster) {
-        const uploadedPoster = await uploadGamePosterToStorage({
-          poster: editGamePosterData,
-          title: updatedGame.title,
-          folder: "orders",
-        });
-        if (!getGamePosterStoragePath(uploadedPoster)) {
-          throw new Error("Не удалось сохранить постер в storage.");
-        }
-        updatedGame.poster = uploadedPoster;
-        shouldDeletePreviousPoster =
-          previousPoster &&
-          previousPoster !== updatedGame.poster &&
-          Boolean(getGamePosterStoragePath(previousPoster));
-      }
-
-      const { error } = await supabaseClient
-        .from("Game_Orders")
-        .update({
-          game_title: updatedGame.title,
-          game_year: updatedGame.year,
-          game_genres: updatedGame.genres,
-          game_poster: updatedGame.poster,
-          game_order_by: updatedGame.orderBy,
-          game_order_type: updatedGame.orderType,
-        })
-        .eq("id", editingGameId);
-
-      if (error) throw error;
-
-      if (shouldDeletePreviousPoster) {
-        await deleteGamePosterFromStorage(previousPoster);
-      }
-      Object.assign(game, updatedGame);
-      renderGames();
-      editGamePosterData = null;
-      closeModal("editGameModal", true);
-    } catch (err) {
-      console.error("Error updating game", err);
-      alert("Не удалось сохранить изменения заказа игры. Попробуйте ещё раз.");
-    }
-  });
-
 document
   .getElementById("editPlayedGameForm")
   ?.addEventListener("submit", async function (e) {
@@ -1588,7 +1481,6 @@ function resetForm() {
   document.getElementById("addWatchlistForm").reset();
   document.getElementById("addGameForm")?.reset();
   document.getElementById("addPlayedGameForm")?.reset();
-  document.getElementById("editGameForm")?.reset();
   document.getElementById("editPlayedGameForm")?.reset();
 
   // Очистка состояния автопоиска фильмов

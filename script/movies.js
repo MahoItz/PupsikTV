@@ -1073,15 +1073,6 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
       copyOrderEditCommand(order);
     };
 
-    const editItem = document.createElement("button");
-    editItem.type = "button";
-    editItem.className = "order-actions-item";
-    editItem.innerHTML = "<span>Редактировать</span><span aria-hidden=\"true\">✏️</span>";
-    editItem.onclick = () => {
-      closeOrderActionsMenu();
-      openEditOrderModal(order.id);
-    };
-
     const deleteItem = document.createElement("button");
     deleteItem.type = "button";
     deleteItem.className = "order-actions-item order-actions-item--danger";
@@ -1091,7 +1082,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
       openConfirmDeleteOrderModal(order.id);
     };
 
-    menu.append(planItem, copyItem, editItem, deleteItem);
+    menu.append(planItem, copyItem, deleteItem);
     menuBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       toggleOrderActionsMenu(menu, menuBtn);
@@ -1515,15 +1506,6 @@ function createGameCard(game, showActions = isAdmin) {
       openPlanDateModal(game.id, "game");
     };
 
-    const editItem = document.createElement("button");
-    editItem.type = "button";
-    editItem.className = "order-actions-item";
-    editItem.innerHTML = "<span>Редактировать</span><span aria-hidden=\"true\">✏️</span>";
-    editItem.onclick = () => {
-      closeOrderActionsMenu();
-      openEditGameModal(game.id);
-    };
-
     const deleteItem = document.createElement("button");
     deleteItem.type = "button";
     deleteItem.className = "order-actions-item order-actions-item--danger";
@@ -1533,7 +1515,7 @@ function createGameCard(game, showActions = isAdmin) {
       openConfirmDeleteGameOrderModal(game.id);
     };
 
-    menu.append(planItem, editItem, deleteItem);
+    menu.append(planItem, deleteItem);
     menuBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       toggleOrderActionsMenu(menu, menuBtn);

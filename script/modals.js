@@ -915,6 +915,20 @@ function buildSelectFromSource(sourceId, value) {
       const cloned = opt.cloneNode(true);
       select.appendChild(cloned);
     });
+  } else {
+    const fallbackOptions = [
+      { value: "", label: "Не указано" },
+      { value: "Донат", label: "Донат" },
+      { value: "Шары", label: "Шары" },
+      { value: "Баллы канала", label: "Баллы канала" },
+      { value: "Рулетка", label: "Рулетка" },
+    ];
+    fallbackOptions.forEach((opt) => {
+      const option = document.createElement("option");
+      option.value = opt.value;
+      option.textContent = opt.label;
+      select.appendChild(option);
+    });
   }
   if (value !== undefined && value !== null) {
     select.value = value;
@@ -1905,33 +1919,6 @@ function markGameDone(id) {
   openRateGameModal(id);
 }
 
-function openEditGameModal(id) {
-  editingGameId = id;
-  const game = gameOrders.find((g) => g.id === id);
-  if (!game) return;
-  const preview = document.getElementById("editGamePosterPreview");
-  const overlay = preview.parentElement.nextElementSibling;
-  if (overlay && overlay.classList.contains("poster-overlay")) overlay.remove();
-  steamGridPoster = null;
-  steamGridPosters = [];
-  resetRawgPosterCache();
-  document.getElementById("editGameTitle").value = game.title;
-  document.getElementById("editGameYear").value = game.year || "";
-  document.getElementById("editGameGenres").value = game.genres || "";
-  document.getElementById("editGameOrderBy").value = game.orderBy || "";
-  document.getElementById("editGameOrderType").value = game.orderType || "";
-  preview.src = game.poster;
-  document.getElementById("editGamePoster").value = "";
-  editGamePosterData = null;
-  const delBtn = document.getElementById("deleteGameBtn");
-  if (delBtn) {
-    delBtn.onclick = () => {
-      closeModal("editGameModal");
-      openConfirmDeleteGameOrderModal(id);
-    };
-  }
-  document.getElementById("editGameModal").style.display = "block";
-}
 
 function openEditPlayedGameModal(id) {
   editingPlayedGameId = id;
@@ -2219,29 +2206,6 @@ function parseDuration(durationStr) {
   return parseInt(str, 10) || 0;
 }
 
-function openEditOrderModal(id) {
-  editingOrderId = id;
-  const order = watchlist.find((o) => o.id === id);
-  if (!order) return;
-  document.getElementById("editOrderTitle").value = order.title;
-  document.getElementById("editOrderOriginTitle").value =
-    order.originalTitle || "";
-  document.getElementById("editOrderYear").value = order.year || "";
-  document.getElementById("editOrderGenre").value = order.genres || "";
-  document.getElementById("editOrderBy").value = order.orderBy || "";
-  document.getElementById("editOrderType").value = order.orderType || "";
-  document.getElementById("editOrderPosterPreview").src = order.poster;
-  document.getElementById("editOrderPoster").value = "";
-  editOrderPosterData = null;
-  const delBtn = document.getElementById("deleteOrderBtn");
-  if (delBtn) {
-    delBtn.onclick = () => {
-      closeModal("editOrderModal");
-      openConfirmDeleteOrderModal(id);
-    };
-  }
-  document.getElementById("editOrderModal").style.display = "block";
-}
 
 function closeModal(modalId, shouldReset = false) {
   document.getElementById(modalId).style.display = "none";
