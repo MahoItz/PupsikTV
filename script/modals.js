@@ -1973,6 +1973,14 @@ function openConfirmDeleteMovieModal(id) {
 async function confirmDeleteMovie() {
   if (deleteMovieId !== null) {
     await performDeleteMovie(deleteMovieId);
+    const movieDetailsModal = document.getElementById("movieDetailsModal");
+    if (
+      movieDetailsModal &&
+      movieDetailsModal.style.display === "block" &&
+      movieDetailsModal.dataset.recordId === String(deleteMovieId)
+    ) {
+      closeModal("movieDetailsModal");
+    }
     deleteMovieId = null;
   }
   closeModal("confirmDeleteMovieModal");
@@ -1987,6 +1995,14 @@ function openConfirmDeletePlayedGameModal(id) {
 async function confirmDeletePlayedGame() {
   if (deletePlayedGameId !== null) {
     await deletePlayedGame(deletePlayedGameId);
+    const gameDetailsModal = document.getElementById("gameDetailsModal");
+    if (
+      gameDetailsModal &&
+      gameDetailsModal.style.display === "block" &&
+      gameDetailsModal.dataset.recordId === String(deletePlayedGameId)
+    ) {
+      closeModal("gameDetailsModal");
+    }
     deletePlayedGameId = null;
   }
   closeModal("confirmDeletePlayedGameModal");
