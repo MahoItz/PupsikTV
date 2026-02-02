@@ -65,6 +65,20 @@ document
       rouletteAutofillActive && rouletteOrderByInput
         ? rouletteOrderByInput.value.trim()
         : "";
+    if (rouletteAutofillActive && rouletteOrderByInput) {
+      const hasOrderBy = rouletteOrderByInput.value.trim().length > 0;
+      if (!hasOrderBy) {
+        rouletteOrderByInput.reportValidity();
+        const modalContent = rouletteOrderByInput.closest(".modal-content");
+        if (modalContent && typeof modalContent.scrollTo === "function") {
+          modalContent.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        rouletteOrderByInput.focus();
+        return;
+      }
+    }
 
     let movieData;
 

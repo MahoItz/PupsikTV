@@ -33,6 +33,7 @@
     max-width: 550px;
     max-height: 90vh;
     overflow-y: auto;
+    scroll-behavior: smooth;
     border: 2px solid rgba(0, 212, 255, 0.3);
     box-shadow:
         0 0 50px rgba(0, 0, 0, 0.5),

@@ -1979,8 +1979,15 @@ function toggleRouletteOrderInput(visible) {
 
   rouletteOrderGroup.style.display = visible ? "block" : "none";
 
-  if (!visible && rouletteOrderByInput) {
-    rouletteOrderByInput.value = "";
+  if (rouletteOrderByInput) {
+    if (visible) {
+      rouletteOrderByInput.required = true;
+      rouletteOrderByInput.classList.add("roulette-order-attention");
+    } else {
+      rouletteOrderByInput.required = false;
+      rouletteOrderByInput.classList.remove("roulette-order-attention");
+      rouletteOrderByInput.value = "";
+    }
   }
 }
 
