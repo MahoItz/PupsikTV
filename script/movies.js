@@ -27,6 +27,12 @@ function getFilteredSortedMovies() {
         scoreMatch(normalizedQuery, movie.genre || movie.genres || "") - 10
       );
 
+      // Ник заказчика
+      score = Math.max(
+        score,
+        scoreMatch(normalizedQuery, movie.orderBy || "") - 5
+      );
+
       // Год
       const yearString = movie.year ? String(movie.year) : "";
       const normalizedYear = normalizeSearchText(yearString);
@@ -1586,11 +1592,46 @@ function getSortedGameOrders() {
 
 function getFilteredSortedPlayedGames() {
   let result = [...allPlayedGames];
-  if (currentGameSearch) {
-    const q = currentGameSearch.toLowerCase();
-    result = result.filter(
-      (g) => g.title.toLowerCase().includes(q) || g.year.toString().includes(q)
-    );
+  const normalizedQuery = normalizeSearchText(currentGameSearch);
+
+  if (normalizedQuery) {
+    const queryDigits = normalizedQuery.replace(/\D+/g, "");
+
+    const scored = result.map((game) => {
+      let score = 0;
+
+      // Название
+      score = Math.max(score, scoreMatch(normalizedQuery, game.title));
+
+      // Жанры
+      score = Math.max(
+        score,
+        scoreMatch(normalizedQuery, game.genres || "") - 10
+      );
+
+      // Ник заказчика
+      score = Math.max(
+        score,
+        scoreMatch(normalizedQuery, game.orderBy || "") - 5
+      );
+
+      // Год
+      const yearString = game.year ? String(game.year) : "";
+      const normalizedYear = normalizeSearchText(yearString);
+      if (
+        (normalizedYear && normalizedYear.includes(normalizedQuery)) ||
+        (queryDigits && yearString.includes(queryDigits))
+      ) {
+        score += 5;
+      }
+
+      return { game, searchScore: score };
+    });
+
+    result = scored
+      .filter((item) => item.searchScore > 0)
+      .sort((a, b) => b.searchScore - a.searchScore)
+      .map((item) => item.game);
   }
   switch (currentGameSort) {
     case "title":
