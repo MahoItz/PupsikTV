@@ -1253,6 +1253,11 @@ function openMovieDetailsModal(id) {
 
   handleMovieDetailsStudios(movie, modal);
 
+  const deleteBtn = document.getElementById("movieDetailsDeleteBtn");
+  if (deleteBtn) {
+    deleteBtn.onclick = () => openConfirmDeleteMovieModal(movie.id);
+  }
+
   alignDetailsPoster(modal);
   modal.style.display = "block";
 }
@@ -1512,6 +1517,11 @@ async function openGameDetailsModal(id) {
     if (activeGameDetailsId === id) {
       renderGameDetailsModal(updatedGame, modal);
     }
+  }
+
+  const deleteBtn = document.getElementById("gameDetailsDeleteBtn");
+  if (deleteBtn) {
+    deleteBtn.onclick = () => openConfirmDeletePlayedGameModal(game.id);
   }
 }
 

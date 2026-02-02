@@ -1088,7 +1088,7 @@
             </div>
             <div class="fortune-movie-actions">
                 <button id="fortuneMovieCancel" type="button" class="btn btn-secondary">Выход</button>
-                <button id="fortuneMovieDelete" type="button" class="btn btn-danger">Удалить фильм</button>
+                <button id="fortuneMovieDelete" type="button" class="details-delete-link">Удалить фильм</button>
             </div>
         </div>
     </div>
@@ -1181,6 +1181,11 @@
                     <div class="movie-details-section">
                         <div class="movie-details-section-title">Описание</div>
                         <div id="movieDetailsDescription" class="movie-details-description"></div>
+                    </div>
+                    <div class="movie-details-actions admin-only">
+                        <button id="movieDetailsDeleteBtn" type="button" class="details-delete-link">
+                            Удалить фильм
+                        </button>
                     </div>
                     <div class="movie-details-section" data-details-section="movieDetails-extra">
                         <div class="movie-details-section-title">О фильме</div>
@@ -1308,6 +1313,11 @@
                     <div class="movie-details-section">
                         <div class="movie-details-section-title">Описание</div>
                         <div id="gameDetailsDescription" class="movie-details-description"></div>
+                    </div>
+                    <div class="movie-details-actions admin-only">
+                        <button id="gameDetailsDeleteBtn" type="button" class="details-delete-link">
+                            Удалить игру
+                        </button>
                     </div>
                 </div>
             </div>

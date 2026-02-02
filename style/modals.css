@@ -731,6 +731,29 @@
     font-size: 0.95rem;
 }
 
+.movie-details-actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.details-delete-link {
+    background: transparent;
+    border: none;
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+}
+
+.details-delete-link:hover,
+.details-delete-link:focus-visible {
+    color: #ff9b9b;
+    text-decoration-thickness: 2px;
+    outline: none;
+}
+
 #movieDetailsModal .movie-details-section[data-details-info="order"],
 #gameDetailsModal .movie-details-section[data-details-info="order"],
 #orderDetailsModal .movie-details-section[data-details-info="order"] {
