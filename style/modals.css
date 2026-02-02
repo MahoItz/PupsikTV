@@ -452,6 +452,12 @@
     padding: 32px;
 }
 
+#movieDetailsModal .modal-content,
+#gameDetailsModal .modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
 #movieDetailsModal h2,
 #gameDetailsModal h2,
 #orderDetailsModal h2,
@@ -480,6 +486,11 @@
     gap: 24px;
     align-items: flex-start;
     flex-wrap: wrap;
+}
+
+#movieDetailsModal .movie-details-body,
+#gameDetailsModal .movie-details-body {
+    flex: 1;
 }
 
 #movieDetailsModal .movie-details-poster-wrap,
