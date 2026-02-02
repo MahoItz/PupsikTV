@@ -645,19 +645,63 @@ function ensureDetailsInfoSection(infoColumn, key) {
   }
 
   let section = infoColumn.querySelector(`[data-details-info="${key}"]`);
+  const modal = infoColumn.closest(".modal");
+  const editKey =
+    key === "order" && modal?.id === "movieDetailsModal"
+      ? "movieDetails-order"
+      : key === "order" && modal?.id === "orderDetailsModal"
+        ? "orderDetails-order"
+        : null;
+
   if (!section) {
     section = document.createElement("div");
     section.className = "movie-details-section";
     section.dataset.detailsInfo = key;
+  }
 
-    const title = document.createElement("div");
+  let header = section.querySelector(".movie-details-section-header");
+  if (!header) {
+    header = document.createElement("div");
+    header.className = "movie-details-section-header";
+    section.prepend(header);
+  }
+
+  let title = header.querySelector(".movie-details-section-title");
+  if (!title) {
+    title = document.createElement("span");
     title.className = "movie-details-section-title";
     title.textContent = "Детали заказа";
+    header.appendChild(title);
+  }
 
-    const body = document.createElement("div");
+  if (editKey && !header.querySelector(`[data-details-edit="${editKey}"]`)) {
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "details-edit-toggle admin-only";
+    editBtn.dataset.detailsEdit = editKey;
+    editBtn.setAttribute("aria-label", "Редактировать блок «Детали заказа»");
+    editBtn.innerHTML = '<i class="fa-solid fa-pen" aria-hidden="true"></i>';
+    header.appendChild(editBtn);
+  }
+
+  let body = section.querySelector(".movie-details-extra");
+  if (!body) {
+    body = document.createElement("div");
     body.className = "movie-details-extra";
+    section.appendChild(body);
+  }
 
-    section.append(title, body);
+  if (editKey && !section.querySelector(`[data-details-actions="${editKey}"]`)) {
+    const actions = document.createElement("div");
+    actions.className = "details-edit-actions admin-only";
+    actions.dataset.detailsActions = editKey;
+    const saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.className = "btn btn-primary details-edit-save";
+    saveBtn.dataset.detailsSave = editKey;
+    saveBtn.textContent = "Сохранить";
+    actions.appendChild(saveBtn);
+    section.appendChild(actions);
   }
 
   return section;
@@ -739,10 +783,351 @@ function reorderDetailsLayout(modal, config) {
   }
 }
 
+const detailsEditConfigs = {
+  "movieDetails-about": {
+    modalId: "movieDetailsModal",
+    recordType: "movie",
+    table: "movies",
+    fields: [
+      { valueId: "movieDetailsYear", key: "year", localKey: "year", dbKey: "year", type: "number" },
+      { valueId: "movieDetailsGenre", key: "genre", localKey: "genre", dbKey: "genres", type: "text" },
+      { valueId: "movieDetailsCountry", key: "country", localKey: "country", dbKey: "country", type: "text" },
+      { valueId: "movieDetailsDirector", key: "director", localKey: "director", dbKey: "director", type: "text" },
+    ],
+  },
+  "movieDetails-order": {
+    modalId: "movieDetailsModal",
+    recordType: "movie",
+    table: "movies",
+    fields: [
+      { valueId: "movieDetailsOrderBy", key: "orderBy", localKey: "orderBy", dbKey: "order_by", type: "text" },
+      {
+        valueId: "movieDetailsOrderType",
+        key: "orderType",
+        localKey: "orderType",
+        dbKey: "order_type",
+        type: "select",
+        selectSourceId: "editMovieOrderType",
+      },
+    ],
+  },
+  "gameDetails-about": {
+    modalId: "gameDetailsModal",
+    recordType: "playedGame",
+    table: "games",
+    fields: [
+      { valueId: "gameDetailsYear", key: "year", localKey: "year", dbKey: "year", type: "number" },
+      { valueId: "gameDetailsGenre", key: "genres", localKey: "genres", dbKey: "genres", type: "text" },
+    ],
+  },
+  "gameDetails-order": {
+    modalId: "gameDetailsModal",
+    recordType: "playedGame",
+    table: "games",
+    fields: [
+      { valueId: "gameDetailsOrderBy", key: "orderBy", localKey: "orderBy", dbKey: "order_by", type: "text" },
+      {
+        valueId: "gameDetailsOrderType",
+        key: "orderType",
+        localKey: "orderType",
+        dbKey: "order_type",
+        type: "select",
+        selectSourceId: "editPlayedGameOrderType",
+      },
+    ],
+  },
+  "orderDetails-about": {
+    modalId: "orderDetailsModal",
+    recordType: "order",
+    table: "Movie_Orders",
+    fields: [
+      { valueId: "orderDetailsYear", key: "year", localKey: "year", dbKey: "order_year", type: "number" },
+      { valueId: "orderDetailsGenre", key: "genres", localKey: "genres", dbKey: "order_genres", type: "text" },
+      { valueId: "orderDetailsCountry", key: "country", localKey: "country", dbKey: "country", type: "text" },
+      { valueId: "orderDetailsDirector", key: "director", localKey: "director", dbKey: "director", type: "text" },
+    ],
+  },
+  "orderDetails-order": {
+    modalId: "orderDetailsModal",
+    recordType: "order",
+    table: "Movie_Orders",
+    fields: [
+      { valueId: "orderDetailsOrderBy", key: "orderBy", localKey: "orderBy", dbKey: "order_by", type: "text" },
+      {
+        valueId: "orderDetailsOrderType",
+        key: "orderType",
+        localKey: "orderType",
+        dbKey: "order_type",
+        type: "select",
+        selectSourceId: "editOrderType",
+      },
+    ],
+  },
+  "gameOrderDetails-about": {
+    modalId: "gameOrderDetailsModal",
+    recordType: "gameOrder",
+    table: "Game_Orders",
+    fields: [
+      { valueId: "gameOrderDetailsYear", key: "year", localKey: "year", dbKey: "game_year", type: "number" },
+      { valueId: "gameOrderDetailsGenre", key: "genres", localKey: "genres", dbKey: "game_genres", type: "text" },
+    ],
+  },
+  "gameOrderDetails-order": {
+    modalId: "gameOrderDetailsModal",
+    recordType: "gameOrder",
+    table: "Game_Orders",
+    fields: [
+      { valueId: "gameOrderDetailsOrderBy", key: "orderBy", localKey: "orderBy", dbKey: "game_order_by", type: "text" },
+      {
+        valueId: "gameOrderDetailsOrderType",
+        key: "orderType",
+        localKey: "orderType",
+        dbKey: "game_order_type",
+        type: "select",
+        selectSourceId: "editGameOrderType",
+      },
+    ],
+  },
+};
+
+function setDetailsModalContext(modal, type, id) {
+  if (!modal) return;
+  modal.dataset.recordType = type;
+  modal.dataset.recordId = id;
+}
+
+function getRecordByType(type, id) {
+  if (id === undefined || id === null) return null;
+  const matchId = typeof id === "string" ? Number(id) || id : id;
+  if (type === "movie") return allMovies.find((m) => m.id === matchId);
+  if (type === "playedGame") return allPlayedGames.find((g) => g.id === matchId);
+  if (type === "order") return watchlist.find((o) => o.id === matchId);
+  if (type === "gameOrder") return gameOrders.find((g) => g.id === matchId);
+  return null;
+}
+
+function buildSelectFromSource(sourceId, value) {
+  const select = document.createElement("select");
+  select.className = "details-edit-select";
+  const source = document.getElementById(sourceId);
+  if (source) {
+    Array.from(source.options).forEach((opt) => {
+      const cloned = opt.cloneNode(true);
+      select.appendChild(cloned);
+    });
+  }
+  if (value !== undefined && value !== null) {
+    select.value = value;
+  }
+  return select;
+}
+
+function createDetailsInput(field, record) {
+  const currentValue = record ? record[field.localKey] : "";
+  if (field.type === "select") {
+    return buildSelectFromSource(field.selectSourceId, currentValue || "");
+  }
+  if (field.type === "textarea") {
+    const textarea = document.createElement("textarea");
+    textarea.className = "details-edit-textarea";
+    textarea.value = currentValue || "";
+    return textarea;
+  }
+  const input = document.createElement("input");
+  input.className = "details-edit-input";
+  input.type = field.type === "number" ? "number" : "text";
+  input.value = currentValue ?? "";
+  return input;
+}
+
+function normalizeDetailsValue(field, inputValue, record) {
+  if (field.type === "number") {
+    const parsed = parseInt(inputValue, 10);
+    if (!Number.isFinite(parsed)) {
+      return record ? record[field.localKey] : null;
+    }
+    return parsed;
+  }
+  if (typeof inputValue === "string") {
+    return inputValue.trim();
+  }
+  return inputValue;
+}
+
+function setDetailsValueText(valueId, value) {
+  const empty = value === null || value === undefined || value === "";
+  setMovieDetailsText(valueId, empty ? "" : value, "—");
+}
+
+function enterDetailsEdit(key) {
+  const config = detailsEditConfigs[key];
+  if (!config) return;
+  const modal = document.getElementById(config.modalId);
+  if (!modal) return;
+  const record = getRecordByType(config.recordType, modal.dataset.recordId);
+  if (!record) return;
+
+  config.fields.forEach((field) => {
+    const span = document.getElementById(field.valueId);
+    if (!span || span.dataset.editing === "true") return;
+    span.dataset.editing = "true";
+    span.dataset.originalText = span.textContent ?? "";
+    const input = createDetailsInput(field, record);
+    input.dataset.detailsField = `${key}:${field.key}`;
+    span.textContent = "";
+    span.appendChild(input);
+  });
+
+  const actions = modal.querySelector(`[data-details-actions="${key}"]`);
+  if (actions) actions.classList.add("is-visible");
+  const toggle = modal.querySelector(`[data-details-edit="${key}"]`);
+  if (toggle) toggle.setAttribute("aria-pressed", "true");
+}
+
+function exitDetailsEdit(key, { restore = true } = {}) {
+  const config = detailsEditConfigs[key];
+  if (!config) return;
+  const modal = document.getElementById(config.modalId);
+  if (!modal) return;
+
+  config.fields.forEach((field) => {
+    const span = document.getElementById(field.valueId);
+    if (!span || span.dataset.editing !== "true") return;
+    const original = span.dataset.originalText ?? "";
+    const current = span.textContent ?? "";
+    span.dataset.editing = "false";
+    span.removeAttribute("data-original-text");
+    span.innerHTML = "";
+    span.textContent = restore ? original : current;
+  });
+
+  const actions = modal.querySelector(`[data-details-actions="${key}"]`);
+  if (actions) actions.classList.remove("is-visible");
+  const toggle = modal.querySelector(`[data-details-edit="${key}"]`);
+  if (toggle) toggle.setAttribute("aria-pressed", "false");
+}
+
+function resetDetailsInlineEdits(modal) {
+  if (!modal) return;
+  Object.keys(detailsEditConfigs).forEach((key) => {
+    if (detailsEditConfigs[key].modalId === modal.id) {
+      exitDetailsEdit(key, { restore: true });
+    }
+  });
+}
+
+async function saveDetailsEdit(key) {
+  const config = detailsEditConfigs[key];
+  if (!config) return;
+  const modal = document.getElementById(config.modalId);
+  if (!modal) return;
+  const record = getRecordByType(config.recordType, modal.dataset.recordId);
+  if (!record) return;
+
+  const updates = {};
+  const payload = {};
+  let hasChanges = false;
+
+  config.fields.forEach((field) => {
+    const span = document.getElementById(field.valueId);
+    const input = span?.querySelector(`[data-details-field="${key}:${field.key}"]`);
+    if (!input) return;
+    const value = normalizeDetailsValue(field, input.value, record);
+    updates[field.key] = value;
+    const current = record[field.localKey];
+    if (String(current ?? "") !== String(value ?? "")) {
+      hasChanges = true;
+    }
+    if (field.dbKey) {
+      if (field.key === "orderType" || field.key === "orderBy") {
+        payload[field.dbKey] = value ? value : null;
+      } else {
+        payload[field.dbKey] = value;
+      }
+    }
+  });
+
+  if (!hasChanges) {
+    exitDetailsEdit(key, { restore: true });
+    return;
+  }
+
+  try {
+    const { error } = await supabaseClient
+      .from(config.table)
+      .update(payload)
+      .eq("id", record.id);
+    if (error) throw error;
+
+    config.fields.forEach((field) => {
+      if (updates[field.key] !== undefined) {
+        if (field.key === "orderType" || field.key === "orderBy") {
+          record[field.localKey] = updates[field.key] || "";
+        } else {
+          record[field.localKey] = updates[field.key];
+        }
+      }
+    });
+
+    if (config.recordType === "movie") {
+      localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+      renderMovies();
+    } else if (config.recordType === "playedGame") {
+      localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+      renderPlayedGames();
+    } else if (config.recordType === "order") {
+      renderWatchlist();
+    } else if (config.recordType === "gameOrder") {
+      renderGames();
+    }
+
+    config.fields.forEach((field) => {
+      const value = updates[field.key];
+      setDetailsValueText(field.valueId, value);
+    });
+
+    exitDetailsEdit(key, { restore: false });
+  } catch (err) {
+    console.error("Failed to save details edit", err);
+    alert("Не удалось сохранить изменения. Попробуйте ещё раз.");
+  }
+}
+
+let detailsInlineEditsBound = false;
+function initDetailsInlineEdits() {
+  if (detailsInlineEditsBound) return;
+  detailsInlineEditsBound = true;
+
+  document.addEventListener("click", (event) => {
+    const editBtn = event.target.closest("[data-details-edit]");
+    if (editBtn) {
+      const key = editBtn.dataset.detailsEdit;
+      const config = detailsEditConfigs[key];
+      if (!config) return;
+      const modal = document.getElementById(config.modalId);
+      const isEditing = modal?.querySelector(`[data-details-actions="${key}"]`)?.classList.contains("is-visible");
+      if (isEditing) {
+        exitDetailsEdit(key, { restore: true });
+      } else {
+        enterDetailsEdit(key);
+      }
+      return;
+    }
+
+    const saveBtn = event.target.closest("[data-details-save]");
+    if (saveBtn) {
+      const key = saveBtn.dataset.detailsSave;
+      saveDetailsEdit(key);
+    }
+  });
+}
+
 function openMovieDetailsModal(id) {
   const movie = allMovies.find((m) => m.id === id);
   const modal = document.getElementById("movieDetailsModal");
   if (!movie || !modal) return;
+  resetDetailsInlineEdits(modal);
+  setDetailsModalContext(modal, "movie", movie.id);
 
   const title = formatMovieDetailsValue(movie.title, "Без названия");
   const originalTitle = movie.originalTitle || movie.original_title || "";
@@ -1114,6 +1499,8 @@ async function openGameDetailsModal(id) {
   const game = allPlayedGames.find((g) => g.id === id);
   const modal = document.getElementById("gameDetailsModal");
   if (!game || !modal) return;
+  resetDetailsInlineEdits(modal);
+  setDetailsModalContext(modal, "playedGame", game.id);
   activeGameDetailsId = id;
 
   renderGameDetailsModal(game, modal);
@@ -1131,6 +1518,8 @@ async function openGameDetailsModal(id) {
 function renderOrderDetailsModal(order) {
   const modal = document.getElementById("orderDetailsModal");
   if (!order || !modal) return;
+  resetDetailsInlineEdits(modal);
+  setDetailsModalContext(modal, "order", order.id);
 
   const title = formatMovieDetailsValue(order.title, "Без названия");
   const originalTitle = order.originalTitle || "";
@@ -1279,6 +1668,8 @@ function openGameOrderDetailsModal(id) {
   const game = gameOrders.find((g) => g.id === id);
   const modal = document.getElementById("gameOrderDetailsModal");
   if (!game || !modal) return;
+  resetDetailsInlineEdits(modal);
+  setDetailsModalContext(modal, "gameOrder", game.id);
 
   if (typeof setActiveGameOrderDetailsId === "function") {
     setActiveGameOrderDetailsId(id);
@@ -1572,6 +1963,10 @@ function openAddPlayedGameModal() {
   setRatingStars("playedGameRatingStars", 0);
   setupRatingStars("playedGameRatingStars");
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  initDetailsInlineEdits();
+});
 
 function openConfirmDeleteMovieModal(id) {
   deleteMovieId = id;

@@ -1109,7 +1109,13 @@
                 </div>
                 <div class="movie-details-info">
                     <div class="movie-details-meta">
-                        <div class="movie-details-section-title movie-details-meta-title">О фильме</div>
+                        <div class="movie-details-section-header">
+                            <span class="movie-details-section-title movie-details-meta-title">О фильме</span>
+                            <button type="button" class="details-edit-toggle admin-only" data-details-edit="movieDetails-about"
+                                aria-label="Редактировать блок «О фильме»">
+                                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <div class="movie-details-meta-item">
                             <span class="movie-details-meta-label">Год</span>
                             <span id="movieDetailsYear" class="movie-details-meta-value"></span>
@@ -1153,12 +1159,16 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="details-edit-actions admin-only" data-details-actions="movieDetails-about">
+                            <button type="button" class="btn btn-primary details-edit-save"
+                                data-details-save="movieDetails-about">Сохранить</button>
+                        </div>
                     </div>
                     <div class="movie-details-section">
                         <div class="movie-details-section-title">Описание</div>
                         <div id="movieDetailsDescription" class="movie-details-description"></div>
                     </div>
-                    <div class="movie-details-section">
+                    <div class="movie-details-section" data-details-section="movieDetails-extra">
                         <div class="movie-details-section-title">О фильме</div>
                         <div class="movie-details-extra">
                             <div class="movie-details-meta-item">
@@ -1188,7 +1198,13 @@
                 </div>
                 <div class="movie-details-info">
                     <div class="movie-details-meta">
-                        <div class="movie-details-section-title movie-details-meta-title">Об игре</div>
+                        <div class="movie-details-section-header">
+                            <span class="movie-details-section-title movie-details-meta-title">Об игре</span>
+                            <button type="button" class="details-edit-toggle admin-only" data-details-edit="gameDetails-about"
+                                aria-label="Редактировать блок «Об игре»">
+                                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <div class="movie-details-meta-item">
                             <span class="movie-details-meta-label">Год</span>
                             <span id="gameDetailsYear" class="movie-details-meta-value"></span>
@@ -1243,9 +1259,19 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="details-edit-actions admin-only" data-details-actions="gameDetails-about">
+                            <button type="button" class="btn btn-primary details-edit-save"
+                                data-details-save="gameDetails-about">Сохранить</button>
+                        </div>
                     </div>
                     <div class="movie-details-section" data-details-info="order">
-                        <div class="movie-details-section-title">Детали заказа</div>
+                        <div class="movie-details-section-header">
+                            <span class="movie-details-section-title">Детали заказа</span>
+                            <button type="button" class="details-edit-toggle admin-only" data-details-edit="gameDetails-order"
+                                aria-label="Редактировать блок «Детали заказа»">
+                                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <div class="movie-details-extra">
                             <div class="movie-details-meta-item">
                                 <span class="movie-details-meta-label">Кто заказал</span>
@@ -1259,6 +1285,10 @@
                                 <span class="movie-details-meta-label">Дата добавления</span>
                                 <span id="gameDetailsDate" class="movie-details-meta-value"></span>
                             </div>
+                        </div>
+                        <div class="details-edit-actions admin-only" data-details-actions="gameDetails-order">
+                            <button type="button" class="btn btn-primary details-edit-save"
+                                data-details-save="gameDetails-order">Сохранить</button>
                         </div>
                     </div>
                     <div class="movie-details-section">
@@ -1283,7 +1313,13 @@
                 </div>
                 <div class="movie-details-info">
                     <div class="movie-details-meta">
-                        <div class="movie-details-section-title movie-details-meta-title">О фильме</div>
+                        <div class="movie-details-section-header">
+                            <span class="movie-details-section-title movie-details-meta-title">О фильме</span>
+                            <button type="button" class="details-edit-toggle admin-only" data-details-edit="orderDetails-about"
+                                aria-label="Редактировать блок «О фильме»">
+                                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <div class="movie-details-meta-item">
                             <span class="movie-details-meta-label">Год</span>
                             <span id="orderDetailsYear" class="movie-details-meta-value"></span>
@@ -1326,12 +1362,16 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="details-edit-actions admin-only" data-details-actions="orderDetails-about">
+                            <button type="button" class="btn btn-primary details-edit-save"
+                                data-details-save="orderDetails-about">Сохранить</button>
+                        </div>
                     </div>
                     <div class="movie-details-section">
                         <div class="movie-details-section-title">Описание</div>
                         <div id="orderDetailsDescription" class="movie-details-description"></div>
                     </div>
-                    <div class="movie-details-section">
+                    <div class="movie-details-section" data-details-section="orderDetails-extra">
                         <div class="movie-details-section-title">Детали заказа</div>
                         <div class="movie-details-extra">
                             <div class="movie-details-meta-item">
@@ -1408,7 +1448,13 @@
                 </div>
                 <div class="movie-details-info">
                     <div class="movie-details-meta">
-                        <div class="movie-details-section-title movie-details-meta-title">Об игре</div>
+                        <div class="movie-details-section-header">
+                            <span class="movie-details-section-title movie-details-meta-title">Об игре</span>
+                            <button type="button" class="details-edit-toggle admin-only" data-details-edit="gameOrderDetails-about"
+                                aria-label="Редактировать блок «Об игре»">
+                                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <div class="movie-details-meta-item">
                             <span class="movie-details-meta-label">Год</span>
                             <span id="gameOrderDetailsYear" class="movie-details-meta-value"></span>
@@ -1453,9 +1499,19 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="details-edit-actions admin-only" data-details-actions="gameOrderDetails-about">
+                            <button type="button" class="btn btn-primary details-edit-save"
+                                data-details-save="gameOrderDetails-about">Сохранить</button>
+                        </div>
                     </div>
                     <div class="movie-details-section">
-                        <div class="movie-details-section-title">Детали заказа</div>
+                        <div class="movie-details-section-header">
+                            <span class="movie-details-section-title">Детали заказа</span>
+                            <button type="button" class="details-edit-toggle admin-only" data-details-edit="gameOrderDetails-order"
+                                aria-label="Редактировать блок «Детали заказа»">
+                                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <div class="movie-details-extra">
                             <div class="movie-details-meta-item">
                                 <span class="movie-details-meta-label">Кто заказал</span>
@@ -1473,6 +1529,10 @@
                                 <span class="movie-details-meta-label">Дата добавления</span>
                                 <span id="gameOrderDetailsDate" class="movie-details-meta-value"></span>
                             </div>
+                        </div>
+                        <div class="details-edit-actions admin-only" data-details-actions="gameOrderDetails-order">
+                            <button type="button" class="btn btn-primary details-edit-save"
+                                data-details-save="gameOrderDetails-order">Сохранить</button>
                         </div>
                     </div>
                     <div class="movie-details-section">

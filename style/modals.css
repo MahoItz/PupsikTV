@@ -626,6 +626,69 @@
     margin-bottom: 10px;
 }
 
+.movie-details-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.movie-details-section-header .movie-details-section-title {
+    margin-bottom: 0;
+}
+
+.details-edit-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.details-edit-toggle:hover,
+.details-edit-toggle:focus-visible {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+}
+
+.details-edit-actions {
+    margin-top: 12px;
+    display: none;
+    justify-content: flex-end;
+}
+
+.details-edit-actions.is-visible {
+    display: flex;
+}
+
+.details-edit-input,
+.details-edit-select,
+.details-edit-textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.details-edit-input:focus,
+.details-edit-select:focus,
+.details-edit-textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+}
+
 .movie-details-meta-title {
     margin-bottom: 12px;
 }

@@ -769,11 +769,7 @@ function createMovieCard(
   }
 
   if (showActions) {
-    const editBtn = document.createElement("button");
-    editBtn.className = "btn btn-edit btn-icon";
-    editBtn.textContent = "✏️";
-    editBtn.onclick = () => openEditModal(movie.id);
-    actions.appendChild(editBtn);
+    // Inline editing is handled inside the details modal now.
   }
 
   footer.appendChild(actions);
@@ -1774,12 +1770,7 @@ function createPlayedGameCard(
     actions.appendChild(rateBtn);
   }
   if (showActions) {
-    const editBtn = document.createElement("button");
-    editBtn.className = "btn btn-edit btn-icon";
-    editBtn.textContent = "✏️";
-    editBtn.onclick = () => openEditPlayedGameModal(game.id);
-    actions.appendChild(editBtn);
-    actions.appendChild(editBtn);
+    // Inline editing is handled inside the details modal now.
   }
   if (actions.childElementCount > 0) footer.appendChild(actions);
   info.appendChild(footer);
