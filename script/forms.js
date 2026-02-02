@@ -947,6 +947,15 @@ async function submitGameRating() {
   const idx = gameOrders.findIndex((g) => g.id === ratingGameId);
   if (idx !== -1) {
     const source = gameOrders[idx];
+    const descriptionValue = (() => {
+      if (!source?.description) return null;
+      if (typeof source.description === "object") return source.description;
+      if (typeof source.description === "string") {
+        const trimmed = source.description.trim();
+        return trimmed ? { original: trimmed, translated: null } : null;
+      }
+      return null;
+    })();
     const played = {
       title: source.title,
       year: source.year,
@@ -957,6 +966,15 @@ async function submitGameRating() {
       dateAdded: new Date().toISOString().split("T")[0],
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
+      description: descriptionValue,
+      rawgRating: source.rating ?? null,
+      metacritic: source.metacritic ?? null,
+      released: source.released ?? null,
+      playtime: source.playtime ?? null,
+      platforms: source.platforms ?? "",
+      developers: source.developers ?? "",
+      publishers: source.publishers ?? "",
+      rawgId: source.rawgId ?? null,
     };
     try {
       const { data, error } = await supabaseClient
@@ -972,6 +990,15 @@ async function submitGameRating() {
           order_type: played.orderType,
           game_rating_sum: 0,
           game_rating_count: 0,
+          description: played.description,
+          rawg_rating: played.rawgRating,
+          metacritic: played.metacritic,
+          released: played.released,
+          playtime: played.playtime,
+          platforms: played.platforms,
+          developers: played.developers,
+          publishers: played.publishers,
+          rawg_id: played.rawgId,
         })
         .select()
         .single();
@@ -987,6 +1014,15 @@ async function submitGameRating() {
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        description: data.description ?? played.description ?? "",
+        rawgRating: data.rawg_rating ?? played.rawgRating ?? null,
+        metacritic: data.metacritic ?? played.metacritic ?? null,
+        released: data.released ?? played.released ?? null,
+        playtime: data.playtime ?? played.playtime ?? null,
+        platforms: data.platforms ?? played.platforms ?? "",
+        developers: data.developers ?? played.developers ?? "",
+        publishers: data.publishers ?? played.publishers ?? "",
+        rawgId: data.rawg_id ?? played.rawgId ?? null,
         ratingSum: Number(data.game_rating_sum ?? 0) || 0,
         ratingCount: Number(data.game_rating_count ?? 0) || 0,
         userRating: null,
