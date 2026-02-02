@@ -112,9 +112,6 @@
                     </div>
                     <div class="sort-row">
                         <div class="sort-controls">
-                            <button class="btn btn-primary admin-only" onclick="openAddPlayedGameModal()">
-                                ➕
-                            </button>
                             <div class="sort-merge">
                                 <select onchange="sortPlayedGames(this.value)">
                                     <option value="date">Сортировка: По дате</option>
@@ -130,6 +127,10 @@
                             </div>
                         </div>
                         <div class="movies-count">Всего игр: <span id="gamesCount">0</span></div>
+                    </div>
+                    <div class="admin-divider admin-only" aria-hidden="true"></div>
+                    <div class="admin-actions admin-only">
+                        <button class="admin-action-button" onclick="openAddPlayedGameModal()">Добавить игру</button>
                     </div>
                     <div class="movies-grid" id="gamesGridPlayed">
                         <!-- Список пройденных игр -->
