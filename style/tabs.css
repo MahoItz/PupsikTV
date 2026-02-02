@@ -5,6 +5,8 @@
     position: relative;
     gap: 10px;
     padding-bottom: 10px;
+    --indicator-left: 0px;
+    --indicator-width: 50%;
 }
 
 .list-tabs button {
@@ -34,6 +36,19 @@
     background: linear-gradient(90deg, rgba(0, 212, 255, 0) 0%, rgba(140, 170, 255, 0.35) 50%, rgba(0, 212, 255, 0) 100%);
 }
 
+.list-tabs::before {
+    content: "";
+    position: absolute;
+    left: var(--indicator-left);
+    bottom: -1px;
+    width: var(--indicator-width);
+    height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(0, 212, 255, 0), rgba(0, 212, 255, 0.85), rgba(0, 212, 255, 0));
+    opacity: 1;
+    transition: left 0.25s ease, width 0.25s ease;
+}
+
 .list-tabs button:hover {
     color: var(--text-primary);
 }
@@ -43,22 +58,7 @@
     text-shadow: 0 0 12px rgba(0, 212, 255, 0.35);
 }
 
-.list-tabs button::after {
-    content: "";
-    position: absolute;
-    left: 12%;
-    right: 12%;
-    bottom: -10px;
-    height: 3px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, rgba(0, 212, 255, 0) 0%, rgba(0, 212, 255, 0.85) 50%, rgba(0, 212, 255, 0) 100%);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.list-tabs button.active::after {
-    opacity: 1;
-}
+ 
 
 /* ---------------- Mobile Tabs ---------------- */
 .mobile-tabs {
@@ -95,4 +95,3 @@
         padding-bottom: 70px;
     }
 }
-

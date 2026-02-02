@@ -1660,12 +1660,25 @@ function updateTabVisibility() {
 
 let activeListTab = "movies";
 
+function updateListTabsIndicator() {
+  const tabs = document.querySelector(".list-tabs");
+  if (!tabs) return;
+  const activeButton = tabs.querySelector("button.active");
+  if (!activeButton) return;
+  const tabsRect = tabs.getBoundingClientRect();
+  const buttonRect = activeButton.getBoundingClientRect();
+  const left = buttonRect.left - tabsRect.left;
+  tabs.style.setProperty("--indicator-left", `${left}px`);
+  tabs.style.setProperty("--indicator-width", `${buttonRect.width}px`);
+}
+
 function showListTab(tab) {
   activeListTab = tab;
   document.querySelectorAll(".list-tabs button").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.list === tab);
   });
   updateListVisibility();
+  requestAnimationFrame(updateListTabsIndicator);
 }
 
 function updateListVisibility() {
@@ -1676,4 +1689,7 @@ function updateListVisibility() {
   if (games) games.style.display = activeListTab === "games" ? "block" : "none";
 }
 
-window.addEventListener("resize", updateTabVisibility);
+window.addEventListener("resize", () => {
+  updateTabVisibility();
+  updateListTabsIndicator();
+});
