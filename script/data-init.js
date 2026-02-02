@@ -977,13 +977,18 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
       selectedRAWGGame = rawgResults[idx] || null;
+      const gameResultsWrap = document.getElementById("gameAutoResultsContainer");
+      if (gameResultsWrap) gameResultsWrap.style.display = "none";
+      if (selectedRAWGGame) {
+        showSelectionLoading("gameAutoPreview", "Добавляем игру...");
+      }
       if (selectedRAWGGame) {
         gameTitleInput.value = selectedRAWGGame.name || "";
         await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showRAWGPreview();
-      document.getElementById("gameAutoResultsContainer").style.display =
-        "none";
+      const preview = document.getElementById("gameAutoPreview");
+      if (preview) preview.removeAttribute("aria-busy");
     });
 
   const playedSearchBtn = document.getElementById("playedGameAutoSearchBtn");
@@ -1014,13 +1019,20 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
       selectedRAWGGame = rawgResults[idx] || null;
+      const playedResultsWrap = document.getElementById(
+        "playedGameAutoResultsContainer"
+      );
+      if (playedResultsWrap) playedResultsWrap.style.display = "none";
+      if (selectedRAWGGame) {
+        showSelectionLoading("playedGameAutoPreview", "Добавляем игру...");
+      }
       if (selectedRAWGGame) {
         playedTitleInput.value = selectedRAWGGame.name || "";
         await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showPlayedGamePreview();
-      document.getElementById("playedGameAutoResultsContainer").style.display =
-        "none";
+      const preview = document.getElementById("playedGameAutoPreview");
+      if (preview) preview.removeAttribute("aria-busy");
     });
 
   const preview = document.getElementById("editPosterPreview");

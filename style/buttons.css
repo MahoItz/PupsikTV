@@ -137,6 +137,19 @@
     display: flex;
     justify-content: center;
     padding: 10px;
+    gap: 10px;
+    align-items: center;
+}
+
+.autocomplete-loading.is-inline {
+    justify-content: flex-start;
+    padding: 12px 6px;
+}
+
+.autocomplete-loading .loading-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.02em;
 }
 
 @keyframes spin {

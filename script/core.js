@@ -974,6 +974,19 @@ function showSearchLoading(containerId, listId) {
     '<div class="autocomplete-loading"><span class="loading-spinner"></span></div>';
 }
 
+function showSelectionLoading(previewId, label) {
+  const preview = document.getElementById(previewId);
+  if (!preview) return;
+  const safeLabel = label || "Добавляем...";
+  preview.innerHTML =
+    `<div class="autocomplete-loading is-inline">` +
+    `<span class="loading-spinner"></span>` +
+    `<span class="loading-label">${safeLabel}</span>` +
+    `</div>`;
+  preview.style.display = "block";
+  preview.setAttribute("aria-busy", "true");
+}
+
 // Массив фильмов будет заполняться данными из базы
 let allMovies = [];
 let movies = [];
