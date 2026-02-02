@@ -732,9 +732,11 @@
 }
 
 .movie-details-actions {
-    margin-top: 14px;
+    margin-top: auto;
+    padding-top: 14px;
     display: flex;
     justify-content: flex-start;
+    align-self: flex-start;
 }
 
 .details-delete-link {
