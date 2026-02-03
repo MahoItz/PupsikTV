@@ -98,6 +98,14 @@ const FORTUNE_SUGGESTIONS_POLL_INTERVAL = 3000;
 const FORTUNE_KINOPOISK_FILM_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 const FORTUNE_SUGGESTIONS_ENABLED = false;
+const MUSIC_MENU_COLLAPSED_LIMIT_SELECTORS = [
+  ".movies-list-wrap",
+  ".movies-page",
+  ".movies-content",
+  ".left-panel",
+  ".main-content",
+];
+const MUSIC_MENU_COLLAPSED_LIMIT_OFFSET = 10;
 
 const fortuneSuggestionsState = {
   pollTimerId: null,
@@ -201,6 +209,33 @@ let orderCurrentParentGuideData = null;
 let orderTimingsRequestId = 0;
 let activeOrderDetailsId = null;
 let activeOrderDetailsOverride = null;
+
+function updateMusicMenuCollapsedLimit() {
+  if (!musicMenu) {
+    return;
+  }
+
+  const boundaryElement = MUSIC_MENU_COLLAPSED_LIMIT_SELECTORS.map(
+    (selector) => document.querySelector(selector)
+  ).find(Boolean);
+
+  if (!boundaryElement) {
+    document.documentElement.style.removeProperty(
+      "--music-menu-collapsed-limit"
+    );
+    musicMenu.style.removeProperty("--music-menu-collapsed-limit");
+    return;
+  }
+
+  const boundaryLeft = boundaryElement.getBoundingClientRect().left;
+  const limit = Math.max(0, boundaryLeft - MUSIC_MENU_COLLAPSED_LIMIT_OFFSET);
+  const limitValue = `${limit}px`;
+  document.documentElement.style.setProperty(
+    "--music-menu-collapsed-limit",
+    limitValue
+  );
+  musicMenu.style.setProperty("--music-menu-collapsed-limit", limitValue);
+}
 
 function escapeRegExp(str = "") {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1212,6 +1247,8 @@ function initializeFortuneSuggestions() {
 }
 
 document.addEventListener("DOMContentLoaded", initializeFortuneSuggestions);
+document.addEventListener("DOMContentLoaded", updateMusicMenuCollapsedLimit);
+window.addEventListener("resize", updateMusicMenuCollapsedLimit);
 
 if (musicMenu && musicMenuButton && closeMusicMenu) {
   const setMenuCollapsed = (shouldCollapse) => {
@@ -1258,6 +1295,7 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
       rulesPanelStandaloneOpen = false;
     }
     updateRulesPanelState();
+    updateMusicMenuCollapsedLimit();
   };
 
   const closeMenu = () => {
