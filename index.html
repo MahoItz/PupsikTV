@@ -99,7 +99,13 @@
                     </div>
 
                     <div class="movies-grid" id="moviesGrid">
-                        <!-- Список просмотренных фильмов -->
+                        <div class="section-loader" role="status" aria-live="polite">
+                            <div class="section-loader__spinner">
+                                <span class="section-loader__ring"></span>
+                                <span class="section-loader__ring section-loader__ring--delay"></span>
+                            </div>
+                            <p class="section-loader__text">Загружаем фильмы...</p>
+                        </div>
                     </div>
                     <div id="pagination" class="pagination"></div>
                 </div>
@@ -132,7 +138,13 @@
                         <button class="admin-action-button" onclick="openAddPlayedGameModal()">Добавить игру</button>
                     </div>
                     <div class="movies-grid" id="gamesGridPlayed">
-                        <!-- Список пройденных игр -->
+                        <div class="section-loader" role="status" aria-live="polite">
+                            <div class="section-loader__spinner">
+                                <span class="section-loader__ring"></span>
+                                <span class="section-loader__ring section-loader__ring--delay"></span>
+                            </div>
+                            <p class="section-loader__text">Загружаем пройденные игры...</p>
+                        </div>
                     </div>
                     <div id="gamesPagination" class="pagination"></div>
                 </div>
@@ -157,7 +169,13 @@
                         </div>
                         <div id="watchlistPaginationTop" class="pagination"></div>
                         <div id="watchlistContainer">
-                            <!-- Список заказанных фильмов-->
+                            <div class="section-loader section-loader--compact" role="status" aria-live="polite">
+                                <div class="section-loader__spinner">
+                                    <span class="section-loader__ring"></span>
+                                    <span class="section-loader__ring section-loader__ring--delay"></span>
+                                </div>
+                                <p class="section-loader__text">Загружаем заказанные фильмы...</p>
+                            </div>
                         </div>
                         <div id="watchlistPagination" class="pagination"></div>
                     </div>
@@ -172,7 +190,13 @@
                             <button class="admin-action-button" onclick="openAddGameModal()">Добавить игру</button>
                         </div>
                         <div id="gamesContainer">
-                            <!-- Список заказанных игр -->
+                            <div class="section-loader section-loader--compact" role="status" aria-live="polite">
+                                <div class="section-loader__spinner">
+                                    <span class="section-loader__ring"></span>
+                                    <span class="section-loader__ring section-loader__ring--delay"></span>
+                                </div>
+                                <p class="section-loader__text">Загружаем заказанные игры...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
