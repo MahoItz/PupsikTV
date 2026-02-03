@@ -874,11 +874,12 @@
 
 .music-menu.collapsed .collapse-music-menu:hover::before,
 .music-menu.collapsed .collapse-music-menu:focus-visible::before {
-    opacity: 1;
+    opacity: 0.45;
 }
 
-.music-menu.collapsed:hover .collapse-music-menu::before {
-    opacity: 1;
+.music-menu.collapsed:hover .collapse-music-menu::before,
+.music-menu.collapsed .fortune-wheel-card__actions:hover .collapse-music-menu::before {
+    opacity: 0.45;
 }
 
 .music-menu.collapsed .collapse-music-menu:hover {
