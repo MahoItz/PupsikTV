@@ -4682,6 +4682,8 @@ function initFortuneWheel() {
   // ============= TICK SOUND: Sound loading =============
   let tickBase = null;
   const tickAudioPath = "Music/ding.mp3";
+  const kazinoWinnerLabel = "Не бей копытом (2004)";
+  let kazinoWinnerBase = null;
 
   function normalizeRouletteSpinVolume(volume) {
     const parsed = Number(volume);
@@ -4721,6 +4723,15 @@ function initFortuneWheel() {
     tickBase = audio;
   })();
 
+  (function loadKazinoWinnerSound() {
+    const audio = new Audio();
+    audio.src = "Music/Kazino.mp3";
+    audio.preload = "auto";
+    audio.volume = 0.2;
+    audio.load();
+    kazinoWinnerBase = audio;
+  })();
+
   if (typeof window !== "undefined") {
     window.addEventListener("roulette:spin-volume-change", (event) => {
       updateTickBaseVolume(event?.detail?.volume);
@@ -4737,6 +4748,19 @@ function initFortuneWheel() {
       );
       tickBase.volume = resolvedVolume;
       clone.volume = resolvedVolume;
+      clone.play().catch(() => {
+        /* ignore */
+      });
+    } catch (err) {
+      /* ignore cloning errors */
+    }
+  }
+
+  function playKazinoWinnerSound() {
+    if (!kazinoWinnerBase) return;
+    try {
+      const clone = kazinoWinnerBase.cloneNode();
+      clone.volume = 0.25;
       clone.play().catch(() => {
         /* ignore */
       });
@@ -5178,6 +5202,9 @@ function initFortuneWheel() {
     const text = activeItems[index];
     if (!text) {
       return;
+    }
+    if (text.trim() === kazinoWinnerLabel) {
+      playKazinoWinnerSound();
     }
 
     const remainingItems = activeItems.filter((item) => item !== text);
