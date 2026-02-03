@@ -100,13 +100,19 @@ const FORTUNE_KINOPOISK_FILM_URL =
 const FORTUNE_SUGGESTIONS_ENABLED = false;
 
 const updateMusicMenuContentBoundary = () => {
-  const contentBoundaryElement = document.querySelector(
+  const contentBoundaryElements = document.querySelectorAll(
     ".left-panel, .main-content"
   );
-  if (!contentBoundaryElement) {
+  if (contentBoundaryElements.length === 0) {
     return;
   }
-  const boundaryValue = contentBoundaryElement.getBoundingClientRect().left;
+  const boundaryCandidates = Array.from(contentBoundaryElements)
+    .map((element) => element.getBoundingClientRect().left)
+    .filter((value) => Number.isFinite(value));
+  if (boundaryCandidates.length === 0) {
+    return;
+  }
+  const boundaryValue = Math.max(...boundaryCandidates);
   const targetElement = musicMenu || document.documentElement;
   if (!targetElement) {
     return;

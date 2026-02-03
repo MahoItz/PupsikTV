@@ -273,6 +273,10 @@
     max-height: none;
 }
 
+.music-menu.collapsed .fortune-items-list-actions {
+    display: none;
+}
+
 .music-menu.collapsed .fortune-wheel-card {
     position: absolute;
     inset: 0;
@@ -870,6 +874,10 @@
 
 .music-menu.collapsed .collapse-music-menu:hover::before,
 .music-menu.collapsed .collapse-music-menu:focus-visible::before {
+    opacity: 1;
+}
+
+.music-menu.collapsed:hover .collapse-music-menu::before {
     opacity: 1;
 }
 
