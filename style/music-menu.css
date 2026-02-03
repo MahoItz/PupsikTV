@@ -131,7 +131,7 @@
 .music-menu.collapsed {
     --music-menu-target-width: clamp(var(--music-menu-collapsed-min-width),
             calc(100vw - var(--rules-panel-width) - var(--panels-gap)),
-            clamp(var(--music-menu-collapsed-min-width), 32vw, 760px));
+            clamp(var(--music-menu-collapsed-min-width), 32vw, 460px));
     --music-menu-visible-width: min(var(--music-menu-target-width), var(--music-menu-collapsed-limit, var(--music-menu-target-width)));
     width: var(--music-menu-visible-width);
     max-width: var(--music-menu-collapsed-limit, var(--music-menu-target-width));
@@ -260,6 +260,15 @@
 }
 
 .music-menu.collapsed .fortune-controls>*:not(.fortune-items-wrapper) {
+    display: none;
+}
+
+.music-menu.collapsed .fortune-title,
+.music-menu.collapsed .fortune-suggestions-button,
+.music-menu.collapsed .fortune-suggestions-container,
+.music-menu.collapsed .fortune-suggestions-dropdown,
+.music-menu.collapsed .fortune-suggestions-badge,
+.music-menu.collapsed .fortune-items-count-label {
     display: none;
 }
 
