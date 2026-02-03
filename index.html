@@ -29,6 +29,15 @@
 </head>
 
 <body>
+    <div id="appLoader" class="app-loader" role="status" aria-live="polite">
+        <div class="app-loader__content">
+            <div class="section-loader__spinner">
+                <span class="section-loader__ring"></span>
+                <span class="section-loader__ring section-loader__ring--delay"></span>
+            </div>
+            <p class="section-loader__text">Загрузка...</p>
+        </div>
+    </div>
     <div class="container">
         <button id="musicMenuButton" class="music-menu-button" aria-label="Музыка">
             <img src="images/wheel_icon.webp" alt="wheel icon">
