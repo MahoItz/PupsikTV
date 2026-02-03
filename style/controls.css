@@ -354,6 +354,7 @@ select {
     cursor: pointer;
     transition: var(--transition);
     font-weight: 500;
+    appearance: none;
 }
 
 select option {
