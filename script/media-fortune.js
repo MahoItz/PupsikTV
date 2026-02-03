@@ -99,6 +99,24 @@ const FORTUNE_KINOPOISK_FILM_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.2/films";
 const FORTUNE_SUGGESTIONS_ENABLED = false;
 
+const updateMusicMenuContentBoundary = () => {
+  const contentBoundaryElement = document.querySelector(
+    ".left-panel, .main-content"
+  );
+  if (!contentBoundaryElement) {
+    return;
+  }
+  const boundaryValue = contentBoundaryElement.getBoundingClientRect().left;
+  const targetElement = musicMenu || document.documentElement;
+  if (!targetElement) {
+    return;
+  }
+  targetElement.style.setProperty(
+    "--music-menu-content-boundary",
+    `${Math.max(0, boundaryValue)}px`
+  );
+};
+
 const fortuneSuggestionsState = {
   pollTimerId: null,
   isFetching: false,
@@ -1212,6 +1230,8 @@ function initializeFortuneSuggestions() {
 }
 
 document.addEventListener("DOMContentLoaded", initializeFortuneSuggestions);
+document.addEventListener("DOMContentLoaded", updateMusicMenuContentBoundary);
+window.addEventListener("resize", updateMusicMenuContentBoundary);
 
 if (musicMenu && musicMenuButton && closeMusicMenu) {
   const setMenuCollapsed = (shouldCollapse) => {
@@ -1258,6 +1278,7 @@ if (musicMenu && musicMenuButton && closeMusicMenu) {
       rulesPanelStandaloneOpen = false;
     }
     updateRulesPanelState();
+    updateMusicMenuContentBoundary();
   };
 
   const closeMenu = () => {
