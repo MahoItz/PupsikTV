@@ -131,7 +131,7 @@
 .music-menu.collapsed {
     --music-menu-target-width: clamp(var(--music-menu-collapsed-min-width),
             calc(100vw - var(--rules-panel-width) - var(--panels-gap)),
-            clamp(var(--music-menu-collapsed-min-width), 32vw, 360px));
+            clamp(var(--music-menu-collapsed-min-width), 32vw, 760px));
     --music-menu-visible-width: min(var(--music-menu-target-width), var(--music-menu-collapsed-limit, var(--music-menu-target-width)));
     width: var(--music-menu-visible-width);
     max-width: var(--music-menu-collapsed-limit, var(--music-menu-target-width));
@@ -159,6 +159,7 @@
     }
 
     body.music-menu-is-collapsed .music-menu-button {
+        display: none;
         left: calc(var(--collapsed-music-menu-width) + var(--container-side-padding));
     }
 
