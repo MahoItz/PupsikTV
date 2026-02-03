@@ -81,7 +81,7 @@ function clearFile(fileInput, label, fileName, removeBtn, preview) {
   removeBtn.style.display = "none";
 
   if (preview) {
-    preview.src = "https://via.placeholder.com/300x400?text=Нет+постера";
+    preview.src = "images/placeholder-poster.webp";
     preview.style.display = "none";
   }
 }

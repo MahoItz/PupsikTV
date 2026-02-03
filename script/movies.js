@@ -84,7 +84,7 @@ const MOVIE_RENDER_KEY_DELIMITER = "\u001F";
 const kpFallbackCache = new Map();
 let kpFallbackRequestId = 0;
 const KP_FALLBACK_POSTER_PLACEHOLDER =
-  "https://via.placeholder.com/120x180?text=Нет+постера";
+  "images/placeholder-poster.webp";
 const kpFallbackDetailsCache = new Map();
 const kpFallbackStaffCache = new Map();
 const kpFallbackOrderCache = new Map();
@@ -107,6 +107,7 @@ function createKpFallbackCard(film) {
   poster.loading = "lazy";
   poster.className = "kp-fallback-poster";
   poster.onerror = () => {
+    poster.onerror = null;
     poster.src = KP_FALLBACK_POSTER_PLACEHOLDER;
   };
 
@@ -619,8 +620,10 @@ function createMovieCard(
   placeholderText.textContent = "Нет постера";
   placeholder.appendChild(placeholderText);
   poster.onerror = () => {
-    poster.style.display = "none";
-    placeholder.style.display = "flex";
+    poster.onerror = null;
+    poster.src = KP_FALLBACK_POSTER_PLACEHOLDER;
+    poster.style.display = "";
+    placeholder.style.display = "none";
   };
 
   const orderByText =
@@ -939,7 +942,9 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   poster.className = "order-poster";
   poster.loading = "lazy";
   poster.onerror = () => {
-    poster.style.display = "none";
+    poster.onerror = null;
+    poster.src = KP_FALLBACK_POSTER_PLACEHOLDER;
+    poster.style.display = "";
   };
   poster.addEventListener("mouseenter", (e) => {
     if (!ratingTooltip) return;

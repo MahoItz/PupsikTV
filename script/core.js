@@ -16,8 +16,7 @@ function buildAbsoluteApiUrl(path) {
 }
 
 const GAME_POSTER_BUCKET = "game-posters";
-const PLACEHOLDER_POSTER_HOST = "via.placeholder.com";
-
+const PLACEHOLDER_POSTER_HOST = "images/placeholder-poster.webp";
 function buildGamePosterFileName(title) {
   const safeTitle = (title || "game")
     .toString()
@@ -1387,7 +1386,7 @@ const fortuneWinnerWatchBtn = document.getElementById("fortuneWinnerWatch");
 const fortuneWinnerCancelBtn = document.getElementById("fortuneWinnerCancel");
 let fortuneWinnerMovie = null;
 const DEFAULT_POSTER_PLACEHOLDER =
-  "https://via.placeholder.com/300x450?text=Нет+постера";
+  "images/placeholder-poster.webp";
 const rouletteAutofillHint = document.getElementById("rouletteAutofillHint");
 const rouletteAutofillClearBtn = document.getElementById("rouletteAutofillClear");
 const rouletteOrderGroup = document.getElementById("rouletteOrderGroup");
