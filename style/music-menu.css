@@ -271,6 +271,13 @@
     max-height: none;
 }
 
+.music-menu.collapsed .fortune-items-list-actions,
+.music-menu.collapsed .fortune-items-parent-guide,
+.music-menu.collapsed .fortune-items-link,
+.music-menu.collapsed .fortune-items-remove {
+    display: none;
+}
+
 .music-menu.collapsed .fortune-wheel-card {
     position: absolute;
     inset: 0;
