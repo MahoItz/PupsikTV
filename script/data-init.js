@@ -775,26 +775,13 @@ document.addEventListener("DOMContentLoaded", async function () {
     orderBtn.replaceChildren(img);
   }
 
-  const appLoader = document.getElementById("appLoader");
-  if (appLoader) {
-    appLoader.classList.remove("app-loader--hidden");
-    appLoader.removeAttribute("aria-hidden");
-  }
-
-  try {
-    await Promise.all([
-      loadSettingsFromSupabase(),
-      loadMoviesFromSupabase(),
-      loadWatchlistFromSupabase(),
-      loadGamesFromSupabase(),
-      loadPlayedGamesFromSupabase(),
-    ]);
-  } finally {
-    if (appLoader) {
-      appLoader.classList.add("app-loader--hidden");
-      appLoader.setAttribute("aria-hidden", "true");
-    }
-  }
+  await Promise.all([
+    loadSettingsFromSupabase(),
+    loadMoviesFromSupabase(),
+    loadWatchlistFromSupabase(),
+    loadGamesFromSupabase(),
+    loadPlayedGamesFromSupabase(),
+  ]);
   const headerImg = document.querySelector("#headerLogo img");
   if (headerImg)
     headerImg.addEventListener("click", () => {
