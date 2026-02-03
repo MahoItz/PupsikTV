@@ -4,8 +4,50 @@ function normalizeImdbId(id) {
   return typeof id === "string" ? id.trim() : "";
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url);
+function resolveFetch() {
+  if (typeof globalThis.fetch === "function") {
+    return { fetch: globalThis.fetch };
+  }
+
+  const attempts = [];
+  const candidates = [
+    {
+      name: "undici",
+      getFetch: (moduleExports) => moduleExports?.fetch,
+    },
+    {
+      name: "node-fetch",
+      getFetch: (moduleExports) => moduleExports?.default ?? moduleExports,
+    },
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const moduleExports = require(candidate.name);
+      const fetched = candidate.getFetch(moduleExports);
+      if (typeof fetched === "function") {
+        globalThis.fetch = fetched;
+        return { fetch: fetched, source: candidate.name };
+      }
+      attempts.push(`${candidate.name} loaded but did not export fetch`);
+    } catch (error) {
+      attempts.push(
+        `${candidate.name} unavailable: ${error?.message || "unknown error"}`
+      );
+    }
+  }
+
+  return {
+    error:
+      "Fetch API is not available in this environment. " +
+      `Node.js version: ${process.version || "unknown"}. ` +
+      `Tried to load undici/node-fetch. Details: ${attempts.join("; ")}.`,
+  };
+}
+
+async function fetchJson(url, fetchImpl) {
+  const response = await fetchImpl(url);
 
   if (!response.ok) {
     const error = new Error(`Request failed with status ${response.status}`);
@@ -34,11 +76,17 @@ async function handler(req, res) {
     return;
   }
 
+  const { fetch: fetchImpl, error: fetchError } = resolveFetch();
+  if (!fetchImpl) {
+    res.status(500).json({ error: fetchError });
+    return;
+  }
+
   try {
     const findUrl = `${TMDB_API_BASE_URL}/find/${encodeURIComponent(
       imdbId
     )}?api_key=${encodeURIComponent(apiKey)}&external_source=imdb_id`;
-    const findData = await fetchJson(findUrl);
+    const findData = await fetchJson(findUrl, fetchImpl);
 
     const movieResult =
       findData?.movie_results?.[0] || findData?.tv_results?.[0] || null;
@@ -57,7 +105,7 @@ async function handler(req, res) {
       movieResult.id
     )}?api_key=${encodeURIComponent(apiKey)}&language=ru-RU`;
 
-    const details = await fetchJson(detailsUrl);
+    const details = await fetchJson(detailsUrl, fetchImpl);
 
     res.status(200).json({
       id: movieResult.id,
