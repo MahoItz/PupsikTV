@@ -797,19 +797,52 @@ function createMovieCard(
 function deriveKinopoiskIdFromOrder(order) {
   if (!order) return null;
 
+  if (typeof getKinopoiskIdFromMovie === "function") {
+    const resolved = getKinopoiskIdFromMovie(order);
+    if (resolved) return resolved;
+  }
+  if (typeof extractKinopoiskIdFromValue === "function") {
+    const extracted = extractKinopoiskIdFromValue(order.kinopoiskId);
+    if (extracted) return extracted;
+  }
   return order.kinopoiskId || null;
 }
 
-function buildReyohohoUrlForOrder(order) {
+const ORDER_PLAYER_BASE_URL = "https://flcksbr.xyz/film/";
+
+function buildOrderPlayerUrlForOrder(order) {
   const kpId = deriveKinopoiskIdFromOrder(order);
-  return kpId ? `${REYOHOHO_BASE_URL}#${kpId}` : REYOHOHO_BASE_URL;
+  return kpId ? `${ORDER_PLAYER_BASE_URL}${kpId}` : "";
 }
 
 function openOrderOnReyohoho(order) {
-  const targetUrl = buildReyohohoUrlForOrder(order);
-  const newWindow = window.open(targetUrl, "_blank");
-  if (!newWindow) {
-    console.warn("ReYohoho window was blocked by the browser");
+  const targetUrl = buildOrderPlayerUrlForOrder(order);
+  if (!targetUrl) {
+    if (typeof showToastNotification === "function") {
+      showToastNotification("У фильма нет ID для запуска плеера.", "warning");
+    } else {
+      alert("У фильма нет ID для запуска плеера.");
+    }
+    return;
+  }
+
+  const modal = document.getElementById("orderPlayerModal");
+  const frame = document.getElementById("orderPlayerFrame");
+  const titleEl = document.getElementById("orderPlayerTitle");
+  const externalLink = document.getElementById("orderPlayerOpenExternal");
+
+  if (titleEl) {
+    const title = order?.title ? `Смотреть: ${order.title}` : "Смотреть";
+    titleEl.textContent = title;
+  }
+  if (externalLink) {
+    externalLink.href = targetUrl;
+  }
+  if (frame) {
+    frame.src = targetUrl;
+  }
+  if (modal) {
+    modal.style.display = "block";
   }
 }
 

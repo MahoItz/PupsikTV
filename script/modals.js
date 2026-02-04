@@ -2276,6 +2276,12 @@ function closeModal(modalId, shouldReset = false) {
   if (modalId === "gameDetailsModal") {
     activeGameDetailsId = null;
   }
+  if (modalId === "orderPlayerModal") {
+    const frame = document.getElementById("orderPlayerFrame");
+    if (frame) {
+      frame.src = "about:blank";
+    }
+  }
   if (modalId === "gameOrderDetailsModal") {
     if (typeof clearActiveGameOrderDetailsId === "function") {
       clearActiveGameOrderDetailsId();

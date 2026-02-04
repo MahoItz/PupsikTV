@@ -1401,6 +1401,20 @@
             </div>
         </div>
     </div>
+    <div id="orderPlayerModal" class="modal">
+        <div class="modal-content order-player-modal">
+            <span class="close" onclick="closeModal('orderPlayerModal')">&times;</span>
+            <div class="order-player-header">
+                <h2 id="orderPlayerTitle" class="order-player-title">Смотреть</h2>
+                <a id="orderPlayerOpenExternal" class="btn btn-secondary" target="_blank"
+                    rel="noopener noreferrer">Открыть во вкладке</a>
+            </div>
+            <div class="order-player-frame-wrap">
+                <iframe id="orderPlayerFrame" class="order-player-frame" title="Плеер фильма" loading="lazy"
+                    allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
     <div id="gameOrderDetailsModal" class="modal">
         <div class="modal-content game-order-details-modal">
             <span class="close" onclick="closeModal('gameOrderDetailsModal')">&times;</span>
