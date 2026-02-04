@@ -1254,13 +1254,37 @@ function openMovieDetailsModal(id) {
   const movieKpRating = document
     .getElementById("movieDetailsKpRating")
     ?.closest(".movie-details-rating");
+  if (movieKpRating) {
+    movieKpRating.dataset.kpId = movie?.id ?? "";
+    movieKpRating.dataset.kpTable = "movies";
+    movieKpRating.dataset.kpTitle = movie?.title ?? "";
+    movieKpRating.dataset.kpYear = movie?.year ?? "";
+    movieKpRating.dataset.kpOriginalTitle = movie?.originalTitle ?? "";
+    movieKpRating.dataset.kpKinopoiskId =
+      movie?.kinopoiskId ?? movie?.kpId ?? movie?.kp_id ?? "";
+  }
   if (movieKpRating && movieKpRating.dataset.kpBound !== "true") {
     movieKpRating.dataset.kpBound = "true";
     movieKpRating.style.cursor = "pointer";
     movieKpRating.addEventListener("click", (event) => {
       event?.stopPropagation?.();
       if (typeof openKinopoiskPageForRecord === "function") {
-        openKinopoiskPageForRecord({ item: movie, table: "movies" });
+        const id = movieKpRating.dataset.kpId;
+        const table = movieKpRating.dataset.kpTable || "movies";
+        let currentMovie = null;
+        if (id && Array.isArray(allMovies)) {
+          currentMovie = allMovies.find((m) => String(m.id) === String(id));
+        }
+        if (!currentMovie) {
+          currentMovie = {
+            id,
+            title: movieKpRating.dataset.kpTitle || "",
+            year: movieKpRating.dataset.kpYear || "",
+            originalTitle: movieKpRating.dataset.kpOriginalTitle || "",
+            kinopoiskId: movieKpRating.dataset.kpKinopoiskId || null,
+          };
+        }
+        openKinopoiskPageForRecord({ item: currentMovie, table });
       }
     });
   }
@@ -1650,13 +1674,37 @@ function renderOrderDetailsModal(order) {
   const orderKpRating = document
     .getElementById("orderDetailsKpRating")
     ?.closest(".movie-details-rating");
+  if (orderKpRating) {
+    orderKpRating.dataset.kpId = order?.id ?? "";
+    orderKpRating.dataset.kpTable = "Movie_Orders";
+    orderKpRating.dataset.kpTitle = order?.title ?? "";
+    orderKpRating.dataset.kpYear = order?.year ?? "";
+    orderKpRating.dataset.kpOriginalTitle = order?.originalTitle ?? "";
+    orderKpRating.dataset.kpKinopoiskId =
+      order?.kinopoiskId ?? order?.kpId ?? order?.kp_id ?? "";
+  }
   if (orderKpRating && orderKpRating.dataset.kpBound !== "true") {
     orderKpRating.dataset.kpBound = "true";
     orderKpRating.style.cursor = "pointer";
     orderKpRating.addEventListener("click", (event) => {
       event?.stopPropagation?.();
       if (typeof openKinopoiskPageForRecord === "function") {
-        openKinopoiskPageForRecord({ item: order, table: "Movie_Orders" });
+        const id = orderKpRating.dataset.kpId;
+        const table = orderKpRating.dataset.kpTable || "Movie_Orders";
+        let currentOrder = null;
+        if (id && Array.isArray(watchlist)) {
+          currentOrder = watchlist.find((o) => String(o.id) === String(id));
+        }
+        if (!currentOrder) {
+          currentOrder = {
+            id,
+            title: orderKpRating.dataset.kpTitle || "",
+            year: orderKpRating.dataset.kpYear || "",
+            originalTitle: orderKpRating.dataset.kpOriginalTitle || "",
+            kinopoiskId: orderKpRating.dataset.kpKinopoiskId || null,
+          };
+        }
+        openKinopoiskPageForRecord({ item: currentOrder, table });
       }
     });
   }
