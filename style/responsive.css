@@ -80,29 +80,11 @@
 
 @media (max-width: 600px) {
     .list-toolbar {
-        gap: 12px;
-    }
-
-    .search-controls.search-with-count {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+        gap: 8px;
     }
 
     .search-controls.search-with-count .search-input {
-        padding-right: 18px;
-    }
-
-    .search-count {
-        position: static;
-        transform: none;
-        align-self: flex-start;
-        padding: 0;
-        height: auto;
-    }
-
-    .search-count::before {
-        display: none;
+        padding-right: 120px;
     }
 
     .sort-controls,
