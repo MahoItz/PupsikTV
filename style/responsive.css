@@ -63,6 +63,10 @@
         align-items: stretch;
     }
 
+    .search-controls.search-with-count {
+        flex: 0 1 auto;
+    }
+
     .search-controls.search-with-count .search-input {
         padding-right: 130px;
     }
@@ -75,6 +79,31 @@
         margin: 5% auto;
         padding: 30px 25px;
         width: 95%;
+    }
+}
+
+@media (max-width: 600px) {
+    .list-toolbar {
+        gap: 8px;
+    }
+
+    .search-controls.search-with-count .search-input {
+        padding-right: 120px;
+    }
+
+    .sort-controls,
+    .sort-merge {
+        width: 100%;
+    }
+
+    .sort-merge {
+        justify-content: space-between;
+    }
+
+    .sort-controls select {
+        flex: 1;
+        min-width: 0;
+        padding-right: 12px;
     }
 }
 
@@ -101,4 +130,3 @@
         grid-column: auto;
     }
 }
-
