@@ -63,6 +63,10 @@
         align-items: stretch;
     }
 
+    .search-controls.search-with-count {
+        flex: 0 1 auto;
+    }
+
     .search-controls.search-with-count .search-input {
         padding-right: 130px;
     }
