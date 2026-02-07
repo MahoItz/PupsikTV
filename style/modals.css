@@ -268,69 +268,16 @@
 
 .order-player-header {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
     margin-bottom: 16px;
-    padding: 16px;
-    border-radius: 18px;
-    background: linear-gradient(120deg, rgba(22, 24, 32, 0.85), rgba(14, 16, 22, 0.6));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.35);
-}
-
-.order-player-heading {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
 }
 
 .order-player-title {
     margin: 0;
     font-size: 1.4rem;
-}
-
-.order-player-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: flex-end;
-}
-
-.order-player-control {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 200px;
-}
-
-.order-player-control-label {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-secondary);
-}
-
-.order-player-actions {
-    display: flex;
-    align-items: flex-end;
-    gap: 14px;
-    flex-wrap: wrap;
-    justify-content: space-between;
-}
-
-.order-player-actions .btn {
-    white-space: nowrap;
-}
-
-.order-player-controls select {
-    min-width: 220px;
-    border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(12, 14, 18, 0.75);
-}
-
-.order-player-controls select:focus {
-    border-color: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 0 0 3px rgba(109, 237, 255, 0.15);
 }
 
 .order-player-frame-wrap {
@@ -361,19 +308,6 @@
 
     .order-player-frame {
         height: 56vh;
-    }
-
-    .order-player-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .order-player-controls {
-        width: 100%;
-    }
-
-    .order-player-controls select {
-        width: 100%;
     }
 }
 
@@ -809,6 +743,20 @@
     color: var(--text-primary);
     font-weight: 600;
     font-size: 0.95rem;
+}
+
+.details-edit-input[type="number"] {
+    width: 80px;
+}
+
+.details-edit-input[type="number"]::-webkit-outer-spin-button,
+.details-edit-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.details-edit-input[type="number"] {
+    -moz-appearance: textfield;
 }
 
 .details-edit-input:focus,
