@@ -1,4 +1,4 @@
-﻿// Отображение фильмов
+// Отображение фильмов
 function getFilteredSortedMovies() {
   let result = [...allMovies];
 
@@ -808,61 +808,16 @@ function deriveKinopoiskIdFromOrder(order) {
   return order.kinopoiskId || null;
 }
 
-const ORDER_PLAYER_API_URL = "https://fbphdplay.top/api/players?kinopoisk=";
-const ORDER_PLAYER_DEFAULT_TYPE = "Alloha";
+const ORDER_PLAYER_BASE_URL = "https://flcksbr.xyz/film/";
 
-function normalizeOrderPlayerProviders(payload) {
-  if (!payload) return [];
-  const data = payload.data ?? payload;
-  if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.players)) return data.players;
-  if (data && Array.isArray(data.items)) return data.items;
-  return [];
-}
-
-function normalizeOrderPlayerTranslations(provider) {
-  if (!provider) return [];
-  const translations = provider.translations ?? [];
-  if (Array.isArray(translations)) return translations;
-  if (translations && Array.isArray(translations.items)) return translations.items;
-  return [];
-}
-
-function pickDefaultOrderTranslation(translations) {
-  if (!translations.length) return null;
-  const preferred = translations.find((item) =>
-    /рус|дуб|дублирован|russian/i.test(item?.name || "")
-  );
-  return preferred || translations[0];
-}
-
-function applyOrderPlayerUrl(url) {
-  const frame = document.getElementById("orderPlayerFrame");
-  const externalLink = document.getElementById("orderPlayerOpenExternal");
-  const safeUrl = url || "";
-
-  if (externalLink) {
-    externalLink.href = safeUrl || "#";
-  }
-  if (frame) {
-    frame.src = safeUrl || "about:blank";
-  }
-}
-
-function populateOrderPlayerSelect(select, items, getLabel) {
-  if (!select) return;
-  select.innerHTML = "";
-  items.forEach((item, index) => {
-    const option = document.createElement("option");
-    option.value = String(index);
-    option.textContent = getLabel(item, index);
-    select.appendChild(option);
-  });
-}
-
-async function openOrderOnReyohoho(order) {
+function buildOrderPlayerUrlForOrder(order) {
   const kpId = deriveKinopoiskIdFromOrder(order);
-  if (!kpId) {
+  return kpId ? `${ORDER_PLAYER_BASE_URL}${kpId}` : "";
+}
+
+function openOrderOnReyohoho(order) {
+  const targetUrl = buildOrderPlayerUrlForOrder(order);
+  if (!targetUrl) {
     if (typeof showToastNotification === "function") {
       showToastNotification("У фильма нет ID для запуска плеера.", "warning");
     } else {
@@ -872,124 +827,22 @@ async function openOrderOnReyohoho(order) {
   }
 
   const modal = document.getElementById("orderPlayerModal");
+  const frame = document.getElementById("orderPlayerFrame");
   const titleEl = document.getElementById("orderPlayerTitle");
-  const sourceSelect = document.getElementById("orderPlayerSourceSelect");
-  const translationSelect = document.getElementById(
-    "orderPlayerTranslationSelect"
-  );
-  const sourceControl = sourceSelect
-    ? sourceSelect.closest(".order-player-control")
-    : null;
-  const translationControl = translationSelect
-    ? translationSelect.closest(".order-player-control")
-    : null;
+  const externalLink = document.getElementById("orderPlayerOpenExternal");
 
   if (titleEl) {
     const title = order?.title ? `Смотреть: ${order.title}` : "Смотреть";
     titleEl.textContent = title;
   }
+  if (externalLink) {
+    externalLink.href = targetUrl;
+  }
+  if (frame) {
+    frame.src = targetUrl;
+  }
   if (modal) {
     modal.style.display = "block";
-  }
-  applyOrderPlayerUrl("");
-
-  try {
-    const response = await fetch(`${ORDER_PLAYER_API_URL}${kpId}`);
-    if (!response.ok) {
-      throw new Error(`Player request failed: ${response.status}`);
-    }
-    const payload = await response.json();
-    const providers = normalizeOrderPlayerProviders(payload);
-
-    if (!providers.length) {
-      throw new Error("No providers in response");
-    }
-
-    populateOrderPlayerSelect(
-      sourceSelect,
-      providers,
-      (item, index) => item?.type || `Источник ${index + 1}`
-    );
-
-    if (sourceControl) {
-      sourceControl.style.display = providers.length > 1 ? "" : "none";
-    }
-
-    const defaultProviderIndex = providers.findIndex(
-      (item) =>
-        (item?.type || "").toLowerCase() ===
-        ORDER_PLAYER_DEFAULT_TYPE.toLowerCase()
-    );
-    const initialProviderIndex =
-      defaultProviderIndex >= 0 ? defaultProviderIndex : 0;
-
-    function setProvider(index) {
-      const provider = providers[index] || providers[0];
-      const translations = normalizeOrderPlayerTranslations(provider);
-
-      populateOrderPlayerSelect(
-        translationSelect,
-        translations,
-        (item, tIndex) =>
-          item?.name
-            ? `${item.name}${item.quality ? ` (${item.quality})` : ""}`
-            : `Перевод ${tIndex + 1}`
-      );
-
-      if (translationSelect) {
-        translationSelect.disabled = translations.length <= 1;
-      }
-      if (translationControl) {
-        translationControl.style.display = translations.length ? "" : "none";
-      }
-
-      const defaultTranslation = pickDefaultOrderTranslation(translations);
-      if (translationSelect && translations.length) {
-        const idx = Math.max(
-          0,
-          translations.indexOf(defaultTranslation || translations[0])
-        );
-        translationSelect.selectedIndex = idx;
-      }
-
-      const targetUrl =
-        defaultTranslation?.iframeUrl || provider?.iframeUrl || "";
-      applyOrderPlayerUrl(targetUrl);
-    }
-
-    if (sourceSelect) {
-      sourceSelect.selectedIndex = initialProviderIndex;
-      sourceSelect.onchange = () => {
-        const idx = Number(sourceSelect.value || sourceSelect.selectedIndex);
-        setProvider(Number.isNaN(idx) ? 0 : idx);
-      };
-    }
-
-    if (translationSelect) {
-      translationSelect.onchange = () => {
-        const providerIndex = sourceSelect
-          ? Number(sourceSelect.value || sourceSelect.selectedIndex)
-          : 0;
-        const provider = providers[Number.isNaN(providerIndex) ? 0 : providerIndex];
-        const translations = normalizeOrderPlayerTranslations(provider);
-        const tIndex = Number(
-          translationSelect.value || translationSelect.selectedIndex
-        );
-        const translation = translations[Number.isNaN(tIndex) ? 0 : tIndex];
-        const targetUrl =
-          translation?.iframeUrl || provider?.iframeUrl || "";
-        applyOrderPlayerUrl(targetUrl);
-      };
-    }
-
-    setProvider(initialProviderIndex);
-  } catch (error) {
-    console.error("Failed to load order player:", error);
-    if (typeof showToastNotification === "function") {
-      showToastNotification("Не удалось загрузить плеер.", "error");
-    } else {
-      alert("Не удалось загрузить плеер.");
-    }
   }
 }
 

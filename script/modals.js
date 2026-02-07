@@ -796,6 +796,7 @@ const detailsEditConfigs = {
       { valueId: "movieDetailsGenre", key: "genre", localKey: "genre", dbKey: "genres", type: "text" },
       { valueId: "movieDetailsCountry", key: "country", localKey: "country", dbKey: "country", type: "text" },
       { valueId: "movieDetailsDirector", key: "director", localKey: "director", dbKey: "director", type: "text" },
+      { valueId: "movieDetailsPupsikRating", key: "rating", localKey: "rating", dbKey: "rating_numeric", type: "rating" },
     ],
   },
   "movieDetails-order": {
@@ -821,6 +822,7 @@ const detailsEditConfigs = {
     fields: [
       { valueId: "gameDetailsYear", key: "year", localKey: "year", dbKey: "year", type: "number" },
       { valueId: "gameDetailsGenre", key: "genres", localKey: "genres", dbKey: "genres", type: "text" },
+      { valueId: "gameDetailsPupsikRating", key: "rating", localKey: "rating", dbKey: "rating_numeric", type: "rating" },
     ],
   },
   "gameDetails-order": {
@@ -952,7 +954,14 @@ function createDetailsInput(field, record) {
   }
   const input = document.createElement("input");
   input.className = "details-edit-input";
-  input.type = field.type === "number" ? "number" : "text";
+  if (field.type === "rating") {
+    input.type = "number";
+    input.min = "0";
+    input.max = "11";
+    input.step = "0.1";
+  } else {
+    input.type = field.type === "number" ? "number" : "text";
+  }
   input.value = currentValue ?? "";
   return input;
 }
@@ -964,6 +973,13 @@ function normalizeDetailsValue(field, inputValue, record) {
       return record ? record[field.localKey] : null;
     }
     return parsed;
+  }
+  if (field.type === "rating") {
+    const parsed = parseFloat(inputValue);
+    if (!Number.isFinite(parsed)) {
+      return record ? record[field.localKey] : null;
+    }
+    return Math.min(11, Math.max(0, parsed));
   }
   if (typeof inputValue === "string") {
     return inputValue.trim();
