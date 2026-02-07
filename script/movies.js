@@ -810,6 +810,7 @@ function deriveKinopoiskIdFromOrder(order) {
 
 const ORDER_PLAYER_API_URL = "https://fbphdplay.top/api/players?kinopoisk=";
 const ORDER_PLAYER_DEFAULT_TYPE = "Alloha";
+const ORDER_PLAYER_EXTERNAL_BASE_URL = "https://flcksbr.xyz/film/";
 
 function normalizeOrderPlayerProviders(payload) {
   if (!payload) return [];
@@ -836,14 +837,14 @@ function pickDefaultOrderTranslation(translations) {
   return preferred || translations[0];
 }
 
+function buildOrderExternalPlayerUrl(kpId) {
+  return kpId ? `${ORDER_PLAYER_EXTERNAL_BASE_URL}${kpId}` : "#";
+}
+
 function applyOrderPlayerUrl(url) {
   const frame = document.getElementById("orderPlayerFrame");
-  const externalLink = document.getElementById("orderPlayerOpenExternal");
   const safeUrl = url || "";
 
-  if (externalLink) {
-    externalLink.href = safeUrl || "#";
-  }
   if (frame) {
     frame.src = safeUrl || "about:blank";
   }
@@ -877,6 +878,7 @@ async function openOrderOnReyohoho(order) {
   const translationSelect = document.getElementById(
     "orderPlayerTranslationSelect"
   );
+  const externalLink = document.getElementById("orderPlayerOpenExternal");
   const sourceControl = sourceSelect
     ? sourceSelect.closest(".order-player-control")
     : null;
@@ -892,6 +894,9 @@ async function openOrderOnReyohoho(order) {
     modal.style.display = "block";
   }
   applyOrderPlayerUrl("");
+  if (externalLink) {
+    externalLink.href = buildOrderExternalPlayerUrl(kpId);
+  }
 
   try {
     const response = await fetch(`${ORDER_PLAYER_API_URL}${kpId}`);
@@ -1142,7 +1147,9 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     if (!ratingTooltip) return;
     ratingTooltip.style.display = "none";
   });
-  poster.addEventListener("click", () => openOrderOnReyohoho(order));
+  if (isAdmin) {
+    poster.addEventListener("click", () => openOrderOnReyohoho(order));
+  }
   card.appendChild(poster);
 
   const info = document.createElement("div");
