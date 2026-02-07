@@ -1944,11 +1944,12 @@ function toggleGameSortOrder() {
   const btn = document.getElementById("gameSortOrderBtn");
   if (btn) {
     const img = document.createElement("img");
-    img.src = gameSortAscending
-      ? "images/up-arrow.webp"
-      : "images/down-arrow.webp";
+    img.src = "images/sort_arrow.webp";
     img.alt = "";
     img.className = "sort-arrow";
+    if (gameSortAscending) {
+      img.classList.add("is-desc");
+    }
     btn.replaceChildren(img);
   }
   renderPlayedGames();

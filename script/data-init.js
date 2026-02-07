@@ -768,11 +768,26 @@ document.addEventListener("DOMContentLoaded", async function () {
   const orderBtn = document.getElementById("sortOrderBtn");
   if (orderBtn) {
     const img = document.createElement("img");
-    img.src = sortAscending ? "images/down-arrow.webp" : "images/up-arrow.webp";
+    img.src = "images/sort_arrow.webp";
     img.alt = "";
     img.className = "sort-arrow";
+    if (sortAscending) {
+      img.classList.add("is-desc");
+    }
 
     orderBtn.replaceChildren(img);
+  }
+
+  const gameOrderBtn = document.getElementById("gameSortOrderBtn");
+  if (gameOrderBtn) {
+    const img = document.createElement("img");
+    img.src = "images/sort_arrow.webp";
+    img.alt = "";
+    img.className = "sort-arrow";
+    if (gameSortAscending) {
+      img.classList.add("is-desc");
+    }
+    gameOrderBtn.replaceChildren(img);
   }
 
   await Promise.all([

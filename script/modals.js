@@ -10,9 +10,12 @@ function toggleSortOrder() {
   const orderBtn = document.getElementById("sortOrderBtn");
   if (orderBtn) {
     const img = document.createElement("img");
-    img.src = sortAscending ? "images/up-arrow.webp" : "images/down-arrow.webp";
+    img.src = "images/sort_arrow.webp";
     img.alt = "";
     img.className = "sort-arrow";
+    if (sortAscending) {
+      img.classList.add("is-desc");
+    }
 
     orderBtn.replaceChildren(img);
   }
