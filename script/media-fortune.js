@@ -185,6 +185,15 @@ const orderParentGuideLists = {
 };
 const gameOrderDetailsDescriptionStatus =
   document.getElementById("gameOrderDetailsDescriptionStatus");
+const gameOrderDetailsTranslateDescription = document.getElementById(
+  "gameOrderDetailsTranslateDescription"
+);
+const gameDetailsDescriptionStatus = document.getElementById(
+  "gameDetailsDescriptionStatus"
+);
+const gameDetailsTranslateDescription = document.getElementById(
+  "gameDetailsTranslateDescription"
+);
 let activeGameOrderDetailsId = null;
 function setActiveGameOrderDetailsId(id) {
   activeGameOrderDetailsId = id;
@@ -194,6 +203,10 @@ function clearActiveGameOrderDetailsId() {
 }
 function isGameDescriptionTranslating(gameOrderId) {
   return orderGameDescriptionPrefetches.has(gameOrderId);
+}
+const playedGameDescriptionPrefetches = new Map();
+function isPlayedGameDescriptionTranslating(gameId) {
+  return playedGameDescriptionPrefetches.has(gameId);
 }
 const orderTimings = document.getElementById("orderTimings");
 const orderTimingsStatus = document.getElementById("orderTimingsStatus");
@@ -1891,6 +1904,23 @@ async function persistOrderGameDescription(gameOrderId, descriptionData) {
   }
 }
 
+async function persistPlayedGameDescription(gameId, descriptionData) {
+  if (!gameId || !supabaseClient || !descriptionData) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("games")
+    .update({ description: descriptionData })
+    .eq("id", gameId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to store game description", error);
+  }
+}
+
 const orderGameDescriptionPrefetches = new Map();
 
 async function translateGameDescription(text, modelValue) {
@@ -1997,6 +2027,7 @@ async function prefetchOrderGameDescriptionForOrder(gameOrder, options = {}) {
       console.warn(
         "[prefetchOrderGameDescription] No translation model configured"
       );
+      syncGameOrderTranslateButton(gameOrder);
       return desc;
     }
 
@@ -2004,6 +2035,7 @@ async function prefetchOrderGameDescriptionForOrder(gameOrder, options = {}) {
       spinner: true,
       gameOrderId: gameOrder.id,
     });
+    syncGameOrderTranslateButton(gameOrder);
 
     try {
       const translated = await translateGameDescriptionWithFallback(
@@ -2036,10 +2068,12 @@ async function prefetchOrderGameDescriptionForOrder(gameOrder, options = {}) {
         );
       }
 
+      syncGameOrderTranslateButton(gameOrder);
       return descriptionData;
     } catch (err) {
       console.error("Failed to translate game description for order", err);
       setGameOrderDescriptionStatus("", { gameOrderId: gameOrder.id });
+      syncGameOrderTranslateButton(gameOrder);
       return desc;
     }
   })();
@@ -2050,6 +2084,120 @@ async function prefetchOrderGameDescriptionForOrder(gameOrder, options = {}) {
     return await loadPromise;
   } finally {
     orderGameDescriptionPrefetches.delete(gameOrder.id);
+    syncGameOrderTranslateButton(gameOrder);
+  }
+}
+
+async function prefetchPlayedGameDescriptionForGame(game, options = {}) {
+  const { force = false } = options;
+  if (!game || !game.id || !supabaseClient) {
+    return null;
+  }
+
+  const desc = game.description;
+  const originalText =
+    typeof desc === "string"
+      ? desc
+      : desc && typeof desc === "object" && typeof desc.original === "string"
+        ? desc.original
+        : "";
+  const hasTranslated =
+    desc &&
+    typeof desc === "object" &&
+    typeof desc.translated === "string" &&
+    desc.translated.trim();
+
+  if (!force && hasTranslated) {
+    return desc;
+  }
+
+  if (!originalText || !originalText.trim()) {
+    setGameDetailsDescriptionStatus("Нет данных для перевода.", {
+      gameId: game.id,
+    });
+    syncGameDetailsTranslateButton(game);
+    return null;
+  }
+
+  if (!force && playedGameDescriptionPrefetches.has(game.id)) {
+    return playedGameDescriptionPrefetches.get(game.id);
+  }
+
+  const loadPromise = (async () => {
+    const { model: selectedModel } =
+      (await loadFortuneTranslationModel()) || {};
+
+    if (!selectedModel) {
+      console.warn(
+        "[prefetchPlayedGameDescription] No translation model configured"
+      );
+      setGameDetailsDescriptionStatus("Модель перевода не настроена.", {
+        gameId: game.id,
+      });
+      syncGameDetailsTranslateButton(game);
+      return desc;
+    }
+
+    setGameDetailsDescriptionStatus("Переводим...", {
+      spinner: true,
+      gameId: game.id,
+    });
+
+    try {
+      const translated = await translateGameDescriptionWithFallback(
+        originalText,
+        selectedModel
+      );
+      const descriptionData = {
+        original: originalText,
+        translated: translated || null,
+      };
+
+      game.description = descriptionData;
+      setGameDetailsDescriptionStatus("", { gameId: game.id });
+
+      if (typeof updateLocalPlayedGame === "function") {
+        updateLocalPlayedGame(game);
+      } else if (Array.isArray(allPlayedGames)) {
+        const idx = allPlayedGames.findIndex((g) => g.id === game.id);
+        if (idx !== -1) {
+          allPlayedGames[idx] = game;
+        }
+        localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+      }
+
+      if (typeof renderPlayedGames === "function") {
+        renderPlayedGames();
+      }
+
+      await persistPlayedGameDescription(game.id, descriptionData);
+
+      if (
+        typeof activeGameDetailsId !== "undefined" &&
+        activeGameDetailsId === game.id &&
+        typeof setMovieDetailsText === "function"
+      ) {
+        const descText = getGameDescriptionDisplayText(descriptionData);
+        setMovieDetailsText("gameDetailsDescription", descText, "—");
+      }
+
+      syncGameDetailsTranslateButton(game);
+      return descriptionData;
+    } catch (err) {
+      console.error("Failed to translate game description", err);
+      setGameDetailsDescriptionStatus("Ошибка перевода", { gameId: game.id });
+      syncGameDetailsTranslateButton(game);
+      return desc;
+    }
+  })();
+
+  playedGameDescriptionPrefetches.set(game.id, loadPromise);
+
+  try {
+    return await loadPromise;
+  } finally {
+    playedGameDescriptionPrefetches.delete(game.id);
+    syncGameDetailsTranslateButton(game);
   }
 }
 
@@ -2080,6 +2228,68 @@ function setGameOrderDescriptionStatus(message, options = {}) {
   gameOrderDetailsDescriptionStatus.style.display = message
     ? "inline-flex"
     : "none";
+}
+
+function syncGameOrderTranslateButton(gameOrder) {
+  if (!gameOrderDetailsTranslateDescription) return;
+  const desc = gameOrder?.description ?? null;
+  const originalText =
+    typeof desc === "string"
+      ? desc
+      : desc && typeof desc === "object" && typeof desc.original === "string"
+        ? desc.original
+        : "";
+  const canTranslate = Boolean(originalText && originalText.trim());
+  const isBusy =
+    gameOrder &&
+    typeof gameOrder.id !== "undefined" &&
+    orderGameDescriptionPrefetches.has(gameOrder.id);
+  const shouldDisable = !canTranslate || isBusy;
+  gameOrderDetailsTranslateDescription.disabled = shouldDisable;
+  gameOrderDetailsTranslateDescription.classList.toggle(
+    "btn-disabled",
+    shouldDisable
+  );
+}
+
+function setGameDetailsDescriptionStatus(message, options = {}) {
+  if (!gameDetailsDescriptionStatus) return;
+  const { spinner = false, gameId = null } = options;
+  if (
+    gameId != null &&
+    typeof activeGameDetailsId !== "undefined" &&
+    activeGameDetailsId != null &&
+    String(gameId) !== String(activeGameDetailsId)
+  ) {
+    return;
+  }
+  gameDetailsDescriptionStatus.textContent = message || "";
+  gameDetailsDescriptionStatus.classList.toggle(
+    "game-order-description-status--loading",
+    spinner
+  );
+  gameDetailsDescriptionStatus.style.display = message
+    ? "inline-flex"
+    : "none";
+}
+
+function syncGameDetailsTranslateButton(game) {
+  if (!gameDetailsTranslateDescription) return;
+  const desc = game?.description ?? null;
+  const originalText =
+    typeof desc === "string"
+      ? desc
+      : desc && typeof desc === "object" && typeof desc.original === "string"
+        ? desc.original
+        : "";
+  const canTranslate = Boolean(originalText && originalText.trim());
+  const isBusy =
+    game &&
+    typeof game.id !== "undefined" &&
+    playedGameDescriptionPrefetches.has(game.id);
+  const shouldDisable = !canTranslate || isBusy;
+  gameDetailsTranslateDescription.disabled = shouldDisable;
+  gameDetailsTranslateDescription.classList.toggle("btn-disabled", shouldDisable);
 }
 
 function getActiveOrderDetails() {
@@ -3921,6 +4131,43 @@ if (orderParentGuideTranslate) {
     "click",
     openOrderGuideInGoogleTranslate
   );
+}
+
+if (gameOrderDetailsTranslateDescription) {
+  gameOrderDetailsTranslateDescription.addEventListener("click", () => {
+    if (activeGameOrderDetailsId == null) {
+      return;
+    }
+    const gameOrder = Array.isArray(gameOrders)
+      ? gameOrders.find(
+          (item) => String(item.id) === String(activeGameOrderDetailsId)
+        )
+      : null;
+    if (!gameOrder) {
+      return;
+    }
+    prefetchOrderGameDescriptionForOrder(gameOrder, { force: true });
+  });
+}
+
+if (gameDetailsTranslateDescription) {
+  gameDetailsTranslateDescription.addEventListener("click", () => {
+    if (
+      typeof activeGameDetailsId === "undefined" ||
+      activeGameDetailsId == null
+    ) {
+      return;
+    }
+    const game = Array.isArray(allPlayedGames)
+      ? allPlayedGames.find(
+          (item) => String(item.id) === String(activeGameDetailsId)
+        )
+      : null;
+    if (!game) {
+      return;
+    }
+    prefetchPlayedGameDescriptionForGame(game, { force: true });
+  });
 }
 
 if (fortuneMovieDelete) {

@@ -1381,6 +1381,19 @@ function renderGameDetailsModal(game, modal) {
   const descText = getGameDetailsDescriptionText(game);
   setMovieDetailsText("gameDetailsDescription", descText, "—");
 
+  const isTranslating =
+    typeof isPlayedGameDescriptionTranslating === "function" &&
+    isPlayedGameDescriptionTranslating(game.id);
+  if (typeof setGameDetailsDescriptionStatus === "function") {
+    setGameDetailsDescriptionStatus(
+      isTranslating ? "Переводим..." : "",
+      { spinner: isTranslating, gameId: game.id }
+    );
+  }
+  if (typeof syncGameDetailsTranslateButton === "function") {
+    syncGameDetailsTranslateButton(game);
+  }
+
   const votes = Math.round(game.ratingCount ?? 0);
   const votesEl = document.getElementById("gameDetailsVotes");
   if (votesEl) {
@@ -1813,6 +1826,9 @@ function openGameOrderDetailsModal(id) {
       isTranslating ? "Переводим..." : "",
       { spinner: isTranslating, gameOrderId: game.id }
     );
+  }
+  if (typeof syncGameOrderTranslateButton === "function") {
+    syncGameOrderTranslateButton(game);
   }
 
   setMovieDetailsText("gameOrderDetailsMetacritic", game.metacritic, "—");

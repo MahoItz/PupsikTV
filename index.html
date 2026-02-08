@@ -1239,7 +1239,15 @@
                         </div>
                     </div>
                     <div class="movie-details-section">
-                        <div class="movie-details-section-title">Описание</div>
+                        <div class="game-order-description-header">
+                            <span class="movie-details-section-title">Описание</span>
+                            <button id="gameDetailsTranslateDescription" type="button"
+                                class="details-edit-toggle game-description-translate"
+                                title="Перевести описание" aria-label="Перевести описание">
+                                <i class="fa-solid fa-language" aria-hidden="true"></i>
+                            </button>
+                            <span id="gameDetailsDescriptionStatus" class="game-order-description-status"></span>
+                        </div>
                         <div id="gameDetailsDescription" class="movie-details-description"></div>
                     </div>
                 </div>
@@ -1532,6 +1540,11 @@
                     <div class="movie-details-section">
                         <div class="game-order-description-header">
                             <span class="movie-details-section-title">Описание</span>
+                            <button id="gameOrderDetailsTranslateDescription" type="button"
+                                class="details-edit-toggle game-description-translate"
+                                title="Перевести описание" aria-label="Перевести описание">
+                                <i class="fa-solid fa-language" aria-hidden="true"></i>
+                            </button>
                             <span id="gameOrderDetailsDescriptionStatus" class="game-order-description-status"></span>
                         </div>
                         <div id="gameOrderDetailsDescription" class="movie-details-description"></div>
