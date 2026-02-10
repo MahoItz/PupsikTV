@@ -1131,23 +1131,24 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
     poster.src = KP_FALLBACK_POSTER_PLACEHOLDER;
     poster.style.display = "";
   };
-  poster.addEventListener("mouseenter", (e) => {
-    if (!ratingTooltip) return;
-    ratingTooltip.textContent = "Смотреть";
-    ratingTooltip.style.display = "block";
-    ratingTooltip.style.left = e.pageX + 10 + "px";
-    ratingTooltip.style.top = e.pageY + 10 + "px";
-  });
-  poster.addEventListener("mousemove", (e) => {
-    if (!ratingTooltip) return;
-    ratingTooltip.style.left = e.pageX + 10 + "px";
-    ratingTooltip.style.top = e.pageY + 10 + "px";
-  });
-  poster.addEventListener("mouseleave", () => {
-    if (!ratingTooltip) return;
-    ratingTooltip.style.display = "none";
-  });
   if (isAdmin) {
+    poster.classList.add("order-poster--clickable");
+    poster.addEventListener("mouseenter", (e) => {
+      if (!ratingTooltip) return;
+      ratingTooltip.textContent = "Смотреть";
+      ratingTooltip.style.display = "block";
+      ratingTooltip.style.left = e.pageX + 10 + "px";
+      ratingTooltip.style.top = e.pageY + 10 + "px";
+    });
+    poster.addEventListener("mousemove", (e) => {
+      if (!ratingTooltip) return;
+      ratingTooltip.style.left = e.pageX + 10 + "px";
+      ratingTooltip.style.top = e.pageY + 10 + "px";
+    });
+    poster.addEventListener("mouseleave", () => {
+      if (!ratingTooltip) return;
+      ratingTooltip.style.display = "none";
+    });
     poster.addEventListener("click", () => openOrderOnReyohoho(order));
   }
   card.appendChild(poster);

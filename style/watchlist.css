@@ -217,10 +217,14 @@
     border-radius: 8px;
     object-fit: cover;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    cursor: default;
+}
+
+.order-poster--clickable {
     cursor: pointer;
 }
 
-.order-poster:hover {
+.order-poster--clickable:hover {
     scale: 1.05;
     transition: var(--transition);
 }
