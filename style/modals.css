@@ -347,6 +347,7 @@
 }
 
 .order-player-frame-wrap {
+    position: relative;
     width: 100%;
     background: #000;
     border-radius: 16px;
@@ -361,6 +362,51 @@
     height: min(70vh, 680px);
     border: 0;
     background: #000;
+}
+
+.order-player-loader {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: radial-gradient(circle, rgba(14, 14, 14, 0.9), rgba(8, 8, 8, 0.95));
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.order-player-loader.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.order-player-spinner {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.18);
+    border-top-color: var(--primary);
+    animation: orderPlayerSpin 0.9s linear infinite;
+}
+
+.order-player-loader-text {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+@keyframes orderPlayerSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @media (max-width: 720px) {

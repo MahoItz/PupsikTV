@@ -841,6 +841,16 @@ function buildOrderExternalPlayerUrl(kpId) {
   return kpId ? `${ORDER_PLAYER_EXTERNAL_BASE_URL}${kpId}` : "#";
 }
 
+function setOrderPlayerLoading(isLoading, message) {
+  const loader = document.getElementById("orderPlayerLoader");
+  if (!loader) return;
+  if (typeof message === "string") {
+    const textEl = loader.querySelector(".order-player-loader-text");
+    if (textEl) textEl.textContent = message;
+  }
+  loader.classList.toggle("is-visible", Boolean(isLoading));
+}
+
 function applyOrderPlayerUrl(url) {
   const frame = document.getElementById("orderPlayerFrame");
   const safeUrl = url || "";
@@ -893,6 +903,7 @@ async function openOrderOnReyohoho(order) {
   if (modal) {
     modal.style.display = "block";
   }
+  setOrderPlayerLoading(true, "Загрузка плеера…");
   applyOrderPlayerUrl("");
   if (externalLink) {
     externalLink.href = buildOrderExternalPlayerUrl(kpId);
@@ -959,6 +970,9 @@ async function openOrderOnReyohoho(order) {
 
       const targetUrl =
         defaultTranslation?.iframeUrl || provider?.iframeUrl || "";
+      if (targetUrl) {
+        setOrderPlayerLoading(true, "Загрузка фильма…");
+      }
       applyOrderPlayerUrl(targetUrl);
     }
 
@@ -981,15 +995,26 @@ async function openOrderOnReyohoho(order) {
           translationSelect.value || translationSelect.selectedIndex
         );
         const translation = translations[Number.isNaN(tIndex) ? 0 : tIndex];
-        const targetUrl =
-          translation?.iframeUrl || provider?.iframeUrl || "";
-        applyOrderPlayerUrl(targetUrl);
+      const targetUrl =
+        translation?.iframeUrl || provider?.iframeUrl || "";
+      if (targetUrl) {
+        setOrderPlayerLoading(true, "Загрузка фильма…");
+      }
+      applyOrderPlayerUrl(targetUrl);
+    };
+  }
+
+    const frame = document.getElementById("orderPlayerFrame");
+    if (frame) {
+      frame.onload = () => {
+        setOrderPlayerLoading(false);
       };
     }
 
     setProvider(initialProviderIndex);
   } catch (error) {
     console.error("Failed to load order player:", error);
+    setOrderPlayerLoading(false);
     if (typeof showToastNotification === "function") {
       showToastNotification("Не удалось загрузить плеер.", "error");
     } else {
