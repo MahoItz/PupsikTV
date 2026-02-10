@@ -260,12 +260,12 @@
 }
 
 /* Movie player (order) */
-#orderPlayerModal.modal {
+body.order-player-fullscreen #orderPlayerModal.modal {
     backdrop-filter: none;
     background-color: rgba(0, 0, 0, 0.9);
 }
 
-#orderPlayerModal .modal-content {
+body.order-player-fullscreen #orderPlayerModal .modal-content {
     backdrop-filter: none;
     animation: none;
     transform: none;

@@ -841,6 +841,27 @@ function buildOrderExternalPlayerUrl(kpId) {
   return kpId ? `${ORDER_PLAYER_EXTERNAL_BASE_URL}${kpId}` : "#";
 }
 
+function setupOrderPlayerFullscreenHandling() {
+  if (setupOrderPlayerFullscreenHandling.initialized) return;
+  setupOrderPlayerFullscreenHandling.initialized = true;
+
+  const applyFullscreenState = () => {
+    const fsElement = document.fullscreenElement;
+    const isOrderPlayer =
+      fsElement &&
+      (fsElement.id === "orderPlayerFrame" ||
+        (typeof fsElement.closest === "function" &&
+          fsElement.closest("#orderPlayerModal")));
+    document.body.classList.toggle(
+      "order-player-fullscreen",
+      Boolean(isOrderPlayer)
+    );
+  };
+
+  document.addEventListener("fullscreenchange", applyFullscreenState);
+  applyFullscreenState();
+}
+
 function setOrderPlayerLoading(isLoading, message) {
   const loader = document.getElementById("orderPlayerLoader");
   if (!loader) return;

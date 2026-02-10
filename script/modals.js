@@ -2316,6 +2316,7 @@ function closeModal(modalId, shouldReset = false) {
     if (frame) {
       frame.src = "about:blank";
     }
+    document.body.classList.remove("order-player-fullscreen");
   }
   if (modalId === "gameOrderDetailsModal") {
     if (typeof clearActiveGameOrderDetailsId === "function") {

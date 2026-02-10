@@ -620,6 +620,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   ratingTooltip.className = "rating-tooltip";
   document.body.appendChild(ratingTooltip);
 
+  if (typeof setupOrderPlayerFullscreenHandling === "function") {
+    setupOrderPlayerFullscreenHandling();
+  }
+
   settingsPanel = document.getElementById("settingsPanel");
   settingsToggleButton = document.getElementById("settingsToggleButton");
   settingsPanelCloseButton = document.getElementById("settingsPanelCloseButton");
