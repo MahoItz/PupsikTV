@@ -282,9 +282,9 @@ body.order-player-fullscreen #orderPlayerModal .modal-content {
 .order-player-header {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-bottom: 16px;
-    padding: 16px;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding: 12px;
     border-radius: 18px;
     background: linear-gradient(120deg, rgba(22, 24, 32, 0.85), rgba(14, 16, 22, 0.6));
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -294,51 +294,68 @@ body.order-player-fullscreen #orderPlayerModal .modal-content {
 .order-player-heading {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 4px;
 }
 
 .order-player-title {
     margin: 0;
-    font-size: 1.4rem;
+    font-size: 1.25rem;
 }
 
 .order-player-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    align-items: flex-end;
+    gap: 10px;
+    align-items: center;
+    flex: 1;
 }
 
 .order-player-control {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 200px;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
 }
 
 .order-player-control-label {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
     color: var(--text-secondary);
+    white-space: nowrap;
 }
 
 .order-player-actions {
     display: flex;
-    align-items: flex-end;
-    gap: 14px;
+    align-items: center;
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(18, 24, 38, 0.92), rgba(10, 12, 22, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 8px 18px rgba(0, 0, 0, 0.35);
 }
 
 .order-player-actions .btn {
     white-space: nowrap;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    line-height: 1;
+    border-radius: 10px;
 }
 
 .order-player-controls select {
-    min-width: 220px;
+    min-width: 180px;
+    height: 34px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    line-height: 1;
     border-color: rgba(255, 255, 255, 0.12);
     background: rgba(12, 14, 18, 0.75);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .order-player-controls select:focus {
