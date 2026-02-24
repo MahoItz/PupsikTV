@@ -1164,7 +1164,71 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   infoBtn.textContent = "i";
   infoBtn.title = "Информация о фильме";
   infoBtn.setAttribute("aria-label", "Информация о заказанном фильме");
-  infoBtn.onclick = () => openOrderDetailsModal(order.id);
+  infoBtn.onclick = async () => {
+    if (!order?.__virtual && order?.id !== undefined && order?.id !== null && order?.id !== "") {
+      openOrderDetailsModal(order.id);
+      return;
+    }
+    if (
+      order?.__virtual &&
+      order?.kinopoiskId &&
+      KINOPOISK_API_KEY
+    ) {
+      const needsDetails =
+        !order.description || !order.country || !order.imdbId || !order.kpRating;
+      const needsActors =
+        !Array.isArray(order.actors) || order.actors.length === 0;
+      if (needsDetails || needsActors) {
+        try {
+          const [details, staff] = await Promise.all([
+            needsDetails ? fetchKpFallbackDetails(order.kinopoiskId) : null,
+            needsActors ? fetchKpFallbackStaff(order.kinopoiskId) : null,
+          ]);
+          if (details) {
+            const countryText = Array.isArray(details.countries)
+              ? details.countries
+                  .map((c) => c.country)
+                  .filter(Boolean)
+                  .join(", ")
+              : "";
+            order.description =
+              details.description || details.shortDescription || order.description || "";
+            order.country = countryText || order.country || "";
+            order.imdbId = details.imdbId || order.imdbId || null;
+            order.kpRating =
+              details.ratingKinopoisk || details.ratingImdb || order.kpRating || "-";
+            if (details.filmLength && !order.length) {
+              order.length = details.filmLength;
+            }
+            if (details.year && !order.year) {
+              order.year = details.year;
+            }
+          }
+          if (staff) {
+            if (Array.isArray(staff.actors) && staff.actors.length) {
+              order.actors = staff.actors;
+            }
+            if (Array.isArray(staff.directors) && staff.directors.length) {
+              order.director = staff.directors.join(", ");
+            }
+          }
+        } catch (err) {
+          console.error("Failed to load preview details", err);
+        }
+      }
+    }
+    if (typeof openOrderDetailsModalFromData === "function") {
+      openOrderDetailsModalFromData(order);
+    }
+    if (
+      typeof fetchOrderParentGuideForOrder === "function" &&
+      order?.kinopoiskId &&
+      KINOPOISK_API_KEY &&
+      !order?.parentGuideStatus
+    ) {
+      fetchOrderParentGuideForOrder(order);
+    }
+  };
   card.appendChild(infoBtn);
 
   const poster = document.createElement("img");

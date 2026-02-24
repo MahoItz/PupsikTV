@@ -445,6 +445,86 @@ function showKPPreview() {
   preview.style.display = "block";
 }
 
+const watchlistPreviewDetailsCache = new Map();
+const watchlistPreviewDetailsPending = new Map();
+const watchlistPreviewStaffCache = new Map();
+const watchlistPreviewStaffPending = new Map();
+
+function getWatchlistPreviewDetails(filmId) {
+  if (!filmId || !KINOPOISK_API_KEY) {
+    return Promise.resolve(null);
+  }
+  if (watchlistPreviewDetailsCache.has(filmId)) {
+    return Promise.resolve(watchlistPreviewDetailsCache.get(filmId));
+  }
+  if (watchlistPreviewDetailsPending.has(filmId)) {
+    return watchlistPreviewDetailsPending.get(filmId);
+  }
+
+  const loadPromise = fetch(
+    `${KINOPOISK_FILM_URL}/${encodeURIComponent(filmId)}`,
+    {
+      headers: {
+        "X-API-KEY": KINOPOISK_API_KEY,
+        "Content-Type": "application/json",
+      },
+    }
+  )
+    .then(async (res) => {
+      if (!res.ok) {
+        await handleKinopoiskErrorResponse(res);
+        return null;
+      }
+      return res.json();
+    })
+    .then((data) => {
+      watchlistPreviewDetailsCache.set(filmId, data || null);
+      return data || null;
+    })
+    .catch((err) => {
+      console.error("Kinopoisk preview details error", err);
+      watchlistPreviewDetailsCache.set(filmId, null);
+      return null;
+    })
+    .finally(() => {
+      watchlistPreviewDetailsPending.delete(filmId);
+    });
+
+  watchlistPreviewDetailsPending.set(filmId, loadPromise);
+  return loadPromise;
+}
+
+function getWatchlistPreviewStaff(filmId) {
+  if (!filmId || !KINOPOISK_API_KEY) {
+    return Promise.resolve({ actors: [], directors: [] });
+  }
+  if (watchlistPreviewStaffCache.has(filmId)) {
+    return Promise.resolve(watchlistPreviewStaffCache.get(filmId));
+  }
+  if (watchlistPreviewStaffPending.has(filmId)) {
+    return watchlistPreviewStaffPending.get(filmId);
+  }
+
+  const loadPromise = fetchKPFilmStaff(filmId)
+    .then((staff) => {
+      const normalized = staff || { actors: [], directors: [] };
+      watchlistPreviewStaffCache.set(filmId, normalized);
+      return normalized;
+    })
+    .catch((err) => {
+      console.error("Kinopoisk preview staff error", err);
+      const fallback = { actors: [], directors: [] };
+      watchlistPreviewStaffCache.set(filmId, fallback);
+      return fallback;
+    })
+    .finally(() => {
+      watchlistPreviewStaffPending.delete(filmId);
+    });
+
+  watchlistPreviewStaffPending.set(filmId, loadPromise);
+  return loadPromise;
+}
+
 // Preview for watchlist modal
 function showWatchlistKPPreview() {
   const preview = document.getElementById("watchAutoPreview");
@@ -454,26 +534,74 @@ function showWatchlistKPPreview() {
     preview.style.display = "none";
     return;
   }
+  const filmId = selectedKPOrderMovie.filmId || null;
+  const hasDetails = filmId && watchlistPreviewDetailsCache.has(filmId);
+  const hasStaff = filmId && watchlistPreviewStaffCache.has(filmId);
+  const details = hasDetails ? watchlistPreviewDetailsCache.get(filmId) : null;
+  const staff = hasStaff ? watchlistPreviewStaffCache.get(filmId) : null;
+
+  if (filmId && KINOPOISK_API_KEY) {
+    if (!hasDetails) {
+      getWatchlistPreviewDetails(filmId).then(() => {
+        if (selectedKPOrderMovie?.filmId === filmId) {
+          showWatchlistKPPreview();
+        }
+      });
+    }
+    if (!hasStaff) {
+      getWatchlistPreviewStaff(filmId).then(() => {
+        if (selectedKPOrderMovie?.filmId === filmId) {
+          showWatchlistKPPreview();
+        }
+      });
+    }
+  }
+
   if (
     selectedKPOrderMovie.filmLength === undefined &&
-    selectedKPOrderMovie.filmId
+    filmId &&
+    KINOPOISK_API_KEY &&
+    !details?.filmLength
   ) {
-    fetchKPFilmLength(selectedKPOrderMovie.filmId).then((len) => {
+    fetchKPFilmLength(filmId).then((len) => {
       selectedKPOrderMovie.filmLength = len;
       showWatchlistKPPreview();
     });
   }
+
+  if (selectedKPOrderMovie.filmLength === undefined && details?.filmLength) {
+    selectedKPOrderMovie.filmLength = details.filmLength;
+  }
+
+  const countryText = Array.isArray(details?.countries)
+    ? details.countries.map((c) => c.country).filter(Boolean).join(", ")
+    : "";
+  const directorText = Array.isArray(staff?.directors)
+    ? staff.directors.join(", ")
+    : "";
   const order = {
+    id: filmId ? `kp-${filmId}` : `kp-${Date.now()}`,
+    __virtual: true,
     title: selectedKPOrderMovie.nameRu || selectedKPOrderMovie.nameEn || "",
     originalTitle: selectedKPOrderMovie.nameEn || "",
     year: selectedKPOrderMovie.year || "",
     length: selectedKPOrderMovie.filmLength || null,
-    kpRating: selectedKPOrderMovie.rating || "-",
+    kpRating:
+      details?.ratingKinopoisk ||
+      details?.ratingImdb ||
+      selectedKPOrderMovie.rating ||
+      "-",
     poster:
       selectedKPOrderMovie.posterUrlPreview ||
       selectedKPOrderMovie.posterUrl ||
       "https://via.placeholder.com/300x400?text=Нет+постера",
     genres: selectedKPOrderMovie.genres?.map((g) => g.genre).join(", ") || "",
+    description: details?.description || details?.shortDescription || "",
+    country: countryText,
+    director: directorText,
+    actors: staff?.actors || [],
+    kinopoiskId: filmId || null,
+    imdbId: details?.imdbId || null,
     orderBy: document.getElementById("watchOrderBy").value || "",
     orderType: document.getElementById("watchOrderType").value || "",
     dateAdded: new Date().toISOString().split("T")[0],

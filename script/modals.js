@@ -446,6 +446,8 @@ async function loadStudios(item, section, requestId, tableName = "movies") {
   const id = item.id;
   const title = item.title;
   const year = item.year;
+  const kinopoiskId = item.kinopoiskId || item.kpId || item.kp_id || null;
+  const knownImdbId = item.imdbId || item.imdb_id || null;
   const cacheKey = `${tableName}_${id}`;
 
   if (movieStudiosLoadCache.has(cacheKey)) {
@@ -456,38 +458,62 @@ async function loadStudios(item, section, requestId, tableName = "movies") {
     return;
   }
 
-  setMovieStudiosStatus(section, "Загружаем...");
+  setMovieStudiosStatus(section, "Р—Р°РіСЂСѓР¶Р°РµРј...");
 
   try {
-    setMovieStudiosStatus(section, "Ищем на Кинопоиске...");
-    const kpFilm = await searchKinopoiskByTitleYear(title, year);
+    if (knownImdbId && TMDB_ENABLED) {
+      setMovieStudiosStatus(section, "Р—Р°РіСЂСѓР¶Р°РµРј СЃС‚СѓРґРёРё...");
+      const studiosData = await fetchStudiosFromTmdb(knownImdbId);
 
-    if (requestId !== movieStudiosRequestId) return;
+      if (requestId !== movieStudiosRequestId) return;
 
-    if (!kpFilm) {
-      setMovieStudiosStatus(section, "Фильм не найден на Кинопоиске");
+      if (!studiosData || studiosData.studios.length === 0) {
+        setMovieStudiosStatus(section, "РЎС‚СѓРґРёРё РЅРµ РЅР°Р№РґРµРЅС‹");
+        return;
+      }
+
+      movieStudiosLoadCache.set(cacheKey, studiosData);
+      renderMovieStudios(section, studiosData);
+
+      await saveStudiosToDb(id, studiosData, tableName);
+
+      item.studios = JSON.stringify(studiosData);
       return;
     }
 
-    const kinopoiskId = kpFilm.filmId || kpFilm.kinopoiskId || kpFilm.id;
+    let resolvedKinopoiskId = kinopoiskId;
 
-    setMovieStudiosStatus(section, "Получаем IMDb ID...");
-    const imdbId = await fetchImdbIdFromKinopoiskFilm(kinopoiskId);
+    if (!resolvedKinopoiskId) {
+      setMovieStudiosStatus(section, "РС‰РµРј РЅР° РљРёРЅРѕРїРѕРёСЃРєРµ...");
+      const kpFilm = await searchKinopoiskByTitleYear(title, year);
+
+      if (requestId !== movieStudiosRequestId) return;
+
+      if (!kpFilm) {
+        setMovieStudiosStatus(section, "Р¤РёР»СЊРј РЅРµ РЅР°Р№РґРµРЅ РЅР° РљРёРЅРѕРїРѕРёСЃРєРµ");
+        return;
+      }
+
+      resolvedKinopoiskId = kpFilm.filmId || kpFilm.kinopoiskId || kpFilm.id;
+    }
+
+    setMovieStudiosStatus(section, "РџРѕР»СѓС‡Р°РµРј IMDb ID...");
+    const imdbId = await fetchImdbIdFromKinopoiskFilm(resolvedKinopoiskId);
 
     if (requestId !== movieStudiosRequestId) return;
 
     if (!imdbId) {
-      setMovieStudiosStatus(section, "IMDb ID не найден");
+      setMovieStudiosStatus(section, "IMDb ID РЅРµ РЅР°Р№РґРµРЅ");
       return;
     }
 
-    setMovieStudiosStatus(section, "Загружаем студии...");
+    setMovieStudiosStatus(section, "Р—Р°РіСЂСѓР¶Р°РµРј СЃС‚СѓРґРёРё...");
     const studiosData = await fetchStudiosFromTmdb(imdbId);
 
     if (requestId !== movieStudiosRequestId) return;
 
     if (!studiosData || studiosData.studios.length === 0) {
-      setMovieStudiosStatus(section, "Студии не найдены");
+      setMovieStudiosStatus(section, "РЎС‚СѓРґРёРё РЅРµ РЅР°Р№РґРµРЅС‹");
       return;
     }
 
@@ -500,7 +526,7 @@ async function loadStudios(item, section, requestId, tableName = "movies") {
   } catch (err) {
     console.error("Error loading studios", err);
     if (requestId === movieStudiosRequestId) {
-      setMovieStudiosStatus(section, "Ошибка загрузки");
+      setMovieStudiosStatus(section, "РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё");
     }
   }
 }
