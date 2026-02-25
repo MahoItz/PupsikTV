@@ -1,0 +1,115 @@
+.admin-player-page {
+  width: min(1100px, calc(100% - 28px));
+  margin: 20px auto 40px;
+}
+
+.admin-player-page__header {
+  margin-bottom: 18px;
+  padding: 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  background: rgba(7, 18, 38, 0.82);
+}
+
+.admin-player-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  text-decoration: none;
+  color: #8de9ff;
+}
+
+.admin-player-page__header h1 {
+  margin: 0 0 6px;
+}
+
+.admin-player-page__header p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.admin-player-app {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-player-search,
+.admin-player-selection,
+.admin-player-embed,
+.admin-player-denied {
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  border-radius: 16px;
+  background: rgba(7, 18, 38, 0.82);
+  padding: 16px;
+}
+
+.admin-player-search label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.admin-player-search__input-wrap {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-player-search__input-wrap .search-input {
+  flex: 1;
+}
+
+.admin-player-search__results {
+  margin-top: 10px;
+}
+
+.admin-player-selection {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.admin-player-selection__poster-wrap img {
+  width: 90px;
+  height: 120px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.admin-player-selection__meta h2 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+}
+
+.admin-player-selection__meta p {
+  margin: 0 0 4px;
+  color: var(--text-secondary);
+}
+
+.admin-player-embed .order-player-frame-wrap {
+  height: min(68vh, 720px);
+}
+
+.admin-player-denied {
+  text-align: center;
+}
+
+.admin-player-denied h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 720px) {
+  .admin-player-selection {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-player-selection__poster-wrap {
+    display: flex;
+    justify-content: center;
+  }
+
+  .admin-player-search__input-wrap {
+    flex-direction: column;
+  }
+}

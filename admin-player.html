@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pupsik TV — Админ плеер</title>
+  <link rel="icon" href="images/Pupsik_TV_Icon.webp">
+  <link rel="stylesheet" href="/style/base.css">
+  <link rel="stylesheet" href="/style/buttons.css">
+  <link rel="stylesheet" href="/style/forms.css">
+  <link rel="stylesheet" href="/style/autocomplete.css">
+  <link rel="stylesheet" href="/style/modals.css">
+  <link rel="stylesheet" href="/style/admin-player.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+  <div class="admin-player-page">
+    <header class="admin-player-page__header">
+      <a class="admin-player-page__back" href="/" aria-label="Назад на главную">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+        <span>На главную</span>
+      </a>
+      <h1>Админ-плеер</h1>
+      <p>Поиск фильма по Кинопоиску и просмотр через плеер Reyohoho.</p>
+    </header>
+
+    <main id="adminPlayerApp" class="admin-player-app" hidden>
+      <section class="admin-player-search">
+        <label for="adminPlayerSearchInput">Название фильма</label>
+        <div class="admin-player-search__input-wrap">
+          <input id="adminPlayerSearchInput" class="search-input" type="text" placeholder="Введите название фильма">
+          <button id="adminPlayerSearchButton" type="button" class="search-btn" aria-label="Поиск фильма">
+            <i class="fas fa-search" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="adminPlayerResultsContainer" class="admin-player-search__results" style="display:none;">
+          <div id="adminPlayerResults" class="autocomplete-list"></div>
+        </div>
+      </section>
+
+      <section id="adminPlayerSelection" class="admin-player-selection" hidden>
+        <div class="admin-player-selection__poster-wrap">
+          <img id="adminPlayerSelectionPoster" src="images/placeholder-poster.webp" alt="Постер выбранного фильма">
+        </div>
+        <div class="admin-player-selection__meta">
+          <h2 id="adminPlayerSelectionTitle"></h2>
+          <p id="adminPlayerSelectionYear"></p>
+          <p id="adminPlayerSelectionGenres"></p>
+        </div>
+      </section>
+
+      <section class="order-player-modal admin-player-embed">
+        <div class="order-player-header">
+          <div class="order-player-heading">
+            <h2 id="adminPlayerTitle" class="order-player-title">Выберите фильм для просмотра</h2>
+          </div>
+          <div class="order-player-actions">
+            <div class="order-player-controls">
+              <label class="order-player-control">
+                <span class="order-player-control-label">Источник</span>
+                <select id="adminPlayerSourceSelect" aria-label="Источник"></select>
+              </label>
+              <label class="order-player-control">
+                <span class="order-player-control-label">Перевод</span>
+                <select id="adminPlayerTranslationSelect" aria-label="Перевод"></select>
+              </label>
+            </div>
+            <a id="adminPlayerOpenExternal" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Открыть во вкладке</a>
+          </div>
+        </div>
+        <div class="order-player-frame-wrap">
+          <div id="adminPlayerLoader" class="order-player-loader" aria-hidden="true">
+            <div class="order-player-spinner"></div>
+            <div class="order-player-loader-text">Загружаю плеер…</div>
+          </div>
+          <iframe id="adminPlayerFrame" class="order-player-frame" title="Плеер фильма" loading="lazy"
+            allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </section>
+    </main>
+
+    <section id="adminPlayerAccessDenied" class="admin-player-denied" hidden>
+      <h2>Только для админа</h2>
+      <p>Страница доступна после входа в админ-режим на главной странице.</p>
+      <a href="/" class="btn btn-secondary">Вернуться на главную</a>
+    </section>
+  </div>
+
+  <script src="script/admin-player.js" defer></script>
+</body>
+
+</html>
