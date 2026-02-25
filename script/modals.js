@@ -984,7 +984,7 @@ function createDetailsInput(field, record) {
     input.type = "number";
     input.min = "0";
     input.max = "11";
-    input.step = "0.1";
+    input.step = "0.01";
   } else {
     input.type = field.type === "number" ? "number" : "text";
   }
@@ -1001,11 +1001,15 @@ function normalizeDetailsValue(field, inputValue, record) {
     return parsed;
   }
   if (field.type === "rating") {
-    const parsed = parseFloat(inputValue);
+    if (hasTooManyFractionDigits(String(inputValue ?? ""))) {
+      return record ? record[field.localKey] : null;
+    }
+    const parsed = parseRatingInputValue(String(inputValue ?? ""));
     if (!Number.isFinite(parsed)) {
       return record ? record[field.localKey] : null;
     }
-    return Math.min(11, Math.max(0, parsed));
+    const clamped = Math.min(11, Math.max(0, parsed));
+    return roundRatingToTwoDigits(clamped);
   }
   if (typeof inputValue === "string") {
     return inputValue.trim();
@@ -2498,7 +2502,12 @@ function setupRatingStars(containerId = "ratingStars") {
 
   if (ratingInput) {
     ratingInput.addEventListener("input", function () {
-      const value = parseFloat(this.value.replace(/,/, "."));
+      const value = parseRatingInputValue(this.value);
+      if (hasTooManyFractionDigits(this.value)) {
+        this.setCustomValidity("Можно ввести не более 2 знаков после запятой");
+        this.reportValidity();
+        return;
+      }
       if (!isNaN(value) && value >= 0 && value <= 11) {
         this.setCustomValidity("");
         setRatingStars(containerId, value, false);
@@ -2569,11 +2578,30 @@ function getCurrentRating(containerId) {
   return parseFloat(container.dataset.currentRating) || 0;
 }
 
+function parseRatingInputValue(rawValue) {
+  if (typeof rawValue !== "string") return NaN;
+  return parseFloat(rawValue.trim().replace(/,/g, "."));
+}
+
+function hasTooManyFractionDigits(rawValue) {
+  if (typeof rawValue !== "string") return false;
+  const normalized = rawValue.trim().replace(/,/g, ".");
+  if (!normalized || !normalized.includes(".")) return false;
+  const fraction = normalized.split(".")[1] || "";
+  return fraction.length > 2;
+}
+
+function roundRatingToTwoDigits(ratingValue) {
+  if (!Number.isFinite(ratingValue)) return NaN;
+  return Math.round(ratingValue * 100) / 100;
+}
+
 function isRatingValid(r) {
   return typeof r === "number" && !isNaN(r) && r >= 0 && r <= 11;
 }
 
 function getRatingValue(inputId) {
   const el = document.getElementById(inputId);
-  return el ? parseFloat(el.value.replace(/,/, ".")) : NaN;
+  const parsed = el ? parseRatingInputValue(el.value) : NaN;
+  return roundRatingToTwoDigits(parsed);
 }
