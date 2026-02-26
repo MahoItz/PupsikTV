@@ -21,20 +21,22 @@ function readHistoryCache() {
     const parsed = JSON.parse(raw);
     const timestamp = Number(parsed?.timestamp);
     const items = Array.isArray(parsed?.items) ? parsed.items : [];
+    const etag = typeof parsed?.etag === "string" ? parsed.etag : "";
 
     if (!timestamp || Number.isNaN(timestamp)) return null;
     if (!items.length) return null;
     if (Date.now() - timestamp > ADMIN_PLAYER_HISTORY_TTL_MS) return null;
 
-    return items;
+    return { items, etag };
   } catch (error) {
     console.warn("Failed to read admin player history cache", error);
     return null;
   }
 }
 
-function writeHistoryCache(list) {
+function writeHistoryCache(list, etag = "") {
   const safeList = Array.isArray(list) ? list.slice(0, MAX_PLAYER_HISTORY) : [];
+  const safeEtag = typeof etag === "string" ? etag : "";
 
   try {
     localStorage.setItem(
@@ -42,6 +44,7 @@ function writeHistoryCache(list) {
       JSON.stringify({
         timestamp: Date.now(),
         items: safeList,
+        etag: safeEtag,
       })
     );
   } catch (error) {
@@ -52,8 +55,8 @@ function writeHistoryCache(list) {
 }
 
 function updateHistoryState(list, options = {}) {
-  const { shouldRender = false } = options;
-  const safeList = writeHistoryCache(list);
+  const { shouldRender = false, etag = "" } = options;
+  const safeList = writeHistoryCache(list, etag);
   currentHistory = safeList;
   if (shouldRender) renderHistory(safeList);
   return safeList;
@@ -104,17 +107,29 @@ function upsertHistoryItem(list, item) {
 
 async function loadHistory() {
   try {
+    const cache = readHistoryCache();
+    const cachedEtag = cache?.etag || "";
+
     const response = await fetch("/api/admin-player-history", {
-      headers: getAdminAuthHeaders(),
+      headers: {
+        ...getAdminAuthHeaders(),
+        ...(cachedEtag ? { "If-None-Match": cachedEtag } : {}),
+      },
     });
+
+    if (response.status === 304) {
+      return currentHistory;
+    }
+
     if (!response.ok) throw new Error(`Failed to fetch history: ${response.status}`);
     const payload = await response.json();
+    const etag = response.headers.get("ETag") || "";
     const list = Array.isArray(payload?.items) ? payload.items : [];
     const normalized = list.map((item) => ({ ...item, watched_at: item.created_at || item.watched_at }));
-    return updateHistoryState(normalized, { shouldRender: true });
+    return updateHistoryState(normalized, { shouldRender: true, etag });
   } catch (error) {
     console.error("Failed to load admin player history", error);
-    return updateHistoryState([], { shouldRender: true });
+    return currentHistory;
   }
 }
 
@@ -138,7 +153,8 @@ async function saveHistoryItem(movie) {
     const payload = await response.json();
     const list = Array.isArray(payload?.items) ? payload.items : [];
     const normalized = list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
-    return updateHistoryState(normalized, { shouldRender: true });
+    const etag = response.headers.get("ETag") || "";
+    return updateHistoryState(normalized, { shouldRender: true, etag });
   } catch (error) {
     console.error("Failed to save admin player history", error);
     return currentHistory;
@@ -163,7 +179,8 @@ async function deleteHistoryItem(kpId) {
     const payload = await response.json();
     const list = Array.isArray(payload?.items) ? payload.items : [];
     const normalized = list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
-    return updateHistoryState(normalized, { shouldRender: true });
+    const etag = response.headers.get("ETag") || "";
+    return updateHistoryState(normalized, { shouldRender: true, etag });
   } catch (error) {
     console.error("Failed to delete admin player history", error);
     return currentHistory;
@@ -625,8 +642,8 @@ async function initPage() {
     if (denied) denied.hidden = true;
 
     const cachedHistory = readHistoryCache();
-    if (cachedHistory?.length) {
-      updateHistoryState(cachedHistory, { shouldRender: true });
+    if (cachedHistory?.items?.length) {
+      updateHistoryState(cachedHistory.items, { shouldRender: true, etag: cachedHistory.etag || "" });
       setHistoryLoaderMessage("Обновляем историю в фоне...");
       setHistoryLoading(true);
     } else {

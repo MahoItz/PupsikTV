@@ -1,9 +1,25 @@
 const { createClient } = require("@supabase/supabase-js");
+const { createHash } = require("node:crypto");
 const { extractBearerToken, verifyAdminToken } = require("./_admin-session.js");
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const TABLE_NAME = "admin_player_history";
 const MAX_PLAYER_HISTORY = 15;
+const HISTORY_CACHE_CONTROL = "private, max-age=30, must-revalidate";
+
+function createHistoryEtag(rows) {
+  const payload = (Array.isArray(rows) ? rows : [])
+    .map((row) => `${row?.kp_id || ""}:${row?.created_at || ""}`)
+    .join("|");
+
+  const hash = createHash("sha1").update(payload).digest("hex");
+  return `"${hash}"`;
+}
+
+function normalizeEtag(value) {
+  if (typeof value !== "string") return "";
+  return value.trim();
+}
 
 function parseYear(value) {
   if (value === null || value === undefined || value === "") return null;
@@ -55,7 +71,7 @@ function verifyAdminRequest(req) {
   return { ok: true };
 }
 
-async function getHistory(supabase, res) {
+async function getHistory(supabase, req, res) {
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select("created_at, kp_id, title, year, poster")
@@ -67,7 +83,18 @@ async function getHistory(supabase, res) {
     return res.status(500).json({ error: "Failed to load history" });
   }
 
-  return res.status(200).json({ items: data || [] });
+  const items = data || [];
+  const etag = createHistoryEtag(items);
+  const requestEtag = normalizeEtag(req.headers["if-none-match"]);
+
+  res.setHeader("Cache-Control", HISTORY_CACHE_CONTROL);
+  res.setHeader("ETag", etag);
+
+  if (requestEtag && requestEtag === etag) {
+    return res.status(304).end();
+  }
+
+  return res.status(200).json({ items });
 }
 
 async function saveHistoryItem(supabase, req, res) {
@@ -128,7 +155,7 @@ async function saveHistoryItem(supabase, req, res) {
     }
   }
 
-  return getHistory(supabase, res);
+  return getHistory(supabase, req, res);
 }
 
 async function handler(req, res) {
@@ -159,7 +186,7 @@ async function handler(req, res) {
   }
 
   if (method === "GET") {
-    return getHistory(supabase, res);
+    return getHistory(supabase, req, res);
   }
 
   if (method === "DELETE") {
@@ -175,7 +202,7 @@ async function handler(req, res) {
       return res.status(500).json({ error: "Failed to delete history item" });
     }
 
-    return getHistory(supabase, res);
+    return getHistory(supabase, req, res);
   }
 
   return saveHistoryItem(supabase, req, res);
