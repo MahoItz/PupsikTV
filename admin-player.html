@@ -8,6 +8,7 @@
   <link rel="icon" href="images/Pupsik_TV_Icon.webp">
   <link rel="stylesheet" href="/style/base.css">
   <link rel="stylesheet" href="/style/buttons.css">
+  <link rel="stylesheet" href="/style/controls.css">
   <link rel="stylesheet" href="/style/forms.css">
   <link rel="stylesheet" href="/style/autocomplete.css">
   <link rel="stylesheet" href="/style/modals.css">
@@ -17,19 +18,15 @@
 
 <body>
   <div class="admin-player-page">
-    <header class="admin-player-page__header">
-      <a class="admin-player-page__back" href="/" aria-label="Назад на главную">
+    <a class="admin-player-page__back" href="/" aria-label="Назад на главную">
         <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
         <span>На главную</span>
       </a>
-      <h1>Админ-плеер</h1>
-      <p>Поиск фильма по Кинопоиску и просмотр через плеер Reyohoho.</p>
-    </header>
 
     <main id="adminPlayerApp" class="admin-player-app" hidden>
       <section class="admin-player-search">
         <label for="adminPlayerSearchInput">Название фильма</label>
-        <div class="admin-player-search__input-wrap">
+        <div class="admin-player-search__input-wrap input-with-btn">
           <input id="adminPlayerSearchInput" class="search-input" type="text" placeholder="Введите название фильма">
           <button id="adminPlayerSearchButton" type="button" class="search-btn" aria-label="Поиск фильма">
             <i class="fas fa-search" aria-hidden="true"></i>
