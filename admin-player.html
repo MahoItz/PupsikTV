@@ -24,48 +24,54 @@
       </a>
 
     <main id="adminPlayerApp" class="admin-player-app" hidden>
-      <section class="admin-player-search">
-        <label for="adminPlayerSearchInput">Название фильма</label>
-        <div class="admin-player-search__input-wrap input-with-btn">
-          <input id="adminPlayerSearchInput" class="search-input" type="text" placeholder="Введите название фильма">
-          <button id="adminPlayerSearchButton" type="button" class="search-btn" aria-label="Поиск фильма">
-            <i class="fas fa-search" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div id="adminPlayerResultsContainer" class="admin-player-search__results" style="display:none;">
-          <div id="adminPlayerResults" class="autocomplete-list"></div>
-        </div>
-      </section>
-
-      
-
-      <section class="order-player-modal admin-player-embed">
-        <div class="order-player-header">
-          <div class="order-player-heading">
-            <h2 id="adminPlayerTitle" class="order-player-title">Выберите фильм для просмотра</h2>
+      <div class="admin-player-main">
+        <section class="admin-player-search">
+          <label for="adminPlayerSearchInput">Название фильма</label>
+          <div class="admin-player-search__input-wrap input-with-btn">
+            <input id="adminPlayerSearchInput" class="search-input" type="text" placeholder="Введите название фильма">
+            <button id="adminPlayerSearchButton" type="button" class="search-btn" aria-label="Поиск фильма">
+              <i class="fas fa-search" aria-hidden="true"></i>
+            </button>
           </div>
-          <div class="order-player-actions">
-            <div class="order-player-controls">
-              <label class="order-player-control">
-                <span class="order-player-control-label">Источник</span>
-                <select id="adminPlayerSourceSelect" aria-label="Источник"></select>
-              </label>
-              <label class="order-player-control">
-                <span class="order-player-control-label">Перевод</span>
-                <select id="adminPlayerTranslationSelect" aria-label="Перевод"></select>
-              </label>
+          <div id="adminPlayerResultsContainer" class="admin-player-search__results" style="display:none;">
+            <div id="adminPlayerResults" class="autocomplete-list"></div>
+          </div>
+        </section>
+
+        <section class="order-player-modal admin-player-embed">
+          <div class="order-player-header">
+            <div class="order-player-heading">
+              <h2 id="adminPlayerTitle" class="order-player-title">Выберите фильм для просмотра</h2>
             </div>
-            <a id="adminPlayerOpenExternal" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Открыть во вкладке</a>
+            <div class="order-player-actions">
+              <div class="order-player-controls">
+                <label class="order-player-control">
+                  <span class="order-player-control-label">Источник</span>
+                  <select id="adminPlayerSourceSelect" aria-label="Источник"></select>
+                </label>
+                <label class="order-player-control">
+                  <span class="order-player-control-label">Перевод</span>
+                  <select id="adminPlayerTranslationSelect" aria-label="Перевод"></select>
+                </label>
+              </div>
+              <a id="adminPlayerOpenExternal" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Открыть во вкладке</a>
+            </div>
           </div>
-        </div>
-        <div class="order-player-frame-wrap">
-          <div id="adminPlayerLoader" class="order-player-loader" aria-hidden="true">
-            <div class="order-player-spinner"></div>
-            <div class="order-player-loader-text">Загружаю плеер…</div>
+          <div class="order-player-frame-wrap">
+            <div id="adminPlayerLoader" class="order-player-loader" aria-hidden="true">
+              <div class="order-player-spinner"></div>
+              <div class="order-player-loader-text">Загружаю плеер…</div>
+            </div>
+            <iframe id="adminPlayerFrame" class="order-player-frame" title="Плеер фильма" loading="lazy"
+              allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
           </div>
-          <iframe id="adminPlayerFrame" class="order-player-frame" title="Плеер фильма" loading="lazy"
-            allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
-        </div>
+        </section>
+      </div>
+
+      <section class="admin-player-history">
+        <h2 class="admin-player-history__title">История просмотра</h2>
+        <div id="adminPlayerHistoryList" class="admin-player-history__list"></div>
+        <p class="admin-player-history__empty">Пока ничего не смотрели</p>
       </section>
     </main>
 
