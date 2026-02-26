@@ -4,23 +4,15 @@ const ORDER_PLAYER_API_URL = "https://fbphdplay.top/api/players?kinopoisk=";
 const ORDER_PLAYER_DEFAULT_TYPE = "Alloha";
 const ORDER_PLAYER_EXTERNAL_BASE_URL = "https://flcksbr.xyz/film/";
 const MAX_PLAYER_HISTORY = 15;
-const PLAYER_HISTORY_STORAGE_KEY = "adminPlayerHistory";
 
 let kinopoiskApiKey = "";
 let searchResults = [];
 let selectedMovie = null;
 let searchRequestId = 0;
 
-function getHistoryFromStorage() {
-  try {
-    const raw = localStorage.getItem(PLAYER_HISTORY_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.error("Failed to parse admin player history", error);
-    return [];
-  }
+function getAdminAuthHeaders() {
+  const token = localStorage.getItem("adminToken") || "";
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 function normalizeHistoryItem(movie) {
@@ -30,7 +22,7 @@ function normalizeHistoryItem(movie) {
   return {
     kp_id: Number(kpId),
     title: getMovieTitle(movie),
-    year: movie?.year || "",
+    year: movie?.year || null,
     poster: movie?.posterUrlPreview || movie?.posterUrl || movie?.poster || "",
     watched_at: new Date().toISOString(),
   };
@@ -43,17 +35,43 @@ function upsertHistoryItem(list, item) {
   return [item, ...deduped].slice(0, MAX_PLAYER_HISTORY);
 }
 
-function saveHistoryList(list) {
-  localStorage.setItem(PLAYER_HISTORY_STORAGE_KEY, JSON.stringify(list));
+async function loadHistory() {
+  try {
+    const response = await fetch("/api/admin-player-history", {
+      headers: getAdminAuthHeaders(),
+    });
+    if (!response.ok) throw new Error(`Failed to fetch history: ${response.status}`);
+    const payload = await response.json();
+    const list = Array.isArray(payload?.items) ? payload.items : [];
+    return list.map((item) => ({ ...item, watched_at: item.created_at || item.watched_at }));
+  } catch (error) {
+    console.error("Failed to load admin player history", error);
+    return [];
+  }
 }
 
-function saveHistoryItem(movie) {
+async function saveHistoryItem(movie) {
   const item = normalizeHistoryItem(movie);
-  if (!item) return getHistoryFromStorage();
+  if (!item) return [];
 
-  const updatedList = upsertHistoryItem(getHistoryFromStorage(), item);
-  saveHistoryList(updatedList);
-  return updatedList;
+  try {
+    const response = await fetch("/api/admin-player-history", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAdminAuthHeaders(),
+      },
+      body: JSON.stringify(item),
+    });
+
+    if (!response.ok) throw new Error(`Failed to save history: ${response.status}`);
+    const payload = await response.json();
+    const list = Array.isArray(payload?.items) ? payload.items : [];
+    return list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
+  } catch (error) {
+    console.error("Failed to save admin player history", error);
+    return [];
+  }
 }
 
 function formatWatchedAt(isoDate) {
@@ -379,7 +397,7 @@ function setupSearchEvents() {
     input.value = getMovieTitle(selectedMovie);
     resultsContainer.style.display = "none";
     await loadPlayerForMovie(selectedMovie);
-    const updatedHistory = saveHistoryItem(selectedMovie);
+    const updatedHistory = await saveHistoryItem(selectedMovie);
     renderHistory(updatedHistory);
   });
 
@@ -391,14 +409,14 @@ function setupSearchEvents() {
     const kpId = Number(historyItem.dataset.kpId);
     if (!kpId) return;
 
-    const history = getHistoryFromStorage();
+    const history = await loadHistory();
     const item = history.find((entry) => Number(entry?.kp_id) === kpId);
     if (!item) return;
 
     selectedMovie = buildMovieFromHistoryItem(item);
     input.value = getMovieTitle(selectedMovie);
     await loadPlayerForMovie(selectedMovie);
-    const updatedHistory = saveHistoryItem(selectedMovie);
+    const updatedHistory = await saveHistoryItem(selectedMovie);
     renderHistory(updatedHistory);
   });
 }
@@ -416,7 +434,7 @@ async function initPage() {
 
     if (app) app.hidden = false;
     if (denied) denied.hidden = true;
-    renderHistory(getHistoryFromStorage());
+    renderHistory(await loadHistory());
     setupSearchEvents();
   } catch (error) {
     console.error("Admin player init error", error);
