@@ -94,6 +94,17 @@ async function deleteHistoryItem(kpId) {
 }
 
 
+
+function setHistoryLoading(isLoading) {
+  const loader = document.getElementById("adminPlayerHistoryLoader");
+  const historyList = document.getElementById("adminPlayerHistoryList");
+  const emptyState = document.querySelector(".admin-player-history__empty");
+
+  if (loader) loader.hidden = !isLoading;
+  if (historyList) historyList.setAttribute("aria-busy", String(Boolean(isLoading)));
+  if (emptyState && isLoading) emptyState.hidden = true;
+}
+
 function formatWatchedAt(isoDate) {
   if (!isoDate) return "";
   const date = new Date(isoDate);
@@ -505,7 +516,13 @@ async function initPage() {
 
     if (app) app.hidden = false;
     if (denied) denied.hidden = true;
-    renderHistory(await loadHistory());
+    setHistoryLoading(true);
+    try {
+      const history = await loadHistory();
+      renderHistory(history);
+    } finally {
+      setHistoryLoading(false);
+    }
     setupSearchEvents();
   } catch (error) {
     console.error("Admin player init error", error);
