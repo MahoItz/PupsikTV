@@ -74,6 +74,26 @@ async function saveHistoryItem(movie) {
   }
 }
 
+async function deleteHistoryItem(kpId) {
+  if (!kpId) return [];
+
+  try {
+    const response = await fetch(`/api/admin-player-history?kp_id=${encodeURIComponent(kpId)}`, {
+      method: "DELETE",
+      headers: getAdminAuthHeaders(),
+    });
+
+    if (!response.ok) throw new Error(`Failed to delete history: ${response.status}`);
+    const payload = await response.json();
+    const list = Array.isArray(payload?.items) ? payload.items : [];
+    return list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
+  } catch (error) {
+    console.error("Failed to delete admin player history", error);
+    return [];
+  }
+}
+
+
 function formatWatchedAt(isoDate) {
   if (!isoDate) return "";
   const date = new Date(isoDate);
@@ -95,16 +115,35 @@ function renderHistory(list) {
     button.className = "admin-player-history-item";
     button.dataset.kpId = String(item.kp_id);
 
+    const posterWrap = document.createElement("span");
+    posterWrap.className = "admin-player-history-item__poster";
+    const poster = document.createElement("img");
+    poster.src = item.poster || "images/placeholder-poster.webp";
+    poster.alt = item.title ? `??????: ${item.title}` : "?????? ??????";
+    poster.loading = "lazy";
+    posterWrap.appendChild(poster);
+
+    const content = document.createElement("span");
+    content.className = "admin-player-history-item__content";
+
     const title = document.createElement("span");
     title.className = "admin-player-history-item__title";
-    title.textContent = item.title || "Без названия";
+    title.textContent = item.title || "??? ????????";
 
     const meta = document.createElement("span");
     meta.className = "admin-player-history-item__meta";
     const watchedAt = formatWatchedAt(item.watched_at);
-    meta.textContent = item.year ? `${item.year}${watchedAt ? ` • ${watchedAt}` : ""}` : watchedAt;
+    meta.textContent = item.year ? `${item.year}${watchedAt ? ` ? ${watchedAt}` : ""}` : watchedAt;
 
-    button.append(title, meta);
+    const remove = document.createElement("span");
+    remove.className = "admin-player-history-item__remove";
+    remove.setAttribute("role", "button");
+    remove.setAttribute("tabindex", "0");
+    remove.setAttribute("aria-label", "??????? ?? ???????");
+    remove.textContent = "?";
+
+    content.append(title, meta);
+    button.append(posterWrap, content, remove);
     historyList.appendChild(button);
   });
 
@@ -112,6 +151,7 @@ function renderHistory(list) {
     emptyState.hidden = safeList.length > 0;
   }
 }
+
 
 function buildMovieFromHistoryItem(item) {
   return {
@@ -403,6 +443,18 @@ function setupSearchEvents() {
 
   const historyList = document.getElementById("adminPlayerHistoryList");
   historyList?.addEventListener("click", async (event) => {
+    const removeBtn = event.target.closest(".admin-player-history-item__remove");
+    if (removeBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      const historyItem = removeBtn.closest(".admin-player-history-item");
+      const kpId = Number(historyItem?.dataset.kpId);
+      if (!kpId) return;
+      const updatedHistory = await deleteHistoryItem(kpId);
+      renderHistory(updatedHistory);
+      return;
+    }
+
     const historyItem = event.target.closest(".admin-player-history-item");
     if (!historyItem) return;
 
@@ -417,6 +469,18 @@ function setupSearchEvents() {
     input.value = getMovieTitle(selectedMovie);
     await loadPlayerForMovie(selectedMovie);
     const updatedHistory = await saveHistoryItem(selectedMovie);
+    renderHistory(updatedHistory);
+  });
+
+  historyList?.addEventListener("keydown", async (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const removeBtn = event.target.closest(".admin-player-history-item__remove");
+    if (!removeBtn) return;
+    event.preventDefault();
+    const historyItem = removeBtn.closest(".admin-player-history-item");
+    const kpId = Number(historyItem?.dataset.kpId);
+    if (!kpId) return;
+    const updatedHistory = await deleteHistoryItem(kpId);
     renderHistory(updatedHistory);
   });
 }

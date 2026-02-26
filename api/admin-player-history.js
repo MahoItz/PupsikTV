@@ -133,8 +133,8 @@ async function saveHistoryItem(supabase, req, res) {
 
 async function handler(req, res) {
   const method = (req.method || "").toUpperCase();
-  if (!["GET", "POST"].includes(method)) {
-    res.setHeader("Allow", ["GET", "POST"]);
+  if (!["GET", "POST", "DELETE"].includes(method)) {
+    res.setHeader("Allow", ["GET", "POST", "DELETE"]);
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
@@ -159,6 +159,22 @@ async function handler(req, res) {
   }
 
   if (method === "GET") {
+    return getHistory(supabase, res);
+  }
+
+  if (method === "DELETE") {
+    const rawId = req.query?.kp_id ?? req.body?.kp_id;
+    const kpId = Number.parseInt(rawId, 10);
+    if (!Number.isFinite(kpId)) {
+      return res.status(400).json({ error: "Invalid kp_id" });
+    }
+
+    const { error } = await supabase.from(TABLE_NAME).delete().eq("kp_id", kpId);
+    if (error) {
+      console.error("Failed to delete admin player history row", error);
+      return res.status(500).json({ error: "Failed to delete history item" });
+    }
+
     return getHistory(supabase, res);
   }
 
