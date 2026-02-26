@@ -125,6 +125,10 @@
   margin-bottom: 12px;
 }
 
+.admin-player-history__loader[hidden] {
+  display: none !important;
+}
+
 .admin-player-history__list {
   display: grid;
   gap: 12px;
