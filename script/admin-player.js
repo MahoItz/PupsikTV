@@ -115,23 +115,7 @@ function renderResults() {
   container.style.display = searchResults.length ? "block" : "none";
 }
 
-function renderSelection(movie) {
-  const selection = document.getElementById("adminPlayerSelection");
-  const poster = document.getElementById("adminPlayerSelectionPoster");
-  const title = document.getElementById("adminPlayerSelectionTitle");
-  const year = document.getElementById("adminPlayerSelectionYear");
-  const genres = document.getElementById("adminPlayerSelectionGenres");
 
-  if (!selection || !poster || !title || !year || !genres || !movie) return;
-
-  selection.hidden = false;
-  poster.src = movie.posterUrlPreview || movie.posterUrl || "images/placeholder-poster.webp";
-  title.textContent = getMovieTitle(movie);
-  year.textContent = movie.year ? `Год: ${movie.year}` : "Год: не указан";
-  genres.textContent = Array.isArray(movie.genres) && movie.genres.length
-    ? `Жанры: ${movie.genres.map((g) => g.genre).join(", ")}`
-    : "Жанры: не указаны";
-}
 
 async function loadPlayerForMovie(movie) {
   const kpId = movie?.filmId;
@@ -299,7 +283,6 @@ function setupSearchEvents() {
 
     input.value = getMovieTitle(selectedMovie);
     resultsContainer.style.display = "none";
-    renderSelection(selectedMovie);
     await loadPlayerForMovie(selectedMovie);
   });
 }
