@@ -98,7 +98,7 @@ function formatWatchedAt(isoDate) {
   if (!isoDate) return "";
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("ru-RU");
+  return date.toLocaleDateString("ru-RU");
 }
 
 function renderHistory(list) {
@@ -119,7 +119,7 @@ function renderHistory(list) {
     posterWrap.className = "admin-player-history-item__poster";
     const poster = document.createElement("img");
     poster.src = item.poster || "images/placeholder-poster.webp";
-    poster.alt = item.title ? `??????: ${item.title}` : "?????? ??????";
+    poster.alt = item.title ? `Постер: ${item.title}` : "Постер фильма";
     poster.loading = "lazy";
     posterWrap.appendChild(poster);
 
@@ -128,19 +128,26 @@ function renderHistory(list) {
 
     const title = document.createElement("span");
     title.className = "admin-player-history-item__title";
-    title.textContent = item.title || "??? ????????";
+    title.textContent = item.title || "Без названия";
 
     const meta = document.createElement("span");
     meta.className = "admin-player-history-item__meta";
-    const watchedAt = formatWatchedAt(item.watched_at);
-    meta.textContent = item.year ? `${item.year}${watchedAt ? ` ? ${watchedAt}` : ""}` : watchedAt;
+    const year = document.createElement("span");
+    year.className = "admin-player-history-item__year";
+    year.textContent = item.year ? String(item.year) : "—";
+
+    const watchedAt = document.createElement("span");
+    watchedAt.className = "admin-player-history-item__watched-at";
+    watchedAt.textContent = formatWatchedAt(item.watched_at) || "—";
+
+    meta.append(year, watchedAt);
 
     const remove = document.createElement("span");
     remove.className = "admin-player-history-item__remove";
     remove.setAttribute("role", "button");
     remove.setAttribute("tabindex", "0");
-    remove.setAttribute("aria-label", "??????? ?? ???????");
-    remove.textContent = "?";
+    remove.setAttribute("aria-label", "Удалить из истории");
+    remove.textContent = "×";
 
     content.append(title, meta);
     button.append(posterWrap, content, remove);

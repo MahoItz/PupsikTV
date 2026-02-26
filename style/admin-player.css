@@ -212,8 +212,22 @@
 }
 
 .admin-player-history-item__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   font-size: 0.85rem;
   color: rgba(201, 246, 255, 0.7);
+}
+
+.admin-player-history-item__year {
+  font-weight: 600;
+  color: rgba(201, 246, 255, 0.9);
+}
+
+.admin-player-history-item__watched-at {
+  text-align: right;
+  white-space: nowrap;
 }
 
 .admin-player-history-item__remove {
