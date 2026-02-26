@@ -110,10 +110,11 @@ async function loadHistory() {
     if (!response.ok) throw new Error(`Failed to fetch history: ${response.status}`);
     const payload = await response.json();
     const list = Array.isArray(payload?.items) ? payload.items : [];
-    return list.map((item) => ({ ...item, watched_at: item.created_at || item.watched_at }));
+    const normalized = list.map((item) => ({ ...item, watched_at: item.created_at || item.watched_at }));
+    return updateHistoryState(normalized, { shouldRender: true });
   } catch (error) {
     console.error("Failed to load admin player history", error);
-    return [];
+    return updateHistoryState([], { shouldRender: true });
   }
 }
 
@@ -137,7 +138,7 @@ async function saveHistoryItem(movie) {
     const payload = await response.json();
     const list = Array.isArray(payload?.items) ? payload.items : [];
     const normalized = list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
-    return updateHistoryState(normalized);
+    return updateHistoryState(normalized, { shouldRender: true });
   } catch (error) {
     console.error("Failed to save admin player history", error);
     return currentHistory;
@@ -162,7 +163,7 @@ async function deleteHistoryItem(kpId) {
     const payload = await response.json();
     const list = Array.isArray(payload?.items) ? payload.items : [];
     const normalized = list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
-    return updateHistoryState(normalized);
+    return updateHistoryState(normalized, { shouldRender: true });
   } catch (error) {
     console.error("Failed to delete admin player history", error);
     return currentHistory;
@@ -213,6 +214,9 @@ function renderHistory(list) {
     button.type = "button";
     button.className = "admin-player-history-item";
     button.dataset.kpId = String(item.kp_id);
+    button.dataset.title = item.title || "";
+    button.dataset.year = item.year ? String(item.year) : "";
+    button.dataset.poster = item.poster || "";
 
     const posterWrap = document.createElement("span");
     posterWrap.className = "admin-player-history-item__poster";
@@ -265,6 +269,18 @@ function buildMovieFromHistoryItem(item) {
     nameRu: item.title,
     year: item.year,
     posterUrlPreview: item.poster,
+  };
+}
+
+function buildMovieFromHistoryDataset(dataset) {
+  const filmId = Number(dataset?.kpId);
+  if (!filmId) return null;
+
+  return {
+    filmId,
+    nameRu: dataset?.title || "",
+    year: dataset?.year || null,
+    posterUrlPreview: dataset?.poster || "",
   };
 }
 
@@ -543,8 +559,7 @@ function setupSearchEvents() {
     input.value = getMovieTitle(selectedMovie);
     resultsContainer.style.display = "none";
     await loadPlayerForMovie(selectedMovie);
-    const updatedHistory = await saveHistoryItem(selectedMovie);
-    renderHistory(updatedHistory);
+    await saveHistoryItem(selectedMovie);
   });
 
   const historyList = document.getElementById("adminPlayerHistoryList");
@@ -556,8 +571,7 @@ function setupSearchEvents() {
       const historyItem = removeBtn.closest(".admin-player-history-item");
       const kpId = Number(historyItem?.dataset.kpId);
       if (!kpId) return;
-      const updatedHistory = await deleteHistoryItem(kpId);
-      renderHistory(updatedHistory);
+      await deleteHistoryItem(kpId);
       return;
     }
 
@@ -568,13 +582,20 @@ function setupSearchEvents() {
     if (!kpId) return;
 
     const item = currentHistory.find((entry) => Number(entry?.kp_id) === kpId);
-    if (!item) return;
+    selectedMovie = buildMovieFromHistoryDataset(historyItem.dataset);
+    if (!selectedMovie && item) {
+      selectedMovie = buildMovieFromHistoryItem(item);
+    }
+    if (!selectedMovie) {
+      const refreshedHistory = await loadHistory();
+      const refreshedItem = refreshedHistory.find((entry) => Number(entry?.kp_id) === kpId);
+      if (!refreshedItem) return;
+      selectedMovie = buildMovieFromHistoryItem(refreshedItem);
+    }
 
-    selectedMovie = buildMovieFromHistoryItem(item);
     input.value = getMovieTitle(selectedMovie);
     await loadPlayerForMovie(selectedMovie);
-    const updatedHistory = await saveHistoryItem(selectedMovie);
-    renderHistory(updatedHistory);
+    await saveHistoryItem(selectedMovie);
   });
 
   historyList?.addEventListener("keydown", async (event) => {
@@ -585,8 +606,7 @@ function setupSearchEvents() {
     const historyItem = removeBtn.closest(".admin-player-history-item");
     const kpId = Number(historyItem?.dataset.kpId);
     if (!kpId) return;
-    const updatedHistory = await deleteHistoryItem(kpId);
-    renderHistory(updatedHistory);
+    await deleteHistoryItem(kpId);
   });
 }
 
@@ -618,12 +638,8 @@ async function initPage() {
 
     loadHistory()
       .then((history) => {
-        const hasChanges = !isSameHistoryList(history, currentHistory);
-        if (hasChanges) {
-          updateHistoryState(history, { shouldRender: true });
-        } else {
-          updateHistoryState(currentHistory);
-        }
+        if (!isSameHistoryList(history, currentHistory)) return;
+        updateHistoryState(currentHistory, { shouldRender: true });
       })
       .finally(() => {
         setHistoryLoading(false);
