@@ -1,5 +1,5 @@
 .admin-player-page {
-  width: min(1100px, calc(100% - 28px));
+  width: min(1440px, calc(100% - 28px));
   margin: 20px auto 40px;
 }
 
@@ -17,7 +17,7 @@
 
 .admin-player-app {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1100px) minmax(280px, 360px) minmax(0, 1fr);
   align-items: start;
   gap: 16px;
 }
@@ -26,6 +26,8 @@
   display: grid;
   gap: 16px;
   min-width: 0;
+  grid-column: 2;
+  width: 100%;
 }
 
 .admin-player-search,
@@ -105,6 +107,7 @@
 .admin-player-history {
   position: sticky;
   top: 16px;
+  grid-column: 3;
 }
 
 .admin-player-history__title {
@@ -134,8 +137,13 @@
     grid-template-columns: 1fr;
   }
 
+  .admin-player-main {
+    grid-column: auto;
+  }
+
   .admin-player-history {
     position: static;
+    grid-column: auto;
   }
 
   .admin-player-search__input-wrap {
