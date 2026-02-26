@@ -4,11 +4,78 @@ const ORDER_PLAYER_API_URL = "https://fbphdplay.top/api/players?kinopoisk=";
 const ORDER_PLAYER_DEFAULT_TYPE = "Alloha";
 const ORDER_PLAYER_EXTERNAL_BASE_URL = "https://flcksbr.xyz/film/";
 const MAX_PLAYER_HISTORY = 15;
+const ADMIN_PLAYER_HISTORY_CACHE_KEY = "adminPlayerHistoryCache";
+const ADMIN_PLAYER_HISTORY_TTL_MS = 60 * 1000;
 
 let kinopoiskApiKey = "";
 let searchResults = [];
 let selectedMovie = null;
 let searchRequestId = 0;
+let currentHistory = [];
+
+function readHistoryCache() {
+  try {
+    const raw = localStorage.getItem(ADMIN_PLAYER_HISTORY_CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    const timestamp = Number(parsed?.timestamp);
+    const items = Array.isArray(parsed?.items) ? parsed.items : [];
+
+    if (!timestamp || Number.isNaN(timestamp)) return null;
+    if (!items.length) return null;
+    if (Date.now() - timestamp > ADMIN_PLAYER_HISTORY_TTL_MS) return null;
+
+    return items;
+  } catch (error) {
+    console.warn("Failed to read admin player history cache", error);
+    return null;
+  }
+}
+
+function writeHistoryCache(list) {
+  const safeList = Array.isArray(list) ? list.slice(0, MAX_PLAYER_HISTORY) : [];
+
+  try {
+    localStorage.setItem(
+      ADMIN_PLAYER_HISTORY_CACHE_KEY,
+      JSON.stringify({
+        timestamp: Date.now(),
+        items: safeList,
+      })
+    );
+  } catch (error) {
+    console.warn("Failed to write admin player history cache", error);
+  }
+
+  return safeList;
+}
+
+function updateHistoryState(list, options = {}) {
+  const { shouldRender = false } = options;
+  const safeList = writeHistoryCache(list);
+  currentHistory = safeList;
+  if (shouldRender) renderHistory(safeList);
+  return safeList;
+}
+
+function isSameHistoryList(nextList, prevList) {
+  const next = Array.isArray(nextList) ? nextList : [];
+  const prev = Array.isArray(prevList) ? prevList : [];
+
+  if (next.length !== prev.length) return false;
+
+  return next.every((item, index) => {
+    const candidate = prev[index] || {};
+    return (
+      Number(item?.kp_id) === Number(candidate?.kp_id) &&
+      String(item?.title || "") === String(candidate?.title || "") &&
+      String(item?.year || "") === String(candidate?.year || "") &&
+      String(item?.poster || "") === String(candidate?.poster || "") &&
+      String(item?.watched_at || "") === String(candidate?.watched_at || "")
+    );
+  });
+}
 
 function getAdminAuthHeaders() {
   const token = localStorage.getItem("adminToken") || "";
@@ -52,7 +119,9 @@ async function loadHistory() {
 
 async function saveHistoryItem(movie) {
   const item = normalizeHistoryItem(movie);
-  if (!item) return [];
+  if (!item) return currentHistory;
+
+  updateHistoryState(upsertHistoryItem(currentHistory, item), { shouldRender: true });
 
   try {
     const response = await fetch("/api/admin-player-history", {
@@ -67,15 +136,21 @@ async function saveHistoryItem(movie) {
     if (!response.ok) throw new Error(`Failed to save history: ${response.status}`);
     const payload = await response.json();
     const list = Array.isArray(payload?.items) ? payload.items : [];
-    return list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
+    const normalized = list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
+    return updateHistoryState(normalized);
   } catch (error) {
     console.error("Failed to save admin player history", error);
-    return [];
+    return currentHistory;
   }
 }
 
 async function deleteHistoryItem(kpId) {
-  if (!kpId) return [];
+  if (!kpId) return currentHistory;
+
+  updateHistoryState(
+    currentHistory.filter((entry) => Number(entry?.kp_id) !== Number(kpId)),
+    { shouldRender: true }
+  );
 
   try {
     const response = await fetch(`/api/admin-player-history?kp_id=${encodeURIComponent(kpId)}`, {
@@ -86,10 +161,11 @@ async function deleteHistoryItem(kpId) {
     if (!response.ok) throw new Error(`Failed to delete history: ${response.status}`);
     const payload = await response.json();
     const list = Array.isArray(payload?.items) ? payload.items : [];
-    return list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
+    const normalized = list.map((entry) => ({ ...entry, watched_at: entry.created_at || entry.watched_at }));
+    return updateHistoryState(normalized);
   } catch (error) {
     console.error("Failed to delete admin player history", error);
-    return [];
+    return currentHistory;
   }
 }
 
@@ -108,6 +184,13 @@ function setHistoryLoading(isLoading) {
   }
   if (historyList) historyList.setAttribute("aria-busy", String(active));
   if (emptyState && active) emptyState.hidden = true;
+}
+
+function setHistoryLoaderMessage(message) {
+  const loaderText = document.querySelector("#adminPlayerHistoryLoader .section-loader__text");
+  if (loaderText && typeof message === "string") {
+    loaderText.textContent = message;
+  }
 }
 
 function formatWatchedAt(isoDate) {
@@ -484,8 +567,7 @@ function setupSearchEvents() {
     const kpId = Number(historyItem.dataset.kpId);
     if (!kpId) return;
 
-    const history = await loadHistory();
-    const item = history.find((entry) => Number(entry?.kp_id) === kpId);
+    const item = currentHistory.find((entry) => Number(entry?.kp_id) === kpId);
     if (!item) return;
 
     selectedMovie = buildMovieFromHistoryItem(item);
@@ -521,14 +603,31 @@ async function initPage() {
 
     if (app) app.hidden = false;
     if (denied) denied.hidden = true;
-    setHistoryLoading(true);
-    try {
-      const history = await loadHistory();
-      renderHistory(history);
-    } finally {
-      setHistoryLoading(false);
+
+    const cachedHistory = readHistoryCache();
+    if (cachedHistory?.length) {
+      updateHistoryState(cachedHistory, { shouldRender: true });
+      setHistoryLoaderMessage("Обновляем историю в фоне...");
+      setHistoryLoading(true);
+    } else {
+      setHistoryLoaderMessage("Загружаем историю просмотра...");
+      setHistoryLoading(true);
     }
+
     setupSearchEvents();
+
+    loadHistory()
+      .then((history) => {
+        const hasChanges = !isSameHistoryList(history, currentHistory);
+        if (hasChanges) {
+          updateHistoryState(history, { shouldRender: true });
+        } else {
+          updateHistoryState(currentHistory);
+        }
+      })
+      .finally(() => {
+        setHistoryLoading(false);
+      });
   } catch (error) {
     console.error("Admin player init error", error);
     if (denied) denied.hidden = false;
