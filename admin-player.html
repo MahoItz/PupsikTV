@@ -70,13 +70,15 @@
       </div>
 
       <section class="admin-player-history">
-        <h2 class="admin-player-history__title">История просмотра</h2>
-        <div id="adminPlayerHistoryLoader" class="section-loader section-loader--compact admin-player-history__loader" role="status" aria-live="polite">
-          <div class="section-loader__spinner" aria-hidden="true">
-            <span class="section-loader__ring"></span>
-            <span class="section-loader__ring section-loader__ring--delay"></span>
+        <div class="admin-player-history__header">
+          <h2 class="admin-player-history__title">История просмотра</h2>
+          <div id="adminPlayerHistoryLoader" class="section-loader section-loader--compact admin-player-history__loader" role="status" aria-live="polite" aria-hidden="true">
+            <div class="section-loader__spinner" aria-hidden="true">
+              <span class="section-loader__ring"></span>
+              <span class="section-loader__ring section-loader__ring--delay"></span>
+            </div>
+            <p class="section-loader__text">Загружаем историю просмотра...</p>
           </div>
-          <p class="section-loader__text">Загружаем историю просмотра...</p>
         </div>
         <div id="adminPlayerHistoryList" class="admin-player-history__list"></div>
         <p class="admin-player-history__empty" hidden>Пока ничего не смотрели</p>
