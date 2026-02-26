@@ -3,11 +3,106 @@ const KINOPOISK_SEARCH_URL =
 const ORDER_PLAYER_API_URL = "https://fbphdplay.top/api/players?kinopoisk=";
 const ORDER_PLAYER_DEFAULT_TYPE = "Alloha";
 const ORDER_PLAYER_EXTERNAL_BASE_URL = "https://flcksbr.xyz/film/";
+const MAX_PLAYER_HISTORY = 15;
+const PLAYER_HISTORY_STORAGE_KEY = "adminPlayerHistory";
 
 let kinopoiskApiKey = "";
 let searchResults = [];
 let selectedMovie = null;
 let searchRequestId = 0;
+
+function getHistoryFromStorage() {
+  try {
+    const raw = localStorage.getItem(PLAYER_HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error("Failed to parse admin player history", error);
+    return [];
+  }
+}
+
+function normalizeHistoryItem(movie) {
+  const kpId = movie?.kp_id || movie?.filmId;
+  if (!kpId) return null;
+
+  return {
+    kp_id: Number(kpId),
+    title: getMovieTitle(movie),
+    year: movie?.year || "",
+    poster: movie?.posterUrlPreview || movie?.posterUrl || movie?.poster || "",
+    watched_at: new Date().toISOString(),
+  };
+}
+
+function upsertHistoryItem(list, item) {
+  if (!item?.kp_id) return Array.isArray(list) ? list.slice(0, MAX_PLAYER_HISTORY) : [];
+  const baseList = Array.isArray(list) ? list : [];
+  const deduped = baseList.filter((entry) => Number(entry?.kp_id) !== Number(item.kp_id));
+  return [item, ...deduped].slice(0, MAX_PLAYER_HISTORY);
+}
+
+function saveHistoryList(list) {
+  localStorage.setItem(PLAYER_HISTORY_STORAGE_KEY, JSON.stringify(list));
+}
+
+function saveHistoryItem(movie) {
+  const item = normalizeHistoryItem(movie);
+  if (!item) return getHistoryFromStorage();
+
+  const updatedList = upsertHistoryItem(getHistoryFromStorage(), item);
+  saveHistoryList(updatedList);
+  return updatedList;
+}
+
+function formatWatchedAt(isoDate) {
+  if (!isoDate) return "";
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString("ru-RU");
+}
+
+function renderHistory(list) {
+  const historyList = document.getElementById("adminPlayerHistoryList");
+  const emptyState = document.querySelector(".admin-player-history__empty");
+  if (!historyList) return;
+
+  const safeList = Array.isArray(list) ? list : [];
+  historyList.innerHTML = "";
+
+  safeList.forEach((item) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "admin-player-history-item";
+    button.dataset.kpId = String(item.kp_id);
+
+    const title = document.createElement("span");
+    title.className = "admin-player-history-item__title";
+    title.textContent = item.title || "Без названия";
+
+    const meta = document.createElement("span");
+    meta.className = "admin-player-history-item__meta";
+    const watchedAt = formatWatchedAt(item.watched_at);
+    meta.textContent = item.year ? `${item.year}${watchedAt ? ` • ${watchedAt}` : ""}` : watchedAt;
+
+    button.append(title, meta);
+    historyList.appendChild(button);
+  });
+
+  if (emptyState) {
+    emptyState.hidden = safeList.length > 0;
+  }
+}
+
+function buildMovieFromHistoryItem(item) {
+  return {
+    filmId: item.kp_id,
+    nameRu: item.title,
+    year: item.year,
+    posterUrlPreview: item.poster,
+  };
+}
 
 function debounce(fn, delay) {
   let timeout;
@@ -284,6 +379,27 @@ function setupSearchEvents() {
     input.value = getMovieTitle(selectedMovie);
     resultsContainer.style.display = "none";
     await loadPlayerForMovie(selectedMovie);
+    const updatedHistory = saveHistoryItem(selectedMovie);
+    renderHistory(updatedHistory);
+  });
+
+  const historyList = document.getElementById("adminPlayerHistoryList");
+  historyList?.addEventListener("click", async (event) => {
+    const historyItem = event.target.closest(".admin-player-history-item");
+    if (!historyItem) return;
+
+    const kpId = Number(historyItem.dataset.kpId);
+    if (!kpId) return;
+
+    const history = getHistoryFromStorage();
+    const item = history.find((entry) => Number(entry?.kp_id) === kpId);
+    if (!item) return;
+
+    selectedMovie = buildMovieFromHistoryItem(item);
+    input.value = getMovieTitle(selectedMovie);
+    await loadPlayerForMovie(selectedMovie);
+    const updatedHistory = saveHistoryItem(selectedMovie);
+    renderHistory(updatedHistory);
   });
 }
 
@@ -300,6 +416,7 @@ async function initPage() {
 
     if (app) app.hidden = false;
     if (denied) denied.hidden = true;
+    renderHistory(getHistoryFromStorage());
     setupSearchEvents();
   } catch (error) {
     console.error("Admin player init error", error);
