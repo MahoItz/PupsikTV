@@ -99,10 +99,15 @@ function setHistoryLoading(isLoading) {
   const loader = document.getElementById("adminPlayerHistoryLoader");
   const historyList = document.getElementById("adminPlayerHistoryList");
   const emptyState = document.querySelector(".admin-player-history__empty");
+  const active = Boolean(isLoading);
 
-  if (loader) loader.hidden = !isLoading;
-  if (historyList) historyList.setAttribute("aria-busy", String(Boolean(isLoading)));
-  if (emptyState && isLoading) emptyState.hidden = true;
+  if (loader) {
+    loader.hidden = !active;
+    loader.setAttribute("aria-hidden", String(!active));
+    loader.classList.toggle("is-visible", active);
+  }
+  if (historyList) historyList.setAttribute("aria-busy", String(active));
+  if (emptyState && active) emptyState.hidden = true;
 }
 
 function formatWatchedAt(isoDate) {

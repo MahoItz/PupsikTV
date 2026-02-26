@@ -123,6 +123,11 @@
 
 .admin-player-history__loader {
   margin-bottom: 12px;
+  display: none;
+}
+
+.admin-player-history__loader.is-visible {
+  display: flex;
 }
 
 .admin-player-history__loader[hidden] {
