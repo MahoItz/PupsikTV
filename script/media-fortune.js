@@ -2629,7 +2629,7 @@ async function fetchOrderParentGuideForOrder(order) {
       normalizedGuideData?.original || {}
     );
 
-    if (!hasOriginalContent) {
+    if (!hasOriginalContent && !isExpectedEmptyParentGuide(guideData)) {
       throw createParentGuideLoadError("Parent guide content is empty", {
         code: "PARENT_GUIDE_PARSE_EMPTY",
       });
@@ -2728,7 +2728,7 @@ async function prefetchOrderParentGuideForOrder(order, options = {}) {
       const hasOriginalContent = hasParentGuideContent(
         normalizedGuideData.original || {}
       );
-      if (!hasOriginalContent) {
+      if (!hasOriginalContent && !isExpectedEmptyParentGuide(guideData)) {
         const emptyError = createParentGuideLoadError(
           "Parent guide content is empty",
           {
@@ -3687,7 +3687,7 @@ async function fetchFortuneParentGuide(imdbId) {
       normalizedGuideData?.original || {}
     );
 
-    if (!hasOriginalContent) {
+    if (!hasOriginalContent && !isExpectedEmptyParentGuide(guideData)) {
       throw createParentGuideLoadError("Parent guide content is empty", {
         code: "PARENT_GUIDE_PARSE_EMPTY",
       });
@@ -3743,6 +3743,10 @@ function getParentGuideErrorMessage(err) {
   return "Не удалось загрузить родительский гайд. Попробуйте позже.";
 }
 
+function isExpectedEmptyParentGuide(payload) {
+  return payload?.meta?.emptyReason === "section_has_no_items";
+}
+
 async function loadFortuneParentGuideData(imdbId) {
   if (!imdbId) {
     throw new Error("Missing IMDb ID for parent guide request");
@@ -3771,7 +3775,7 @@ async function loadFortuneParentGuideData(imdbId) {
   }
 
   const hasContent = hasParentGuideContent(payload?.original || {});
-  if (!hasContent) {
+  if (!hasContent && !isExpectedEmptyParentGuide(payload)) {
     throw createParentGuideLoadError("Parent guide content is empty", {
       status: response.status,
       code: payload?.code || "PARENT_GUIDE_PARSE_EMPTY",
@@ -4439,7 +4443,7 @@ function initFortuneWheel() {
         const hasOriginalContent = hasParentGuideContent(
           normalizedGuideData?.original || {}
         );
-        if (!hasOriginalContent) {
+        if (!hasOriginalContent && !isExpectedEmptyParentGuide(guideData)) {
           throw createParentGuideLoadError("Parent guide content is empty", {
             code: "PARENT_GUIDE_PARSE_EMPTY",
           });

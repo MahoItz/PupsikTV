@@ -54,6 +54,26 @@ function cleanText(text) {
   );
 }
 
+function isParentGuideNoiseLine(text) {
+  const normalized = String(text || "").trim().toLowerCase();
+  if (!normalized) {
+    return true;
+  }
+
+  const normalizedNoIndex = normalized.replace(/^\d+\.\s*/, "");
+  const noisePatterns = [
+    /add an item/,
+    /rate this title for sex\s*(?:&|and)\s*nudity/,
+    /\bfound this to have\b/,
+    /\b\d+\s+of\s+\d+\b/,
+    /\bvote\b/,
+    /see all parent guides?/,
+    /^sex\s*(?:&|and)\s*nudity$/,
+  ];
+
+  return noisePatterns.some((pattern) => pattern.test(normalizedNoIndex));
+}
+
 function dedupeItems(items = []) {
   const seen = new Set();
   const result = [];
@@ -61,6 +81,9 @@ function dedupeItems(items = []) {
   for (const item of items) {
     const normalized = cleanText(item);
     if (!normalized || normalized.length < 2) {
+      continue;
+    }
+    if (isParentGuideNoiseLine(normalized)) {
       continue;
     }
     const key = normalized.toLowerCase();
@@ -259,6 +282,26 @@ function hasParentGuideContent(sections = {}) {
   );
 }
 
+function hasParentGuidePageSignals(html) {
+  const lower = String(html || "").toLowerCase();
+  return (
+    lower.includes("parental guide") ||
+    lower.includes("parent guide") ||
+    lower.includes("advisory")
+  );
+}
+
+function hasSexAndNuditySectionSignals(html) {
+  const lower = String(html || "").toLowerCase();
+  return (
+    /sex\s*(?:&amp;|&|and)\s*nudity/i.test(html) ||
+    lower.includes("sub-section-nudity") ||
+    lower.includes("advisory-nudity") ||
+    lower.includes('id="nudity"') ||
+    lower.includes("rate this title for sex")
+  );
+}
+
 function detectBlockedOrInterstitial(html) {
   const lower = String(html || "").toLowerCase();
   const blockingSignals = [
@@ -331,14 +374,21 @@ function parseParentGuide(html) {
   }
 
   const blockedDetected = detectBlockedOrInterstitial(html);
+  const hasParentGuidePage = hasParentGuidePageSignals(html);
+  const hasSexSection = hasSexAndNuditySectionSignals(html);
+  const emptyReason =
+    hasParentGuidePage && hasSexSection
+      ? "section_has_no_items"
+      : blockedDetected
+      ? "blocked_or_layout_changed"
+      : "parse_empty";
+
   return {
     sections: { [TARGET_SECTION_KEY]: [] },
     meta: {
       strategy: "none",
       blockedDetected,
-      emptyReason: blockedDetected
-        ? "blocked_or_layout_changed"
-        : "parse_empty",
+      emptyReason,
     },
   };
 }
@@ -406,6 +456,11 @@ async function handler(req, res) {
     });
 
     if (hasContent) {
+      res.status(200).json({ original: parsed.sections, meta: parsed.meta });
+      return;
+    }
+
+    if (parsed.meta.emptyReason === "section_has_no_items") {
       res.status(200).json({ original: parsed.sections, meta: parsed.meta });
       return;
     }
