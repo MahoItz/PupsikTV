@@ -1434,6 +1434,23 @@ body.order-player-fullscreen #orderPlayerModal .modal-content {
     gap: 12px;
 }
 
+#orderDetailsModal .fortune-parent-guide__title-clickable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+#orderDetailsModal .fortune-parent-guide__title-clickable:hover {
+    color: #9fe6ff;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.35);
+}
+
+#orderDetailsModal .fortune-parent-guide__title-clickable:focus-visible {
+    outline: 2px solid rgba(0, 212, 255, 0.7);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
 #orderDetailsModal .fortune-parent-guide__actions {
     display: flex;
     align-items: center;

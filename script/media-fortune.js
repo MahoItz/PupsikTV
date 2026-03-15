@@ -169,6 +169,7 @@ const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const orderDetailsModal = document.getElementById("orderDetailsModal");
+const orderParentGuideTitle = document.getElementById("orderParentGuideTitle");
 const orderParentGuideStatus = document.getElementById("orderParentGuideStatus");
 const orderParentGuideTranslate = document.getElementById(
   "orderParentGuideTranslate"
@@ -2303,6 +2304,26 @@ function getActiveOrderDetails() {
   return watchlist.find((order) => order.id === activeOrderDetailsId) || null;
 }
 
+function reloadParentGuideForActiveOrder() {
+  const order = getActiveOrderDetails();
+  if (!order) {
+    return;
+  }
+
+  if (
+    typeof prefetchOrderParentGuideForOrder === "function" &&
+    order.id &&
+    supabaseClient
+  ) {
+    prefetchOrderParentGuideForOrder(order, { force: true });
+    return;
+  }
+
+  if (typeof fetchOrderParentGuideForOrder === "function") {
+    fetchOrderParentGuideForOrder(order);
+  }
+}
+
 function setOrderParentGuideStatus(message, options = {}) {
   if (!orderParentGuideStatus) {
     return;
@@ -4193,6 +4214,17 @@ if (orderParentGuideTranslate) {
     "click",
     openOrderGuideInGoogleTranslate
   );
+}
+
+if (orderParentGuideTitle) {
+  orderParentGuideTitle.addEventListener("click", reloadParentGuideForActiveOrder);
+  orderParentGuideTitle.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+    event.preventDefault();
+    reloadParentGuideForActiveOrder();
+  });
 }
 
 if (gameOrderDetailsTranslateDescription) {
