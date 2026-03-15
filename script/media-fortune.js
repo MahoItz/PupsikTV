@@ -2604,6 +2604,15 @@ async function fetchOrderParentGuideForOrder(order) {
   try {
     const guideData = await loadFortuneParentGuideDataWithRetry(imdbId);
     const normalizedGuideData = normalizeParentGuideData(guideData);
+    const hasOriginalContent = hasParentGuideContent(
+      normalizedGuideData?.original || {}
+    );
+
+    if (!hasOriginalContent) {
+      throw createParentGuideLoadError("Parent guide content is empty", {
+        code: "PARENT_GUIDE_PARSE_EMPTY",
+      });
+    }
 
     setOrderMetadata(order, {
       parentGuide: normalizedGuideData,
@@ -2626,12 +2635,9 @@ async function fetchOrderParentGuideForOrder(order) {
     }
     setOrderMetadata(order, {
       parentGuideStatus: "error",
-      parentGuideError:
-        "Не удалось загрузить родительский гайд. Попробуйте позже.",
+      parentGuideError: getParentGuideErrorMessage(err),
     });
-    setOrderParentGuideError(
-      "Не удалось загрузить родительский гайд. Попробуйте позже."
-    );
+    setOrderParentGuideError(getParentGuideErrorMessage(err));
   }
 }
 
@@ -2701,6 +2707,15 @@ async function prefetchOrderParentGuideForOrder(order, options = {}) {
       const hasOriginalContent = hasParentGuideContent(
         normalizedGuideData.original || {}
       );
+      if (!hasOriginalContent) {
+        const emptyError = createParentGuideLoadError(
+          "Parent guide content is empty",
+          {
+            code: "PARENT_GUIDE_PARSE_EMPTY",
+          }
+        );
+        throw emptyError;
+      }
       const { model: selectedTranslationModel } =
         (await loadFortuneTranslationModel()) || {};
 
@@ -2772,16 +2787,13 @@ async function prefetchOrderParentGuideForOrder(order, options = {}) {
       console.error("Failed to prefetch parent guide for order", err);
       setOrderMetadata(order, {
         parentGuideStatus: "error",
-        parentGuideError:
-          "Не удалось загрузить родительский гайд. Попробуйте позже.",
+        parentGuideError: getParentGuideErrorMessage(err),
       });
       if (
         activeOrderDetailsId === order.id &&
         orderDetailsModal?.style.display === "block"
       ) {
-        setOrderParentGuideError(
-          "Не удалось загрузить родительский гайд. Попробуйте позже."
-        );
+        setOrderParentGuideError(getParentGuideErrorMessage(err));
       }
       return null;
     }
@@ -3650,6 +3662,15 @@ async function fetchFortuneParentGuide(imdbId) {
   try {
     const guideData = await loadFortuneParentGuideDataWithRetry(imdbId);
     const normalizedGuideData = normalizeParentGuideData(guideData);
+    const hasOriginalContent = hasParentGuideContent(
+      normalizedGuideData?.original || {}
+    );
+
+    if (!hasOriginalContent) {
+      throw createParentGuideLoadError("Parent guide content is empty", {
+        code: "PARENT_GUIDE_PARSE_EMPTY",
+      });
+    }
 
     if (selectedFortuneLabel) {
       setFortuneItemMetadata(selectedFortuneLabel, {
@@ -3677,10 +3698,28 @@ async function fetchFortuneParentGuide(imdbId) {
       return;
     }
     console.error("Failed to load parental guide", err);
-    setFortuneParentGuideError(
-      "Не удалось загрузить родительский гайд. Попробуйте позже."
-    );
+    setFortuneParentGuideError(getParentGuideErrorMessage(err));
   }
+}
+
+function createParentGuideLoadError(message, details = {}) {
+  const error = new Error(message || "Parent guide load failed");
+  if (details && typeof details === "object") {
+    Object.assign(error, details);
+  }
+  return error;
+}
+
+function getParentGuideErrorMessage(err) {
+  const code = err?.code || "";
+  if (
+    code === "IMDB_BLOCKED_OR_LAYOUT_CHANGED" ||
+    code === "PARENT_GUIDE_PARSE_EMPTY"
+  ) {
+    return "IMDb временно недоступен или изменил разметку.";
+  }
+
+  return "Не удалось загрузить родительский гайд. Попробуйте позже.";
 }
 
 async function loadFortuneParentGuideData(imdbId) {
@@ -3691,12 +3730,35 @@ async function loadFortuneParentGuideData(imdbId) {
   const response = await fetch(
     `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}`
   );
+  let payload = null;
 
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
   }
 
-  return response.json();
+  if (!response.ok) {
+    throw createParentGuideLoadError(
+      `Request failed: ${response.status}`,
+      {
+        status: response.status,
+        code: payload?.code || null,
+        meta: payload?.meta || null,
+      }
+    );
+  }
+
+  const hasContent = hasParentGuideContent(payload?.original || {});
+  if (!hasContent) {
+    throw createParentGuideLoadError("Parent guide content is empty", {
+      status: response.status,
+      code: payload?.code || "PARENT_GUIDE_PARSE_EMPTY",
+      meta: payload?.meta || null,
+    });
+  }
+
+  return payload;
 }
 
 async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
@@ -4342,6 +4404,14 @@ function initFortuneWheel() {
           metadata.imdbId
         );
         const normalizedGuideData = normalizeParentGuideData(guideData);
+        const hasOriginalContent = hasParentGuideContent(
+          normalizedGuideData?.original || {}
+        );
+        if (!hasOriginalContent) {
+          throw createParentGuideLoadError("Parent guide content is empty", {
+            code: "PARENT_GUIDE_PARSE_EMPTY",
+          });
+        }
         setFortuneItemMetadata(normalizedLabel, {
           parentGuideStatus: "ready",
           parentGuide: normalizedGuideData,
@@ -4357,8 +4427,7 @@ function initFortuneWheel() {
         console.error("Failed to preload parent guide", err);
         setFortuneItemMetadata(normalizedLabel, {
           parentGuideStatus: "error",
-          parentGuideError:
-            "Не удалось загрузить родительский гайд. Попробуйте позже.",
+          parentGuideError: getParentGuideErrorMessage(err),
         });
         renderFortuneItemsList();
         fortuneParentGuideLoads.delete(normalizedLabel);
