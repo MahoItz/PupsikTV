@@ -32,6 +32,16 @@
     margin-bottom: 15px;
 }
 
+.form-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.form-row .form-group {
+    flex: 1 1 0;
+}
+
 .form-group label {
     display: block;
     margin-top: 30px;
@@ -44,7 +54,8 @@
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
     width: 100%;
     padding: 14px 18px;
     border: 2px solid rgba(0, 212, 255, 0.2);
@@ -63,7 +74,8 @@
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
     outline: none;
     border-color: var(--secondary-color);
     box-shadow: 0 0 25px rgba(0, 212, 255, 0.3);

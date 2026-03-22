@@ -1597,6 +1597,23 @@ async function clearGamePlanDate(gameId) {
   }
 }
 
+function appendGameTitleWithMode(container, titleText, gameMode, titleClass) {
+  if (!container) return;
+
+  const title = document.createElement("span");
+  title.className = titleClass;
+  title.textContent = titleText || "Без названия";
+  container.appendChild(title);
+
+  const normalizedMode = normalizeGameMode(gameMode);
+  if (!normalizedMode) return;
+
+  const mode = document.createElement("span");
+  mode.className = "game-mode-label";
+  mode.textContent = `(${normalizedMode})`;
+  container.appendChild(mode);
+}
+
 function createGameCard(game, showActions = isAdmin) {
   const wrapper = document.createElement("div");
   wrapper.className = "order-wrapper";
@@ -1661,7 +1678,7 @@ function createGameCard(game, showActions = isAdmin) {
 
   const title = document.createElement("div");
   title.className = "order-title";
-  title.textContent = game.title;
+  appendGameTitleWithMode(title, game.title, game.gameMode, "order-title-text");
   info.appendChild(title);
 
   const genres = document.createElement("div");
@@ -2004,7 +2021,7 @@ function createPlayedGameCard(
   header.className = "movie-header";
   const title = document.createElement("div");
   title.className = "movie-title";
-  title.textContent = game.title;
+  appendGameTitleWithMode(title, game.title, game.gameMode, "movie-title-text");
   header.appendChild(title);
   info.appendChild(header);
 

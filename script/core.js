@@ -61,6 +61,15 @@ function proxyPosterUrl(url) {
   return url;
 }
 
+function normalizeGameMode(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (normalized === "coop") return "Coop";
+  if (normalized === "single") return "Single";
+  return "";
+}
+
 async function uploadGamePosterToStorage({
   poster,
   file,

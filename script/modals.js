@@ -858,6 +858,14 @@ const detailsEditConfigs = {
     fields: [
       { valueId: "gameDetailsOrderBy", key: "orderBy", localKey: "orderBy", dbKey: "order_by", type: "text" },
       {
+        valueId: "gameDetailsGameMode",
+        key: "gameMode",
+        localKey: "gameMode",
+        dbKey: "game_mode",
+        type: "select",
+        selectSourceId: "playedGameAutoModeSelect",
+      },
+      {
         valueId: "gameDetailsOrderType",
         key: "orderType",
         localKey: "orderType",
@@ -909,6 +917,14 @@ const detailsEditConfigs = {
     table: "Game_Orders",
     fields: [
       { valueId: "gameOrderDetailsOrderBy", key: "orderBy", localKey: "orderBy", dbKey: "game_order_by", type: "text" },
+      {
+        valueId: "gameOrderDetailsGameMode",
+        key: "gameMode",
+        localKey: "gameMode",
+        dbKey: "game_mode",
+        type: "select",
+        selectSourceId: "gameAutoModeSelect",
+      },
       {
         valueId: "gameOrderDetailsOrderType",
         key: "orderType",
@@ -1406,6 +1422,7 @@ function renderGameDetailsModal(game, modal) {
     game.dateAdded ? formatDateTime(game.dateAdded) : ""
   );
   setMovieDetailsText("gameDetailsOrderBy", orderByValue);
+  setMovieDetailsText("gameDetailsGameMode", normalizeGameMode(game.gameMode), "—");
   setMovieDetailsText("gameDetailsOrderType", orderTypeValue);
   setMovieDetailsText("gameDetailsPupsikRating", game.rating);
   setMovieDetailsText("gameDetailsUserRating", game.userRating ?? "-");
@@ -1841,6 +1858,7 @@ function openGameOrderDetailsModal(id) {
     game.planDate ? formatDateTime(game.planDate) : ""
   );
   setMovieDetailsText("gameOrderDetailsOrderBy", orderByValue);
+  setMovieDetailsText("gameOrderDetailsGameMode", normalizeGameMode(game.gameMode), "—");
   setMovieDetailsText("gameOrderDetailsOrderType", orderTypeValue);
 
   const descText =
@@ -2410,9 +2428,13 @@ function switchGameMode(mode) {
   if (mode === "auto") {
     document.getElementById("gameAutoMode").style.display = "block";
     document.getElementById("gameManualMode").style.display = "none";
+    document.getElementById("gameAutoModeField").style.display = "block";
+    document.getElementById("gameManualModeField").style.display = "none";
   } else {
     document.getElementById("gameAutoMode").style.display = "none";
     document.getElementById("gameManualMode").style.display = "block";
+    document.getElementById("gameAutoModeField").style.display = "none";
+    document.getElementById("gameManualModeField").style.display = "block";
   }
 }
 
@@ -2427,9 +2449,13 @@ function switchPlayedGameMode(mode) {
   if (mode === "auto") {
     document.getElementById("playedGameAutoMode").style.display = "block";
     document.getElementById("playedGameManualMode").style.display = "none";
+    document.getElementById("playedGameAutoModeField").style.display = "block";
+    document.getElementById("playedGameManualModeField").style.display = "none";
   } else {
     document.getElementById("playedGameAutoMode").style.display = "none";
     document.getElementById("playedGameManualMode").style.display = "block";
+    document.getElementById("playedGameAutoModeField").style.display = "none";
+    document.getElementById("playedGameManualModeField").style.display = "block";
   }
 }
 

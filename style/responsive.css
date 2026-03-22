@@ -22,6 +22,11 @@
 }
 
 @media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
     .container {
         padding: 15px;
     }

@@ -243,6 +243,10 @@
     margin-bottom: 4px;
 }
 
+.order-title-text {
+    display: inline;
+}
+
 .order-original-title {
     font-size: 0.85rem;
     color: var(--text-secondary);

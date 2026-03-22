@@ -182,6 +182,7 @@ function computeGamesSignature(list) {
     const ratingCount = Number(game?.ratingCount ?? 0);
     const orderByHash = stringHash(game?.orderBy ?? "");
     const orderTypeHash = stringHash(game?.orderType ?? "");
+    const gameModeHash = stringHash(game?.gameMode ?? "");
     const posterHash = stringHash(game?.poster ?? "");
     const descriptionValue =
       typeof game?.description === "string"
@@ -197,6 +198,7 @@ function computeGamesSignature(list) {
     hash = (hash * 31 + ratingCount) >>> 0;
     hash = (hash * 31 + orderByHash) >>> 0;
     hash = (hash * 31 + orderTypeHash) >>> 0;
+    hash = (hash * 31 + gameModeHash) >>> 0;
     hash = (hash * 31 + posterHash) >>> 0;
     hash = (hash * 31 + descriptionHash) >>> 0;
   }
@@ -451,7 +453,7 @@ async function loadGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Game_Orders")
       .select(
-        "id, created_at, game_title, game_order_type, game_order_by, game_genres, game_poster, game_year, game_plan_date, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
+        "id, created_at, game_title, game_order_type, game_order_by, game_mode, game_genres, game_poster, game_year, game_plan_date, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
       )
       .order("id", { ascending: true });
 
@@ -469,6 +471,7 @@ async function loadGamesFromSupabase() {
           ? item.game_order_by
           : "",
       orderType: item.game_order_type,
+      gameMode: normalizeGameMode(item.game_mode),
       dateAdded: item.created_at,
       description: item.description || "",
       rating: item.rawg_rating || null, // Using 'rating' to align with movie structure for generic usage if needed
@@ -504,7 +507,7 @@ async function loadPlayedGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("games")
       .select(
-        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type, game_rating_sum, game_rating_count, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
+        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type, game_mode, game_rating_sum, game_rating_count, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
       )
       .order("id", { ascending: false });
 
@@ -524,6 +527,7 @@ async function loadPlayedGamesFromSupabase() {
         dateAdded: item.date,
         orderBy: item.order_by && item.order_by !== "null" ? item.order_by : "",
         orderType: item.order_type,
+        gameMode: normalizeGameMode(item.game_mode),
         description: item.description || "",
         rawgRating: item.rawg_rating ?? null,
         metacritic: item.metacritic ?? null,

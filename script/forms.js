@@ -49,6 +49,32 @@ async function resolveKinopoiskImdbId(kinopoiskId, currentImdbId) {
   return fetchKinopoiskImdbId(kinopoiskId);
 }
 
+function syncGameModeSelectGroup(groupName) {
+  const selects = Array.from(
+    document.querySelectorAll(`[data-sync-game-mode="${groupName}"]`)
+  );
+  if (!selects.length) return;
+
+  selects.forEach((select) => {
+    select.addEventListener("change", () => {
+      const nextValue = normalizeGameMode(select.value);
+      selects.forEach((otherSelect) => {
+        if (otherSelect !== select) {
+          otherSelect.value = nextValue;
+        }
+      });
+    });
+  });
+}
+
+function getSelectedGameMode(mode, autoSelectId, manualSelectId) {
+  const sourceId = mode === "auto" ? autoSelectId : manualSelectId;
+  return normalizeGameMode(document.getElementById(sourceId)?.value);
+}
+
+syncGameModeSelectGroup("add-game");
+syncGameModeSelectGroup("played-game");
+
 document
   .getElementById("addMovieForm")
   .addEventListener("submit", async function (e) {
@@ -491,6 +517,11 @@ document
 
     const orderType = document.getElementById("gameOrderType").value;
     const orderBy = document.getElementById("gameOrderBy").value;
+    const gameMode = getSelectedGameMode(
+      currentGameMode,
+      "gameAutoModeSelect",
+      "gameManualModeSelect"
+    );
 
     let gameData;
     let posterFile = null;
@@ -547,6 +578,7 @@ document
             "https://via.placeholder.com/300x400?text=Нет+постера",
           orderBy: orderBy,
           orderType: orderType,
+          gameMode: gameMode,
           // New fields
           description: fullGameDetails?.description_raw || fullGameDetails?.description || "",
           rating: fullGameDetails?.rating || g.rating || null,
@@ -566,6 +598,7 @@ document
           poster: "https://via.placeholder.com/300x400?text=Нет+постера",
           orderBy: orderBy,
           orderType: orderType,
+          gameMode: gameMode,
           description: "",
           rating: null,
           metacritic: null,
@@ -596,6 +629,7 @@ document
         poster: poster,
         orderBy: orderBy,
         orderType: orderType,
+        gameMode: gameMode,
         description: "",
         rating: null,
         metacritic: null,
@@ -630,6 +664,7 @@ document
           game_poster: gameData.poster,
           game_order_by: gameData.orderBy,
           game_order_type: gameData.orderType,
+          game_mode: gameData.gameMode || null,
           description: descriptionValue,
           rawg_rating: gameData.rating,
           metacritic: gameData.metacritic,
@@ -654,6 +689,7 @@ document
         planDate: data.game_plan_date || null,
         orderBy: data.game_order_by,
         orderType: data.game_order_type,
+        gameMode: normalizeGameMode(data.game_mode),
         dateAdded: data.created_at,
         description: data.description || "",
         rating: data.rawg_rating || null,
@@ -709,6 +745,11 @@ document
 
     let gameData;
     let posterFile = null;
+    const gameMode = getSelectedGameMode(
+      currentPlayedGameMode,
+      "playedGameAutoModeSelect",
+      "playedGameManualModeSelect"
+    );
 
     if (currentPlayedGameMode === "auto") {
       const titleInput = document.getElementById("playedGameAutoTitle").value;
@@ -743,6 +784,7 @@ document
         rating: rating,
         orderBy: orderBy,
         orderType: orderType,
+        gameMode: gameMode,
         rawgId: g.id || null,
       };
     } else {
@@ -765,6 +807,7 @@ document
         rating: rating,
         orderBy: orderBy,
         orderType: orderType,
+        gameMode: gameMode,
       };
     }
 
@@ -796,6 +839,7 @@ document
           date: new Date().toISOString().split("T")[0],
           order_by: gameData.orderBy,
           order_type: gameData.orderType,
+          game_mode: gameData.gameMode || null,
           game_rating_sum: 0,
           game_rating_count: 0,
           rawg_id: gameData.rawgId ?? null,
@@ -815,6 +859,7 @@ document
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        gameMode: normalizeGameMode(data.game_mode),
         rawgId: data.rawg_id ?? null,
         ratingSum: Number(data.game_rating_sum ?? 0) || 0,
         ratingCount: Number(data.game_rating_count ?? 0) || 0,
@@ -980,6 +1025,7 @@ async function submitGameRating() {
       dateAdded: new Date().toISOString().split("T")[0],
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
+      gameMode: normalizeGameMode(source.gameMode),
       description: descriptionValue,
       rawgRating: source.rating ?? null,
       metacritic: source.metacritic ?? null,
@@ -1002,6 +1048,7 @@ async function submitGameRating() {
           date: played.dateAdded,
           order_by: played.orderBy,
           order_type: played.orderType,
+          game_mode: played.gameMode || null,
           game_rating_sum: 0,
           game_rating_count: 0,
           description: played.description,
@@ -1028,6 +1075,7 @@ async function submitGameRating() {
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
+        gameMode: normalizeGameMode(data.game_mode),
         description: data.description ?? played.description ?? "",
         rawgRating: data.rawg_rating ?? played.rawgRating ?? null,
         metacritic: data.metacritic ?? played.metacritic ?? null,
