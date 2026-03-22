@@ -176,6 +176,75 @@
         inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
+.poster-overlay.poster-overlay--absolute-below {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 12px);
+    bottom: auto;
+    transform: none;
+    margin: 0;
+    width: max-content;
+    max-width: min(440px, calc(100vw - 48px));
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--border-radius-small);
+    z-index: 12;
+}
+
+.details-poster-change-btn {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+}
+
+.poster-overlay-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: 18px;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.poster-overlay-close:hover {
+    background: rgba(0, 212, 255, 0.14);
+    border-color: rgba(0, 212, 255, 0.35);
+    transform: scale(1.04);
+}
+
+.poster-overlay--absolute-below .overlay-arrow {
+    width: 34px;
+    height: 34px;
+    font-size: 30px;
+    border-radius: 10px;
+    padding: 4px;
+}
+
+.poster-overlay--absolute-below .thumb-container {
+    gap: 8px;
+    padding: 2px 26px 2px 0;
+}
+
+.poster-overlay--absolute-below .thumb-wrapper {
+    width: 58px;
+}
+
+.poster-overlay--absolute-below .thumb-wrapper .loading-spinner {
+    width: 24px;
+    height: 24px;
+    border-width: 3px;
+}
+
 .poster-overlay .overlay-arrow {
     color: var(--secondary-color);
     font-size: 40px;

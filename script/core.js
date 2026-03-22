@@ -2688,18 +2688,26 @@ async function fetchKPFilmStaff(filmId) {
   }
 }
 
-async function fetchSteamGridPosters(title) {
-  steamGridPoster = null;
-  steamGridPosters = [];
-  if (!title) return;
+async function fetchSteamGridPostersForTitle(title) {
+  if (!title) {
+    return {
+      selectedPoster: null,
+      posters: [],
+    };
+  }
   try {
     const res = await fetch(
       `/api/steamgriddb?search=${encodeURIComponent(title)}`
     );
-    if (!res.ok) return;
+    if (!res.ok) {
+      return {
+        selectedPoster: null,
+        posters: [],
+      };
+    }
     const data = await res.json();
     const posters = Array.isArray(data.posters) ? data.posters : [];
-    steamGridPosters = posters
+    const normalizedPosters = posters
       .map((g) => {
         if (typeof g === "string") {
           const proxied = proxyPosterUrl(g);
@@ -2715,17 +2723,35 @@ async function fetchSteamGridPosters(title) {
         };
       })
       .filter(Boolean);
-    steamGridPoster =
-      steamGridPosters[0]?.thumb || steamGridPosters[0]?.url || null;
+    return {
+      selectedPoster:
+        normalizedPosters[0]?.thumb || normalizedPosters[0]?.url || null,
+      posters: normalizedPosters,
+    };
   } catch (err) {
     console.error("SteamGridDB fetch error", err);
+    return {
+      selectedPoster: null,
+      posters: [],
+    };
   }
 }
 
-function createPosterOverlay(targetImg, posters, placeBelow = false) {
+async function fetchSteamGridPosters(title) {
+  steamGridPoster = null;
+  steamGridPosters = [];
+  const result = await fetchSteamGridPostersForTitle(title);
+  steamGridPoster = result.selectedPoster;
+  steamGridPosters = result.posters;
+}
+
+function createPosterOverlay(targetImg, posters, placeBelow = false, options = {}) {
   if (!targetImg || !Array.isArray(posters) || posters.length < 2) return;
   const overlay = document.createElement("div");
   overlay.className = "poster-overlay" + (placeBelow ? " below" : "");
+  if (options.absoluteBelow) {
+    overlay.classList.add("poster-overlay--absolute-below");
+  }
 
   const prev = document.createElement("div");
   prev.className = "overlay-arrow prev";
@@ -2740,7 +2766,10 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
 
   const maxVisible = 4;
   let startIdx = 0;
-  let selectedPoster = targetImg.src;
+  let selectedPoster = options.selectedPoster || targetImg.src;
+  const onSelect =
+    typeof options.onSelect === "function" ? options.onSelect : null;
+  const syncGlobalSelection = options.syncGlobalSelection !== false;
 
   function render() {
     container.innerHTML = "";
@@ -2781,14 +2810,16 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
       };
       img.src = thumbUrl;
       img.onclick = () => {
-        steamGridPoster = thumbUrl;
-        targetImg.src = steamGridPoster;
-        selectedPoster = steamGridPoster;
-        if (targetImg.id === "editPlayedGamePosterPreview") {
-          editPlayedGamePosterData = steamGridPoster;
+        if (syncGlobalSelection) {
+          steamGridPoster = thumbUrl;
         }
-        if (targetImg.id === "editPlayedGamePosterPreview") {
-          const selection = steamGridPoster;
+        targetImg.src = thumbUrl;
+        selectedPoster = thumbUrl;
+        if (!onSelect && targetImg.id === "editPlayedGamePosterPreview") {
+          editPlayedGamePosterData = thumbUrl;
+        }
+        if (!onSelect && targetImg.id === "editPlayedGamePosterPreview") {
+          const selection = thumbUrl;
           readRemoteImageAsOptimizedDataURL(selection)
             .then((optimized) => {
               if (!optimized || selection !== selectedPoster) return;
@@ -2802,6 +2833,13 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
             .catch((err) => {
               console.error("Error optimizing SteamGrid poster", err);
             });
+        }
+        if (onSelect) {
+          onSelect({
+            selectedPoster: thumbUrl,
+            poster,
+            targetImg,
+          });
         }
         render();
       };
@@ -2831,7 +2869,11 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
   overlay.appendChild(container);
   overlay.appendChild(next);
 
-  if (placeBelow) {
+  if (options.absoluteBelow) {
+    const parent = targetImg.parentElement;
+    parent.style.position = "relative";
+    parent.appendChild(overlay);
+  } else if (placeBelow) {
     const parent = targetImg.parentElement;
     parent.insertAdjacentElement("afterend", overlay);
   } else {
@@ -2840,4 +2882,5 @@ function createPosterOverlay(targetImg, posters, placeBelow = false) {
   }
 
   render();
+  return overlay;
 }

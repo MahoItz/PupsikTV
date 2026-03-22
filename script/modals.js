@@ -845,6 +845,12 @@ const detailsEditConfigs = {
     modalId: "gameDetailsModal",
     recordType: "playedGame",
     table: "games",
+    posterEditor: {
+      imageId: "gameDetailsPoster",
+      localKey: "poster",
+      dbKey: "poster",
+      folder: "played",
+    },
     fields: [
       { valueId: "gameDetailsYear", key: "year", localKey: "year", dbKey: "year", type: "number" },
       { valueId: "gameDetailsGenre", key: "genres", localKey: "genres", dbKey: "genres", type: "text" },
@@ -856,6 +862,13 @@ const detailsEditConfigs = {
     recordType: "playedGame",
     table: "games",
     fields: [
+      {
+        valueId: "gameDetailsDate",
+        key: "dateAdded",
+        localKey: "dateAdded",
+        dbKey: "date",
+        type: "date",
+      },
       { valueId: "gameDetailsOrderBy", key: "orderBy", localKey: "orderBy", dbKey: "order_by", type: "text" },
       {
         valueId: "gameDetailsGameMode",
@@ -906,6 +919,12 @@ const detailsEditConfigs = {
     modalId: "gameOrderDetailsModal",
     recordType: "gameOrder",
     table: "Game_Orders",
+    posterEditor: {
+      imageId: "gameOrderDetailsPoster",
+      localKey: "poster",
+      dbKey: "game_poster",
+      folder: "orders",
+    },
     fields: [
       { valueId: "gameOrderDetailsYear", key: "year", localKey: "year", dbKey: "game_year", type: "number" },
       { valueId: "gameOrderDetailsGenre", key: "genres", localKey: "genres", dbKey: "game_genres", type: "text" },
@@ -916,6 +935,13 @@ const detailsEditConfigs = {
     recordType: "gameOrder",
     table: "Game_Orders",
     fields: [
+      {
+        valueId: "gameOrderDetailsDate",
+        key: "dateAdded",
+        localKey: "dateAdded",
+        dbKey: "created_at",
+        type: "datetime-local",
+      },
       { valueId: "gameOrderDetailsOrderBy", key: "orderBy", localKey: "orderBy", dbKey: "game_order_by", type: "text" },
       {
         valueId: "gameOrderDetailsGameMode",
@@ -951,6 +977,127 @@ function getRecordByType(type, id) {
   if (type === "order") return watchlist.find((o) => o.id === matchId);
   if (type === "gameOrder") return gameOrders.find((g) => g.id === matchId);
   return null;
+}
+
+const detailsPosterEditState = new Map();
+
+function getDetailsDateInputValue(value) {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
+    return String(value);
+  }
+  if (typeof formatDateLocal === "function") {
+    return formatDateLocal(value);
+  }
+  return "";
+}
+
+function formatDetailsDisplayValue(field, value) {
+  if (field?.type === "date") {
+    return value ? formatDate(value) : "";
+  }
+  if (field?.type === "datetime-local") {
+    return value ? formatDateTime(value) : "";
+  }
+  return value;
+}
+
+function cleanupDetailsPosterEditor(key, { restorePoster = true } = {}) {
+  const state = detailsPosterEditState.get(key);
+  if (!state) return;
+
+  if (state.triggerButton?.parentElement) {
+    state.triggerButton.remove();
+  }
+
+  if (state.overlay?.parentElement) {
+    state.overlay.remove();
+  }
+
+  if (restorePoster && state.previewEl) {
+    state.previewEl.src = state.originalPoster || DEFAULT_POSTER_PLACEHOLDER;
+  }
+
+  detailsPosterEditState.delete(key);
+}
+
+async function setupDetailsPosterEditor(key, record) {
+  const config = detailsEditConfigs[key];
+  const posterEditor = config?.posterEditor;
+  if (!posterEditor || !record) return;
+
+  cleanupDetailsPosterEditor(key, { restorePoster: false });
+
+  const previewEl = document.getElementById(posterEditor.imageId);
+  if (!previewEl) return;
+
+  const originalPoster = record[posterEditor.localKey] || previewEl.src || "";
+  const state = {
+    previewEl,
+    originalPoster,
+    pendingPoster: originalPoster,
+    triggerButton: null,
+    overlay: null,
+  };
+  detailsPosterEditState.set(key, state);
+
+  const title = String(record.title || record.game_title || "").trim();
+  const result = await fetchSteamGridPostersForTitle(title);
+  if (detailsPosterEditState.get(key) !== state) return;
+
+  const posters = [];
+  const seen = new Set();
+  const appendPoster = (poster) => {
+    const url = poster?.url || poster?.thumb || "";
+    const thumb = poster?.thumb || poster?.url || "";
+    const dedupeKey = `${url}|${thumb}`;
+    if (!url || seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
+    posters.push({ url, thumb });
+  };
+
+  appendPoster({ url: originalPoster, thumb: originalPoster });
+  (result?.posters || []).forEach(appendPoster);
+
+  if (posters.length < 2) {
+    return;
+  }
+
+  state.overlay = createPosterOverlay(previewEl, posters, false, {
+    absoluteBelow: true,
+    selectedPoster: originalPoster,
+    syncGlobalSelection: false,
+    onSelect: ({ selectedPoster }) => {
+      state.pendingPoster = selectedPoster || state.pendingPoster;
+    },
+  });
+
+  if (!state.overlay) {
+    return;
+  }
+
+  state.overlay.style.display = "none";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "poster-overlay-close";
+  closeBtn.setAttribute("aria-label", "Закрыть выбор постера");
+  closeBtn.textContent = "×";
+  closeBtn.onclick = () => {
+    state.overlay.style.display = "none";
+  };
+  state.overlay.appendChild(closeBtn);
+
+  const triggerButton = document.createElement("button");
+  triggerButton.type = "button";
+  triggerButton.className = "btn btn-secondary details-poster-change-btn";
+  triggerButton.textContent = "Заменить постер";
+  triggerButton.onclick = () => {
+    state.overlay.style.display = "flex";
+  };
+
+  previewEl.parentElement.appendChild(triggerButton);
+  state.triggerButton = triggerButton;
 }
 
 function buildSelectFromSource(sourceId, value) {
@@ -1002,6 +1149,17 @@ function createDetailsInput(field, record) {
     input.min = "0";
     input.max = "11";
     input.step = "0.01";
+  } else if (field.type === "date") {
+    input.type = "date";
+    input.value = getDetailsDateInputValue(currentValue);
+    return input;
+  } else if (field.type === "datetime-local") {
+    input.type = "datetime-local";
+    input.value =
+      typeof formatDateTimeLocal === "function"
+        ? formatDateTimeLocal(currentValue)
+        : "";
+    return input;
   } else {
     input.type = field.type === "number" ? "number" : "text";
   }
@@ -1027,6 +1185,24 @@ function normalizeDetailsValue(field, inputValue, record) {
     }
     const clamped = Math.min(11, Math.max(0, parsed));
     return roundRatingToTwoDigits(clamped);
+  }
+  if (field.type === "date") {
+    const normalized = String(inputValue ?? "").trim();
+    if (!normalized) return null;
+    return /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+      ? normalized
+      : record
+        ? record[field.localKey]
+        : null;
+  }
+  if (field.type === "datetime-local") {
+    const normalized = String(inputValue ?? "").trim();
+    if (!normalized) return null;
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) {
+      return record ? record[field.localKey] : null;
+    }
+    return parsed.toISOString();
   }
   if (typeof inputValue === "string") {
     return inputValue.trim();
@@ -1058,6 +1234,10 @@ function enterDetailsEdit(key) {
     span.appendChild(input);
   });
 
+  if (config.posterEditor) {
+    setupDetailsPosterEditor(key, record);
+  }
+
   const actions = modal.querySelector(`[data-details-actions="${key}"]`);
   if (actions) actions.classList.add("is-visible");
   const toggle = modal.querySelector(`[data-details-edit="${key}"]`);
@@ -1080,6 +1260,8 @@ function exitDetailsEdit(key, { restore = true } = {}) {
     span.innerHTML = "";
     span.textContent = restore ? original : current;
   });
+
+  cleanupDetailsPosterEditor(key, { restorePoster: restore });
 
   const actions = modal.querySelector(`[data-details-actions="${key}"]`);
   if (actions) actions.classList.remove("is-visible");
@@ -1107,6 +1289,7 @@ async function saveDetailsEdit(key) {
   const updates = {};
   const payload = {};
   let hasChanges = false;
+  let previousPosterToDelete = null;
 
   config.fields.forEach((field) => {
     const span = document.getElementById(field.valueId);
@@ -1127,12 +1310,44 @@ async function saveDetailsEdit(key) {
     }
   });
 
+  if (config.posterEditor) {
+    const state = detailsPosterEditState.get(key);
+    const currentPoster = record[config.posterEditor.localKey] || "";
+    const pendingPoster = state?.pendingPoster || currentPoster;
+    if (pendingPoster !== currentPoster) {
+      hasChanges = true;
+    }
+  }
+
   if (!hasChanges) {
     exitDetailsEdit(key, { restore: true });
     return;
   }
 
   try {
+    if (config.posterEditor) {
+      const state = detailsPosterEditState.get(key);
+      const localKey = config.posterEditor.localKey;
+      const dbKey = config.posterEditor.dbKey;
+      const currentPoster = record[localKey] || "";
+      const pendingPoster = state?.pendingPoster || currentPoster;
+      if (pendingPoster !== currentPoster) {
+        const uploadedPoster = await uploadGamePosterToStorage({
+          poster: pendingPoster,
+          title: record.title || "",
+          folder: config.posterEditor.folder,
+        });
+        updates[localKey] = uploadedPoster;
+        payload[dbKey] = uploadedPoster;
+        previousPosterToDelete =
+          currentPoster &&
+          currentPoster !== uploadedPoster &&
+          getGamePosterStoragePath(currentPoster)
+            ? currentPoster
+            : null;
+      }
+    }
+
     const { error } = await supabaseClient
       .from(config.table)
       .update(payload)
@@ -1149,6 +1364,14 @@ async function saveDetailsEdit(key) {
       }
     });
 
+    if (config.posterEditor && updates[config.posterEditor.localKey] !== undefined) {
+      record[config.posterEditor.localKey] = updates[config.posterEditor.localKey];
+      const posterEl = document.getElementById(config.posterEditor.imageId);
+      if (posterEl) {
+        posterEl.src = record[config.posterEditor.localKey] || DEFAULT_POSTER_PLACEHOLDER;
+      }
+    }
+
     if (config.recordType === "movie") {
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
       renderMovies();
@@ -1163,8 +1386,12 @@ async function saveDetailsEdit(key) {
 
     config.fields.forEach((field) => {
       const value = updates[field.key];
-      setDetailsValueText(field.valueId, value);
+      setDetailsValueText(field.valueId, formatDetailsDisplayValue(field, value));
     });
+
+    if (previousPosterToDelete) {
+      await deleteGamePosterFromStorage(previousPosterToDelete);
+    }
 
     exitDetailsEdit(key, { restore: false });
   } catch (err) {
@@ -2356,7 +2583,10 @@ function parseDuration(durationStr) {
 
 
 function closeModal(modalId, shouldReset = false) {
-  document.getElementById(modalId).style.display = "none";
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = "none";
+  }
   if (modalId === "gameDetailsModal") {
     activeGameDetailsId = null;
   }
@@ -2374,6 +2604,17 @@ function closeModal(modalId, shouldReset = false) {
     if (typeof setGameOrderDescriptionStatus === "function") {
       setGameOrderDescriptionStatus("");
     }
+  }
+  if (
+    modal &&
+    (
+      modalId === "movieDetailsModal" ||
+      modalId === "gameDetailsModal" ||
+      modalId === "orderDetailsModal" ||
+      modalId === "gameOrderDetailsModal"
+    )
+  ) {
+    resetDetailsInlineEdits(modal);
   }
   if (shouldReset) {
     resetForm();
