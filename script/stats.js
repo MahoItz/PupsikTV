@@ -313,13 +313,6 @@
       ],
       leaderboards: [
         {
-          title: "Общий топ",
-          items: leaders.total.map((entry) => ({
-            name: entry.name,
-            value: `${formatNumber(entry.total)} заказов`,
-          })),
-        },
-        {
           title: "Топ по фильмам",
           items: leaders.movies.map((entry) => ({
             name: entry.name,
@@ -331,6 +324,13 @@
           items: leaders.games.map((entry) => ({
             name: entry.name,
             value: `${formatNumber(entry.games)} игр`,
+          })),
+        },
+        {
+          title: "Общий топ",
+          items: leaders.total.map((entry) => ({
+            name: entry.name,
+            value: `${formatNumber(entry.total)} заказов`,
           })),
         },
       ],
