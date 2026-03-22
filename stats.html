@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PupsikTV Stats</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=carter-one:400|space-grotesk:400,500,700" rel="stylesheet" />
+    <link rel="icon" href="images/Pupsik_TV_Icon.webp">
+    <link rel="stylesheet" href="/style/base.css">
+    <link rel="stylesheet" href="/style/stats.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="stats-page">
+    <main class="stats-shell">
+        <a href="/" class="stats-back-link" aria-label="Вернуться на главную">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            <span>Назад</span>
+        </a>
+
+        <section class="stats-hero">
+            <div class="stats-hero__copy">
+                <p class="stats-eyebrow">PupsikTV Analytics</p>
+                <h1>Статистика сайта</h1>
+                <p class="stats-hero__text">
+                    Самые важные цифры по фильмам, играм, заказам и зрителям в одном месте.
+                </p>
+            </div>
+            <div class="stats-hero__badge">
+                <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+            </div>
+        </section>
+
+        <div id="statsError" class="stats-error" hidden></div>
+
+        <section id="statsLoading" class="stats-loading" aria-live="polite">
+            <div class="stats-loading__spinner" aria-hidden="true"></div>
+            <p>Загружаю статистику сайта…</p>
+        </section>
+
+        <div id="statsContent" hidden>
+            <section class="stats-section">
+                <div class="stats-section__header">
+                    <h2>Обзор</h2>
+                    <p id="statsUpdatedAt" class="stats-section__hint"></p>
+                </div>
+                <div id="statsOverview" class="stats-overview-grid"></div>
+            </section>
+
+            <section class="stats-layout-grid">
+                <article class="stats-panel">
+                    <div class="stats-section__header">
+                        <h2>Оценки фильмов</h2>
+                        <p class="stats-section__hint">Завершённые фильмы по шкале PupsikTV</p>
+                    </div>
+                    <div id="movieRatingDistribution" class="stats-bars"></div>
+                </article>
+
+                <article class="stats-panel">
+                    <div class="stats-section__header">
+                        <h2>Типы заказов</h2>
+                        <p class="stats-section__hint">Фильмы и игры по источнику заказа</p>
+                    </div>
+                    <div id="orderTypeBreakdown" class="stats-breakdown-grid"></div>
+                </article>
+            </section>
+
+            <section class="stats-layout-grid">
+                <article class="stats-panel">
+                    <div class="stats-section__header">
+                        <h2>Лидеры заказов</h2>
+                        <p class="stats-section__hint">Кто заказывал чаще всего</p>
+                    </div>
+                    <div id="leaderboards" class="leaderboard-grid"></div>
+                </article>
+
+                <article class="stats-panel">
+                    <div class="stats-section__header">
+                        <h2>Дополнительно</h2>
+                        <p class="stats-section__hint">Несколько быстрых срезов по базе</p>
+                    </div>
+                    <div id="statsHighlights" class="stats-highlights"></div>
+                </article>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="/script/stats.js" defer></script>
+</body>
+
+</html>
