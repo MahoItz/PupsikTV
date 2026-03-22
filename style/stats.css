@@ -127,6 +127,15 @@
     font-size: 1.35rem;
 }
 
+.stats-section__header h3 {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 1.05rem;
+}
+
+.stats-section__header--subsection {
+    margin: 22px 0 12px;
+}
+
 .stats-section__hint {
     color: rgba(255, 255, 255, 0.66);
     font-size: 0.9rem;
@@ -193,6 +202,12 @@
 .stats-bars {
     display: grid;
     gap: 12px;
+}
+
+.stats-subsection {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .stats-bar {

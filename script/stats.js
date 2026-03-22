@@ -114,11 +114,12 @@
       movieOrdersResult,
       gamesResult,
       gameOrdersResult,
+      movieRatingsResult,
     ] = await withTimeout(
       Promise.all([
         client
           .from("movies")
-          .select("id, rating_numeric, order_by, order_type, date"),
+          .select("id, rating_numeric, rating_sum, rating_count, order_by, order_type, date"),
         client
           .from("Movie_Orders")
           .select("id, order_by, order_type, created_at"),
@@ -128,6 +129,10 @@
         client
           .from("Game_Orders")
           .select("id, game_order_by, game_order_type, created_at"),
+        client
+          .from("ratings")
+          .select("rating, movie_id, category, source")
+          .eq("category", "Movie"),
       ]),
       DATA_TIMEOUT_MS,
       "Stats data request"
@@ -138,6 +143,7 @@
       movieOrdersResult,
       gamesResult,
       gameOrdersResult,
+      movieRatingsResult,
     ];
 
     const failedResult = results.find((result) => result.error);
@@ -150,6 +156,7 @@
       movieOrders: movieOrdersResult.data || [],
       games: gamesResult.data || [],
       gameOrders: gameOrdersResult.data || [],
+      movieRatings: movieRatingsResult.data || [],
     };
   }
 
@@ -162,14 +169,14 @@
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }
 
-  function buildRatingDistribution(movies) {
+  function buildRatingDistribution(entries, getValue) {
     const counts = new Map();
     for (let rating = MOVIE_RATING_MAX; rating >= 0; rating -= 1) {
       counts.set(rating, 0);
     }
 
-    for (const movie of movies) {
-      const bucket = clampRatingBucket(movie?.rating_numeric);
+    for (const entry of entries) {
+      const bucket = clampRatingBucket(getValue(entry));
       if (bucket === null) continue;
       counts.set(bucket, (counts.get(bucket) || 0) + 1);
     }
@@ -221,7 +228,7 @@
     };
   }
 
-  function computeStats({ movies, movieOrders, games, gameOrders }) {
+  function computeStats({ movies, movieOrders, games, gameOrders, movieRatings }) {
     const movieHistory = [
       ...movies.map((item) => ({
         orderBy: item.order_by,
@@ -251,7 +258,14 @@
       "orderType"
     );
     const leaders = buildLeaders(movieHistory, gameHistory);
-    const ratingDistribution = buildRatingDistribution(movies);
+    const ratingDistribution = buildRatingDistribution(
+      movies,
+      (movie) => movie?.rating_numeric
+    );
+    const viewerRatingDistribution = buildRatingDistribution(
+      movieRatings,
+      (rating) => rating?.rating
+    );
 
     const movieOrdersWithoutName = movieHistory.filter(
       (entry) => !normalizeOrderBy(entry.orderBy)
@@ -260,10 +274,18 @@
       (entry) => !normalizeOrderBy(entry.orderBy)
     ).length;
 
-    const ratingsCount = ratingDistribution.reduce(
+    const pupsikRatingsCount = ratingDistribution.reduce(
       (sum, [, count]) => sum + count,
       0
     );
+    const viewerRatingsCount = movies.reduce((sum, movie) => {
+      const count = Number(movie?.rating_count ?? 0);
+      return Number.isFinite(count) && count > 0 ? sum + count : sum;
+    }, 0);
+    const viewerRatedMoviesCount = movies.reduce((sum, movie) => {
+      const count = Number(movie?.rating_count ?? 0);
+      return Number.isFinite(count) && count > 0 ? sum + 1 : sum;
+    }, 0);
     const topMovieRating = ratingDistribution.reduce((best, current) => {
       const [bestRating, bestCount] = best || [null, -1];
       const [currentRating, currentCount] = current;
@@ -273,31 +295,39 @@
       }
       return best;
     }, null);
-    const averageMovieRating = ratingsCount
+    const averagePupsikRating = pupsikRatingsCount
       ? (
           movies.reduce((sum, movie) => {
             const value = toSafeNumber(movie.rating_numeric);
             return value === null ? sum : sum + value;
-          }, 0) / ratingsCount
+          }, 0) / pupsikRatingsCount
+        ).toFixed(2)
+      : "0.00";
+    const averageViewerRating = viewerRatingsCount
+      ? (
+          movies.reduce((sum, movie) => {
+            const ratingSum = Number(movie?.rating_sum ?? 0);
+            return Number.isFinite(ratingSum) ? sum + ratingSum : sum;
+          }, 0) / viewerRatingsCount
         ).toFixed(2)
       : "0.00";
 
     return {
       overview: [
         {
-          label: "Фильмов в базе",
+          label: "Фильмов просмотрено",
           value: movies.length,
-          meta: `${movieOrders.length} ещё ожидают просмотра`,
+          meta: "в основном списке",
         },
         {
-          label: "История заказов фильмов",
-          value: movieHistory.length,
-          meta: "включая завершённые и ожидающие",
+          label: "Фильмов в очереди",
+          value: movieOrders.length,
+          meta: "ожидают просмотра",
         },
         {
-          label: "История заказов игр",
-          value: gameHistory.length,
-          meta: `${games.length} пройдено, ${gameOrders.length} в ожидании`,
+          label: "Игр пройдено",
+          value: games.length,
+          meta: `${gameOrders.length} в ожидании`,
         },
         {
           label: "Уникальных заказчиков",
@@ -306,6 +336,7 @@
         },
       ],
       ratingDistribution,
+      viewerRatingDistribution,
       orderTypeGroups: [
         { title: "Фильмы", items: movieTypeCounts },
         { title: "Игры", items: gameTypeCounts },
@@ -339,17 +370,26 @@
           title: "По фильмам",
           items: [
             {
-              label: "Оценённых фильмов",
-              value: formatNumber(ratingsCount),
+              label: "Фильмов с оценкой Pupsik",
+              value: formatNumber(pupsikRatingsCount),
             },
             {
-              label: "Средняя оценка",
-              value: averageMovieRating,
+              label: "Средняя оценка Pupsik",
+              value: averagePupsikRating,
+            },
+            {
+              label: "Средняя оценка зрителей",
+              value: averageViewerRating,
+            },
+            {
+              label: "Голосов зрителей",
+              value: formatNumber(viewerRatingsCount),
+              meta: `${formatNumber(viewerRatedMoviesCount)} фильмов оценено`,
             },
             {
               label: topMovieRating
-                ? `Самый частый рейтинг: ${topMovieRating[0]}`
-                : "Самый частый рейтинг",
+                ? `Самый частый рейтинг Pupsik: ${topMovieRating[0]}`
+                : "Самый частый рейтинг Pupsik",
               value: topMovieRating ? formatNumber(topMovieRating[1]) : "0",
             },
           ],
@@ -422,8 +462,8 @@
       .join("");
   }
 
-  function renderRatingDistribution(distribution) {
-    const container = document.getElementById("movieRatingDistribution");
+  function renderRatingDistribution(distribution, containerId = "movieRatingDistribution") {
+    const container = document.getElementById(containerId);
     if (!container) return;
 
     const maxValue = distribution.reduce(
@@ -520,6 +560,7 @@
               <div class="stats-highlight-item">
                 <span>${item.label}</span>
                 <strong class="stats-highlight-item__value">${item.value}</strong>
+                ${item.meta ? `<small class="stats-highlight-item__meta">${item.meta}</small>` : ""}
               </div>
             `
           )
@@ -548,6 +589,10 @@
 
       renderOverview(stats.overview);
       renderRatingDistribution(stats.ratingDistribution);
+      renderRatingDistribution(
+        stats.viewerRatingDistribution,
+        "viewerMovieRatingDistribution"
+      );
       renderBreakdown(stats.orderTypeGroups);
       renderLeaderboards(stats.leaderboards);
       renderHighlights(stats.highlights);
