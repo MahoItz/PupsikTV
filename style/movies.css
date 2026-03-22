@@ -450,6 +450,10 @@
     border-color: rgba(138, 43, 226, 0.4);
 }
 
+.ribbon-auction {
+    border-color: rgba(255, 82, 168, 0.45);
+}
+
 .ribbon-balls {
     border-color: rgba(0, 200, 255, 0.4);
 }

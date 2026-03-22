@@ -1338,6 +1338,7 @@ const ROULETTE_ORDER_TYPE = "Рулетка";
 const ORDER_TYPE_CLASSES = {
   Донат: "ribbon-donate",
   "Баллы канала": "ribbon-points",
+  Аукцион: "ribbon-auction",
   Шары: "ribbon-balls",
   [ROULETTE_ORDER_TYPE]: "ribbon-roulette",
 };

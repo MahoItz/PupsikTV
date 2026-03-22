@@ -952,6 +952,7 @@ function buildSelectFromSource(sourceId, value) {
       { value: "Донат", label: "Донат" },
       { value: "Шары", label: "Шары" },
       { value: "Баллы канала", label: "Баллы канала" },
+      { value: "Аукцион", label: "Аукцион" },
       { value: "Рулетка", label: "Рулетка" },
     ];
     fallbackOptions.forEach((opt) => {
