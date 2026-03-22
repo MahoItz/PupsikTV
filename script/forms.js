@@ -410,19 +410,12 @@ document
       };
     }
 
-    const duplicateOrder =
-      watchlist.some(
-        (o) =>
-          o.title.trim().toLowerCase() ===
-            orderData.title.trim().toLowerCase() &&
-          Number(o.year) === Number(orderData.year)
-      ) ||
-      allMovies.some(
-        (m) =>
-          m.title.trim().toLowerCase() ===
-            orderData.title.trim().toLowerCase() &&
-          Number(m.year) === Number(orderData.year)
-      );
+    const duplicateOrder = watchlist.some(
+      (o) =>
+        o.title.trim().toLowerCase() ===
+          orderData.title.trim().toLowerCase() &&
+        Number(o.year) === Number(orderData.year)
+    );
     if (duplicateOrder) {
       showDuplicateModal();
       return;
@@ -916,6 +909,26 @@ async function submitRating() {
       orderType: source.orderType || "",
       studios: source.studios || null,
     };
+    const duplicateWatchedMovie = allMovies.some(
+      (m) =>
+        m.title.trim().toLowerCase() ===
+          watchedMovie.title.trim().toLowerCase() &&
+        Number(m.year) === Number(watchedMovie.year)
+    );
+    if (duplicateWatchedMovie) {
+      showDuplicateModal(
+        "Такой фильм уже есть в списке просмотренных. Можно удалить его из заказанных.",
+        {
+          actionLabel: "Удалить",
+          onAction: async () => {
+            closeModal("duplicateModal");
+            closeModal("rateMovieModal", true);
+            await performDeleteOrder(source.id);
+          },
+        }
+      );
+      return;
+    }
     const confirmBtn = document.querySelector("#rateMovieModal .btn-primary");
     isSubmittingRating = true;
     if (confirmBtn) confirmBtn.disabled = true;

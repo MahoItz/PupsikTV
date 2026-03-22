@@ -496,6 +496,13 @@ body.order-player-fullscreen #orderPlayerModal .modal-content {
     margin-top: 10px;
 }
 
+#duplicateModal .modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+}
+
 #fortuneDuplicateModal .modal-content {
     text-align: center;
 }

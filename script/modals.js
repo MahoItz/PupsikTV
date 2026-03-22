@@ -36,7 +36,64 @@ function openAddToWatchlistModal() {
   document.getElementById("addWatchlistModal").style.display = "block";
 }
 
-function showDuplicateModal() {
+let duplicateModalAction = null;
+
+function resetDuplicateModalState() {
+  const messageEl = document.getElementById("duplicateModalMessage");
+  const actionsEl = document.getElementById("duplicateModalActions");
+  const actionBtn = document.getElementById("duplicateModalActionBtn");
+  if (messageEl) {
+    messageEl.textContent = "Такой фильм уже есть в списке.";
+  }
+  if (actionsEl) {
+    actionsEl.style.display = "none";
+  }
+  if (actionBtn) {
+    actionBtn.textContent = "Удалить";
+    actionBtn.disabled = false;
+  }
+  duplicateModalAction = null;
+}
+
+function showDuplicateModal(message = "Такой фильм уже есть в списке.", options = {}) {
+  const messageEl = document.getElementById("duplicateModalMessage");
+  const actionsEl = document.getElementById("duplicateModalActions");
+  const actionBtn = document.getElementById("duplicateModalActionBtn");
+  const closeBtn = document.getElementById("duplicateModalCloseBtn");
+
+  if (messageEl) {
+    messageEl.textContent = message;
+  }
+
+  duplicateModalAction =
+    typeof options.onAction === "function" ? options.onAction : null;
+
+  if (actionsEl && actionBtn && duplicateModalAction) {
+    actionsEl.style.display = "flex";
+    actionBtn.textContent = options.actionLabel || "Удалить";
+    actionBtn.disabled = false;
+  } else if (actionsEl) {
+    actionsEl.style.display = "none";
+  }
+
+  if (closeBtn && !closeBtn.dataset.bound) {
+    closeBtn.dataset.bound = "true";
+    closeBtn.addEventListener("click", () => closeModal("duplicateModal"));
+  }
+
+  if (actionBtn && !actionBtn.dataset.bound) {
+    actionBtn.dataset.bound = "true";
+    actionBtn.addEventListener("click", async () => {
+      if (!duplicateModalAction) return;
+      actionBtn.disabled = true;
+      try {
+        await duplicateModalAction();
+      } finally {
+        actionBtn.disabled = false;
+      }
+    });
+  }
+
   document.getElementById("duplicateModal").style.display = "block";
 }
 
@@ -47,6 +104,26 @@ function showSearchReminderModal() {
 function openRateModal(id) {
   ratingMovieId = id;
   const item = watchlist.find((w) => w.id === id);
+  if (item) {
+    const duplicateWatchedMovie = allMovies.some(
+      (m) =>
+        m.title.trim().toLowerCase() === item.title.trim().toLowerCase() &&
+        Number(m.year) === Number(item.year)
+    );
+    if (duplicateWatchedMovie) {
+      showDuplicateModal(
+        "Такой фильм уже есть в списке просмотренных. Можно удалить его из заказанных.",
+        {
+          actionLabel: "Удалить",
+          onAction: async () => {
+            closeModal("duplicateModal");
+            await performDeleteOrder(item.id);
+          },
+        }
+      );
+      return;
+    }
+  }
   if (item) {
     document.getElementById("rateMovieTitle").textContent = item.title;
     document.getElementById("rateMoviePoster").src = item.poster;
@@ -2586,6 +2663,9 @@ function closeModal(modalId, shouldReset = false) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.style.display = "none";
+  }
+  if (modalId === "duplicateModal") {
+    resetDuplicateModalState();
   }
   if (modalId === "gameDetailsModal") {
     activeGameDetailsId = null;

@@ -991,7 +991,11 @@
             <h2>Ошибка</h2>
             <img id="duplicateModalImg" class="modal-image" src="images/Angry_Winston.webp" alt="Duplicate"
                 loading="lazy">
-            <p>Такой фильм уже есть в списке.</p>
+            <p id="duplicateModalMessage">Такой фильм уже есть в списке.</p>
+            <div id="duplicateModalActions" class="modal-buttons" style="display:none;">
+                <button id="duplicateModalCloseBtn" type="button" class="btn btn-secondary">Закрыть</button>
+                <button id="duplicateModalActionBtn" type="button" class="btn btn-primary">Удалить</button>
+            </div>
         </div>
     </div>
 
