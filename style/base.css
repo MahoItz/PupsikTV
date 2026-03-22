@@ -63,6 +63,28 @@ body {
     overflow-x: hidden;
 }
 
+.site-footer {
+    width: 100%;
+    margin: 32px 0 0;
+    padding: 22px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(135deg, rgba(12, 18, 34, 0.92), rgba(31, 17, 51, 0.88));
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+    text-align: left;
+}
+
+.site-footer__text {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+}
+
+.site-footer__date {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
 /* Анимации. */
 
 @keyframes textGlow {

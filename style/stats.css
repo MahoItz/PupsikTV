@@ -1,11 +1,18 @@
 .stats-page {
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .stats-shell {
+    flex: 1 0 auto;
     width: min(1280px, calc(100% - 32px));
     margin: 0 auto;
     padding: 32px 0 56px;
+}
+
+.stats-page .site-footer {
+    margin-top: auto;
 }
 
 .stats-back-link {
