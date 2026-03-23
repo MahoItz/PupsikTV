@@ -5,6 +5,7 @@
   const LEADERBOARD_LIMIT = 10;
   const ENV_TIMEOUT_MS = 12000;
   const DATA_TIMEOUT_MS = 20000;
+  const ROULETTE_ORDER_TYPE = "Рулетка";
 
   function buildApiPath(path) {
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -228,6 +229,27 @@
     };
   }
 
+  function buildRouletteLeaders(entries) {
+    const counts = new Map();
+
+    for (const entry of entries) {
+      if (normalizeOrderType(entry?.orderType) !== ROULETTE_ORDER_TYPE) continue;
+
+      const person = normalizeOrderBy(entry?.orderBy);
+      if (!person) continue;
+
+      counts.set(person, (counts.get(person) || 0) + 1);
+    }
+
+    return [...counts.entries()]
+      .map(([name, wins]) => ({ name, wins }))
+      .sort((a, b) => {
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        return a.name.localeCompare(b.name, "ru");
+      })
+      .slice(0, LEADERBOARD_LIMIT);
+  }
+
   function computeStats({ movies, movieOrders, games, gameOrders, movieRatings }) {
     const movieHistory = [
       ...movies.map((item) => ({
@@ -257,6 +279,10 @@
       [...movieHistory, ...gameHistory],
       "orderType"
     );
+    const rouletteLeaders = buildRouletteLeaders([
+      ...movieHistory,
+      ...gameHistory,
+    ]);
     const leaders = buildLeaders(movieHistory, gameHistory);
     const ratingDistribution = buildRatingDistribution(
       movies,
@@ -362,6 +388,13 @@
           items: leaders.total.map((entry) => ({
             name: entry.name,
             value: `${formatNumber(entry.total)} заказов`,
+          })),
+        },
+        {
+          title: "Победы в рулетке",
+          items: rouletteLeaders.map((entry) => ({
+            name: entry.name,
+            value: `${formatNumber(entry.wins)} побед`,
           })),
         },
       ],
