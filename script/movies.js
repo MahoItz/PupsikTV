@@ -1,6 +1,8 @@
 // Отображение фильмов
 function getFilteredSortedMovies() {
-  let result = [...allMovies];
+  let result = allMovies.filter((movie) =>
+    matchesSelectedOrderTypes(movie, "movies")
+  );
 
   const normalizedQuery = normalizeSearchText(currentSearchQuery);
 
@@ -1893,7 +1895,9 @@ function getSortedGameOrders() {
 }
 
 function getFilteredSortedPlayedGames() {
-  let result = [...allPlayedGames];
+  let result = allPlayedGames.filter((game) =>
+    matchesSelectedOrderTypes(game, "games")
+  );
   const normalizedQuery = normalizeSearchText(currentGameSearch);
 
   if (normalizedQuery) {

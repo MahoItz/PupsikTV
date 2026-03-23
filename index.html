@@ -100,6 +100,50 @@
                                     <img src="images/sort_arrow.webp" alt="arrow" class="sort-arrow">
                                 </button>
                             </div>
+                            <div class="order-type-filter">
+                                <button id="movieOrderTypeFilterBtn" class="btn btn-icon btn-filter-toggle" type="button"
+                                    aria-haspopup="true" aria-expanded="false" aria-label="Фильтр по типу заказа"
+                                    title="Фильтр по типу заказа" onclick="toggleOrderTypeFilterMenu('movies')">
+                                    <span class="filter-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" focusable="false">
+                                            <path d="M4 6h16l-6.2 7.1v4.9l-3.6 1.8v-6.7L4 6z" fill="currentColor"></path>
+                                        </svg>
+                                    </span>
+                                    <span id="movieOrderTypeFilterCount" class="filter-badge" hidden>0</span>
+                                </button>
+                                <div id="movieOrderTypeFilterMenu" class="order-type-filter-menu" hidden>
+                                    <div class="order-type-filter-menu__header">
+                                        <span>Тип заказа</span>
+                                        <button class="order-type-filter-menu__clear" type="button"
+                                            onclick="clearOrderTypeFilters('movies')">Сбросить</button>
+                                    </div>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="movies" value="Донат"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Донат</span>
+                                    </label>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="movies" value="Баллы канала"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Баллы канала</span>
+                                    </label>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="movies" value="Рулетка"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Рулетка</span>
+                                    </label>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="movies" value="Шары"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Шары</span>
+                                    </label>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="movies" value="Аукцион"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Аукцион</span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="admin-divider admin-only" aria-hidden="true"></div>
@@ -139,6 +183,50 @@
                                     onclick="toggleGameSortOrder()">
                                     <img src="images/sort_arrow.webp" alt="arrow" class="sort-arrow">
                                 </button>
+                            </div>
+                            <div class="order-type-filter">
+                                <button id="gameOrderTypeFilterBtn" class="btn btn-icon btn-filter-toggle" type="button"
+                                    aria-haspopup="true" aria-expanded="false" aria-label="Фильтр по типу заказа"
+                                    title="Фильтр по типу заказа" onclick="toggleOrderTypeFilterMenu('games')">
+                                    <span class="filter-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" focusable="false">
+                                            <path d="M4 6h16l-6.2 7.1v4.9l-3.6 1.8v-6.7L4 6z" fill="currentColor"></path>
+                                        </svg>
+                                    </span>
+                                    <span id="gameOrderTypeFilterCount" class="filter-badge" hidden>0</span>
+                                </button>
+                                <div id="gameOrderTypeFilterMenu" class="order-type-filter-menu" hidden>
+                                    <div class="order-type-filter-menu__header">
+                                        <span>Тип заказа</span>
+                                        <button class="order-type-filter-menu__clear" type="button"
+                                            onclick="clearOrderTypeFilters('games')">Сбросить</button>
+                                    </div>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="games" value="Донат"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Донат</span>
+                                    </label>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="games" value="Баллы канала"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Баллы канала</span>
+                                    </label>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="games" value="Рулетка"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Рулетка</span>
+                                    </label>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="games" value="Шары"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Шары</span>
+                                    </label>
+                                    <label class="order-type-filter-option">
+                                        <input type="checkbox" data-filter-kind="games" value="Аукцион"
+                                            onchange="handleOrderTypeFilterChange(this)">
+                                        <span>Аукцион</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>

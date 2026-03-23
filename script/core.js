@@ -1005,6 +1005,7 @@ let hasRenderedMovies = false;
 let currentSearchQuery = "";
 let currentSort = "date";
 let sortAscending = false;
+let selectedMovieOrderTypes = new Set();
 
 // Список заказанных фильмов
 let watchlist = [];
@@ -1019,6 +1020,7 @@ let playedGameDataMap = new Map();
 let currentGameSearch = "";
 let currentGameSort = "date";
 let gameSortAscending = false;
+let selectedGameOrderTypes = new Set();
 let gamePage = 1;
 const gamesPerPage = 12;
 let totalGamesPlayed = 0;
@@ -1344,6 +1346,13 @@ async function verifyAdminTokenRequest(token) {
 }
 
 const ROULETTE_ORDER_TYPE = "Рулетка";
+const ORDER_TYPE_FILTER_OPTIONS = [
+  "Донат",
+  "Баллы канала",
+  ROULETTE_ORDER_TYPE,
+  "Шары",
+  "Аукцион",
+];
 const ORDER_TYPE_CLASSES = {
   Донат: "ribbon-donate",
   "Баллы канала": "ribbon-points",
@@ -1380,6 +1389,125 @@ let deletePlayedGameId = null;
 let deleteMovieId = null;
 let deleteOrderId = null;
 let deleteGameOrderId = null;
+
+function normalizeOrderTypeValue(value) {
+  if (typeof value !== "string") return "";
+  const normalized = value.trim();
+  if (!normalized) return "";
+  const lowered = normalized.toLowerCase();
+  if (lowered === "null" || lowered === "undefined") return "";
+  return normalized;
+}
+
+function getOrderTypeFilterState(kind) {
+  return kind === "games" ? selectedGameOrderTypes : selectedMovieOrderTypes;
+}
+
+function getOrderTypeFilterElements(kind) {
+  if (kind === "games") {
+    return {
+      button: document.getElementById("gameOrderTypeFilterBtn"),
+      menu: document.getElementById("gameOrderTypeFilterMenu"),
+      count: document.getElementById("gameOrderTypeFilterCount"),
+    };
+  }
+
+  return {
+    button: document.getElementById("movieOrderTypeFilterBtn"),
+    menu: document.getElementById("movieOrderTypeFilterMenu"),
+    count: document.getElementById("movieOrderTypeFilterCount"),
+  };
+}
+
+function syncOrderTypeFilterButton(kind) {
+  const state = getOrderTypeFilterState(kind);
+  const { count } = getOrderTypeFilterElements(kind);
+  if (!count) return;
+
+  count.textContent = String(state.size);
+  count.hidden = state.size === 0;
+}
+
+function syncOrderTypeFilterCheckboxes(kind) {
+  const state = getOrderTypeFilterState(kind);
+  document
+    .querySelectorAll(`input[data-filter-kind="${kind}"]`)
+    .forEach((input) => {
+      input.checked = state.has(normalizeOrderTypeValue(input.value));
+    });
+}
+
+function closeOrderTypeFilterMenu(kind) {
+  const { button, menu } = getOrderTypeFilterElements(kind);
+  if (button) button.setAttribute("aria-expanded", "false");
+  if (menu) menu.hidden = true;
+}
+
+function closeAllOrderTypeFilterMenus() {
+  closeOrderTypeFilterMenu("movies");
+  closeOrderTypeFilterMenu("games");
+}
+
+function toggleOrderTypeFilterMenu(kind) {
+  const { button, menu } = getOrderTypeFilterElements(kind);
+  if (!button || !menu) return;
+
+  const shouldOpen = menu.hidden;
+  closeAllOrderTypeFilterMenus();
+  if (!shouldOpen) return;
+
+  syncOrderTypeFilterCheckboxes(kind);
+  menu.hidden = false;
+  button.setAttribute("aria-expanded", "true");
+}
+
+function handleOrderTypeFilterChange(input) {
+  if (!input) return;
+
+  const kind = input.dataset.filterKind === "games" ? "games" : "movies";
+  const normalizedValue = normalizeOrderTypeValue(input.value);
+  if (!normalizedValue || !ORDER_TYPE_FILTER_OPTIONS.includes(normalizedValue)) {
+    input.checked = false;
+    return;
+  }
+
+  const state = getOrderTypeFilterState(kind);
+  if (input.checked) state.add(normalizedValue);
+  else state.delete(normalizedValue);
+
+  syncOrderTypeFilterButton(kind);
+
+  if (kind === "games") {
+    gamePage = 1;
+    renderPlayedGames();
+    return;
+  }
+
+  currentPage = 1;
+  renderMovies();
+}
+
+function clearOrderTypeFilters(kind) {
+  const state = getOrderTypeFilterState(kind);
+  state.clear();
+  syncOrderTypeFilterCheckboxes(kind);
+  syncOrderTypeFilterButton(kind);
+
+  if (kind === "games") {
+    gamePage = 1;
+    renderPlayedGames();
+    return;
+  }
+
+  currentPage = 1;
+  renderMovies();
+}
+
+function matchesSelectedOrderTypes(item, kind) {
+  const state = getOrderTypeFilterState(kind);
+  if (state.size === 0) return true;
+  return state.has(normalizeOrderTypeValue(item?.orderType));
+}
 
 const REYOHOHO_BASE_URL = "https://reyohoho.github.io/reyohoho/";
 
@@ -2309,6 +2437,10 @@ if (rouletteAutofillClearBtn) {
 document.addEventListener("click", (e) => {
   if (e.target && (e.target.id === "checkAiModelsBtn" || e.target.closest("#checkAiModelsBtn"))) {
     checkAiModelsStatus();
+  }
+
+  if (!e.target || !e.target.closest(".order-type-filter")) {
+    closeAllOrderTypeFilterMenus();
   }
 });
 

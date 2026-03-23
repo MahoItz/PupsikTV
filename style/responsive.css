@@ -103,12 +103,19 @@
 
     .sort-merge {
         justify-content: space-between;
+        width: 100%;
+        max-width: none;
     }
 
     .sort-controls select {
         flex: 1;
         min-width: 0;
         padding-right: 12px;
+    }
+
+    .order-type-filter-menu {
+        left: 0;
+        right: auto;
     }
 }
 
