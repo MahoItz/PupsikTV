@@ -419,19 +419,49 @@ async function handler(req, res) {
 
   try {
     const encodedId = encodeURIComponent(id);
-    const imdbUrls = [
-      `https://m.imdb.com/title/${encodedId}/parentalguide`,
-      `https://m.imdb.com/title/${encodedId}/parentalguide/`,
-      `https://m.imdb.com/title/${encodedId}/parentalguide?ref_=tt_stry_pg`,
-      `https://m.imdb.com/title/${encodedId}/parentalguide/?ref_=tt_stry_pg`,
+    const imdbCandidates = [
+      {
+        source: "mobile",
+        allowedHost: "m.imdb.com",
+        url: `https://m.imdb.com/title/${encodedId}/parentalguide`,
+      },
+      {
+        source: "mobile",
+        allowedHost: "m.imdb.com",
+        url: `https://m.imdb.com/title/${encodedId}/parentalguide/`,
+      },
+      {
+        source: "mobile",
+        allowedHost: "m.imdb.com",
+        url: `https://m.imdb.com/title/${encodedId}/parentalguide?ref_=tt_stry_pg`,
+      },
+      {
+        source: "mobile",
+        allowedHost: "m.imdb.com",
+        url: `https://m.imdb.com/title/${encodedId}/parentalguide/?ref_=tt_stry_pg`,
+      },
+      {
+        source: "desktop_fallback",
+        allowedHost: "www.imdb.com",
+        url: `https://www.imdb.com/title/${encodedId}/parentalguide`,
+      },
+      {
+        source: "desktop_fallback",
+        allowedHost: "www.imdb.com",
+        url: `https://www.imdb.com/title/${encodedId}/parentalguide/?ref_=tt_stry_pg`,
+      },
     ];
     const mobileUserAgent =
       "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
     const maxAttempts = 2;
     const baseDelayMs = 600;
-    let imdbResponse = null;
     let lastError = null;
-    outer: for (const imdbUrl of imdbUrls) {
+    let fallbackResult = null;
+
+    for (const candidate of imdbCandidates) {
+      const { url: imdbUrl, allowedHost, source } = candidate;
+      let imdbResponse = null;
+
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         try {
           imdbResponse = await fetch(imdbUrl, {
@@ -447,14 +477,18 @@ async function handler(req, res) {
             redirect: "follow",
           });
 
-          if (!String(imdbResponse.url || "").startsWith("https://m.imdb.com/")) {
+          if (
+            !String(imdbResponse.url || "").startsWith(
+              `https://${allowedHost}/`
+            )
+          ) {
             throw new Error(
               `Unexpected IMDb host after redirects: ${imdbResponse.url || "unknown"}`
             );
           }
 
           if (imdbResponse.ok) {
-            break outer;
+            break;
           }
 
           const shouldRetry =
@@ -472,48 +506,70 @@ async function handler(req, res) {
           setTimeout(resolve, baseDelayMs * attempt)
         );
       }
+
+      if (!imdbResponse || !imdbResponse.ok) {
+        continue;
+      }
+
+      const html = await imdbResponse.text();
+      const parsed = parseParentGuide(html);
+      const hasContent = hasParentGuideContent(parsed.sections);
+
+      console.info("[imdb-parent-guide] parse result", {
+        imdbId: id,
+        source,
+        strategy: parsed.meta.strategy,
+        blockedDetected: parsed.meta.blockedDetected,
+        hasContent,
+        itemCount: parsed.sections?.sexAndNudity?.length || 0,
+      });
+
+      if (hasContent) {
+        res
+          .status(200)
+          .json({ original: parsed.sections, meta: { ...parsed.meta, source } });
+        return;
+      }
+
+      if (parsed.meta.emptyReason === "section_has_no_items") {
+        res
+          .status(200)
+          .json({ original: parsed.sections, meta: { ...parsed.meta, source } });
+        return;
+      }
+
+      fallbackResult = {
+        parsed,
+        source,
+      };
     }
 
-    if (!imdbResponse || !imdbResponse.ok) {
-      throw lastError || new Error("Failed to fetch IMDb parental guide");
-    }
-
-    const html = await imdbResponse.text();
-    const parsed = parseParentGuide(html);
-    const hasContent = hasParentGuideContent(parsed.sections);
-
-    console.info("[imdb-parent-guide] parse result", {
-      imdbId: id,
-      strategy: parsed.meta.strategy,
-      blockedDetected: parsed.meta.blockedDetected,
-      hasContent,
-      itemCount: parsed.sections?.sexAndNudity?.length || 0,
-    });
-
-    if (hasContent) {
-      res.status(200).json({ original: parsed.sections, meta: parsed.meta });
-      return;
-    }
-
-    if (parsed.meta.emptyReason === "section_has_no_items") {
-      res.status(200).json({ original: parsed.sections, meta: parsed.meta });
-      return;
-    }
-
-    if (parsed.meta.blockedDetected) {
+    if (fallbackResult?.parsed?.meta?.blockedDetected) {
       res.status(200).json({
-        original: parsed.sections,
+        original: fallbackResult.parsed.sections,
         code: "IMDB_BLOCKED_OR_LAYOUT_CHANGED",
-        meta: parsed.meta,
+        meta: {
+          ...fallbackResult.parsed.meta,
+          source: fallbackResult.source,
+        },
       });
       return;
     }
 
-    res.status(424).json({
-      error: "Failed to parse IMDb parent guide",
-      code: "PARENT_GUIDE_PARSE_EMPTY",
-      meta: parsed.meta,
-    });
+    if (fallbackResult?.parsed) {
+      res.status(424).json({
+        error: "Failed to parse IMDb parent guide",
+        code: "PARENT_GUIDE_PARSE_EMPTY",
+        meta: {
+          ...fallbackResult.parsed.meta,
+          source: fallbackResult.source,
+        },
+      });
+      return;
+    }
+
+    throw lastError || new Error("Failed to fetch IMDb parental guide");
+
   } catch (err) {
     console.error("[imdb-parent-guide] error", err);
     res.status(500).json({ error: "Server error", message: err.message });
