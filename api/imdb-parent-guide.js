@@ -488,11 +488,19 @@ function buildDebugSnapshot(rawText) {
       hasCaptcha: false,
       hasConsent: false,
       hasRobotCheck: false,
+      hasItemHtmlMarker: false,
+      hasListCardMarker: false,
+      hasSubSectionNudity: false,
+      hasParentalGuidePhrase: false,
+      title: null,
       excerpt: "",
+      rawExcerpt: "",
     };
   }
 
   const lower = text.toLowerCase();
+  const titleMatch = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(text);
+
   return {
     length: text.length,
     hasCaptcha: lower.includes("captcha"),
@@ -504,13 +512,22 @@ function buildDebugSnapshot(rawText) {
       lower.includes("not a robot") ||
       lower.includes("verify you are human") ||
       lower.includes("automated access"),
+    hasItemHtmlMarker: lower.includes('data-testid="item-html"'),
+    hasListCardMarker: lower.includes("ipc-list-card"),
+    hasSubSectionNudity: lower.includes('data-testid="sub-section-nudity"'),
+    hasParentalGuidePhrase:
+      lower.includes("parental guide") || lower.includes("parent guide"),
+    title: titleMatch ? cleanText(titleMatch[1]).slice(0, 180) : null,
     excerpt: cleanText(text).slice(0, 600),
+    rawExcerpt: text.slice(0, 600),
   };
 }
 
 async function handler(req, res) {
   const { id } = req.query || {};
-  const debugMode = String(req.query?.debug || "") === "1";
+  const debugMode =
+    String(req.query?.debug || "") === "1" ||
+    String(req.query?.diag || "") === "1";
   if (!id) {
     res.status(400).json({ error: "Missing IMDb title id" });
     return;
@@ -638,6 +655,9 @@ async function handler(req, res) {
           status: imdbResponse.status,
           ok: true,
           finalUrl: imdbResponse.url || null,
+          contentType: imdbResponse.headers.get("content-type") || null,
+          cacheControl: imdbResponse.headers.get("cache-control") || null,
+          server: imdbResponse.headers.get("server") || null,
           snapshot: buildDebugSnapshot(html),
         });
       }
