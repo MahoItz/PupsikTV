@@ -28,7 +28,7 @@
       <span>На главную</span>
     </a>
 
-    <main id="trailersApp" class="trailer-app" hidden>
+    <main id="trailersApp" class="trailer-app">
       <section class="trailer-sidebar trailer-panel">
         <div class="trailer-section-heading">
           <p class="trailer-section-heading__eyebrow">PupsikTV</p>
@@ -61,8 +61,15 @@
               <span id="plannedCount" class="trailer-count-chip">0</span>
             </div>
           </div>
-          <div id="plannedTrailerList" class="trailer-list" aria-live="polite"></div>
-          <p id="plannedTrailerEmpty" class="trailer-empty">Пока список пуст.</p>
+          <div id="plannedTrailerLoading" class="section-loader section-loader--compact trailer-section-loader">
+            <div class="section-loader__spinner" aria-hidden="true">
+              <span class="section-loader__ring"></span>
+              <span class="section-loader__ring section-loader__ring--delay"></span>
+            </div>
+            <p class="section-loader__text">Загружаю список трейлеров...</p>
+          </div>
+          <div id="plannedTrailerList" class="trailer-list" aria-live="polite" hidden></div>
+          <p id="plannedTrailerEmpty" class="trailer-empty" hidden>Пока список пуст.</p>
           <button id="openPlannedTrailersModal" class="trailer-list-section__more trailer-list-section__more--link" type="button">Весь список</button>
         </section>
       </section>
@@ -94,9 +101,6 @@
             <h2>Оценка после просмотра</h2>
           </div>
           <div class="trailer-rating-panel__score">
-            <label class="trailer-rating-panel__field">
-              <span>Оценка стримера</span>
-            </label>
             <div class="rating-stars trailer-rating-stars" id="trailerRatingStars" data-input="trailerRatingInput">
               <span class="rating-star rating-label" data-rating="0">worst</span>
               <span class="rating-star" data-rating="1"></span>
@@ -134,8 +138,16 @@
           </a>
         </div>
 
-        <div id="trailerInfoEmpty" class="trailer-info__empty">
+        <div id="trailerInfoEmpty" class="trailer-info__empty" hidden>
           Выберите трейлер, и здесь появятся постер, описание, актёры и дата выхода.
+        </div>
+
+        <div id="trailerInfoLoading" class="section-loader section-loader--compact trailer-section-loader trailer-info-loader">
+          <div class="section-loader__spinner" aria-hidden="true">
+            <span class="section-loader__ring"></span>
+            <span class="section-loader__ring section-loader__ring--delay"></span>
+          </div>
+          <p>Загружаю информацию о фильме...</p>
         </div>
 
         <div id="trailerInfoContent" class="trailer-info__content" hidden>
@@ -172,8 +184,15 @@
           <h2>Просмотренные</h2>
           <span id="watchedCount" class="trailer-count-chip trailer-count-chip--watched">0</span>
         </div>
-        <div id="watchedTrailersGrid" class="trailer-watched-grid" aria-live="polite"></div>
-        <p id="watchedTrailersEmpty" class="trailer-empty">Оценённых трейлеров ещё нет.</p>
+        <div id="watchedTrailersLoading" class="section-loader section-loader--compact trailer-section-loader">
+          <div class="section-loader__spinner" aria-hidden="true">
+            <span class="section-loader__ring"></span>
+            <span class="section-loader__ring section-loader__ring--delay"></span>
+          </div>
+          <p class="section-loader__text">Загружаю просмотренные трейлеры...</p>
+        </div>
+        <div id="watchedTrailersGrid" class="trailer-watched-grid" aria-live="polite" hidden></div>
+        <p id="watchedTrailersEmpty" class="trailer-empty" hidden>Оценённых трейлеров ещё нет.</p>
       </section>
     </main>
 

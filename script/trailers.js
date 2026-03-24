@@ -683,8 +683,10 @@ function renderTrailerItem(item) {
 function renderTrailerLists() {
   const plannedList = document.getElementById("plannedTrailerList");
   const plannedEmpty = document.getElementById("plannedTrailerEmpty");
+  const plannedLoading = document.getElementById("plannedTrailerLoading");
   const plannedCount = document.getElementById("plannedCount");
   const plannedModalCount = document.getElementById("plannedModalCount");
+  const watchedLoading = document.getElementById("watchedTrailersLoading");
   const watchedCount = document.getElementById("watchedCount");
 
   if (!plannedList) return;
@@ -695,6 +697,9 @@ function renderTrailerLists() {
   plannedList.innerHTML = "";
   planned.forEach((item) => plannedList.appendChild(renderTrailerItem(item)));
 
+  if (plannedLoading) plannedLoading.hidden = true;
+  if (watchedLoading) watchedLoading.hidden = true;
+  if (plannedList) plannedList.hidden = false;
   if (plannedEmpty) plannedEmpty.hidden = planned.length > 0;
   if (plannedCount) plannedCount.textContent = String(planned.length);
   if (plannedModalCount) plannedModalCount.textContent = String(planned.length);
@@ -813,9 +818,26 @@ function renderWatchedTrailersGrid(watchedList) {
 
   const watched = Array.isArray(watchedList) ? watchedList : [];
   grid.innerHTML = "";
+  grid.hidden = false;
   watched.forEach((item) => grid.appendChild(renderWatchedTrailerCard(item)));
 
   if (empty) empty.hidden = watched.length > 0;
+}
+
+function setTrailerListsLoading(isLoading) {
+  const plannedLoading = document.getElementById("plannedTrailerLoading");
+  const plannedList = document.getElementById("plannedTrailerList");
+  const plannedEmpty = document.getElementById("plannedTrailerEmpty");
+  const watchedLoading = document.getElementById("watchedTrailersLoading");
+  const watchedGrid = document.getElementById("watchedTrailersGrid");
+  const watchedEmpty = document.getElementById("watchedTrailersEmpty");
+
+  if (plannedLoading) plannedLoading.hidden = !isLoading;
+  if (watchedLoading) watchedLoading.hidden = !isLoading;
+  if (plannedList) plannedList.hidden = Boolean(isLoading);
+  if (plannedEmpty) plannedEmpty.hidden = true;
+  if (watchedGrid) watchedGrid.hidden = Boolean(isLoading);
+  if (watchedEmpty) watchedEmpty.hidden = true;
 }
 
 function syncTrailerSidebarHeight() {
@@ -837,8 +859,10 @@ function syncTrailerSidebarHeight() {
 
 function toggleInfoVisibility(hasContent) {
   const empty = document.getElementById("trailerInfoEmpty");
+  const loading = document.getElementById("trailerInfoLoading");
   const content = document.getElementById("trailerInfoContent");
   if (empty) empty.hidden = Boolean(hasContent);
+  if (loading) loading.hidden = true;
   if (content) content.hidden = !hasContent;
 }
 
@@ -849,6 +873,22 @@ function resetKinopoiskInfo(message) {
     link.hidden = true;
     link.href = "#";
   }
+}
+
+function setTrailerInfoLoading(isLoading, message = "Загружаю информацию о фильме...") {
+  const empty = document.getElementById("trailerInfoEmpty");
+  const loading = document.getElementById("trailerInfoLoading");
+  const content = document.getElementById("trailerInfoContent");
+  const text =
+    loading?.querySelector(".section-loader__text") || loading?.querySelector("p");
+
+  if (text) {
+    text.textContent = message;
+  }
+
+  if (empty) empty.hidden = Boolean(isLoading);
+  if (loading) loading.hidden = !isLoading;
+  if (content) content.hidden = Boolean(isLoading);
 }
 
 function setTrailerPlayerLoading(isLoading) {
@@ -1393,6 +1433,7 @@ function renderKinopoiskInfo(details, staff) {
 async function applyKinopoiskSelection(trailer, filmId, searchResults) {
   const requestId = ++kinopoiskRequestId;
   renderKinopoiskMatches(searchResults || []);
+  setTrailerInfoLoading(true, "Загружаю информацию о фильме...");
 
   try {
     const details = await fetchKinopoiskDetails(filmId);
@@ -1508,6 +1549,7 @@ async function loadKinopoiskInfoCached(trailer) {
     let chosenId = trailer.kinopoisk_id || null;
 
     if (!chosenId) {
+      setTrailerInfoLoading(true, "Ищу фильм на Кинопоиске...");
       searchResults = await searchKinopoiskByTitle(trailer.title);
       renderKinopoiskMatches(searchResults);
 
@@ -1854,25 +1896,41 @@ function setupFormEvents() {
 async function initPage() {
   const app = document.getElementById("trailersApp");
   const denied = document.getElementById("trailersAccessDenied");
+  const watchedButton = document.getElementById("trailerMarkWatchedButton");
+  const returnButton = document.getElementById("trailerReturnPlannedButton");
+  const deleteButton = document.getElementById("trailerDeleteButton");
 
   try {
+    if (app) app.hidden = false;
+    if (denied) denied.hidden = true;
+    setTrailerFormBusy(true);
+    setTrailerListsLoading(true);
+    setTrailerInfoLoading(true, "Загружаю информацию о фильме...");
+    if (watchedButton) watchedButton.disabled = true;
+    if (returnButton) returnButton.disabled = true;
+    if (deleteButton) deleteButton.disabled = true;
+
     const hasAccess = await verifyAdminAccess();
     if (!hasAccess) {
+      if (app) app.hidden = true;
       if (denied) denied.hidden = false;
       return;
     }
 
-    if (app) app.hidden = false;
     if (denied) denied.hidden = true;
 
     setupListEvents();
     setupFormEvents();
+    setTrailerFormBusy(false);
     await fetchTrailers();
     window.addEventListener("resize", syncTrailerSidebarHeight);
     requestAnimationFrame(syncTrailerSidebarHeight);
   } catch (error) {
     console.error("Trailers page init error", error);
+    if (app) app.hidden = true;
     if (denied) denied.hidden = false;
+  } finally {
+    setTrailerListsLoading(false);
   }
 }
 
