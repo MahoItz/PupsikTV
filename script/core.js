@@ -169,6 +169,9 @@ let rouletteLastWinnerHasPendingSync = false;
 let settingsPanel;
 let settingsToggleButton;
 let settingsPanelCloseButton;
+let topLeftActions;
+let topLeftActionsToggle;
+let topLeftActionsMenu;
 let aiModelSelect;
 let aiModelStatus;
 let aiModelOptions = [];
@@ -317,7 +320,16 @@ function toggleSettingsPanel(forceState) {
   settingsPanel.toggleAttribute("inert", !nextState);
 
   if (!nextState && settingsPanel.contains(document.activeElement)) {
-    if (settingsToggleButton) {
+    const shouldFocusTopLeftToggle =
+      settingsToggleButton &&
+      topLeftActionsToggle &&
+      topLeftActionsMenu &&
+      topLeftActionsMenu.hasAttribute("hidden") &&
+      topLeftActionsMenu.contains(settingsToggleButton);
+
+    if (shouldFocusTopLeftToggle) {
+      topLeftActionsToggle.focus();
+    } else if (settingsToggleButton) {
       settingsToggleButton.focus();
     } else {
       document.activeElement.blur();
@@ -337,6 +349,88 @@ function toggleSettingsPanel(forceState) {
 
 function closeSettingsPanel() {
   toggleSettingsPanel(false);
+}
+
+function toggleTopLeftActionsMenu(forceState) {
+  if (!topLeftActionsToggle || !topLeftActionsMenu) return;
+
+  const isOpen = !topLeftActionsMenu.hasAttribute("hidden");
+  const nextState =
+    typeof forceState === "boolean" ? forceState : !isOpen;
+
+  topLeftActionsMenu.toggleAttribute("hidden", !nextState);
+  topLeftActionsToggle.setAttribute(
+    "aria-expanded",
+    nextState ? "true" : "false"
+  );
+}
+
+function closeTopLeftActionsMenu() {
+  toggleTopLeftActionsMenu(false);
+}
+
+function initTopLeftActionsMenu() {
+  topLeftActions = document.querySelector(".top-left-actions");
+  topLeftActionsToggle = document.getElementById("topLeftActionsToggle");
+  topLeftActionsMenu = document.getElementById("topLeftActionsMenu");
+
+  const musicButton = document.getElementById("musicMenuButton");
+  const settingsButton = document.getElementById("settingsToggleButton");
+  if (
+    !topLeftActions ||
+    !topLeftActionsToggle ||
+    !topLeftActionsMenu ||
+    !musicButton
+  ) {
+    return;
+  }
+
+  const decorateMenuButton = (button, labelText) => {
+    const existingLabel = button.querySelector(".top-left-actions__label");
+    if (existingLabel) {
+      existingLabel.textContent = labelText;
+    } else {
+      const label = document.createElement("span");
+      label.className = "top-left-actions__label";
+      label.textContent = labelText;
+      button.appendChild(label);
+    }
+  };
+
+  decorateMenuButton(musicButton, "Рулетка");
+  topLeftActionsMenu.prepend(musicButton);
+
+  if (settingsButton) {
+    decorateMenuButton(settingsButton, "Настройки");
+    topLeftActionsMenu.appendChild(settingsButton);
+  }
+
+  topLeftActionsToggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleTopLeftActionsMenu();
+  });
+
+  topLeftActionsMenu.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("button, a");
+    if (!actionButton) return;
+    closeTopLeftActionsMenu();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!topLeftActions.contains(event.target)) {
+      closeTopLeftActionsMenu();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+
+    const menuIsOpen = !topLeftActionsMenu.hasAttribute("hidden");
+    if (!menuIsOpen) return;
+
+    closeTopLeftActionsMenu();
+    topLeftActionsToggle.focus();
+  });
 }
 
 function setAiModelStatus(message) {

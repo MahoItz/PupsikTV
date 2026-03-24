@@ -624,6 +624,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   ratingTooltip.className = "rating-tooltip";
   document.body.appendChild(ratingTooltip);
 
+  if (typeof initTopLeftActionsMenu === "function") {
+    initTopLeftActionsMenu();
+  }
+
   if (typeof setupOrderPlayerFullscreenHandling === "function") {
     setupOrderPlayerFullscreenHandling();
   }
