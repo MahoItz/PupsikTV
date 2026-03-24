@@ -7,7 +7,7 @@
 }
 
 .top-left-actions--bar {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
@@ -231,11 +231,20 @@
     display: none !important;
 }
 
-.top-left-actions--bar + .settings-button,
-.settings-button.admin-only {
+.top-left-actions--bar > .settings-button,
+.top-left-actions--bar > .rules-panel-toggle {
+    position: absolute;
     top: 12px;
+}
+
+.top-left-actions--bar > .settings-button {
     right: 72px;
     left: auto;
+    z-index: 12;
+}
+
+.top-left-actions--bar > .rules-panel-toggle {
+    right: 20px;
     z-index: 12;
 }
 

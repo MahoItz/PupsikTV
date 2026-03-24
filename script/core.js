@@ -414,6 +414,15 @@ function initTopLeftActionsMenu() {
   }
 
   if (isPinnedBar) {
+    if (topLeftActions.parentElement !== document.body) {
+      document.body.prepend(topLeftActions);
+    }
+    if (settingsButton && settingsButton.parentElement !== topLeftActions) {
+      topLeftActions.appendChild(settingsButton);
+    }
+    if (rulesButton && rulesButton.parentElement !== topLeftActions) {
+      topLeftActions.appendChild(rulesButton);
+    }
     topLeftActionsMenu.removeAttribute("hidden");
     topLeftActionsToggle.hidden = true;
     topLeftActionsToggle.setAttribute("aria-expanded", "true");
