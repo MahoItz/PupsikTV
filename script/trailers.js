@@ -17,6 +17,7 @@ let kinopoiskRequestId = 0;
 let trailerTitleSearchResults = [];
 let selectedTrailerSearchMovie = null;
 let trailerTitleRequestId = 0;
+let isCreatingTrailer = false;
 
 function getAdminAuthHeaders() {
   const token = localStorage.getItem("adminToken") || "";
@@ -154,6 +155,19 @@ function setStatusText(elementId, message, isError = false) {
   if (!element) return;
   element.textContent = message || "";
   element.style.color = isError ? "#ffbcbc" : "";
+}
+
+function setTrailerFormBusy(isBusy) {
+  const titleInput = document.getElementById("trailerTitleInput");
+  const urlInput = document.getElementById("trailerUrlInput");
+  const addButton = document.getElementById("trailerAddButton");
+
+  if (titleInput) titleInput.disabled = Boolean(isBusy);
+  if (urlInput) urlInput.disabled = Boolean(isBusy);
+  if (addButton) {
+    addButton.disabled = Boolean(isBusy);
+    addButton.setAttribute("aria-busy", String(Boolean(isBusy)));
+  }
 }
 
 function sortTrailers(list) {
@@ -839,6 +853,10 @@ function setupFormEvents() {
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
 
+    if (isCreatingTrailer) {
+      return;
+    }
+
     const title = String(titleInput?.value || "").trim();
     const youtubeUrl = String(urlInput?.value || "").trim();
     const videoId = parseYouTubeVideoId(youtubeUrl);
@@ -857,6 +875,8 @@ function setupFormEvents() {
     }
 
     setStatusText("trailerFormStatus", "Сохраняю трейлер...");
+    isCreatingTrailer = true;
+    setTrailerFormBusy(true);
 
     try {
       await createTrailer({
@@ -880,6 +900,9 @@ function setupFormEvents() {
         error?.message || "Не удалось добавить трейлер.",
         true
       );
+    } finally {
+      isCreatingTrailer = false;
+      setTrailerFormBusy(false);
     }
   });
 
