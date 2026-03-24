@@ -43,6 +43,14 @@
           <div id="trailerTitleResultsContainer" class="fortune-autocomplete" style="display:none;">
             <div id="trailerTitleResults" class="autocomplete-list"></div>
           </div>
+          <div id="trailerSelectedMovieCard" class="trailer-selected-movie" hidden>
+            <img id="trailerSelectedMoviePoster" class="trailer-selected-movie__poster" src="/images/placeholder-poster.webp" alt="Выбранный фильм">
+            <div class="trailer-selected-movie__body">
+              <p id="trailerSelectedMovieTitle" class="trailer-selected-movie__title"></p>
+              <p id="trailerSelectedMovieMeta" class="trailer-selected-movie__meta"></p>
+            </div>
+            <button id="trailerSelectedMovieClear" class="trailer-selected-movie__clear" type="button" aria-label="Сбросить выбранный фильм">&times;</button>
+          </div>
           <label class="trailer-form__field" for="trailerUrlInput">
             <span>Ссылка на YouTube</span>
             <input id="trailerUrlInput" class="search-input" type="url" maxlength="1000" placeholder="https://www.youtube..." required>

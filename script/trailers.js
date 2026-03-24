@@ -354,6 +354,22 @@ function buildKinopoiskFilmUrl(kinopoiskId, fallbackTitle) {
   return buildKinopoiskSearchUrl(fallbackTitle || "");
 }
 
+function buildKinopoiskPosterUrl(kinopoiskId) {
+  const normalizedId = Number.parseInt(kinopoiskId, 10);
+  if (!Number.isFinite(normalizedId) || normalizedId <= 0) {
+    return "";
+  }
+  return `https://kinopoiskapiunofficial.tech/images/posters/kp_small/${normalizedId}.jpg`;
+}
+
+function resolveTrailerPosterSrc(poster, kinopoiskId) {
+  return (
+    buildKinopoiskPosterUrl(kinopoiskId) ||
+    String(poster || "").trim() ||
+    POSTER_PLACEHOLDER
+  );
+}
+
 function escapeHtml(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -624,7 +640,7 @@ function renderTrailerItem(item) {
 
   const poster = document.createElement("img");
   poster.className = "trailer-item__poster";
-  poster.src = item.poster || POSTER_PLACEHOLDER;
+  poster.src = resolveTrailerPosterSrc(item.poster, item.kinopoisk_id);
   poster.alt = item.title ? `Постер: ${item.title}` : "Постер трейлера";
   poster.loading = "lazy";
   poster.onerror = () => {
@@ -729,7 +745,7 @@ function renderWatchedTrailerCard(item) {
   card.dataset.id = String(item.id);
 
   const poster = document.createElement("img");
-  poster.src = item.poster || POSTER_PLACEHOLDER;
+  poster.src = resolveTrailerPosterSrc(item.poster, item.kinopoisk_id);
   poster.alt = item.title || "Постер трейлера";
   poster.className = "movie-poster";
   poster.loading = "lazy";
@@ -1086,7 +1102,7 @@ function openTrailerUserRateModal(trailerId) {
 
   userRatingTrailerId = Number(trailerId);
   title.textContent = trailer.title || "Без названия";
-  poster.src = trailer.poster || POSTER_PLACEHOLDER;
+  poster.src = resolveTrailerPosterSrc(trailer.poster, trailer.kinopoisk_id);
   poster.alt = trailer.title || "Постер трейлера";
   poster.onerror = () => {
     poster.onerror = null;
@@ -1115,10 +1131,48 @@ function setTrailerTitleResultsVisible(isVisible) {
 
 function clearTrailerTitleSearch() {
   trailerTitleSearchResults = [];
-  selectedTrailerSearchMovie = null;
   const list = document.getElementById("trailerTitleResults");
   if (list) list.innerHTML = "";
   setTrailerTitleResultsVisible(false);
+}
+
+function renderSelectedTrailerMovieCard(movie = selectedTrailerSearchMovie) {
+  const card = document.getElementById("trailerSelectedMovieCard");
+  const poster = document.getElementById("trailerSelectedMoviePoster");
+  const title = document.getElementById("trailerSelectedMovieTitle");
+  const meta = document.getElementById("trailerSelectedMovieMeta");
+
+  if (!card || !poster || !title || !meta) return;
+
+  if (!movie) {
+    card.hidden = true;
+    title.textContent = "";
+    meta.textContent = "";
+    poster.src = POSTER_PLACEHOLDER;
+    return;
+  }
+
+  const resolvedTitle = movie?.nameRu || movie?.nameEn || "Без названия";
+  const resolvedPoster =
+    buildKinopoiskPosterUrl(movie?.filmId) ||
+    movie?.posterUrlPreview ||
+    movie?.posterUrl ||
+    POSTER_PLACEHOLDER;
+
+  title.textContent = resolvedTitle;
+  meta.textContent = movie?.year ? String(movie.year) : "Год не указан";
+  poster.src = resolvedPoster;
+  poster.alt = `Постер: ${resolvedTitle}`;
+  poster.onerror = () => {
+    poster.onerror = null;
+    poster.src = POSTER_PLACEHOLDER;
+  };
+  card.hidden = false;
+}
+
+function clearSelectedTrailerMovie() {
+  selectedTrailerSearchMovie = null;
+  renderSelectedTrailerMovieCard(null);
 }
 
 function renderTrailerTitleResults() {
@@ -1145,6 +1199,7 @@ function applyTrailerTitleSelection(movie) {
   titleInput.value = movie?.nameRu || movie?.nameEn || titleInput.value;
   clearTrailerTitleSearch();
   selectedTrailerSearchMovie = movie;
+  renderSelectedTrailerMovieCard(movie);
   setStatusText("trailerFormStatus", "Фильм выбран из Кинопоиска.");
 }
 
@@ -1286,7 +1341,11 @@ function buildTrailerKinopoiskCache(details, staff) {
       details?.releaseDate ||
       details?.startYear ||
       null,
-    posterUrl: details?.posterUrl || details?.posterUrlPreview || "",
+    posterUrl:
+      buildKinopoiskPosterUrl(details?.kinopoiskId) ||
+      details?.posterUrl ||
+      details?.posterUrlPreview ||
+      "",
     webUrl: details?.webUrl || "",
     kinopoiskId: details?.kinopoiskId || null,
   };
@@ -1339,7 +1398,7 @@ function renderStoredKinopoiskInfo(info) {
     : "Список актёров не найден.";
   release.textContent = formatDate(info?.releaseDate || "");
 
-  poster.src = info?.posterUrl || POSTER_PLACEHOLDER;
+  poster.src = resolveTrailerPosterSrc(info?.posterUrl, info?.kinopoiskId);
   poster.alt = resolvedTitle ? `Постер: ${resolvedTitle}` : "Постер фильма";
   poster.onerror = () => {
     poster.onerror = null;
@@ -1416,7 +1475,10 @@ function renderKinopoiskInfo(details, staff) {
     "";
   release.textContent = formatDate(releaseValue);
 
-  poster.src = details?.posterUrl || details?.posterUrlPreview || POSTER_PLACEHOLDER;
+  poster.src = resolveTrailerPosterSrc(
+    details?.posterUrl || details?.posterUrlPreview,
+    details?.kinopoiskId
+  );
   poster.alt = resolvedTitle ? `Постер: ${resolvedTitle}` : "Постер фильма";
   poster.onerror = () => {
     poster.onerror = null;
@@ -1445,7 +1507,11 @@ async function applyKinopoiskSelection(trailer, filmId, searchResults) {
     renderStoredKinopoiskInfo(kinopoiskData);
 
     const nextYear = Number.parseInt(details?.year, 10);
-    const nextPoster = details?.posterUrlPreview || details?.posterUrl || "";
+    const nextPoster =
+      buildKinopoiskPosterUrl(filmId) ||
+      details?.posterUrlPreview ||
+      details?.posterUrl ||
+      "";
     const normalizedYear = Number.isFinite(nextYear) ? nextYear : trailer.year || null;
     const normalizedPoster = nextPoster || trailer.poster || null;
     const needsPatch =
@@ -1639,6 +1705,7 @@ function setupFormEvents() {
   const titleInput = document.getElementById("trailerTitleInput");
   const urlInput = document.getElementById("trailerUrlInput");
   const titleResults = document.getElementById("trailerTitleResults");
+  const selectedMovieClear = document.getElementById("trailerSelectedMovieClear");
   const ratingInput = document.getElementById("trailerRatingInput");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const returnButton = document.getElementById("trailerReturnPlannedButton");
@@ -1652,7 +1719,7 @@ function setupFormEvents() {
     const nextValue = String(titleInput.value || "").trim();
     const selectedTitle = selectedTrailerSearchMovie?.nameRu || selectedTrailerSearchMovie?.nameEn || "";
     if (selectedTitle && nextValue !== selectedTitle) {
-      selectedTrailerSearchMovie = null;
+      clearSelectedTrailerMovie();
     }
     debouncedTrailerTitleSearch(nextValue);
   });
@@ -1669,6 +1736,15 @@ function setupFormEvents() {
     const index = Number(option.dataset.index);
     const movie = trailerTitleSearchResults[index];
     applyTrailerTitleSelection(movie);
+  });
+
+  selectedMovieClear?.addEventListener("click", () => {
+    clearSelectedTrailerMovie();
+    if (titleInput) {
+      titleInput.value = "";
+      titleInput.focus();
+    }
+    setStatusText("trailerFormStatus", "");
   });
 
   document.addEventListener("click", (event) => {
@@ -1718,11 +1794,13 @@ function setupFormEvents() {
         kinopoisk_id: selectedTrailerSearchMovie?.filmId || null,
         year: selectedTrailerSearchMovie?.year || null,
         poster:
+          buildKinopoiskPosterUrl(selectedTrailerSearchMovie?.filmId) ||
           selectedTrailerSearchMovie?.posterUrlPreview ||
           selectedTrailerSearchMovie?.posterUrl ||
           null,
       });
       form.reset();
+      clearSelectedTrailerMovie();
       clearTrailerTitleSearch();
       setStatusText("trailerFormStatus", "Трейлер добавлен.");
     } catch (error) {
