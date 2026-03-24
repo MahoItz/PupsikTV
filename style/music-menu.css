@@ -234,7 +234,7 @@
 .top-left-actions--bar + .settings-button,
 .settings-button.admin-only {
     top: 12px;
-    right: 20px;
+    right: 72px;
     left: auto;
     z-index: 12;
 }
@@ -266,8 +266,9 @@
 
 .settings-button {
     position: fixed;
-    top: 72px;
-    left: 20px;
+    top: 12px;
+    right: 72px;
+    left: auto;
     width: 44px;
     height: 44px;
     border-radius: 12px;
@@ -299,7 +300,7 @@
 
 .rules-panel-toggle {
     position: fixed;
-    top: 20px;
+    top: 12px;
     right: 20px;
     width: 44px;
     height: 44px;
@@ -601,16 +602,16 @@
 .settings-panel {
     position: fixed;
     top: 0;
-    left: 0;
+    right: 0;
     height: 100%;
     width: clamp(320px, 28vw, 420px);
     padding: clamp(14px, 4vh, 26px) clamp(16px, 3vw, 24px);
     background: var(--card-bg);
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.4);
-    transform: translateX(calc(-100% - var(--panels-gap)));
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: -2px 0 20px rgba(0, 0, 0, 0.4);
+    transform: translateX(calc(100% + var(--panels-gap)));
     transition: transform 0.3s ease;
-    z-index: 1450;
+    z-index: 1650;
     pointer-events: none;
     display: flex;
     flex-direction: column;
@@ -624,18 +625,25 @@
 }
 
 .settings-panel__header {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 12px;
+    min-height: 44px;
 }
 
 .settings-panel__header h2 {
     margin: 0;
     font-size: clamp(1.05rem, 2.2vh, 1.3rem);
+    text-align: center;
 }
 
 .settings-panel__close {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
     border: 1px solid rgba(255, 255, 255, 0.16);
     background: rgba(255, 255, 255, 0.06);
     color: var(--text-primary);
@@ -650,7 +658,7 @@
 }
 
 .settings-panel__close:hover {
-    transform: translateY(-1px);
+    transform: translateY(calc(-50% - 1px));
     background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(123, 97, 255, 0.25));
     color: #fff;
     box-shadow: 0 10px 24px rgba(68, 97, 242, 0.35);

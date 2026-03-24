@@ -408,7 +408,7 @@ function initTopLeftActionsMenu() {
     topLeftActionsMenu.appendChild(settingsButton);
   }
 
-  if (rulesButton) {
+  if (rulesButton && !isPinnedBar) {
     decorateMenuButton(rulesButton, "Правила");
     topLeftActionsMenu.appendChild(rulesButton);
   }
