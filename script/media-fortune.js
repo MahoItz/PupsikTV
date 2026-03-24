@@ -3744,7 +3744,11 @@ function getParentGuideErrorMessage(err) {
 }
 
 function isExpectedEmptyParentGuide(payload) {
-  return payload?.meta?.emptyReason === "section_has_no_items";
+  return (
+    payload?.meta?.emptyReason === "section_has_no_items" ||
+    payload?.meta?.emptyReason === "blocked_or_layout_changed" ||
+    payload?.code === "IMDB_BLOCKED_OR_LAYOUT_CHANGED"
+  );
 }
 
 async function loadFortuneParentGuideData(imdbId) {

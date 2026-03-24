@@ -401,55 +401,60 @@ async function handler(req, res) {
   }
 
   try {
-    const imdbUrl = `https://m.imdb.com/title/${encodeURIComponent(id)}/parentalguide`;
+    const encodedId = encodeURIComponent(id);
+    const imdbUrls = [
+      `https://m.imdb.com/title/${encodedId}/parentalguide`,
+      `https://m.imdb.com/title/${encodedId}/parentalguide/`,
+      `https://m.imdb.com/title/${encodedId}/parentalguide?ref_=tt_stry_pg`,
+      `https://m.imdb.com/title/${encodedId}/parentalguide/?ref_=tt_stry_pg`,
+    ];
     const mobileUserAgent =
       "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
-    const maxAttempts = 3;
+    const maxAttempts = 2;
     const baseDelayMs = 600;
     let imdbResponse = null;
     let lastError = null;
+    outer: for (const imdbUrl of imdbUrls) {
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          imdbResponse = await fetch(imdbUrl, {
+            headers: {
+              "User-Agent": mobileUserAgent,
+              Accept:
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+              "Accept-Language": "en-US,en;q=0.9",
+              Referer: "https://m.imdb.com/",
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+            },
+            redirect: "follow",
+          });
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      try {
-        imdbResponse = await fetch(imdbUrl, {
-          headers: {
-            "User-Agent": mobileUserAgent,
-            Accept:
-              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
-            Referer: "https://m.imdb.com/",
-          },
-          redirect: "follow",
-        });
+          if (!String(imdbResponse.url || "").startsWith("https://m.imdb.com/")) {
+            throw new Error(
+              `Unexpected IMDb host after redirects: ${imdbResponse.url || "unknown"}`
+            );
+          }
 
-        if (!String(imdbResponse.url || "").startsWith("https://m.imdb.com/")) {
-          throw new Error(
-            `Unexpected IMDb host after redirects: ${imdbResponse.url || "unknown"}`
-          );
+          if (imdbResponse.ok) {
+            break outer;
+          }
+
+          const shouldRetry =
+            imdbResponse.status === 429 || imdbResponse.status >= 500;
+          if (!shouldRetry || attempt === maxAttempts) {
+            lastError = new Error(
+              `IMDb request failed ${imdbResponse.status} for ${imdbUrl}`
+            );
+          }
+        } catch (err) {
+          lastError = err;
         }
 
-        if (imdbResponse.ok) {
-          break;
-        }
-
-        const shouldRetry =
-          imdbResponse.status === 429 || imdbResponse.status >= 500;
-        if (!shouldRetry || attempt === maxAttempts) {
-          res
-            .status(imdbResponse.status)
-            .json({ error: "Failed to fetch parental guide" });
-          return;
-        }
-      } catch (err) {
-        lastError = err;
-        if (attempt === maxAttempts) {
-          throw err;
-        }
+        await new Promise((resolve) =>
+          setTimeout(resolve, baseDelayMs * attempt)
+        );
       }
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, baseDelayMs * attempt)
-      );
     }
 
     if (!imdbResponse || !imdbResponse.ok) {
@@ -479,8 +484,8 @@ async function handler(req, res) {
     }
 
     if (parsed.meta.blockedDetected) {
-      res.status(502).json({
-        error: "IMDb blocked request or layout changed",
+      res.status(200).json({
+        original: parsed.sections,
         code: "IMDB_BLOCKED_OR_LAYOUT_CHANGED",
         meta: parsed.meta,
       });
