@@ -410,6 +410,45 @@ function parseParentGuide(html) {
   };
 }
 
+function parseMirrorParentGuideText(rawText) {
+  const text = String(rawText || "");
+  if (!text) {
+    return [];
+  }
+
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => cleanText(line))
+    .filter(Boolean);
+
+  const startIndex = lines.findIndex((line) =>
+    /^sex\s*(?:&|and)\s*nudity$/i.test(line)
+  );
+  if (startIndex === -1) {
+    return [];
+  }
+
+  const stopSectionPattern =
+    /^(violence\s*(?:&|and)\s*gore|profanity|alcohol[, ]+drugs\s*(?:&|and)\s*smoking|frightening\s*(?:&|and)\s*intense\s*scenes)$/i;
+  const items = [];
+
+  for (let i = startIndex + 1; i < lines.length; i += 1) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    if (stopSectionPattern.test(line)) break;
+
+    const normalized = line
+      .replace(/^[-*•]\s*/, "")
+      .replace(/^\d+\.\s*/, "")
+      .trim();
+    if (normalized.length < 4) continue;
+    if (isParentGuideNoiseLine(normalized)) continue;
+    items.push(normalized);
+  }
+
+  return dedupeItems(items);
+}
+
 async function handler(req, res) {
   const { id } = req.query || {};
   if (!id) {
@@ -450,6 +489,16 @@ async function handler(req, res) {
         allowedHost: "www.imdb.com",
         url: `https://www.imdb.com/title/${encodedId}/parentalguide/?ref_=tt_stry_pg`,
       },
+      {
+        source: "mirror_mobile_fallback",
+        allowedHost: null,
+        url: `https://r.jina.ai/http://m.imdb.com/title/${encodedId}/parentalguide`,
+      },
+      {
+        source: "mirror_desktop_fallback",
+        allowedHost: null,
+        url: `https://r.jina.ai/http://www.imdb.com/title/${encodedId}/parentalguide`,
+      },
     ];
     const mobileUserAgent =
       "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
@@ -478,6 +527,7 @@ async function handler(req, res) {
           });
 
           if (
+            allowedHost &&
             !String(imdbResponse.url || "").startsWith(
               `https://${allowedHost}/`
             )
@@ -513,33 +563,55 @@ async function handler(req, res) {
 
       const html = await imdbResponse.text();
       const parsed = parseParentGuide(html);
-      const hasContent = hasParentGuideContent(parsed.sections);
+      let hasContent = hasParentGuideContent(parsed.sections);
+      let parsedResult = parsed;
+
+      if (!hasContent && source.startsWith("mirror_")) {
+        const mirrorItems = parseMirrorParentGuideText(html);
+        if (mirrorItems.length > 0) {
+          parsedResult = {
+            sections: { sexAndNudity: mirrorItems },
+            meta: {
+              strategy: "mirror_text_section",
+              blockedDetected: false,
+              emptyReason: null,
+            },
+          };
+          hasContent = true;
+        }
+      }
 
       console.info("[imdb-parent-guide] parse result", {
         imdbId: id,
         source,
-        strategy: parsed.meta.strategy,
-        blockedDetected: parsed.meta.blockedDetected,
+        strategy: parsedResult.meta.strategy,
+        blockedDetected: parsedResult.meta.blockedDetected,
         hasContent,
-        itemCount: parsed.sections?.sexAndNudity?.length || 0,
+        itemCount: parsedResult.sections?.sexAndNudity?.length || 0,
       });
 
       if (hasContent) {
         res
           .status(200)
-          .json({ original: parsed.sections, meta: { ...parsed.meta, source } });
+          .json({
+            original: parsedResult.sections,
+            meta: { ...parsedResult.meta, source },
+          });
         return;
       }
 
-      if (parsed.meta.emptyReason === "section_has_no_items") {
+      if (parsedResult.meta.emptyReason === "section_has_no_items") {
         res
           .status(200)
-          .json({ original: parsed.sections, meta: { ...parsed.meta, source } });
+          .json({
+            original: parsedResult.sections,
+            meta: { ...parsedResult.meta, source },
+          });
         return;
       }
 
       fallbackResult = {
-        parsed,
+        parsed: parsedResult,
         source,
       };
     }
