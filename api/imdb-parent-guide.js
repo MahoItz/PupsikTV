@@ -384,6 +384,14 @@ function detectBlockedOrInterstitial(html) {
   return !hasParentGuideSignal && lower.length < 15000;
 }
 
+function detectAwsWafJsChallenge(html) {
+  const lower = String(html || "").toLowerCase();
+  return (
+    lower.includes("window.gokuprops") &&
+    lower.includes("awswafcookiedomainlist")
+  );
+}
+
 function parseParentGuide(html) {
   const strategyA = extractByMarkers(html, SECTION_MARKERS[TARGET_SECTION_KEY]);
   if (strategyA.length > 0) {
@@ -662,6 +670,7 @@ async function handler(req, res) {
         });
       }
       const parsed = parseParentGuide(html);
+      const awsWafChallengeDetected = detectAwsWafJsChallenge(html);
       let hasContent = hasParentGuideContent(parsed.sections);
       let parsedResult = parsed;
 
@@ -685,6 +694,7 @@ async function handler(req, res) {
         source,
         strategy: parsedResult.meta.strategy,
         blockedDetected: parsedResult.meta.blockedDetected,
+        awsWafChallengeDetected,
         hasContent,
         itemCount: parsedResult.sections?.sexAndNudity?.length || 0,
       });
@@ -720,7 +730,22 @@ async function handler(req, res) {
       fallbackResult = {
         parsed: parsedResult,
         source,
+        awsWafChallengeDetected,
       };
+    }
+
+    if (fallbackResult?.awsWafChallengeDetected) {
+      res.status(200).json({
+        original: fallbackResult.parsed.sections,
+        code: "IMDB_JS_CHALLENGE",
+        meta: {
+          ...fallbackResult.parsed.meta,
+          source: fallbackResult.source,
+          challengeType: "aws_waf_js_challenge",
+          ...(debugMode ? { debug: candidateDebug } : {}),
+        },
+      });
+      return;
     }
 
     if (fallbackResult?.parsed?.meta?.blockedDetected) {

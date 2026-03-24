@@ -3733,6 +3733,10 @@ function createParentGuideLoadError(message, details = {}) {
 
 function getParentGuideErrorMessage(err) {
   const code = err?.code || "";
+  if (code === "IMDB_JS_CHALLENGE") {
+    return "IMDb временно блокирует сервер (JS challenge). Попробуйте позже или используйте кэшированный гайд.";
+  }
+
   if (
     code === "IMDB_BLOCKED_OR_LAYOUT_CHANGED" ||
     code === "PARENT_GUIDE_PARSE_EMPTY"
@@ -3747,7 +3751,8 @@ function isExpectedEmptyParentGuide(payload) {
   return (
     payload?.meta?.emptyReason === "section_has_no_items" ||
     payload?.meta?.emptyReason === "blocked_or_layout_changed" ||
-    payload?.code === "IMDB_BLOCKED_OR_LAYOUT_CHANGED"
+    payload?.code === "IMDB_BLOCKED_OR_LAYOUT_CHANGED" ||
+    payload?.code === "IMDB_JS_CHALLENGE"
   );
 }
 
@@ -3867,6 +3872,9 @@ async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
       return await loadFortuneParentGuideData(imdbId);
     } catch (err) {
       lastError = err;
+      if (err?.code === "IMDB_JS_CHALLENGE") {
+        break;
+      }
       if (attempt >= attempts) {
         break;
       }
