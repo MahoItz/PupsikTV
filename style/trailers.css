@@ -310,6 +310,20 @@
   font-size: 0.9rem;
 }
 
+.trailer-watched-card .movie-footer {
+  margin-top: auto;
+  padding: 0 14px 14px;
+  align-items: center;
+}
+
+.trailer-watched-card .movie-actions {
+  width: 100%;
+}
+
+.trailer-watched-card .btn-rate {
+  width: 100%;
+}
+
 .trailer-empty {
   margin: 0;
   color: rgba(212, 244, 255, 0.65);
@@ -468,6 +482,33 @@
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.05),
     0 12px 24px rgba(2, 6, 14, 0.32);
+}
+
+.trailer-user-rate-modal {
+  max-width: 560px;
+}
+
+.trailer-user-rate-modal .rate-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.trailer-user-rate-modal .rate-image {
+  width: 3rem;
+}
+
+.trailer-user-rate-modal .rate-poster {
+  text-align: center;
+}
+
+.trailer-user-rate-modal #trailerUserRatePoster {
+  display: block;
+  margin: 0 auto 10px auto;
+  width: 60%;
+  max-width: 250px;
 }
 
 .trailer-info__empty {

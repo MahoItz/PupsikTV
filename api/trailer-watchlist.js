@@ -168,7 +168,7 @@ function normalizePatchPayload(payload) {
 async function listTrailers(supabase, res) {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select("id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, watched_at, created_at, updated_at")
+    .select("id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, watched_at, created_at, updated_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -214,7 +214,7 @@ async function createTrailer(supabase, req, res) {
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .insert(normalized)
-    .select("id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, watched_at, created_at, updated_at")
+    .select("id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, watched_at, created_at, updated_at")
     .single();
 
   if (error) {
@@ -265,7 +265,7 @@ async function updateTrailer(supabase, req, res) {
     .from(TABLE_NAME)
     .update(changes)
     .eq("id", id)
-    .select("id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, watched_at, created_at, updated_at")
+    .select("id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, watched_at, created_at, updated_at")
     .single();
 
   if (error) {

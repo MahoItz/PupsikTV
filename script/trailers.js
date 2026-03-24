@@ -1,4 +1,5 @@
 const TRAILER_API_URL = "/api/trailer-watchlist";
+const TRAILER_RATINGS_API_URL = "/api/trailer-ratings";
 const VERIFY_ADMIN_URL = "/api/verify-admin";
 const ENV_URL = "/api/env";
 const KINOPOISK_SEARCH_URL =
@@ -19,6 +20,45 @@ let selectedTrailerSearchMovie = null;
 let trailerTitleRequestId = 0;
 let isCreatingTrailer = false;
 let trailerRatingTooltip = null;
+let userRatingTrailerId = null;
+let isSubmittingTrailerUserRating = false;
+
+function getGuestId() {
+  let guestId = localStorage.getItem("guest_id");
+  if (!guestId) {
+    guestId = `guest_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+    localStorage.setItem("guest_id", guestId);
+  }
+  return guestId;
+}
+
+function getRatedTrailersMap() {
+  try {
+    const raw = localStorage.getItem("ratedTrailers");
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function hasRatedTrailer(trailerId) {
+  const ratedTrailers = getRatedTrailersMap();
+  return Object.prototype.hasOwnProperty.call(ratedTrailers, String(trailerId));
+}
+
+function rememberRatedTrailer(trailerId, rating) {
+  const ratedTrailers = getRatedTrailersMap();
+  ratedTrailers[String(trailerId)] = rating;
+  localStorage.setItem("ratedTrailers", JSON.stringify(ratedTrailers));
+}
+
+function formatViewerRating(item) {
+  const ratingSum = Number(item?.viewer_rating_sum ?? 0) || 0;
+  const ratingCount = Number(item?.viewer_rating_count ?? 0) || 0;
+  if (!ratingCount) return "-";
+  return String(Math.round((ratingSum / ratingCount) * 10) / 10).replace(".", ",");
+}
 
 function getAdminAuthHeaders() {
   const token = localStorage.getItem("adminToken") || "";
@@ -498,12 +538,37 @@ function renderWatchedTrailerCard(item) {
   viewerItem.className = "rating-item rating-user";
   viewerItem.innerHTML = `
     <i class="fa-solid fa-star" aria-hidden="true"></i>
-    <span>-</span>
+    <span>${formatViewerRating(item)}</span>
   `;
 
   ratingDiv.append(streamerItem, viewerItem);
   info.append(title, year, ratingDiv);
   card.append(poster, info);
+
+  const footer = document.createElement("div");
+  footer.className = "movie-footer";
+
+  const actions = document.createElement("div");
+  actions.className = "movie-actions";
+
+  const rateButton = document.createElement("button");
+  rateButton.type = "button";
+  rateButton.className = "btn btn-rate btn-icon";
+  rateButton.textContent = hasRatedTrailer(item.id) ? "Оценено" : "Оценить";
+
+  if (hasRatedTrailer(item.id)) {
+    rateButton.disabled = true;
+    rateButton.title = "Вы уже оценили этот трейлер";
+  } else {
+    rateButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openTrailerUserRateModal(item.id);
+    });
+  }
+
+  actions.appendChild(rateButton);
+  footer.appendChild(actions);
+  card.appendChild(footer);
 
   const handleOpen = () => {
     selectedTrailerId = Number(item.id);
@@ -687,6 +752,68 @@ async function removeTrailer(id) {
     selectedTrailerId = trailers[0]?.id || null;
   }
   renderSelectedTrailer();
+}
+
+async function submitTrailerUserRating(trailerId, rating) {
+  const response = await fetch(TRAILER_RATINGS_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      trailer_id: trailerId,
+      rating,
+      user_id: getGuestId(),
+    }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload?.error || `Failed to submit trailer rating: ${response.status}`);
+  }
+
+  return payload?.trailer || null;
+}
+
+function closeTrailerUserRateModal() {
+  const modal = document.getElementById("trailerUserRateModal");
+  const input = document.getElementById("trailerUserRateInput");
+  if (modal) modal.style.display = "none";
+  if (input) {
+    input.value = "";
+    input.setCustomValidity("");
+  }
+  setRatingStars("trailerUserRateStars", 0);
+  setStatusText("trailerUserRateStatus", "");
+  userRatingTrailerId = null;
+}
+
+function openTrailerUserRateModal(trailerId) {
+  if (hasRatedTrailer(trailerId)) {
+    alert("Вы уже оценили этот трейлер");
+    return;
+  }
+
+  const trailer = trailers.find((item) => Number(item.id) === Number(trailerId));
+  const modal = document.getElementById("trailerUserRateModal");
+  const title = document.getElementById("trailerUserRateTitle");
+  const poster = document.getElementById("trailerUserRatePoster");
+
+  if (!modal || !title || !poster || !trailer) return;
+
+  userRatingTrailerId = Number(trailerId);
+  title.textContent = trailer.title || "Без названия";
+  poster.src = trailer.poster || POSTER_PLACEHOLDER;
+  poster.alt = trailer.title || "Постер трейлера";
+  poster.onerror = () => {
+    poster.onerror = null;
+    poster.src = POSTER_PLACEHOLDER;
+  };
+
+  setRatingStars("trailerUserRateStars", 0);
+  setupRatingStars("trailerUserRateStars");
+  setStatusText("trailerUserRateStatus", "");
+  modal.style.display = "block";
 }
 
 async function searchKinopoiskByTitle(query) {
@@ -1059,6 +1186,10 @@ function setupFormEvents() {
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const returnButton = document.getElementById("trailerReturnPlannedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
+  const userRateModal = document.getElementById("trailerUserRateModal");
+  const userRateClose = document.getElementById("trailerUserRateClose");
+  const userRateSubmit = document.getElementById("trailerUserRateSubmit");
+  const userRateInput = document.getElementById("trailerUserRateInput");
 
   titleInput?.addEventListener("input", () => {
     const nextValue = String(titleInput.value || "").trim();
@@ -1229,6 +1360,80 @@ function setupFormEvents() {
 
   setupRatingStars("trailerRatingStars");
   setRatingStars("trailerRatingStars", 0);
+  setupRatingStars("trailerUserRateStars");
+  setRatingStars("trailerUserRateStars", 0);
+
+  userRateClose?.addEventListener("click", closeTrailerUserRateModal);
+  userRateClose?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    closeTrailerUserRateModal();
+  });
+
+  userRateModal?.addEventListener("click", (event) => {
+    if (event.target === userRateModal) {
+      closeTrailerUserRateModal();
+    }
+  });
+
+  userRateSubmit?.addEventListener("click", async () => {
+    if (!userRatingTrailerId || isSubmittingTrailerUserRating) return;
+
+    const rawRating = String(userRateInput?.value || "").trim();
+    const rating = parseRatingInputValue(rawRating);
+    if (
+      rawRating === "" ||
+      Number.isNaN(rating) ||
+      rating < 0 ||
+      rating > 11 ||
+      hasTooManyFractionDigits(rawRating)
+    ) {
+      setStatusText("trailerUserRateStatus", "Введите корректную оценку от 0 до 11.", true);
+      userRateInput?.reportValidity();
+      return;
+    }
+
+    isSubmittingTrailerUserRating = true;
+    if (userRateSubmit) {
+      userRateSubmit.disabled = true;
+      userRateSubmit.setAttribute("aria-busy", "true");
+    }
+    setStatusText("trailerUserRateStatus", "Сохраняю оценку...");
+
+    try {
+      const updatedTrailer = await submitTrailerUserRating(userRatingTrailerId, rating);
+      if (updatedTrailer) {
+        trailers = sortTrailers(
+          trailers.map((item) =>
+            Number(item.id) === Number(updatedTrailer.id)
+              ? {
+                  ...item,
+                  viewer_rating_sum: updatedTrailer.viewer_rating_sum,
+                  viewer_rating_count: updatedTrailer.viewer_rating_count,
+                }
+              : item
+          )
+        );
+      }
+
+      rememberRatedTrailer(userRatingTrailerId, rating);
+      renderSelectedTrailer();
+      closeTrailerUserRateModal();
+    } catch (error) {
+      console.error("Failed to submit trailer user rating", error);
+      setStatusText(
+        "trailerUserRateStatus",
+        error?.message || "Не удалось сохранить оценку.",
+        true
+      );
+    } finally {
+      isSubmittingTrailerUserRating = false;
+      if (userRateSubmit) {
+        userRateSubmit.disabled = false;
+        userRateSubmit.removeAttribute("aria-busy");
+      }
+    }
+  });
 }
 
 async function initPage() {
