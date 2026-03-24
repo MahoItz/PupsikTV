@@ -820,15 +820,19 @@ function renderWatchedTrailersGrid(watchedList) {
 
 function syncTrailerSidebarHeight() {
   const sidebar = document.querySelector(".trailer-sidebar");
+  const infoPanel = document.querySelector(".trailer-info");
   const main = document.querySelector(".trailer-main");
-  if (!sidebar || !main) return;
+  if (!sidebar || !infoPanel || !main) return;
 
   if (window.innerWidth <= 1280) {
     sidebar.style.removeProperty("--trailer-sidebar-max-height");
+    infoPanel.style.removeProperty("--trailer-sidebar-max-height");
     return;
   }
 
-  sidebar.style.setProperty("--trailer-sidebar-max-height", `${Math.ceil(main.offsetHeight)}px`);
+  const nextHeight = `${Math.ceil(main.offsetHeight)}px`;
+  sidebar.style.setProperty("--trailer-sidebar-max-height", nextHeight);
+  infoPanel.style.setProperty("--trailer-sidebar-max-height", nextHeight);
 }
 
 function toggleInfoVisibility(hasContent) {
@@ -847,6 +851,12 @@ function resetKinopoiskInfo(message) {
   }
 }
 
+function setTrailerPlayerLoading(isLoading) {
+  const placeholder = document.getElementById("trailerPlayerPlaceholder");
+  if (!placeholder) return;
+  placeholder.hidden = !isLoading;
+}
+
 function renderSelectedTrailer() {
   const trailer = getSelectedTrailer();
   const title = document.getElementById("trailerPlayerTitle");
@@ -863,7 +873,7 @@ function renderSelectedTrailer() {
   if (!trailer) {
     if (title) title.textContent = "Выберите трейлер из списка";
     if (frame) frame.src = "about:blank";
-    if (placeholder) placeholder.hidden = false;
+    setTrailerPlayerLoading(false);
     if (openYoutube) {
       openYoutube.href = "#";
       openYoutube.setAttribute("aria-disabled", "true");
@@ -877,12 +887,12 @@ function renderSelectedTrailer() {
   }
 
   if (title) title.textContent = trailer.title || "Без названия";
-  if (frame) frame.src = buildYoutubeEmbedUrl(trailer.youtube_video_id);
-  if (placeholder) placeholder.hidden = false;
+  setTrailerPlayerLoading(true);
   if (frame) {
     frame.onload = () => {
-      if (placeholder) placeholder.hidden = true;
+      setTrailerPlayerLoading(false);
     };
+    frame.src = buildYoutubeEmbedUrl(trailer.youtube_video_id);
   }
   if (openYoutube) {
     openYoutube.href = buildYoutubeWatchUrl(trailer.youtube_video_id);

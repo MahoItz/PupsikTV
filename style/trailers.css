@@ -513,24 +513,40 @@
 .trailer-embed-placeholder {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  gap: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
   color: rgba(255, 255, 255, 0.76);
   pointer-events: none;
   z-index: 2;
+  background: rgba(4, 8, 19, 0.22);
 }
 
 .trailer-embed-placeholder[hidden] {
   display: none;
 }
 
+.trailer-embed-placeholder p,
 .trailer-embed-placeholder i {
-  font-size: 4.2rem;
-  color: #ff4b6e;
-  filter: drop-shadow(0 0 22px rgba(255, 75, 110, 0.35));
+  display: none;
+}
+
+.trailer-embed-placeholder::before {
+  content: "";
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 3px solid rgba(116, 222, 255, 0.18);
+  border-top-color: #74deff;
+  box-shadow: 0 0 18px rgba(116, 222, 255, 0.14);
+  animation: trailer-embed-spin 0.75s linear infinite;
+}
+
+@keyframes trailer-embed-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .trailer-rating-panel__controls {
@@ -601,7 +617,12 @@
 
 .trailer-info {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 18px;
+  min-height: 0;
+  height: var(--trailer-sidebar-max-height, auto);
+  max-height: var(--trailer-sidebar-max-height, none);
+  overflow: hidden;
 }
 
 .trailer-kinopoisk-button {
@@ -667,11 +688,29 @@
 
 .trailer-info__empty {
   color: rgba(212, 244, 255, 0.72);
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .trailer-info__content {
   display: grid;
   gap: 18px;
+  align-content: start;
+  grid-auto-rows: max-content;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 6px;
+}
+
+.trailer-info__empty::-webkit-scrollbar,
+.trailer-info__content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.trailer-info__empty::-webkit-scrollbar-thumb,
+.trailer-info__content::-webkit-scrollbar-thumb {
+  background: rgba(116, 222, 255, 0.3);
+  border-radius: 999px;
 }
 
 .trailer-info__hero {
@@ -765,6 +804,9 @@
   .trailer-info {
     grid-column: 1 / -1;
     position: static;
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
 
   .trailer-sidebar {
