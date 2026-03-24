@@ -127,6 +127,37 @@ function extractItemsFromSectionHtml(sectionHtml) {
     return dedupeItems(strategyItemHtml);
   }
 
+  // More tolerant extraction for current IMDb mobile markup:
+  // text can be directly inside data-testid="item-html" without ipc-html-content-inner-div.
+  const strategyItemHtmlDirect = Array.from(
+    sectionHtml.matchAll(/data-testid="item-html"[^>]*>([\s\S]*?)<\/div>/gi)
+  )
+    .map((match) => cleanText(match[1]))
+    .filter(Boolean);
+
+  if (strategyItemHtmlDirect.length > 0) {
+    return dedupeItems(strategyItemHtmlDirect);
+  }
+
+  // Python reference parser iterates `.ipc-list-card` items and then extracts `data-testid="item-html"`.
+  // Do the same in regex-friendly form as an additional fallback.
+  const strategyListCard = Array.from(
+    sectionHtml.matchAll(
+      /<div[^>]*class="[^"]*ipc-list-card[^"]*"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/gi
+    )
+  )
+    .map((cardMatch) => {
+      const cardHtml = cardMatch[1] || "";
+      const textMatch =
+        /data-testid="item-html"[^>]*>([\s\S]*?)<\/div>/i.exec(cardHtml);
+      return textMatch ? cleanText(textMatch[1]) : "";
+    })
+    .filter(Boolean);
+
+  if (strategyListCard.length > 0) {
+    return dedupeItems(strategyListCard);
+  }
+
   const listItems = Array.from(sectionHtml.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi))
     .map((match) => cleanText(match[1]))
     .filter(Boolean);
