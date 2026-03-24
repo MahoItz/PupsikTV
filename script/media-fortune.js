@@ -3751,6 +3751,56 @@ function isExpectedEmptyParentGuide(payload) {
   );
 }
 
+async function loadCachedOrderParentGuideByImdbId(imdbId) {
+  if (!imdbId || !supabaseClient) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("Movie_Orders")
+      .select("parents_guide, id")
+      .eq("imdb_id", imdbId)
+      .not("parents_guide", "is", null)
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data?.parents_guide) {
+      return null;
+    }
+
+    let parsedGuide = data.parents_guide;
+    if (typeof parsedGuide === "string") {
+      try {
+        parsedGuide = JSON.parse(parsedGuide);
+      } catch {
+        return null;
+      }
+    }
+
+    if (!hasParentGuideContent(parsedGuide?.original || {})) {
+      return null;
+    }
+
+    return {
+      original: parsedGuide.original,
+      translated: parsedGuide.translated || null,
+      translationStatus: parsedGuide.translationStatus || null,
+      meta: {
+        strategy: "supabase_orders_cache",
+        blockedDetected: false,
+        emptyReason: null,
+        source: "supabase_orders_cache",
+      },
+      code: "PARENT_GUIDE_CACHE_HIT",
+    };
+  } catch (err) {
+    console.warn("Failed to load cached parent guide by IMDb id", err);
+    return null;
+  }
+}
+
 async function loadFortuneParentGuideData(imdbId) {
   if (!imdbId) {
     throw new Error("Missing IMDb ID for parent guide request");
@@ -3768,6 +3818,11 @@ async function loadFortuneParentGuideData(imdbId) {
   }
 
   if (!response.ok) {
+    const cachedGuide = await loadCachedOrderParentGuideByImdbId(imdbId);
+    if (cachedGuide) {
+      return cachedGuide;
+    }
+
     throw createParentGuideLoadError(
       `Request failed: ${response.status}`,
       {
@@ -3780,11 +3835,23 @@ async function loadFortuneParentGuideData(imdbId) {
 
   const hasContent = hasParentGuideContent(payload?.original || {});
   if (!hasContent && !isExpectedEmptyParentGuide(payload)) {
+    const cachedGuide = await loadCachedOrderParentGuideByImdbId(imdbId);
+    if (cachedGuide) {
+      return cachedGuide;
+    }
+
     throw createParentGuideLoadError("Parent guide content is empty", {
       status: response.status,
       code: payload?.code || "PARENT_GUIDE_PARSE_EMPTY",
       meta: payload?.meta || null,
     });
+  }
+
+  if (!hasContent && isExpectedEmptyParentGuide(payload)) {
+    const cachedGuide = await loadCachedOrderParentGuideByImdbId(imdbId);
+    if (cachedGuide) {
+      return cachedGuide;
+    }
   }
 
   return payload;
