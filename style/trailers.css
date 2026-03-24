@@ -256,6 +256,10 @@
   z-index: 2;
 }
 
+.trailer-embed-placeholder[hidden] {
+  display: none;
+}
+
 .trailer-embed-placeholder i {
   font-size: 4.2rem;
   color: #ff4b6e;

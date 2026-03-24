@@ -84,7 +84,7 @@ function parseYouTubeVideoId(input) {
 
 function buildYoutubeEmbedUrl(videoId) {
   return videoId
-    ? `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?rel=0`
+    ? `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?rel=0&hl=ru&cc_lang_pref=ru&cc_load_policy=0&iv_load_policy=3&autoplay=0`
     : "about:blank";
 }
 
