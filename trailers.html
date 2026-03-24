@@ -54,10 +54,13 @@
           <p id="trailerFormStatus" class="trailer-form__status" aria-live="polite"></p>
         </form>
 
-        <section class="trailer-list-section">
+        <section class="trailer-list-section trailer-list-section--planned">
           <div class="trailer-list-section__header">
             <h2>Запланированные</h2>
-            <span id="plannedCount" class="trailer-count-chip">0</span>
+            <div class="trailer-list-section__actions">
+              <span id="plannedCount" class="trailer-count-chip">0</span>
+              <button id="openPlannedTrailersModal" class="btn btn-secondary trailer-list-section__more" type="button">Весь список</button>
+            </div>
           </div>
           <div id="plannedTrailerList" class="trailer-list" aria-live="polite"></div>
           <p id="plannedTrailerEmpty" class="trailer-empty">Пока список пуст.</p>
@@ -216,6 +219,18 @@
       </div>
       <button id="trailerUserRateSubmit" class="btn btn-rate" style="width:100%;">Оценить</button>
       <p id="trailerUserRateStatus" class="trailer-form__status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div id="plannedTrailersModal" class="modal">
+    <div class="modal-content trailer-planned-modal">
+      <span id="plannedTrailersModalClose" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
+      <div class="trailer-list-section__header trailer-list-section__header--modal">
+        <h2>Все запланированные трейлеры</h2>
+        <span id="plannedModalCount" class="trailer-count-chip">0</span>
+      </div>
+      <div id="plannedTrailerModalList" class="trailer-list trailer-list--modal" aria-live="polite"></div>
+      <p id="plannedTrailerModalEmpty" class="trailer-empty">Пока список пуст.</p>
     </div>
   </div>
 

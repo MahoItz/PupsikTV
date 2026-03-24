@@ -684,6 +684,7 @@ function renderTrailerLists() {
   const plannedList = document.getElementById("plannedTrailerList");
   const plannedEmpty = document.getElementById("plannedTrailerEmpty");
   const plannedCount = document.getElementById("plannedCount");
+  const plannedModalCount = document.getElementById("plannedModalCount");
   const watchedCount = document.getElementById("watchedCount");
 
   if (!plannedList) return;
@@ -696,9 +697,24 @@ function renderTrailerLists() {
 
   if (plannedEmpty) plannedEmpty.hidden = planned.length > 0;
   if (plannedCount) plannedCount.textContent = String(planned.length);
+  if (plannedModalCount) plannedModalCount.textContent = String(planned.length);
   if (watchedCount) watchedCount.textContent = String(watched.length);
 
+  renderPlannedTrailerModalList(planned);
   renderWatchedTrailersGrid(watched);
+  syncTrailerSidebarHeight();
+}
+
+function renderPlannedTrailerModalList(plannedList) {
+  const modalList = document.getElementById("plannedTrailerModalList");
+  const modalEmpty = document.getElementById("plannedTrailerModalEmpty");
+  if (!modalList) return;
+
+  const planned = Array.isArray(plannedList) ? plannedList : [];
+  modalList.innerHTML = "";
+  planned.forEach((item) => modalList.appendChild(renderTrailerItem(item)));
+
+  if (modalEmpty) modalEmpty.hidden = planned.length > 0;
 }
 
 function renderWatchedTrailerCard(item) {
@@ -800,6 +816,19 @@ function renderWatchedTrailersGrid(watchedList) {
   watched.forEach((item) => grid.appendChild(renderWatchedTrailerCard(item)));
 
   if (empty) empty.hidden = watched.length > 0;
+}
+
+function syncTrailerSidebarHeight() {
+  const sidebar = document.querySelector(".trailer-sidebar");
+  const main = document.querySelector(".trailer-main");
+  if (!sidebar || !main) return;
+
+  if (window.innerWidth <= 1280) {
+    sidebar.style.removeProperty("--trailer-sidebar-max-height");
+    return;
+  }
+
+  sidebar.style.setProperty("--trailer-sidebar-max-height", `${Math.ceil(main.offsetHeight)}px`);
 }
 
 function toggleInfoVisibility(hasContent) {
@@ -1495,16 +1524,52 @@ async function loadKinopoiskInfoCached(trailer) {
 }
 
 function setupListEvents() {
+  const plannedModal = document.getElementById("plannedTrailersModal");
+  const plannedModalClose = document.getElementById("plannedTrailersModalClose");
+  const openPlannedModalButton = document.getElementById("openPlannedTrailersModal");
+
   const clickHandler = (event) => {
     const item = event.target.closest(".trailer-item");
     if (!item) return;
     selectedTrailerId = Number(item.dataset.id);
     renderSelectedTrailer();
+    if (plannedModal) {
+      plannedModal.style.display = "none";
+    }
   };
 
   document
     .getElementById("plannedTrailerList")
     ?.addEventListener("click", clickHandler);
+
+  document
+    .getElementById("plannedTrailerModalList")
+    ?.addEventListener("click", clickHandler);
+
+  openPlannedModalButton?.addEventListener("click", () => {
+    if (plannedModal) {
+      plannedModal.style.display = "block";
+    }
+  });
+
+  const closePlannedModal = () => {
+    if (plannedModal) {
+      plannedModal.style.display = "none";
+    }
+  };
+
+  plannedModalClose?.addEventListener("click", closePlannedModal);
+  plannedModalClose?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    closePlannedModal();
+  });
+
+  plannedModal?.addEventListener("click", (event) => {
+    if (event.target === plannedModal) {
+      closePlannedModal();
+    }
+  });
 
   document
     .getElementById("trailerKinopoiskMatches")
@@ -1793,6 +1858,8 @@ async function initPage() {
     setupListEvents();
     setupFormEvents();
     await fetchTrailers();
+    window.addEventListener("resize", syncTrailerSidebarHeight);
+    requestAnimationFrame(syncTrailerSidebarHeight);
   } catch (error) {
     console.error("Trailers page init error", error);
     if (denied) denied.hidden = false;
