@@ -1,6 +1,43 @@
+const { createClient } = require("@supabase/supabase-js");
 const { extractBearerToken, verifyAdminToken } = require("./_admin-session.js");
 
-function handler(req, res) {
+const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
+
+function createSupabaseClient() {
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+  if (!supabaseKey) {
+    throw new Error("Missing SUPABASE key");
+  }
+
+  return createClient(SUPABASE_URL, supabaseKey, {
+    auth: { persistSession: false },
+  });
+}
+
+async function loadSelectedKinopoiskApi() {
+  try {
+    const supabase = createSupabaseClient();
+    const { data, error } = await supabase
+      .from("settings")
+      .select("kp_api")
+      .order("id", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Failed to load selected Kinopoisk API", error);
+      return "API 1";
+    }
+
+    return data?.kp_api || "API 1";
+  } catch (error) {
+    console.error("Supabase configuration error while loading kp_api", error);
+    return "API 1";
+  }
+}
+
+async function handler(req, res) {
   let password;
   try {
     password =
@@ -52,6 +89,8 @@ function handler(req, res) {
   };
 
   if (isAdmin) {
+    env.KINOPOISK_API_SELECTED = await loadSelectedKinopoiskApi();
+
     if (process.env.KINOPOISK_API_KEY) {
       env.KINOPOISK_API_KEY = process.env.KINOPOISK_API_KEY;
     }

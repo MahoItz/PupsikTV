@@ -1,5 +1,6 @@
 const TRAILER_API_URL = "/api/trailer-watchlist";
 const TRAILER_RATINGS_API_URL = "/api/trailer-ratings";
+const KP_API_SELECTION_URL = "/api/kp-api-selection";
 const VERIFY_ADMIN_URL = "/api/verify-admin";
 const ENV_URL = "/api/env";
 const KINOPOISK_SEARCH_URL =
@@ -12,6 +13,12 @@ const YOUTUBE_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
 const POSTER_PLACEHOLDER = "/images/placeholder-poster.webp";
 
 let kinopoiskApiKey = "";
+let selectedKinopoiskApi = "API 1";
+let kinopoiskApiKeys = {
+  "API 1": "",
+  "API 2": "",
+  "API 3": "",
+};
 let trailers = [];
 let selectedTrailerId = null;
 let kinopoiskRequestId = 0;
@@ -22,6 +29,181 @@ let isCreatingTrailer = false;
 let trailerRatingTooltip = null;
 let userRatingTrailerId = null;
 let isSubmittingTrailerUserRating = false;
+let isSwitchingKinopoiskApi = false;
+let kinopoiskQuotaDialogOpen = false;
+
+function normalizeKpApiValue(value) {
+  if (value === "API 2" || value === "API 3") {
+    return value;
+  }
+  return "API 1";
+}
+
+function getSelectedKinopoiskApiKey(env) {
+  const selectedApi = normalizeKpApiValue(env?.KINOPOISK_API_SELECTED);
+  if (selectedApi === "API 2") {
+    return env?.KINOPOISK_API_KEY2 || env?.KINOPOISK_API_KEY || "";
+  }
+  if (selectedApi === "API 3") {
+    return env?.KINOPOISK_API_KEY3 || env?.KINOPOISK_API_KEY || "";
+  }
+  return env?.KINOPOISK_API_KEY || env?.KINOPOISK_API_KEY2 || env?.KINOPOISK_API_KEY3 || "";
+}
+
+function showToastNotification(message, type = "success") {
+  const normalizedType = ["success", "warning", "error"].includes(type) ? type : "success";
+  let container = document.getElementById("toastContainer");
+
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast-container";
+    container.setAttribute("aria-live", "polite");
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  toast.className = `toast-notification toast-${normalizedType}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add("visible");
+  });
+
+  setTimeout(() => {
+    toast.classList.remove("visible");
+    setTimeout(() => {
+      toast.remove();
+      if (!container.hasChildNodes()) {
+        container.remove();
+      }
+    }, 280);
+  }, 2600);
+}
+
+function applySelectedKinopoiskApi(value) {
+  selectedKinopoiskApi = normalizeKpApiValue(value);
+  kinopoiskApiKey = kinopoiskApiKeys[selectedKinopoiskApi] || "";
+}
+
+function getAvailableKinopoiskApis() {
+  return ["API 1", "API 2", "API 3"].filter((api) => Boolean(kinopoiskApiKeys[api]));
+}
+
+function getNextAvailableKinopoiskApi(currentApi) {
+  const orderedApis = getAvailableKinopoiskApis();
+  if (!orderedApis.length) return null;
+
+  const startIndex = orderedApis.indexOf(normalizeKpApiValue(currentApi));
+  if (startIndex < 0) {
+    return orderedApis[0];
+  }
+
+  if (orderedApis.length === 1) {
+    return orderedApis[0];
+  }
+
+  return orderedApis[(startIndex + 1) % orderedApis.length];
+}
+
+async function persistSelectedKinopoiskApi(nextApi) {
+  const response = await fetch(KP_API_SELECTION_URL, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAdminAuthHeaders(),
+    },
+    body: JSON.stringify({ kp_api: normalizeKpApiValue(nextApi) }),
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload?.error || `Failed to update kp_api: ${response.status}`);
+  }
+
+  return payload?.kp_api || normalizeKpApiValue(nextApi);
+}
+
+async function switchToNextKinopoiskApi() {
+  if (isSwitchingKinopoiskApi) return false;
+
+  const nextApi = getNextAvailableKinopoiskApi(selectedKinopoiskApi);
+  if (!nextApi || nextApi === selectedKinopoiskApi) {
+    showToastNotification("Нет другого доступного API Кинопоиска для переключения.", "warning");
+    return false;
+  }
+
+  isSwitchingKinopoiskApi = true;
+  try {
+    const persistedApi = await persistSelectedKinopoiskApi(nextApi);
+    applySelectedKinopoiskApi(persistedApi);
+    showToastNotification(`Кинопоиск переключен на ${persistedApi}.`, "success");
+    return true;
+  } catch (error) {
+    console.error("Failed to switch Kinopoisk API", error);
+    showToastNotification("Не удалось переключить API Кинопоиска.", "error");
+    return false;
+  } finally {
+    isSwitchingKinopoiskApi = false;
+  }
+}
+
+async function handleKinopoiskErrorResponse(response) {
+  if (!response || response.ok) {
+    return { handled: false, switched: false };
+  }
+
+  if (response.status === 402) {
+    showToastNotification("Превышен дневной лимит запросов к Кинопоиску 500 в день.", "error");
+
+    if (kinopoiskQuotaDialogOpen) {
+      return { handled: true, switched: false };
+    }
+
+    const nextApi = getNextAvailableKinopoiskApi(selectedKinopoiskApi);
+    if (!nextApi || nextApi === selectedKinopoiskApi) {
+      return { handled: true, switched: false };
+    }
+
+    kinopoiskQuotaDialogOpen = true;
+    let switched = false;
+    try {
+      const shouldSwitch = window.confirm(
+        `Превышен дневной лимит ${selectedKinopoiskApi}. Переключить Кинопоиск на ${nextApi}?`
+      );
+      if (shouldSwitch) {
+        switched = await switchToNextKinopoiskApi();
+      }
+    } finally {
+      kinopoiskQuotaDialogOpen = false;
+    }
+
+    return { handled: true, switched };
+  }
+
+  return { handled: false, switched: false };
+}
+
+async function fetchKinopoiskJson(url, requestLabel) {
+  const response = await fetch(url, {
+    headers: {
+      "X-API-KEY": kinopoiskApiKey,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (response.ok) {
+    return response.json();
+  }
+
+  const handled = await handleKinopoiskErrorResponse(response);
+  if (handled.switched) {
+    return fetchKinopoiskJson(url, requestLabel);
+  }
+
+  throw new Error(`${requestLabel} failed: ${response.status}`);
+}
 
 function getGuestId() {
   let guestId = localStorage.getItem("guest_id");
@@ -60,6 +242,24 @@ function formatViewerRating(item) {
   return String(Math.round((ratingSum / ratingCount) * 10) / 10).replace(".", ",");
 }
 
+function parseTrailerKinopoiskData(value) {
+  if (!value) return null;
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? parsed
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 function getAdminAuthHeaders() {
   const token = localStorage.getItem("adminToken") || "";
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -80,8 +280,12 @@ async function verifyAdminAccess() {
   if (!envResponse.ok) return false;
 
   const env = await envResponse.json();
-  kinopoiskApiKey =
-    env.KINOPOISK_API_KEY || env.KINOPOISK_API_KEY2 || env.KINOPOISK_API_KEY3 || "";
+  kinopoiskApiKeys = {
+    "API 1": env.KINOPOISK_API_KEY || "",
+    "API 2": env.KINOPOISK_API_KEY2 || "",
+    "API 3": env.KINOPOISK_API_KEY3 || "",
+  };
+  applySelectedKinopoiskApi(env.KINOPOISK_API_SELECTED);
   return Boolean(env.isAdmin);
 }
 
@@ -668,7 +872,7 @@ function renderSelectedTrailer() {
   if (deleteButton) deleteButton.disabled = false;
 
   setStatusText("trailerActionStatus", "");
-  loadKinopoiskInfo(trailer);
+  loadKinopoiskInfoCached(trailer);
 }
 
 async function fetchTrailers() {
@@ -817,19 +1021,10 @@ function openTrailerUserRateModal(trailerId) {
 }
 
 async function searchKinopoiskByTitle(query) {
-  const response = await fetch(
+  const data = await fetchKinopoiskJson(
     `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`,
-    {
-      headers: {
-        "X-API-KEY": kinopoiskApiKey,
-        "Content-Type": "application/json",
-      },
-    }
+    "Kinopoisk search"
   );
-  if (!response.ok) {
-    throw new Error(`Kinopoisk search failed: ${response.status}`);
-  }
-  const data = await response.json();
   return Array.isArray(data?.films) ? data.films : [];
 }
 
@@ -921,32 +1116,17 @@ function debounce(fn, delay) {
 const debouncedTrailerTitleSearch = debounce(runTrailerTitleSearch, 120);
 
 async function fetchKinopoiskDetails(filmId) {
-  const response = await fetch(`${KINOPOISK_FILM_URL}/${encodeURIComponent(filmId)}`, {
-    headers: {
-      "X-API-KEY": kinopoiskApiKey,
-      "Content-Type": "application/json",
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`Kinopoisk details failed: ${response.status}`);
-  }
-  return response.json();
+  return fetchKinopoiskJson(
+    `${KINOPOISK_FILM_URL}/${encodeURIComponent(filmId)}`,
+    "Kinopoisk details"
+  );
 }
 
 async function fetchKinopoiskStaff(filmId) {
-  const response = await fetch(
+  const data = await fetchKinopoiskJson(
     `${KINOPOISK_STAFF_URL}?filmId=${encodeURIComponent(filmId)}`,
-    {
-      headers: {
-        "X-API-KEY": kinopoiskApiKey,
-        "Content-Type": "application/json",
-      },
-    }
+    "Kinopoisk staff"
   );
-  if (!response.ok) {
-    throw new Error(`Kinopoisk staff failed: ${response.status}`);
-  }
-  const data = await response.json();
   return Array.isArray(data) ? data : [];
 }
 
@@ -998,6 +1178,99 @@ function renderKinopoiskMatches(results) {
     `;
     matches.appendChild(button);
   });
+}
+
+function buildTrailerKinopoiskCache(details, staff) {
+  const actorNames = (Array.isArray(staff) ? staff : [])
+    .filter((person) => person?.professionKey === "ACTOR")
+    .slice(0, 12)
+    .map((person) => person.nameRu || person.nameEn)
+    .filter(Boolean);
+
+  return {
+    title: details?.nameRu || details?.nameOriginal || details?.nameEn || "",
+    year: details?.year || null,
+    filmLength: details?.filmLength || null,
+    countries: Array.isArray(details?.countries)
+      ? details.countries.map((item) => item.country).filter(Boolean)
+      : [],
+    genres: Array.isArray(details?.genres)
+      ? details.genres.map((item) => item.genre).filter(Boolean)
+      : [],
+    ratingKinopoisk: details?.ratingKinopoisk || null,
+    ratingImdb: details?.ratingImdb || null,
+    description: details?.description || details?.shortDescription || "",
+    actors: actorNames,
+    releaseDate:
+      details?.premiereRu ||
+      details?.premiereWorld ||
+      details?.releaseDate ||
+      details?.startYear ||
+      null,
+    posterUrl: details?.posterUrl || details?.posterUrlPreview || "",
+    webUrl: details?.webUrl || "",
+    kinopoiskId: details?.kinopoiskId || null,
+  };
+}
+
+function renderStoredKinopoiskInfo(info) {
+  const title = document.getElementById("trailerInfoTitle");
+  const meta = document.getElementById("trailerInfoMeta");
+  const badges = document.getElementById("trailerInfoBadges");
+  const description = document.getElementById("trailerInfoDescription");
+  const actors = document.getElementById("trailerInfoActors");
+  const release = document.getElementById("trailerInfoRelease");
+  const poster = document.getElementById("trailerPoster");
+  const kpLink = document.getElementById("trailerKinopoiskLink");
+
+  if (!title || !meta || !badges || !description || !actors || !release || !poster || !kpLink) {
+    return;
+  }
+
+  const resolvedTitle = info?.title || "Без названия";
+  const genres = Array.isArray(info?.genres) ? info.genres : [];
+  const countries = Array.isArray(info?.countries) ? info.countries : [];
+  const actorNames = Array.isArray(info?.actors) ? info.actors : [];
+
+  title.textContent = resolvedTitle;
+  meta.textContent = [
+    info?.year || "Год не указан",
+    info?.filmLength ? `${info.filmLength} мин.` : "",
+    countries.join(", "),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  badges.innerHTML = "";
+  [
+    info?.ratingKinopoisk ? `КП ${info.ratingKinopoisk}` : "",
+    info?.ratingImdb ? `IMDb ${info.ratingImdb}` : "",
+    genres.length ? genres.join(", ") : "",
+  ]
+    .filter(Boolean)
+    .forEach((label) => {
+      const badge = document.createElement("span");
+      badge.textContent = label;
+      badges.appendChild(badge);
+    });
+
+  description.textContent = info?.description || "Описание не найдено.";
+  actors.textContent = actorNames.length
+    ? actorNames.join(", ")
+    : "Список актёров не найден.";
+  release.textContent = formatDate(info?.releaseDate || "");
+
+  poster.src = info?.posterUrl || POSTER_PLACEHOLDER;
+  poster.alt = resolvedTitle ? `Постер: ${resolvedTitle}` : "Постер фильма";
+  poster.onerror = () => {
+    poster.onerror = null;
+    poster.src = POSTER_PLACEHOLDER;
+  };
+
+  kpLink.href = info?.webUrl || buildKinopoiskFilmUrl(info?.kinopoiskId, resolvedTitle);
+  kpLink.hidden = !kpLink.href || kpLink.href === "#";
+
+  toggleInfoVisibility(true);
 }
 
 function renderKinopoiskInfo(details, staff) {
@@ -1083,14 +1356,13 @@ async function applyKinopoiskSelection(trailer, filmId, searchResults) {
   renderKinopoiskMatches(searchResults || []);
 
   try {
-    const [details, staff] = await Promise.all([
-      fetchKinopoiskDetails(filmId),
-      fetchKinopoiskStaff(filmId),
-    ]);
+    const details = await fetchKinopoiskDetails(filmId);
+    const staff = await fetchKinopoiskStaff(filmId);
 
     if (requestId !== kinopoiskRequestId) return;
 
-    renderKinopoiskInfo(details, staff);
+    const kinopoiskData = buildTrailerKinopoiskCache(details, staff);
+    renderStoredKinopoiskInfo(kinopoiskData);
 
     const nextYear = Number.parseInt(details?.year, 10);
     const nextPoster = details?.posterUrlPreview || details?.posterUrl || "";
@@ -1099,13 +1371,17 @@ async function applyKinopoiskSelection(trailer, filmId, searchResults) {
     const needsPatch =
       Number(trailer.kinopoisk_id || 0) !== Number(filmId) ||
       Number(trailer.year || 0) !== Number(normalizedYear || 0) ||
-      String(trailer.poster || "") !== String(normalizedPoster || "");
+      String(trailer.poster || "") !== String(normalizedPoster || "") ||
+      JSON.stringify(parseTrailerKinopoiskData(trailer.kinopoisk_data) || null) !==
+        JSON.stringify(kinopoiskData);
 
     if (needsPatch) {
       await patchTrailer(trailer.id, {
         kinopoisk_id: filmId,
         year: normalizedYear,
         poster: normalizedPoster,
+        kinopoisk_data: kinopoiskData,
+        kinopoisk_cached_at: new Date().toISOString(),
       });
     }
   } catch (error) {
@@ -1115,7 +1391,13 @@ async function applyKinopoiskSelection(trailer, filmId, searchResults) {
   }
 }
 
+/*
 async function loadKinopoiskInfo(trailer) {
+  const cachedKinopoiskData = parseTrailerKinopoiskData(trailer?.kinopoisk_data);
+  if (cachedKinopoiskData) {
+    renderStoredKinopoiskInfo(cachedKinopoiskData);
+    return;
+  }
   if (!trailer) {
     resetKinopoiskInfo("Выберите трейлер для поиска информации.");
     return;
@@ -1129,8 +1411,12 @@ async function loadKinopoiskInfo(trailer) {
   }
 
   try {
-    const searchResults = await searchKinopoiskByTitle(trailer.title);
-    renderKinopoiskMatches(searchResults);
+    let searchResults = [];
+    let chosenId = trailer.kinopoisk_id || null;
+
+    if (!chosenId) {
+      searchResults = await searchKinopoiskByTitle(trailer.title);
+      renderKinopoiskMatches(searchResults);
 
     if (!searchResults.length && !trailer.kinopoisk_id) {
       resetKinopoiskInfo("На Кинопоиске ничего не найдено по текущему названию.");
@@ -1141,6 +1427,60 @@ async function loadKinopoiskInfo(trailer) {
       trailer.kinopoisk_id ||
       pickBestKinopoiskMatch(searchResults, trailer)?.filmId ||
       null;
+
+    if (!chosenId) {
+      resetKinopoiskInfo("Не удалось подобрать фильм на Кинопоиске автоматически.");
+      return;
+    }
+
+    await applyKinopoiskSelection(trailer, chosenId, searchResults);
+  } catch (error) {
+    console.error("Kinopoisk search failed", error);
+    resetKinopoiskInfo("Не удалось выполнить поиск на Кинопоиске.");
+  }
+}
+
+*/
+async function loadKinopoiskInfo(trailer) {
+  return loadKinopoiskInfoCached(trailer);
+}
+
+async function loadKinopoiskInfoCached(trailer) {
+  if (!trailer) {
+    resetKinopoiskInfo("Выберите трейлер для поиска информации.");
+    return;
+  }
+
+  const cachedKinopoiskData = parseTrailerKinopoiskData(trailer.kinopoisk_data);
+  if (cachedKinopoiskData) {
+    renderStoredKinopoiskInfo(cachedKinopoiskData);
+    return;
+  }
+
+  if (!kinopoiskApiKey) {
+    resetKinopoiskInfo(
+      "API-ключ Кинопоиска не найден. Плеер и список будут работать без карточки фильма."
+    );
+    return;
+  }
+
+  try {
+    let searchResults = [];
+    let chosenId = trailer.kinopoisk_id || null;
+
+    if (!chosenId) {
+      searchResults = await searchKinopoiskByTitle(trailer.title);
+      renderKinopoiskMatches(searchResults);
+
+      if (!searchResults.length) {
+        resetKinopoiskInfo("На Кинопоиске ничего не найдено по текущему названию.");
+        return;
+      }
+
+      chosenId = pickBestKinopoiskMatch(searchResults, trailer)?.filmId || null;
+    } else {
+      renderKinopoiskMatches([]);
+    }
 
     if (!chosenId) {
       resetKinopoiskInfo("Не удалось подобрать фильм на Кинопоиске автоматически.");

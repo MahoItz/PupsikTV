@@ -6,7 +6,10 @@ const TABLE_NAME = "trailer_watchlist";
 const ALLOWED_METHODS = ["GET", "POST", "PATCH", "DELETE"];
 const VALID_STATUSES = new Set(["planned", "watched"]);
 const PG_UNDEFINED_TABLE = "42P01";
+const PG_UNDEFINED_COLUMN = "42703";
 const PG_INSUFFICIENT_PRIVILEGE = "42501";
+const SELECT_FIELDS =
+  "id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, kinopoisk_data, kinopoisk_cached_at, watched_at, created_at, updated_at";
 
 function createSupabaseClient() {
   const supabaseKey =
@@ -80,8 +83,25 @@ function normalizeString(value, maxLength) {
   return String(value || "").trim().slice(0, maxLength);
 }
 
+function normalizeJsonObject(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value;
+}
+
+function parseIsoDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function isMissingTableError(error) {
   return String(error?.code || "") === PG_UNDEFINED_TABLE;
+}
+
+function isMissingColumnError(error) {
+  return String(error?.code || "") === PG_UNDEFINED_COLUMN;
 }
 
 function isPermissionError(error) {
@@ -106,6 +126,8 @@ function normalizeCreatePayload(payload) {
     poster: normalizeString(payload?.poster, 1000) || null,
     status: normalizeStatus(payload?.status, "planned"),
     streamer_rating: parseRating(payload?.streamer_rating),
+    kinopoisk_data: normalizeJsonObject(payload?.kinopoisk_data),
+    kinopoisk_cached_at: parseIsoDate(payload?.kinopoisk_cached_at),
     watched_at: payload?.watched_at ? new Date(payload.watched_at).toISOString() : null,
   };
 }
@@ -147,6 +169,14 @@ function normalizePatchPayload(payload) {
     changes.streamer_rating = parseRating(payload.streamer_rating);
   }
 
+  if (Object.prototype.hasOwnProperty.call(payload, "kinopoisk_data")) {
+    changes.kinopoisk_data = normalizeJsonObject(payload.kinopoisk_data);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, "kinopoisk_cached_at")) {
+    changes.kinopoisk_cached_at = parseIsoDate(payload.kinopoisk_cached_at);
+  }
+
   if (Object.prototype.hasOwnProperty.call(payload, "status")) {
     const status = normalizeStatus(payload.status, "planned");
     changes.status = status;
@@ -168,7 +198,7 @@ function normalizePatchPayload(payload) {
 async function listTrailers(supabase, res) {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select("id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, watched_at, created_at, updated_at")
+    .select(SELECT_FIELDS)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -179,6 +209,14 @@ async function listTrailers(supabase, res) {
         setupRequired: true,
         message:
           "Таблица trailer_watchlist ещё не создана. Примените SQL-миграцию для страницы трейлеров.",
+      });
+    }
+    if (isMissingColumnError(error)) {
+      return res.status(200).json({
+        items: [],
+        setupRequired: true,
+        message:
+          "В trailer_watchlist не хватает колонок kinopoisk_data и kinopoisk_cached_at для кэша карточки фильма.",
       });
     }
     if (isPermissionError(error)) {
@@ -214,7 +252,7 @@ async function createTrailer(supabase, req, res) {
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .insert(normalized)
-    .select("id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, watched_at, created_at, updated_at")
+    .select(SELECT_FIELDS)
     .single();
 
   if (error) {
@@ -223,6 +261,13 @@ async function createTrailer(supabase, req, res) {
       return res.status(503).json({
         error:
           "Таблица trailer_watchlist ещё не создана. Примените SQL-миграцию для страницы трейлеров.",
+        setupRequired: true,
+      });
+    }
+    if (isMissingColumnError(error)) {
+      return res.status(503).json({
+        error:
+          "В trailer_watchlist не хватает колонок kinopoisk_data и kinopoisk_cached_at для кэша карточки фильма.",
         setupRequired: true,
       });
     }
@@ -265,7 +310,7 @@ async function updateTrailer(supabase, req, res) {
     .from(TABLE_NAME)
     .update(changes)
     .eq("id", id)
-    .select("id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, watched_at, created_at, updated_at")
+    .select(SELECT_FIELDS)
     .single();
 
   if (error) {
@@ -274,6 +319,13 @@ async function updateTrailer(supabase, req, res) {
       return res.status(503).json({
         error:
           "Таблица trailer_watchlist ещё не создана. Примените SQL-миграцию для страницы трейлеров.",
+        setupRequired: true,
+      });
+    }
+    if (isMissingColumnError(error)) {
+      return res.status(503).json({
+        error:
+          "В trailer_watchlist не хватает колонок kinopoisk_data и kinopoisk_cached_at для кэша карточки фильма.",
         setupRequired: true,
       });
     }
