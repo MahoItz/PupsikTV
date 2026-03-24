@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pupsik TV — Трейлеры</title>
+  <link rel="icon" href="images/Pupsik_TV_Icon.webp">
+  <link rel="stylesheet" href="/style/base.css">
+  <link rel="stylesheet" href="/style/buttons.css">
+  <link rel="stylesheet" href="/style/forms.css">
+  <link rel="stylesheet" href="/style/trailers.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="trailers-page">
+  <main class="trailers-shell">
+    <a class="trailers-back-link" href="/" aria-label="На главную">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      <span>На главную</span>
+    </a>
+
+    <section class="trailers-header">
+      <h1>Трейлеры на стрим</h1>
+      <p>Добавляй трейлеры заранее, запускай их на стриме и фиксируй оценку после просмотра.</p>
+    </section>
+
+    <section class="trailers-card">
+      <h2>Добавить трейлер</h2>
+      <form id="trailerForm" class="trailers-form">
+        <label>
+          Название фильма
+          <input id="trailerTitle" type="text" required placeholder="Например: Dune: Part Three">
+        </label>
+        <label>
+          Ссылка YouTube
+          <input id="trailerUrl" type="url" required placeholder="https://www.youtube.com/watch?v=...">
+        </label>
+        <button type="submit" class="btn">Добавить в список</button>
+      </form>
+      <p id="trailerFormError" class="trailers-error" hidden></p>
+    </section>
+
+    <section class="trailers-layout">
+      <article class="trailers-card">
+        <div class="trailers-card__header">
+          <h2>Список к просмотру</h2>
+          <span id="pendingCount" class="trailers-counter">0</span>
+        </div>
+        <div id="pendingList" class="trailers-list"></div>
+      </article>
+
+      <article class="trailers-card trailers-player-card">
+        <h2 id="playerTitle">Выбери трейлер из списка</h2>
+        <div class="trailers-player-wrap">
+          <iframe id="trailerPlayer" title="Плеер YouTube" loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+        </div>
+
+        <div class="trailers-rating">
+          <label for="trailerRating">Оценка после просмотра</label>
+          <div class="trailers-rating__controls">
+            <input id="trailerRating" type="number" min="1" max="10" step="1" placeholder="1-10">
+            <button id="saveRatingButton" class="btn" type="button" disabled>Сохранить оценку</button>
+          </div>
+          <p id="ratingError" class="trailers-error" hidden></p>
+        </div>
+
+        <div id="kinopoiskCard" class="trailers-kp" hidden>
+          <h3>Данные Кинопоиска</h3>
+          <p id="kpStatus" class="trailers-kp__status"></p>
+          <div id="kpInfo" hidden>
+            <p><strong>Название:</strong> <span id="kpTitle"></span></p>
+            <p><strong>Описание:</strong> <span id="kpDescription"></span></p>
+            <p><strong>Актёры:</strong> <span id="kpActors"></span></p>
+            <p><strong>Дата выхода:</strong> <span id="kpReleaseDate"></span></p>
+            <a id="kpLink" target="_blank" rel="noopener noreferrer">Открыть на Кинопоиске</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="trailers-card">
+        <div class="trailers-card__header">
+          <h2>Просмотрено</h2>
+          <span id="watchedCount" class="trailers-counter">0</span>
+        </div>
+        <div id="watchedList" class="trailers-list"></div>
+      </article>
+    </section>
+  </main>
+
+  <script src="/script/trailers.js" defer></script>
+</body>
+
+</html>
