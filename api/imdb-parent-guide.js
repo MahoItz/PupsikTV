@@ -402,6 +402,8 @@ async function handler(req, res) {
 
   try {
     const imdbUrl = `https://m.imdb.com/title/${encodeURIComponent(id)}/parentalguide`;
+    const mobileUserAgent =
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
     const maxAttempts = 3;
     const baseDelayMs = 600;
     let imdbResponse = null;
@@ -411,9 +413,20 @@ async function handler(req, res) {
       try {
         imdbResponse = await fetch(imdbUrl, {
           headers: {
-            "User-Agent": "Mozilla/5.0 (compatible; PupsikTV/1.0)",
+            "User-Agent": mobileUserAgent,
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            Referer: "https://m.imdb.com/",
           },
+          redirect: "follow",
         });
+
+        if (!String(imdbResponse.url || "").startsWith("https://m.imdb.com/")) {
+          throw new Error(
+            `Unexpected IMDb host after redirects: ${imdbResponse.url || "unknown"}`
+          );
+        }
 
         if (imdbResponse.ok) {
           break;
