@@ -64,7 +64,6 @@ function isParentGuideNoiseLine(text) {
   const noisePatterns = [
     /add an item/,
     /rate this title for sex\s*(?:&|and)\s*nudity/,
-    /\bfound this to have\b/,
     /\b\d+\s+of\s+\d+\b/,
     /\bvote\b/,
     /see all parent guides?/,
@@ -74,12 +73,30 @@ function isParentGuideNoiseLine(text) {
   return noisePatterns.some((pattern) => pattern.test(normalizedNoIndex));
 }
 
+function sanitizeParentGuideLine(text) {
+  let normalized = cleanText(text);
+  if (!normalized) {
+    return "";
+  }
+
+  // IMDb often appends voting helpers to real advisory text:
+  // "... 23 of 31 found this to have a severe rating"
+  normalized = normalized
+    .replace(/\s+\d+\s+of\s+\d+\s+found this to have\b[\s\S]*$/i, "")
+    .replace(/\s+\d+\s+out of\s+\d+\s+found this helpful\b[\s\S]*$/i, "")
+    .replace(/\s+edit$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return normalized;
+}
+
 function dedupeItems(items = []) {
   const seen = new Set();
   const result = [];
 
   for (const item of items) {
-    const normalized = cleanText(item);
+    const normalized = sanitizeParentGuideLine(item);
     if (!normalized || normalized.length < 2) {
       continue;
     }
