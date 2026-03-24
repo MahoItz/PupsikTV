@@ -449,8 +449,37 @@ function parseMirrorParentGuideText(rawText) {
   return dedupeItems(items);
 }
 
+function buildDebugSnapshot(rawText) {
+  const text = String(rawText || "");
+  if (!text) {
+    return {
+      length: 0,
+      hasCaptcha: false,
+      hasConsent: false,
+      hasRobotCheck: false,
+      excerpt: "",
+    };
+  }
+
+  const lower = text.toLowerCase();
+  return {
+    length: text.length,
+    hasCaptcha: lower.includes("captcha"),
+    hasConsent:
+      lower.includes("consent") ||
+      lower.includes("privacy choices") ||
+      lower.includes("cookie"),
+    hasRobotCheck:
+      lower.includes("not a robot") ||
+      lower.includes("verify you are human") ||
+      lower.includes("automated access"),
+    excerpt: cleanText(text).slice(0, 600),
+  };
+}
+
 async function handler(req, res) {
   const { id } = req.query || {};
+  const debugMode = String(req.query?.debug || "") === "1";
   if (!id) {
     res.status(400).json({ error: "Missing IMDb title id" });
     return;
@@ -506,6 +535,7 @@ async function handler(req, res) {
     const baseDelayMs = 600;
     let lastError = null;
     let fallbackResult = null;
+    const candidateDebug = [];
 
     for (const candidate of imdbCandidates) {
       const { url: imdbUrl, allowedHost, source } = candidate;
@@ -558,10 +588,28 @@ async function handler(req, res) {
       }
 
       if (!imdbResponse || !imdbResponse.ok) {
+        if (debugMode) {
+          candidateDebug.push({
+            source,
+            url: imdbUrl,
+            status: imdbResponse?.status || null,
+            ok: false,
+          });
+        }
         continue;
       }
 
       const html = await imdbResponse.text();
+      if (debugMode) {
+        candidateDebug.push({
+          source,
+          url: imdbUrl,
+          status: imdbResponse.status,
+          ok: true,
+          finalUrl: imdbResponse.url || null,
+          snapshot: buildDebugSnapshot(html),
+        });
+      }
       const parsed = parseParentGuide(html);
       let hasContent = hasParentGuideContent(parsed.sections);
       let parsedResult = parsed;
@@ -595,7 +643,11 @@ async function handler(req, res) {
           .status(200)
           .json({
             original: parsedResult.sections,
-            meta: { ...parsedResult.meta, source },
+            meta: {
+              ...parsedResult.meta,
+              source,
+              ...(debugMode ? { debug: candidateDebug } : {}),
+            },
           });
         return;
       }
@@ -605,7 +657,11 @@ async function handler(req, res) {
           .status(200)
           .json({
             original: parsedResult.sections,
-            meta: { ...parsedResult.meta, source },
+            meta: {
+              ...parsedResult.meta,
+              source,
+              ...(debugMode ? { debug: candidateDebug } : {}),
+            },
           });
         return;
       }
@@ -623,6 +679,7 @@ async function handler(req, res) {
         meta: {
           ...fallbackResult.parsed.meta,
           source: fallbackResult.source,
+          ...(debugMode ? { debug: candidateDebug } : {}),
         },
       });
       return;
@@ -635,6 +692,7 @@ async function handler(req, res) {
         meta: {
           ...fallbackResult.parsed.meta,
           source: fallbackResult.source,
+          ...(debugMode ? { debug: candidateDebug } : {}),
         },
       });
       return;
