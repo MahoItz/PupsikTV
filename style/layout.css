@@ -4,7 +4,7 @@
     margin: 0 auto;
     padding: var(--container-side-padding);
     min-height: 100vh;
-    padding-top: 90px;
+    padding-top: 110px;
 }
 
 header {
@@ -14,6 +14,7 @@ header {
     backdrop-filter: blur(20px);
     border-radius: 24px;
     position: relative;
+    z-index: 12;
     overflow: visible;
     padding: 40px 20px 10px;
     border: 1px solid rgba(255, 0, 0, 0.1);
@@ -85,7 +86,7 @@ header h1 {
 
 header img {
     position: relative;
-    z-index: 10;
+    z-index: 14;
     max-width: min(280px, 70vw);
     height: auto;
     margin: -100px auto 0;

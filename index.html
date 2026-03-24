@@ -31,12 +31,16 @@
 <body>
     
     <div class="container">
-        <div class="top-left-actions">
+        <div class="top-left-actions top-left-actions--bar">
+            <a href="/" class="top-left-actions__brand" aria-label="PupsikTV">
+                <img src="images/Pupsik_TV_Icon.webp" alt="PupsikTV">
+                <span>PupsikTV</span>
+            </a>
             <button id="topLeftActionsToggle" class="top-left-actions__toggle" type="button"
                 aria-label="Открыть быстрые действия" aria-expanded="false" aria-controls="topLeftActionsMenu">
                 <i class="fa-solid fa-bars" aria-hidden="true"></i>
             </button>
-            <div id="topLeftActionsMenu" class="top-left-actions__menu" hidden>
+            <div id="topLeftActionsMenu" class="top-left-actions__menu">
                 <a href="/admin-player.html" class="admin-player-link admin-only" aria-label="Открыть страницу плеера">
                     <span class="top-left-actions__label">Плеер</span>
                 </a>
@@ -81,6 +85,8 @@
                     aria-label="Discord" class="social-link"><i class="fab fa-discord"></i></a>
             </nav>
         </header>
+
+        
 
         <div class="main-content">
             <div class="left-panel">

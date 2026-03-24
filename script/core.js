@@ -376,6 +376,7 @@ function initTopLeftActionsMenu() {
 
   const musicButton = document.getElementById("musicMenuButton");
   const settingsButton = document.getElementById("settingsToggleButton");
+  const rulesButton = document.getElementById("rulesPanelToggleButton");
   if (
     !topLeftActions ||
     !topLeftActionsToggle ||
@@ -397,12 +398,26 @@ function initTopLeftActionsMenu() {
     }
   };
 
+  const isPinnedBar = topLeftActions.classList.contains("top-left-actions--bar");
+
   decorateMenuButton(musicButton, "Рулетка");
   topLeftActionsMenu.prepend(musicButton);
 
-  if (settingsButton) {
+  if (settingsButton && !isPinnedBar) {
     decorateMenuButton(settingsButton, "Настройки");
     topLeftActionsMenu.appendChild(settingsButton);
+  }
+
+  if (rulesButton) {
+    decorateMenuButton(rulesButton, "Правила");
+    topLeftActionsMenu.appendChild(rulesButton);
+  }
+
+  if (isPinnedBar) {
+    topLeftActionsMenu.removeAttribute("hidden");
+    topLeftActionsToggle.hidden = true;
+    topLeftActionsToggle.setAttribute("aria-expanded", "true");
+    return;
   }
 
   topLeftActionsToggle.addEventListener("click", (event) => {
