@@ -438,27 +438,99 @@ function renderTrailerItem(item) {
 
 function renderTrailerLists() {
   const plannedList = document.getElementById("plannedTrailerList");
-  const watchedList = document.getElementById("watchedTrailerList");
   const plannedEmpty = document.getElementById("plannedTrailerEmpty");
-  const watchedEmpty = document.getElementById("watchedTrailerEmpty");
   const plannedCount = document.getElementById("plannedCount");
   const watchedCount = document.getElementById("watchedCount");
 
-  if (!plannedList || !watchedList) return;
+  if (!plannedList) return;
 
   const planned = trailers.filter((item) => item.status !== "watched");
   const watched = trailers.filter((item) => item.status === "watched");
 
   plannedList.innerHTML = "";
-  watchedList.innerHTML = "";
-
   planned.forEach((item) => plannedList.appendChild(renderTrailerItem(item)));
-  watched.forEach((item) => watchedList.appendChild(renderTrailerItem(item)));
 
   if (plannedEmpty) plannedEmpty.hidden = planned.length > 0;
-  if (watchedEmpty) watchedEmpty.hidden = watched.length > 0;
   if (plannedCount) plannedCount.textContent = String(planned.length);
   if (watchedCount) watchedCount.textContent = String(watched.length);
+
+  renderWatchedTrailersGrid(watched);
+}
+
+function renderWatchedTrailerCard(item) {
+  const card = document.createElement("div");
+  card.className = "movie-card trailer-watched-card";
+  card.tabIndex = 0;
+  card.dataset.id = String(item.id);
+
+  const poster = document.createElement("img");
+  poster.src = item.poster || POSTER_PLACEHOLDER;
+  poster.alt = item.title || "Постер трейлера";
+  poster.className = "movie-poster";
+  poster.loading = "lazy";
+  poster.onerror = () => {
+    poster.onerror = null;
+    poster.src = POSTER_PLACEHOLDER;
+  };
+
+  const info = document.createElement("div");
+  info.className = "movie-info";
+
+  const title = document.createElement("div");
+  title.className = "movie-title";
+  title.textContent = item.title || "Без названия";
+
+  const year = document.createElement("div");
+  year.className = "movie-year";
+  year.textContent = item.year ? String(item.year) : "Год не указан";
+
+  const ratingDiv = document.createElement("div");
+  ratingDiv.className = "movie-rating";
+
+  const streamerItem = document.createElement("div");
+  streamerItem.className = "rating-item";
+  streamerItem.innerHTML = `
+    <img src="/images/Pupsik_TV_Icon.webp" alt="Pupsik Rate">
+    <span>${item.streamer_rating ?? "-"}</span>
+  `;
+
+  const viewerItem = document.createElement("div");
+  viewerItem.className = "rating-item rating-user";
+  viewerItem.innerHTML = `
+    <i class="fa-solid fa-star" aria-hidden="true"></i>
+    <span>-</span>
+  `;
+
+  ratingDiv.append(streamerItem, viewerItem);
+  info.append(title, year, ratingDiv);
+  card.append(poster, info);
+
+  const handleOpen = () => {
+    selectedTrailerId = Number(item.id);
+    renderSelectedTrailer();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  card.addEventListener("click", handleOpen);
+  card.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    handleOpen();
+  });
+
+  return card;
+}
+
+function renderWatchedTrailersGrid(watchedList) {
+  const grid = document.getElementById("watchedTrailersGrid");
+  const empty = document.getElementById("watchedTrailersEmpty");
+  if (!grid) return;
+
+  const watched = Array.isArray(watchedList) ? watchedList : [];
+  grid.innerHTML = "";
+  watched.forEach((item) => grid.appendChild(renderWatchedTrailerCard(item)));
+
+  if (empty) empty.hidden = watched.length > 0;
 }
 
 function toggleInfoVisibility(hasContent) {
@@ -470,17 +542,11 @@ function toggleInfoVisibility(hasContent) {
 
 function resetKinopoiskInfo(message) {
   toggleInfoVisibility(false);
-  const matches = document.getElementById("trailerKinopoiskMatches");
   const link = document.getElementById("trailerKinopoiskLink");
-  if (matches) matches.innerHTML = "";
   if (link) {
     link.hidden = true;
     link.href = "#";
   }
-  setStatusText(
-    "trailerKinopoiskStatus",
-    message || "Выберите трейлер для поиска информации."
-  );
 }
 
 function renderSelectedTrailer() {
@@ -887,7 +953,6 @@ function renderKinopoiskInfo(details, staff) {
 
 async function applyKinopoiskSelection(trailer, filmId, searchResults) {
   const requestId = ++kinopoiskRequestId;
-  setStatusText("trailerKinopoiskStatus", "Загружаю данные Кинопоиска...");
   renderKinopoiskMatches(searchResults || []);
 
   try {
@@ -899,7 +964,6 @@ async function applyKinopoiskSelection(trailer, filmId, searchResults) {
     if (requestId !== kinopoiskRequestId) return;
 
     renderKinopoiskInfo(details, staff);
-    setStatusText("trailerKinopoiskStatus", "Информация загружена.");
 
     const nextYear = Number.parseInt(details?.year, 10);
     const nextPoster = details?.posterUrlPreview || details?.posterUrl || "";
@@ -973,9 +1037,6 @@ function setupListEvents() {
 
   document
     .getElementById("plannedTrailerList")
-    ?.addEventListener("click", clickHandler);
-  document
-    .getElementById("watchedTrailerList")
     ?.addEventListener("click", clickHandler);
 
   document

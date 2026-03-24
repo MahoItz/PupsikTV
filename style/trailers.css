@@ -26,13 +26,16 @@
   display: grid;
   gap: 18px;
   padding: 20px;
-  position: sticky;
-  top: 16px;
 }
 
 .trailer-main {
   display: grid;
   gap: 18px;
+}
+
+.trailer-watched-panel {
+  grid-column: 1 / -1;
+  padding: 20px;
 }
 
 .trailer-player-panel,
@@ -139,10 +142,6 @@
   gap: 10px;
 }
 
-.trailer-list--compact .trailer-item {
-  grid-template-columns: 44px 1fr auto;
-}
-
 .trailer-item {
   width: 100%;
   display: grid;
@@ -243,6 +242,72 @@
   border-color: rgba(255, 208, 0, 0.42);
   background: rgba(255, 208, 0, 0.12);
   transform: translateY(-1px);
+}
+
+.trailer-watched-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 25px;
+  margin-top: 12px;
+}
+
+.trailer-watched-card .movie-poster {
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.trailer-watched-card {
+  cursor: pointer;
+}
+
+.trailer-watched-card:hover,
+.trailer-watched-card:focus-visible {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 0 30px rgba(0, 212, 255, 0.3);
+  border-color: var(--secondary-color);
+  outline: none;
+}
+
+.trailer-watched-card .movie-info {
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.trailer-watched-card .movie-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.trailer-watched-card .movie-year {
+  color: rgba(212, 244, 255, 0.72);
+  font-size: 0.84rem;
+}
+
+.trailer-watched-card .movie-rating {
+  margin-bottom: 0;
+  gap: 8px;
+  padding: 8px 0 0;
+}
+
+.trailer-watched-card .movie-rating .rating-item {
+  flex: 1 1 calc(50% - 5px);
+  padding: 6px 8px;
+  gap: 6px;
+}
+
+.trailer-watched-card .movie-rating img {
+  width: 22px;
+  height: 22px;
+}
+
+.trailer-watched-card .movie-rating span {
+  font-size: 0.9rem;
 }
 
 .trailer-empty {
@@ -369,8 +434,6 @@
 .trailer-info {
   display: grid;
   gap: 18px;
-  position: sticky;
-  top: 16px;
 }
 
 .trailer-kinopoisk-button {
@@ -508,15 +571,15 @@
     grid-column: 1 / -1;
     position: static;
   }
+
+  .trailer-watched-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 860px) {
   .trailer-app {
     grid-template-columns: 1fr;
-  }
-
-  .trailer-sidebar {
-    position: static;
   }
 
   .trailer-info__hero {
@@ -535,5 +598,21 @@
 
   .trailer-player-panel__header {
     flex-direction: column;
+  }
+
+  .trailer-watched-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .trailer-watched-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .trailer-watched-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/style/forms.css">
   <link rel="stylesheet" href="/style/autocomplete.css">
   <link rel="stylesheet" href="/style/modals.css">
+  <link rel="stylesheet" href="/style/movies.css">
   <link rel="stylesheet" href="/style/ratings.css">
   <link rel="stylesheet" href="/style/admin-player.css">
   <link rel="stylesheet" href="/style/trailers.css">
@@ -62,15 +63,6 @@
           </div>
           <div id="plannedTrailerList" class="trailer-list" aria-live="polite"></div>
           <p id="plannedTrailerEmpty" class="trailer-empty">Пока список пуст.</p>
-        </section>
-
-        <section class="trailer-list-section">
-          <div class="trailer-list-section__header">
-            <h2>Просмотренные</h2>
-            <span id="watchedCount" class="trailer-count-chip trailer-count-chip--watched">0</span>
-          </div>
-          <div id="watchedTrailerList" class="trailer-list trailer-list--compact" aria-live="polite"></div>
-          <p id="watchedTrailerEmpty" class="trailer-empty">Оценённых трейлеров ещё нет.</p>
         </section>
       </section>
 
@@ -173,13 +165,16 @@
             <p id="trailerInfoRelease" class="trailer-info__description"></p>
           </div>
         </div>
-
-        <div class="trailer-info__block">
-          <h4>Поиск на Кинопоиске</h4>
-          <p id="trailerKinopoiskStatus" class="trailer-info__description">Выберите трейлер для поиска информации.</p>
-          <div id="trailerKinopoiskMatches" class="trailer-kp-matches"></div>
-        </div>
       </aside>
+
+      <section class="trailer-watched-panel trailer-panel">
+        <div class="trailer-list-section__header">
+          <h2>Просмотренные</h2>
+          <span id="watchedCount" class="trailer-count-chip trailer-count-chip--watched">0</span>
+        </div>
+        <div id="watchedTrailersGrid" class="trailer-watched-grid" aria-live="polite"></div>
+        <p id="watchedTrailersEmpty" class="trailer-empty">Оценённых трейлеров ещё нет.</p>
+      </section>
     </main>
 
     <section id="trailersAccessDenied" class="admin-player-denied trailer-panel" hidden>
