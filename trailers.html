@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pupsik TV - Трейлеры</title>
+  <link rel="icon" href="images/Pupsik_TV_Icon.webp">
+  <link rel="stylesheet" href="/style/base.css">
+  <link rel="stylesheet" href="/style/loaders.css">
+  <link rel="stylesheet" href="/style/buttons.css">
+  <link rel="stylesheet" href="/style/controls.css">
+  <link rel="stylesheet" href="/style/forms.css">
+  <link rel="stylesheet" href="/style/autocomplete.css">
+  <link rel="stylesheet" href="/style/modals.css">
+  <link rel="stylesheet" href="/style/admin-player.css">
+  <link rel="stylesheet" href="/style/trailers.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+  <div class="admin-player-page trailer-page">
+    <a class="admin-player-page__back" href="/" aria-label="Назад на главную">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      <span>На главную</span>
+    </a>
+
+    <main id="trailersApp" class="trailer-app" hidden>
+      <section class="trailer-sidebar trailer-panel">
+        <div class="trailer-section-heading">
+          <p class="trailer-section-heading__eyebrow">PupsikTV</p>
+          <h1>Трейлеры к стриму</h1>
+          <p class="trailer-section-heading__text">
+            Подготовка списка, запуск YouTube-трейлеров и быстрые оценки после просмотра.
+          </p>
+        </div>
+
+        <form id="trailerAddForm" class="trailer-form">
+          <label class="trailer-form__field" for="trailerTitleInput">
+            <span>Название фильма</span>
+            <input id="trailerTitleInput" class="search-input" type="text" maxlength="300" placeholder="Например, 28 лет спустя" required>
+          </label>
+          <div id="trailerTitleResultsContainer" class="fortune-autocomplete" style="display:none;">
+            <div id="trailerTitleResults" class="autocomplete-list"></div>
+          </div>
+          <label class="trailer-form__field" for="trailerUrlInput">
+            <span>Ссылка на YouTube</span>
+            <input id="trailerUrlInput" class="search-input" type="url" maxlength="1000" placeholder="https://www.youtube.com/watch?v=..." required>
+          </label>
+          <button id="trailerAddButton" class="btn btn-primary trailer-form__submit" type="submit">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            <span>Добавить трейлер</span>
+          </button>
+          <p id="trailerFormStatus" class="trailer-form__status" aria-live="polite"></p>
+        </form>
+
+        <section class="trailer-list-section">
+          <div class="trailer-list-section__header">
+            <h2>Запланированные</h2>
+            <span id="plannedCount" class="trailer-count-chip">0</span>
+          </div>
+          <div id="plannedTrailerList" class="trailer-list" aria-live="polite"></div>
+          <p id="plannedTrailerEmpty" class="trailer-empty">Пока список пуст.</p>
+        </section>
+
+        <section class="trailer-list-section">
+          <div class="trailer-list-section__header">
+            <h2>Просмотренные</h2>
+            <span id="watchedCount" class="trailer-count-chip trailer-count-chip--watched">0</span>
+          </div>
+          <div id="watchedTrailerList" class="trailer-list trailer-list--compact" aria-live="polite"></div>
+          <p id="watchedTrailerEmpty" class="trailer-empty">Оценённых трейлеров ещё нет.</p>
+        </section>
+      </section>
+
+      <section class="trailer-main">
+        <section class="trailer-player-panel trailer-panel">
+          <div class="trailer-player-panel__header">
+            <div>
+              <p class="trailer-player-panel__eyebrow">YouTube</p>
+              <h2 id="trailerPlayerTitle">Выберите трейлер из списка</h2>
+            </div>
+            <a id="trailerOpenYoutube" class="btn btn-secondary" href="#" target="_blank" rel="noopener noreferrer" aria-disabled="true">
+              Открыть на YouTube
+            </a>
+          </div>
+
+          <div class="trailer-embed-wrap">
+            <iframe id="trailerPlayerFrame" class="trailer-embed" title="Плеер трейлера" loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin" allowfullscreen src="about:blank"></iframe>
+            <div id="trailerPlayerPlaceholder" class="trailer-embed-placeholder">
+              <i class="fa-brands fa-youtube" aria-hidden="true"></i>
+              <p>Здесь появится YouTube-плеер выбранного трейлера.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="trailer-rating-panel trailer-panel">
+          <div class="trailer-list-section__header">
+            <h2>Оценка после просмотра</h2>
+          </div>
+          <div class="trailer-rating-panel__controls">
+            <label class="trailer-rating-panel__field" for="trailerRatingSelect">
+              <span>Оценка стримера</span>
+              <select id="trailerRatingSelect">
+                <option value="">Не выбрано</option>
+                <option value="1">1/10</option>
+                <option value="2">2/10</option>
+                <option value="3">3/10</option>
+                <option value="4">4/10</option>
+                <option value="5">5/10</option>
+                <option value="6">6/10</option>
+                <option value="7">7/10</option>
+                <option value="8">8/10</option>
+                <option value="9">9/10</option>
+                <option value="10">10/10</option>
+              </select>
+            </label>
+            <button id="trailerMarkWatchedButton" class="btn btn-primary" type="button">Сохранить оценку</button>
+            <button id="trailerReturnPlannedButton" class="btn btn-secondary" type="button">Вернуть в план</button>
+            <button id="trailerDeleteButton" class="btn btn-secondary trailer-delete-button" type="button">Удалить</button>
+          </div>
+          <p id="trailerActionStatus" class="trailer-form__status" aria-live="polite"></p>
+        </section>
+      </section>
+
+      <aside class="trailer-info trailer-panel">
+        <div class="trailer-list-section__header">
+          <h2>Информация о фильме</h2>
+          <a id="trailerKinopoiskLink" class="trailer-external-link" href="#" target="_blank" rel="noopener noreferrer" hidden>
+            Открыть на Кинопоиске
+          </a>
+        </div>
+
+        <div id="trailerInfoEmpty" class="trailer-info__empty">
+          Выберите трейлер, и здесь появятся постер, описание, актёры и дата выхода.
+        </div>
+
+        <div id="trailerInfoContent" class="trailer-info__content" hidden>
+          <div class="trailer-info__hero">
+            <div class="trailer-info__poster-wrap">
+              <img id="trailerPoster" class="trailer-info__poster" src="/images/placeholder-poster.webp" alt="Постер фильма">
+            </div>
+            <div class="trailer-info__headline">
+              <h3 id="trailerInfoTitle">Без названия</h3>
+              <p id="trailerInfoMeta" class="trailer-info__meta"></p>
+              <div id="trailerInfoBadges" class="trailer-info__badges"></div>
+            </div>
+          </div>
+
+          <div class="trailer-info__block">
+            <h4>Описание</h4>
+            <p id="trailerInfoDescription" class="trailer-info__description"></p>
+          </div>
+
+          <div class="trailer-info__block">
+            <h4>Актёры</h4>
+            <p id="trailerInfoActors" class="trailer-info__description"></p>
+          </div>
+
+          <div class="trailer-info__block">
+            <h4>Релиз</h4>
+            <p id="trailerInfoRelease" class="trailer-info__description"></p>
+          </div>
+        </div>
+
+        <div class="trailer-info__block">
+          <h4>Поиск на Кинопоиске</h4>
+          <p id="trailerKinopoiskStatus" class="trailer-info__description">Выберите трейлер для поиска информации.</p>
+          <div id="trailerKinopoiskMatches" class="trailer-kp-matches"></div>
+        </div>
+      </aside>
+    </main>
+
+    <section id="trailersAccessDenied" class="admin-player-denied trailer-panel" hidden>
+      <h2>Только для админа</h2>
+      <p>Страница доступна после входа в админ-режим на главной странице.</p>
+      <a href="/" class="btn btn-secondary">Вернуться на главную</a>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <p class="site-footer__text">Дата создания сайта: <span class="site-footer__date">6 июля 2025</span></p>
+  </footer>
+
+  <script src="/script/trailers.js" defer></script>
+</body>
+
+</html>
