@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/style/forms.css">
   <link rel="stylesheet" href="/style/autocomplete.css">
   <link rel="stylesheet" href="/style/modals.css">
+  <link rel="stylesheet" href="/style/ratings.css">
   <link rel="stylesheet" href="/style/admin-player.css">
   <link rel="stylesheet" href="/style/trailers.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -100,23 +101,30 @@
           <div class="trailer-list-section__header">
             <h2>Оценка после просмотра</h2>
           </div>
-          <div class="trailer-rating-panel__controls">
-            <label class="trailer-rating-panel__field" for="trailerRatingSelect">
+          <div class="trailer-rating-panel__score">
+            <label class="trailer-rating-panel__field">
               <span>Оценка стримера</span>
-              <select id="trailerRatingSelect">
-                <option value="">Не выбрано</option>
-                <option value="1">1/10</option>
-                <option value="2">2/10</option>
-                <option value="3">3/10</option>
-                <option value="4">4/10</option>
-                <option value="5">5/10</option>
-                <option value="6">6/10</option>
-                <option value="7">7/10</option>
-                <option value="8">8/10</option>
-                <option value="9">9/10</option>
-                <option value="10">10/10</option>
-              </select>
             </label>
+            <div class="rating-stars trailer-rating-stars" id="trailerRatingStars" data-input="trailerRatingInput">
+              <span class="rating-star rating-label" data-rating="0">worst</span>
+              <span class="rating-star" data-rating="1"></span>
+              <span class="rating-star" data-rating="2"></span>
+              <span class="rating-star" data-rating="3"></span>
+              <span class="rating-star" data-rating="4"></span>
+              <span class="rating-star" data-rating="5"></span>
+              <span class="rating-star" data-rating="6"></span>
+              <span class="rating-star" data-rating="7"></span>
+              <span class="rating-star" data-rating="8"></span>
+              <span class="rating-star" data-rating="9"></span>
+              <span class="rating-star" data-rating="10"></span>
+              <span class="rating-star rating-label" data-rating="11">best</span>
+            </div>
+            <div class="rating-input-wrapper trailer-rating-input-wrapper">
+              <input id="trailerRatingInput" type="number" min="0" max="11" step="0.01" class="rating-input" placeholder="0">
+              <span class="rating-max">/10</span>
+            </div>
+          </div>
+          <div class="trailer-rating-panel__controls">
             <button id="trailerMarkWatchedButton" class="btn btn-primary" type="button">Сохранить оценку</button>
             <button id="trailerReturnPlannedButton" class="btn btn-secondary" type="button">Вернуть в план</button>
             <button id="trailerDeleteButton" class="btn btn-secondary trailer-delete-button" type="button">Удалить</button>
@@ -128,8 +136,9 @@
       <aside class="trailer-info trailer-panel">
         <div class="trailer-list-section__header">
           <h2>Информация о фильме</h2>
-          <a id="trailerKinopoiskLink" class="trailer-external-link" href="#" target="_blank" rel="noopener noreferrer" hidden>
-            Открыть на Кинопоиске
+          <a id="trailerKinopoiskLink" class="trailer-kinopoisk-button" href="#" target="_blank" rel="noopener noreferrer" hidden>
+            <img src="/images/kinopoisk-icon-main.svg" alt="Kinopoisk">
+            <span>Открыть на Кинопоиске</span>
           </a>
         </div>
 

@@ -18,6 +18,7 @@ let trailerTitleSearchResults = [];
 let selectedTrailerSearchMovie = null;
 let trailerTitleRequestId = 0;
 let isCreatingTrailer = false;
+let trailerRatingTooltip = null;
 
 function getAdminAuthHeaders() {
   const token = localStorage.getItem("adminToken") || "";
@@ -95,6 +96,20 @@ function buildYoutubeWatchUrl(videoId) {
     : "#";
 }
 
+function buildKinopoiskSearchUrl(query) {
+  return `https://www.kinopoisk.ru/index.php?kp_query=${encodeURIComponent(
+    String(query || "").trim()
+  )}`;
+}
+
+function buildKinopoiskFilmUrl(kinopoiskId, fallbackTitle) {
+  const normalizedId = Number.parseInt(kinopoiskId, 10);
+  if (Number.isFinite(normalizedId) && normalizedId > 0) {
+    return `https://www.kinopoisk.ru/film/${normalizedId}/`;
+  }
+  return buildKinopoiskSearchUrl(fallbackTitle || "");
+}
+
 function escapeHtml(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -170,6 +185,160 @@ function setTrailerFormBusy(isBusy) {
   }
 }
 
+function ensureTrailerRatingTooltip() {
+  if (trailerRatingTooltip) return trailerRatingTooltip;
+  const tooltip = document.createElement("div");
+  tooltip.className = "rating-tooltip";
+  tooltip.style.display = "none";
+  document.body.appendChild(tooltip);
+  trailerRatingTooltip = tooltip;
+  return tooltip;
+}
+
+function updateTrailerRatingTooltipPosition(event) {
+  if (!trailerRatingTooltip || trailerRatingTooltip.style.display !== "block") return;
+  trailerRatingTooltip.style.left = `${event.pageX + 10}px`;
+  trailerRatingTooltip.style.top = `${event.pageY + 10}px`;
+}
+
+function showTrailerRatingValueTooltip(event, value) {
+  const tooltip = ensureTrailerRatingTooltip();
+  tooltip.textContent = String(value);
+  tooltip.style.display = "block";
+  updateTrailerRatingTooltipPosition(event);
+}
+
+function hideTrailerRatingValueTooltip() {
+  if (!trailerRatingTooltip) return;
+  trailerRatingTooltip.style.display = "none";
+}
+
+function parseRatingInputValue(rawValue) {
+  if (typeof rawValue !== "string") return NaN;
+  return parseFloat(rawValue.trim().replace(/,/g, "."));
+}
+
+function hasTooManyFractionDigits(rawValue) {
+  if (typeof rawValue !== "string") return false;
+  const normalized = rawValue.trim().replace(/,/g, ".");
+  if (!normalized || !normalized.includes(".")) return false;
+  const fraction = normalized.split(".")[1] || "";
+  return fraction.length > 2;
+}
+
+function getCurrentRating(containerId) {
+  const container = document.getElementById(containerId);
+  return parseFloat(container?.dataset.currentRating) || 0;
+}
+
+function highlightStars(containerId, rating) {
+  const stars = document.querySelectorAll(`#${containerId} .rating-star`);
+
+  stars.forEach((star) => {
+    star.classList.remove("hovered");
+    star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
+    if (star.classList.contains("rating-label")) {
+      star.style.backgroundColor = "transparent";
+    }
+  });
+
+  if (rating >= 1 && rating <= 10) {
+    for (let i = 1; i <= rating; i += 1) {
+      stars[i]?.classList.add("hovered");
+      if (stars[i]) stars[i].style.backgroundColor = "#ffc107";
+    }
+  } else if (rating === 11) {
+    for (let i = 1; i <= 10; i += 1) {
+      stars[i]?.classList.add("hovered");
+      if (stars[i]) stars[i].style.backgroundColor = "#ffc107";
+    }
+  }
+}
+
+function setRatingStars(containerId, rating, updateInput = true) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const stars = container.querySelectorAll(".rating-star");
+  container.dataset.currentRating = String(rating);
+
+  const inputId = container.dataset.input;
+  if (updateInput && inputId) {
+    const input = document.getElementById(inputId);
+    if (input) input.value = String(rating).replace(".", ",");
+  }
+
+  stars.forEach((star) => star.classList.remove("active"));
+
+  if (rating === 0) {
+    stars[0]?.classList.add("active");
+  } else if (rating >= 1 && rating <= 10) {
+    for (let i = 1; i <= rating; i += 1) {
+      stars[i]?.classList.add("active");
+    }
+  } else if (rating === 11) {
+    for (let i = 1; i <= 10; i += 1) {
+      stars[i]?.classList.add("active");
+    }
+    stars[11]?.classList.add("active");
+  }
+}
+
+function setupRatingStars(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container || container.dataset.ready === "true") return;
+
+  const stars = container.querySelectorAll(".rating-star");
+  const inputId = container.dataset.input;
+  const ratingInput = inputId ? document.getElementById(inputId) : null;
+
+  stars.forEach((star) => {
+    star.addEventListener("click", function () {
+      const rating = parseInt(this.dataset.rating, 10);
+      setRatingStars(containerId, rating);
+    });
+
+    star.addEventListener("mouseover", function () {
+      const rating = parseInt(this.dataset.rating, 10);
+      highlightStars(containerId, rating);
+    });
+
+    if (!star.classList.contains("rating-label")) {
+      star.addEventListener("mouseenter", function (event) {
+        showTrailerRatingValueTooltip(event, this.dataset.rating);
+      });
+      star.addEventListener("mousemove", updateTrailerRatingTooltipPosition);
+      star.addEventListener("mouseleave", hideTrailerRatingValueTooltip);
+    }
+  });
+
+  container.addEventListener("mouseleave", () => {
+    highlightStars(containerId, getCurrentRating(containerId));
+    hideTrailerRatingValueTooltip();
+  });
+
+  if (ratingInput) {
+    ratingInput.addEventListener("input", function () {
+      const value = parseRatingInputValue(this.value);
+      if (hasTooManyFractionDigits(this.value)) {
+        this.setCustomValidity("Можно ввести не более 2 знаков после запятой");
+        this.reportValidity();
+        return;
+      }
+
+      if (!Number.isNaN(value) && value >= 0 && value <= 11) {
+        this.setCustomValidity("");
+        setRatingStars(containerId, value, false);
+        highlightStars(containerId, value);
+      } else {
+        this.setCustomValidity("Введите число от 0 до 11");
+        this.reportValidity();
+      }
+    });
+  }
+
+  container.dataset.ready = "true";
+}
+
 function sortTrailers(list) {
   const safeList = Array.isArray(list) ? list.slice() : [];
   return safeList.sort((a, b) => {
@@ -234,10 +403,24 @@ function renderTrailerItem(item) {
   rating.className = "trailer-item__rating";
   rating.textContent =
     item.status === "watched" && item.streamer_rating
-      ? `Оценка: ${item.streamer_rating}/10`
+      ? "Просмотрен"
       : "Ещё не оценён";
 
   body.append(title, meta, rating);
+
+  const actions = document.createElement("div");
+  actions.className = "trailer-item__actions";
+
+  const kpLink = document.createElement("a");
+  kpLink.className = "trailer-item__kp-link";
+  kpLink.href = buildKinopoiskFilmUrl(item.kinopoisk_id, item.title);
+  kpLink.target = "_blank";
+  kpLink.rel = "noopener noreferrer";
+  kpLink.setAttribute("aria-label", "Открыть фильм на Кинопоиске");
+  kpLink.innerHTML = '<img src="/images/kinopoisk-icon-main.svg" alt="Kinopoisk">';
+  kpLink.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
 
   const badge = document.createElement("span");
   badge.className = "trailer-item__badge";
@@ -248,7 +431,8 @@ function renderTrailerItem(item) {
     badge.textContent = "План";
   }
 
-  button.append(poster, body, badge);
+  actions.append(kpLink, badge);
+  button.append(poster, body, actions);
   return button;
 }
 
@@ -305,7 +489,7 @@ function renderSelectedTrailer() {
   const frame = document.getElementById("trailerPlayerFrame");
   const placeholder = document.getElementById("trailerPlayerPlaceholder");
   const openYoutube = document.getElementById("trailerOpenYoutube");
-  const ratingSelect = document.getElementById("trailerRatingSelect");
+  const ratingInput = document.getElementById("trailerRatingInput");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const returnButton = document.getElementById("trailerReturnPlannedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
@@ -320,7 +504,7 @@ function renderSelectedTrailer() {
       openYoutube.href = "#";
       openYoutube.setAttribute("aria-disabled", "true");
     }
-    if (ratingSelect) ratingSelect.value = "";
+    setRatingStars("trailerRatingStars", 0);
     if (watchedButton) watchedButton.disabled = true;
     if (returnButton) returnButton.disabled = true;
     if (deleteButton) deleteButton.disabled = true;
@@ -340,11 +524,13 @@ function renderSelectedTrailer() {
     openYoutube.href = buildYoutubeWatchUrl(trailer.youtube_video_id);
     openYoutube.setAttribute("aria-disabled", "false");
   }
-  if (ratingSelect) {
-    ratingSelect.value =
+  if (ratingInput) {
+    const nextRating =
       trailer.streamer_rating === null || trailer.streamer_rating === undefined
-        ? ""
-        : String(trailer.streamer_rating).replace(/\.0$/, "");
+        ? 0
+        : Number(trailer.streamer_rating);
+    setRatingStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
+    highlightStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
   }
   if (watchedButton) watchedButton.disabled = false;
   if (returnButton) returnButton.disabled = false;
@@ -693,10 +879,7 @@ function renderKinopoiskInfo(details, staff) {
   };
 
   kpLink.href =
-    details?.webUrl ||
-    (details?.kinopoiskId
-      ? `https://www.kinopoisk.ru/film/${details.kinopoiskId}/`
-      : "#");
+    details?.webUrl || buildKinopoiskFilmUrl(details?.kinopoiskId, resolvedTitle);
   kpLink.hidden = !kpLink.href || kpLink.href === "#";
 
   toggleInfoVisibility(true);
@@ -811,7 +994,7 @@ function setupFormEvents() {
   const titleInput = document.getElementById("trailerTitleInput");
   const urlInput = document.getElementById("trailerUrlInput");
   const titleResults = document.getElementById("trailerTitleResults");
-  const ratingSelect = document.getElementById("trailerRatingSelect");
+  const ratingInput = document.getElementById("trailerRatingInput");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const returnButton = document.getElementById("trailerReturnPlannedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
@@ -910,8 +1093,15 @@ function setupFormEvents() {
     const trailer = getSelectedTrailer();
     if (!trailer) return;
 
-    const rating = ratingSelect?.value || "";
-    if (!rating) {
+    const rawRating = String(ratingInput?.value || "").trim();
+    const rating = parseRatingInputValue(rawRating);
+    if (
+      rawRating === "" ||
+      Number.isNaN(rating) ||
+      rating < 0 ||
+      rating > 11 ||
+      hasTooManyFractionDigits(rawRating)
+    ) {
       setStatusText("trailerActionStatus", "Сначала выберите оценку.", true);
       return;
     }
@@ -920,7 +1110,7 @@ function setupFormEvents() {
     try {
       await patchTrailer(trailer.id, {
         status: "watched",
-        streamer_rating: Number(rating),
+        streamer_rating: rating,
         watched_at: new Date().toISOString(),
       });
       setStatusText(
@@ -975,6 +1165,9 @@ function setupFormEvents() {
       );
     }
   });
+
+  setupRatingStars("trailerRatingStars");
+  setRatingStars("trailerRatingStars", 0);
 }
 
 async function initPage() {
