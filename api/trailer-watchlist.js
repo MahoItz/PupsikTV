@@ -385,11 +385,6 @@ async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const access = verifyAdminRequest(req);
-  if (!access.ok) {
-    return res.status(access.status).json({ error: access.error, expired: access.expired || false });
-  }
-
   let supabase;
   try {
     supabase = createSupabaseClient();
@@ -400,6 +395,11 @@ async function handler(req, res) {
 
   if (method === "GET") {
     return listTrailers(supabase, res);
+  }
+
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res.status(access.status).json({ error: access.error, expired: access.expired || false });
   }
 
   if (method === "POST") {

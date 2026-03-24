@@ -31,6 +31,7 @@ let userRatingTrailerId = null;
 let isSubmittingTrailerUserRating = false;
 let isSwitchingKinopoiskApi = false;
 let kinopoiskQuotaDialogOpen = false;
+let hasAdminAccess = false;
 
 function normalizeKpApiValue(value) {
   if (value === "API 2" || value === "API 3") {
@@ -263,6 +264,23 @@ function parseTrailerKinopoiskData(value) {
 function getAdminAuthHeaders() {
   const token = localStorage.getItem("adminToken") || "";
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function updateTrailerAdminUi() {
+  const form = document.getElementById("trailerAddForm");
+  const watchedButton = document.getElementById("trailerMarkWatchedButton");
+  const returnButton = document.getElementById("trailerReturnPlannedButton");
+  const deleteButton = document.getElementById("trailerDeleteButton");
+
+  if (form) {
+    form.hidden = !hasAdminAccess;
+  }
+
+  if (!hasAdminAccess) {
+    if (watchedButton) watchedButton.disabled = true;
+    if (returnButton) returnButton.disabled = true;
+    if (deleteButton) deleteButton.disabled = true;
+  }
 }
 
 async function verifyAdminAccess() {
@@ -962,18 +980,16 @@ function renderSelectedTrailer() {
     setRatingStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
     highlightStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
   }
-  if (watchedButton) watchedButton.disabled = false;
-  if (returnButton) returnButton.disabled = false;
-  if (deleteButton) deleteButton.disabled = false;
+  if (watchedButton) watchedButton.disabled = !hasAdminAccess;
+  if (returnButton) returnButton.disabled = !hasAdminAccess;
+  if (deleteButton) deleteButton.disabled = !hasAdminAccess;
 
   setStatusText("trailerActionStatus", "");
   loadKinopoiskInfoCached(trailer);
 }
 
 async function fetchTrailers() {
-  const response = await fetch(TRAILER_API_URL, {
-    headers: getAdminAuthHeaders(),
-  });
+  const response = await fetch(TRAILER_API_URL);
   const payload = await response.json();
   if (!response.ok) {
     throw new Error(payload?.error || `Failed to load trailers: ${response.status}`);
@@ -1493,6 +1509,10 @@ function renderKinopoiskInfo(details, staff) {
 }
 
 async function applyKinopoiskSelection(trailer, filmId, searchResults) {
+  if (!hasAdminAccess) {
+    return;
+  }
+
   const requestId = ++kinopoiskRequestId;
   renderKinopoiskMatches(searchResults || []);
   setTrailerInfoLoading(true, "Загружаю информацию о фильме...");
@@ -1600,6 +1620,11 @@ async function loadKinopoiskInfoCached(trailer) {
   const cachedKinopoiskData = parseTrailerKinopoiskData(trailer.kinopoisk_data);
   if (cachedKinopoiskData) {
     renderStoredKinopoiskInfo(cachedKinopoiskData);
+    return;
+  }
+
+  if (!hasAdminAccess) {
+    resetKinopoiskInfo(document.getElementById("trailerInfoEmpty")?.textContent || "");
     return;
   }
 
@@ -1785,6 +1810,7 @@ function setupFormEvents() {
     setStatusText("trailerFormStatus", "Сохраняю трейлер...");
     isCreatingTrailer = true;
     setTrailerFormBusy(true);
+    updateTrailerAdminUi();
 
     try {
       await createTrailer({
@@ -1988,25 +2014,19 @@ async function initPage() {
     if (returnButton) returnButton.disabled = true;
     if (deleteButton) deleteButton.disabled = true;
 
-    const hasAccess = await verifyAdminAccess();
-    if (!hasAccess) {
-      if (app) app.hidden = true;
-      if (denied) denied.hidden = false;
-      return;
-    }
-
-    if (denied) denied.hidden = true;
+    hasAdminAccess = await verifyAdminAccess();
+    updateTrailerAdminUi();
 
     setupListEvents();
     setupFormEvents();
-    setTrailerFormBusy(false);
+    setTrailerFormBusy(hasAdminAccess ? false : true);
     await fetchTrailers();
     window.addEventListener("resize", syncTrailerSidebarHeight);
     requestAnimationFrame(syncTrailerSidebarHeight);
   } catch (error) {
     console.error("Trailers page init error", error);
-    if (app) app.hidden = true;
-    if (denied) denied.hidden = false;
+    if (app) app.hidden = false;
+    if (denied) denied.hidden = true;
   } finally {
     setTrailerListsLoading(false);
   }
