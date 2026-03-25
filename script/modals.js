@@ -155,13 +155,15 @@ function openRateGameModal(id) {
   setupRatingStars("rateGameStars");
 }
 
-function openUserRateModal(id) {
-  if (ratedMovies[id]) {
+function openUserRateModal(id, targetType = "movie") {
+  const sourceList = targetType === "order" ? watchlist : allMovies;
+  const movie = sourceList.find((m) => m.id === id);
+  if (hasRatedMovie(movie || id)) {
     alert("Вы уже оценили этот фильм");
     return;
   }
   userRatingMovieId = id;
-  const movie = allMovies.find((m) => m.id === id);
+  userRatingMovieTargetType = targetType === "order" ? "order" : "movie";
   if (movie) {
     document.getElementById("userRateMovieTitle").textContent = movie.title;
     document.getElementById("userRateMoviePoster").src = movie.poster;

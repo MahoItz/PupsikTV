@@ -384,10 +384,7 @@ function normalizeRenderKeyValue(value) {
 }
 
 function getMovieRenderKey(movie) {
-  const ratedValue =
-    typeof ratedMovies !== "undefined" && ratedMovies
-      ? ratedMovies[movie.id]
-      : "";
+  const ratedValue = getRatedMovieValue(movie) ?? "";
   const parts = [
     movie?.id,
     movie?.poster,
@@ -403,7 +400,7 @@ function getMovieRenderKey(movie) {
     movie?.orderBy,
     movie?.orderType,
     ratedValue,
-    Boolean(ratedMovies && ratedMovies[movie.id]),
+    hasRatedMovie(movie),
     isAdmin,
   ];
   return parts.map(normalizeRenderKeyValue).join(MOVIE_RENDER_KEY_DELIMITER);
@@ -770,7 +767,7 @@ function createMovieCard(
     const rateBtn = document.createElement("button");
     rateBtn.className = "btn btn-rate btn-icon";
     rateBtn.textContent = "Оценить";
-    if (ratedMovies[movie.id]) {
+    if (hasRatedMovie(movie)) {
       rateBtn.disabled = true;
       rateBtn.title = "Вы уже оценили";
     } else {
@@ -1409,7 +1406,23 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   card.appendChild(info);
   wrapper.appendChild(card);
 
-  if (showActions && actions) {
+  if (!showActions) {
+    actions = document.createElement("div");
+    actions.className = "order-actions";
+
+    const rateBtn = document.createElement("button");
+    rateBtn.className = "btn btn-rate btn-icon";
+    rateBtn.textContent = "Оценить";
+    if (hasRatedMovie(order)) {
+      rateBtn.disabled = true;
+      rateBtn.title = "Вы уже оценили";
+    } else {
+      rateBtn.onclick = () => openUserRateModal(order.id, "order");
+    }
+    actions.appendChild(rateBtn);
+  }
+
+  if (actions && actions.childElementCount > 0) {
     const actionsRow = document.createElement("div");
     actionsRow.className = "order-actions-below";
     actionsRow.appendChild(actions);

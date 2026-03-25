@@ -1494,6 +1494,7 @@ let editingMovieId = null;
 let ratingMovieId = null;
 let isSubmittingRating = false;
 let userRatingMovieId = null;
+let userRatingMovieTargetType = "movie";
 let userRatingGameId = null;
 let ratingTooltip;
 let ratedMovies = JSON.parse(localStorage.getItem("ratedMovies") || "{}");
@@ -1507,6 +1508,91 @@ let deletePlayedGameId = null;
 let deleteMovieId = null;
 let deleteOrderId = null;
 let deleteGameOrderId = null;
+
+function findMovieRatingTargetById(id) {
+  if (id === null || id === undefined) return null;
+  return (
+    watchlist.find((item) => String(item.id) === String(id)) ||
+    allMovies.find((item) => String(item.id) === String(id)) ||
+    null
+  );
+}
+
+function getMovieRatingStorageKey(target) {
+  if (!target || typeof target !== "object") return "";
+
+  const kinopoiskId = String(
+    target.kinopoiskId ?? target.kp_id ?? target.kpId ?? ""
+  ).trim();
+  if (kinopoiskId) return `kp:${kinopoiskId}`;
+
+  const imdbId = String(target.imdbId ?? target.imdb_id ?? "").trim().toLowerCase();
+  if (imdbId) return `imdb:${imdbId}`;
+
+  const title = String(target.title ?? target.order_title ?? "")
+    .trim()
+    .toLowerCase();
+  const year = String(target.year ?? target.order_year ?? "").trim();
+  if (title) {
+    return `title:${title}|year:${year}`;
+  }
+
+  return "";
+}
+
+function getRatedMovieValue(targetOrId) {
+  if (
+    targetOrId !== null &&
+    typeof targetOrId === "object" &&
+    Object.prototype.hasOwnProperty.call(targetOrId, "id")
+  ) {
+    const stableKey = getMovieRatingStorageKey(targetOrId);
+    if (stableKey && Object.prototype.hasOwnProperty.call(ratedMovies, stableKey)) {
+      return ratedMovies[stableKey];
+    }
+    const legacyId = String(targetOrId.id);
+    if (Object.prototype.hasOwnProperty.call(ratedMovies, legacyId)) {
+      return ratedMovies[legacyId];
+    }
+    return undefined;
+  }
+
+  const target = findMovieRatingTargetById(targetOrId);
+  if (target) return getRatedMovieValue(target);
+
+  const idKey = String(targetOrId ?? "");
+  if (!idKey) return undefined;
+  return Object.prototype.hasOwnProperty.call(ratedMovies, idKey)
+    ? ratedMovies[idKey]
+    : undefined;
+}
+
+function hasRatedMovie(targetOrId) {
+  return getRatedMovieValue(targetOrId) !== undefined;
+}
+
+function rememberRatedMovie(targetOrId, rating) {
+  const target =
+    targetOrId && typeof targetOrId === "object"
+      ? targetOrId
+      : findMovieRatingTargetById(targetOrId);
+  const stableKey = getMovieRatingStorageKey(target);
+
+  if (stableKey) {
+    ratedMovies[stableKey] = rating;
+  }
+  if (target && target.id !== null && target.id !== undefined) {
+    ratedMovies[String(target.id)] = rating;
+  } else if (
+    targetOrId !== null &&
+    targetOrId !== undefined &&
+    typeof targetOrId !== "object"
+  ) {
+    ratedMovies[String(targetOrId)] = rating;
+  }
+
+  localStorage.setItem("ratedMovies", JSON.stringify(ratedMovies));
+}
 
 function normalizeOrderTypeValue(value) {
   if (typeof value !== "string") return "";

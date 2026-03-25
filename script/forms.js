@@ -933,6 +933,23 @@ async function submitRating() {
     isSubmittingRating = true;
     if (confirmBtn) confirmBtn.disabled = true;
     try {
+      const { data: pendingRatingsData, error: pendingRatingsError } =
+        await supabaseClient
+          .from("ratings")
+          .select("rating")
+          .eq("movie_id", ratingMovieId)
+          .eq("category", "MovieOrder");
+      if (pendingRatingsError) throw pendingRatingsError;
+
+      const pendingRatings = Array.isArray(pendingRatingsData)
+        ? pendingRatingsData
+        : [];
+      const pendingRatingSum = pendingRatings.reduce(
+        (sum, row) => sum + Number(row?.rating ?? 0),
+        0
+      );
+      const pendingRatingCount = pendingRatings.length;
+
       watchedMovie.imdbId = await resolveKinopoiskImdbId(
         watchedMovie.kinopoiskId,
         watchedMovie.imdbId
@@ -957,10 +974,25 @@ async function submitRating() {
           actors: normalizeActorsForStorage(watchedMovie.actors),
           director: watchedMovie.director,
           studios: watchedMovie.studios,
+          rating_sum: pendingRatingSum,
+          rating_count: pendingRatingCount,
         })
         .select()
         .single();
       if (error) throw error;
+
+      if (pendingRatingCount > 0) {
+        const { error: moveRatingsError } = await supabaseClient
+          .from("ratings")
+          .update({
+            movie_id: data.id,
+            category: "Movie",
+            title: watchedMovie.title,
+          })
+          .eq("movie_id", ratingMovieId)
+          .eq("category", "MovieOrder");
+        if (moveRatingsError) throw moveRatingsError;
+      }
 
       const newMovie = {
         id: data.id,
@@ -973,10 +1005,15 @@ async function submitRating() {
         kpRating: data.rating_OMDB,
         kinopoiskId: data.kp_id || watchedMovie.kinopoiskId,
         imdbId: data.imdb_id || watchedMovie.imdbId || null,
+        ratingSum: Number(data.rating_sum ?? pendingRatingSum) || 0,
+        ratingCount: Number(data.rating_count ?? pendingRatingCount) || 0,
         dateAdded: data.date,
         orderBy: data.order_by && data.order_by !== "null" ? data.order_by : "",
         orderType: data.order_type,
-        userRating: null,
+        userRating:
+          pendingRatingCount > 0
+            ? Math.round((pendingRatingSum / pendingRatingCount) * 10) / 10
+            : null,
         description: watchedMovie.description,
         country: watchedMovie.country,
         actors: watchedMovie.actors,
@@ -1141,75 +1178,67 @@ async function submitUserMovieRating() {
     return;
   }
 
-  if (ratedMovies[userRatingMovieId]) {
+  const sourceList =
+    userRatingMovieTargetType === "order" ? watchlist : allMovies;
+  const movie = sourceList.find((m) => m.id === userRatingMovieId);
+
+  if (hasRatedMovie(movie || userRatingMovieId)) {
     alert("Вы уже оценили этот фильм");
     closeModal("userRateModal", true);
     isSubmittingUserRating = false;
     return;
   }
 
-  const movie = allMovies.find((m) => m.id === userRatingMovieId);
-
   try {
-    // пишем лог
-    const { error: ratingError } = await supabaseClient.from("ratings").insert({
-      movie_id: userRatingMovieId,
-      rating,
-      source: "user",
-      category: "Movie",
-      title: movie ? movie.title : null,
-      user_id: getGuestId(),
+    const response = await fetch("/api/movie-ratings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        target_id: userRatingMovieId,
+        target_type: userRatingMovieTargetType,
+        rating,
+        user_id: getGuestId(),
+        title: movie ? movie.title : null,
+      }),
     });
 
-    if (ratingError) throw ratingError;
-
-    // считаем все оценки по фильму
-    const {
-      data: ratingsData,
-      count,
-      error: aggError,
-    } = await supabaseClient
-      .from("ratings")
-      .select("rating", { count: "exact", head: false })
-      .eq("movie_id", userRatingMovieId);
-
-    if (aggError) throw aggError;
-
-    const rows = ratingsData || [];
-    const newSum = rows.reduce((acc, row) => acc + Number(row.rating ?? 0), 0);
-    const newCount = typeof count === "number" ? count : rows.length;
-
-    // обновляем movies
-    const { error: movieError } = await supabaseClient
-      .from("movies")
-      .update({
-        rating_sum: newSum,
-        rating_count: newCount,
-      })
-      .eq("id", userRatingMovieId);
-
-    if (movieError) throw movieError;
-
-    // обновляем локальный кэш
-    if (movie) {
-      movie.ratingSum = newSum;
-      movie.ratingCount = newCount;
-      movie.userRating =
-        newCount > 0 ? Math.round((newSum / newCount) * 10) / 10 : null;
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || ("Failed to submit rating: " + response.status));
     }
 
-    localStorage.setItem("moviesCache", JSON.stringify(allMovies));
-    ratedMovies[userRatingMovieId] = rating;
-    localStorage.setItem("ratedMovies", JSON.stringify(ratedMovies));
+    if (userRatingMovieTargetType === "movie" && movie && payload?.movie) {
+      const ratingSum = Number(payload.movie.rating_sum ?? 0) || 0;
+      const ratingCount = Number(payload.movie.rating_count ?? 0) || 0;
+      movie.ratingSum = ratingSum;
+      movie.ratingCount = ratingCount;
+      movie.userRating =
+        ratingCount > 0 ? Math.round((ratingSum / ratingCount) * 10) / 10 : null;
+      localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+    }
 
-    renderMovies();
+    rememberRatedMovie(movie || userRatingMovieId, rating);
+
+    if (userRatingMovieTargetType === "movie") {
+      renderMovies();
+    } else {
+      renderWatchlist();
+    }
   } catch (err) {
     console.error("Error submitting user rating", err);
+    alert(
+      err?.message ||
+        "Не удалось сохранить оценку"
+    );
   } finally {
     isSubmittingUserRating = false;
   }
 
   closeModal("userRateModal", true);
+  userRatingMovieId = null;
+  userRatingMovieTargetType = "movie";
 }
 
 async function submitUserGameRating() {
