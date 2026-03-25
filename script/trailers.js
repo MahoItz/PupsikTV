@@ -1984,6 +1984,23 @@ function setTrailerListsLoading(isLoading) {
   if (watchedEmpty) watchedEmpty.hidden = true;
 }
 
+function setTrailerSidebarLoading(isLoading) {
+  const sidebarLoading = document.getElementById("trailerSidebarLoading");
+  const form = document.getElementById("trailerAddForm");
+  const plannedSection = document.querySelector(".trailer-list-section--planned");
+  const boostySection = document.getElementById("trailerBoostySection");
+
+  if (sidebarLoading) {
+    sidebarLoading.hidden = !isLoading;
+  }
+
+  if (isLoading) {
+    if (form) form.hidden = true;
+    if (plannedSection) plannedSection.hidden = true;
+    if (boostySection) boostySection.hidden = true;
+  }
+}
+
 function syncTrailerSidebarHeight() {
   const sidebar = document.querySelector(".trailer-sidebar");
   const infoPanel = document.querySelector(".trailer-info");
@@ -3398,8 +3415,8 @@ async function initPage() {
     if (app) app.hidden = false;
     if (denied) denied.hidden = true;
     renderTrailerPublicSidebar();
+    setTrailerSidebarLoading(true);
     setTrailerFormBusy(true);
-    setTrailerListsLoading(true);
     setTrailerInfoLoading(true, "Загружаю информацию о фильме...");
     if (watchedButton) watchedButton.disabled = true;
     if (deleteButton) {
@@ -3408,11 +3425,13 @@ async function initPage() {
     }
 
     hasAdminAccess = await verifyAdminAccess();
+    setTrailerSidebarLoading(false);
     updateTrailerAdminUi();
 
     setupListEvents();
     setupFormEvents();
     setTrailerFormBusy(hasAdminAccess ? false : true);
+    setTrailerListsLoading(true);
     await fetchBoostyReviews();
     await fetchTrailers();
     window.addEventListener("resize", () => {
@@ -3428,6 +3447,7 @@ async function initPage() {
     if (app) app.hidden = false;
     if (denied) denied.hidden = true;
   } finally {
+    setTrailerSidebarLoading(false);
     setTrailerListsLoading(false);
   }
 }
