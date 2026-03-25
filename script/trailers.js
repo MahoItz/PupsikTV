@@ -747,11 +747,10 @@ function renderTrailerItem(item) {
   if (item.status === "watched") {
     badge.classList.add("trailer-item__badge--watched");
     badge.textContent = item.streamer_rating ? `${item.streamer_rating}/10` : "OK";
+    actions.append(kpLink, badge);
   } else {
-    badge.textContent = "План";
+    actions.append(kpLink);
   }
-
-  actions.append(kpLink, badge);
   button.append(poster, body, actions);
   return button;
 }

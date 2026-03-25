@@ -255,6 +255,11 @@
   transform: none;
 }
 
+.trailer-list-section__more--link[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .trailer-list-section__header {
   display: flex;
   align-items: center;
@@ -371,7 +376,7 @@
   display: grid;
   grid-template-columns: 56px 1fr auto;
   gap: 12px;
-  align-items: center;
+  align-items: stretch;
   text-align: left;
   padding: 12px;
   border-radius: 14px;
@@ -437,7 +442,9 @@
 
 .trailer-item__actions {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  align-self: stretch;
+  justify-content: flex-end;
   gap: 8px;
 }
 
