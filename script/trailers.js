@@ -276,9 +276,12 @@ function updateTrailerAdminUi() {
     form.hidden = !hasAdminAccess;
   }
 
+  if (deleteButton) {
+    deleteButton.hidden = !hasAdminAccess;
+  }
+
   if (!hasAdminAccess) {
     if (returnButton) returnButton.disabled = true;
-    if (deleteButton) deleteButton.disabled = true;
     if (watchedButton) watchedButton.disabled = false;
   }
 }
@@ -984,7 +987,10 @@ function renderSelectedTrailer() {
     watchedButton.disabled = hasAdminAccess ? false : hasRatedTrailer(trailer.id);
   }
   if (returnButton) returnButton.disabled = !hasAdminAccess;
-  if (deleteButton) deleteButton.disabled = !hasAdminAccess;
+  if (deleteButton) {
+    deleteButton.disabled = !hasAdminAccess;
+    deleteButton.hidden = !hasAdminAccess;
+  }
 
   setStatusText("trailerActionStatus", "");
   loadKinopoiskInfoCached(trailer);
@@ -2070,7 +2076,10 @@ async function initPage() {
     setTrailerInfoLoading(true, "Загружаю информацию о фильме...");
     if (watchedButton) watchedButton.disabled = true;
     if (returnButton) returnButton.disabled = true;
-    if (deleteButton) deleteButton.disabled = true;
+    if (deleteButton) {
+      deleteButton.disabled = true;
+      deleteButton.hidden = true;
+    }
 
     hasAdminAccess = await verifyAdminAccess();
     updateTrailerAdminUi();
