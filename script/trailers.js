@@ -522,7 +522,10 @@ function hasTooManyFractionDigits(rawValue) {
 
 function getCurrentRating(containerId) {
   const container = document.getElementById(containerId);
-  return parseFloat(container?.dataset.currentRating) || 0;
+  const raw = container?.dataset.currentRating;
+  if (raw === undefined || raw === null || raw === "") return null;
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function clampTrailerRatingValue(value) {
@@ -545,10 +548,20 @@ function getTrailerRatingMeaning(value) {
 }
 
 function updateTrailerRatingMeaning(value) {
-  const meaningValue = document.getElementById("trailerRatingMeaningValue");
+  const meaning = document.querySelector(".trailer-rating-panel__meaning");
   const meaningText = document.getElementById("trailerRatingMeaningText");
-  if (meaningValue) {
-    meaningValue.textContent = formatTrailerRatingValue(value);
+  if (value === null || value === undefined || value === "") {
+    if (meaning) {
+      meaning.className = "trailer-rating-panel__meaning";
+    }
+    if (meaningText) {
+      meaningText.textContent = "";
+    }
+    return;
+  }
+  const nearest = Math.round(clampTrailerRatingValue(value));
+  if (meaning) {
+    meaning.className = `trailer-rating-panel__meaning is-level-${nearest}`;
   }
   if (meaningText) {
     meaningText.textContent = getTrailerRatingMeaning(value);
@@ -559,7 +572,10 @@ function syncTrailerRatingPreview(value, options = {}) {
   const { updateInput = true } = options;
   const input = document.getElementById("trailerRatingInput");
   if (updateInput && input) {
-    input.value = formatTrailerRatingValue(value);
+    input.value =
+      value === null || value === undefined || value === ""
+        ? ""
+        : formatTrailerRatingValue(value);
   }
   updateTrailerRatingMeaning(value);
 }
@@ -574,6 +590,10 @@ function highlightStars(containerId, rating) {
       star.style.backgroundColor = "transparent";
     }
   });
+
+  if (rating === null || rating === undefined || Number.isNaN(Number(rating))) {
+    return;
+  }
 
   if (rating >= 1 && rating <= 10) {
     for (let i = 1; i <= rating; i += 1) {
@@ -592,19 +612,24 @@ function setRatingStars(containerId, rating, updateInput = true) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const stars = container.querySelectorAll(".rating-star");
-  container.dataset.currentRating = String(rating);
+  const hasValue = !(rating === null || rating === undefined || rating === "");
+  container.dataset.currentRating = hasValue ? String(rating) : "";
 
   const inputId = container.dataset.input;
   if (updateInput && inputId) {
     const input = document.getElementById(inputId);
-    if (input) input.value = String(rating).replace(".", ",");
+    if (input) input.value = hasValue ? String(rating).replace(".", ",") : "";
   }
 
   if (containerId === "trailerRatingStars") {
-    syncTrailerRatingPreview(rating, { updateInput });
+    syncTrailerRatingPreview(hasValue ? rating : null, { updateInput });
   }
 
   stars.forEach((star) => star.classList.remove("active"));
+
+  if (!hasValue) {
+    return;
+  }
 
   if (rating === 0) {
     stars[0]?.classList.add("active");
@@ -662,6 +687,15 @@ function setupRatingStars(containerId) {
   if (ratingInput) {
     ratingInput.addEventListener("input", function () {
       const value = parseRatingInputValue(this.value);
+      if (!this.value.trim()) {
+        this.setCustomValidity("");
+        setRatingStars(containerId, null, false);
+        highlightStars(containerId, null);
+        if (containerId === "trailerRatingStars") {
+          syncTrailerRatingPreview(null, { updateInput: false });
+        }
+        return;
+      }
       if (hasTooManyFractionDigits(this.value)) {
         this.setCustomValidity("Можно ввести не более 2 знаков после запятой");
         this.reportValidity();
@@ -1068,8 +1102,8 @@ function renderSelectedTrailer() {
       openYoutube.href = "#";
       openYoutube.setAttribute("aria-disabled", "true");
     }
-    setRatingStars("trailerRatingStars", 0);
-    updateTrailerRatingMeaning(0);
+    setRatingStars("trailerRatingStars", null);
+    updateTrailerRatingMeaning(null);
     if (watchedButton) watchedButton.disabled = true;
     if (deleteButton) deleteButton.disabled = true;
     resetKinopoiskInfo("Выберите трейлер для поиска информации.");
@@ -1091,11 +1125,12 @@ function renderSelectedTrailer() {
   if (ratingInput) {
     const nextRating =
       trailer.streamer_rating === null || trailer.streamer_rating === undefined
-        ? 0
+        ? null
         : Number(trailer.streamer_rating);
-    setRatingStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
-    highlightStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
-    syncTrailerRatingPreview(Number.isFinite(nextRating) ? nextRating : 0);
+    const normalizedRating = Number.isFinite(nextRating) ? nextRating : null;
+    setRatingStars("trailerRatingStars", normalizedRating);
+    highlightStars("trailerRatingStars", normalizedRating);
+    syncTrailerRatingPreview(normalizedRating);
   }
   if (watchedButton) {
     watchedButton.disabled = hasAdminAccess ? false : hasRatedTrailer(trailer.id);
@@ -2068,7 +2103,7 @@ function setupFormEvents() {
   });
 
   setupRatingStars("trailerRatingStars");
-  setRatingStars("trailerRatingStars", 0);
+  setRatingStars("trailerRatingStars", null);
   setupRatingStars("trailerUserRateStars");
   setRatingStars("trailerUserRateStars", 0);
 
