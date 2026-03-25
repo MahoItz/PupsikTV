@@ -1093,10 +1093,15 @@ async function submitTrailerUserRating(trailerId, rating) {
 function closeTrailerUserRateModal() {
   const modal = document.getElementById("trailerUserRateModal");
   const input = document.getElementById("trailerUserRateInput");
+  const submitButton = document.getElementById("trailerUserRateSubmit");
   if (modal) modal.style.display = "none";
   if (input) {
     input.value = "";
     input.setCustomValidity("");
+  }
+  if (submitButton) {
+    submitButton.disabled = false;
+    submitButton.removeAttribute("aria-busy");
   }
   setRatingStars("trailerUserRateStars", 0);
   setStatusText("trailerUserRateStatus", "");
@@ -1113,6 +1118,7 @@ function openTrailerUserRateModal(trailerId) {
   const modal = document.getElementById("trailerUserRateModal");
   const title = document.getElementById("trailerUserRateTitle");
   const poster = document.getElementById("trailerUserRatePoster");
+  const submitButton = document.getElementById("trailerUserRateSubmit");
 
   if (!modal || !title || !poster || !trailer) return;
 
@@ -1128,6 +1134,10 @@ function openTrailerUserRateModal(trailerId) {
   setRatingStars("trailerUserRateStars", 0);
   setupRatingStars("trailerUserRateStars");
   setStatusText("trailerUserRateStatus", "");
+  if (submitButton) {
+    submitButton.disabled = false;
+    submitButton.removeAttribute("aria-busy");
+  }
   modal.style.display = "block";
 }
 
@@ -1959,7 +1969,7 @@ function setupFormEvents() {
       userRateSubmit.disabled = true;
       userRateSubmit.setAttribute("aria-busy", "true");
     }
-    setStatusText("trailerUserRateStatus", "Сохраняю оценку...");
+    setStatusText("trailerUserRateStatus", "Сохраняем оценку...");
 
     try {
       const updatedTrailer = await submitTrailerUserRating(userRatingTrailerId, rating);
@@ -1979,7 +1989,14 @@ function setupFormEvents() {
 
       rememberRatedTrailer(userRatingTrailerId, rating);
       renderSelectedTrailer();
-      closeTrailerUserRateModal();
+      setStatusText(
+        "trailerUserRateStatus",
+        `Ваша оценка: ${String(rating).replace(".", ",")} сохранена.`
+      );
+      if (userRateSubmit) {
+        userRateSubmit.disabled = true;
+        userRateSubmit.removeAttribute("aria-busy");
+      }
     } catch (error) {
       console.error("Failed to submit trailer user rating", error);
       setStatusText(
@@ -1989,7 +2006,7 @@ function setupFormEvents() {
       );
     } finally {
       isSubmittingTrailerUserRating = false;
-      if (userRateSubmit) {
+      if (userRateSubmit && !hasRatedTrailer(userRatingTrailerId)) {
         userRateSubmit.disabled = false;
         userRateSubmit.removeAttribute("aria-busy");
       }
