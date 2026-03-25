@@ -31,7 +31,25 @@
     <main id="trailersApp" class="trailer-app">
       <section class="trailer-sidebar trailer-panel">
         <div class="trailer-section-heading">
-          <p class="trailer-section-heading__eyebrow">PupsikTV</p>
+          <p id="trailerSectionEyebrow" class="trailer-section-heading__eyebrow">PupsikTV</p>
+          <div id="trailerAdminTabs" class="trailer-admin-tabs" hidden>
+            <button
+              id="trailerAdminTabTrailers"
+              class="trailer-admin-tabs__button is-active"
+              type="button"
+              data-sidebar-mode="trailers"
+            >
+              Трейлеры
+            </button>
+            <button
+              id="trailerAdminTabBoosty"
+              class="trailer-admin-tabs__button"
+              type="button"
+              data-sidebar-mode="boosty"
+            >
+              Boosty
+            </button>
+          </div>
           <h1>Трейлеры к стриму</h1>
         </div>
 
@@ -104,8 +122,33 @@
 
           <section class="trailer-saved-streams">
             <div class="trailer-list-section__header trailer-saved-streams__header">
+              <div class="trailer-list-section__actions">
+                <button id="openBoostyReviewFormButton" class="trailer-list-section__more trailer-list-section__more--link" type="button" hidden>Добавить обзор</button>
+              </div>
               <h2 id="trailerSavedStreamsTitle">Разборы стримов</h2>
             </div>
+            <form id="boostyReviewForm" class="trailer-form boosty-review-form" hidden>
+              <label class="trailer-form__field" for="boostyReviewTitleInput">
+                <span>Название обзора</span>
+                <input id="boostyReviewTitleInput" class="search-input" type="text" maxlength="300" placeholder="Например, Паук-Нуар - разбор" required>
+              </label>
+              <label class="trailer-form__field" for="boostyReviewUrlInput">
+                <span>Ссылка на Boosty</span>
+                <input id="boostyReviewUrlInput" class="search-input" type="url" maxlength="1000" placeholder="https://boosty.to/..." required>
+              </label>
+              <label class="trailer-form__field" for="boostyReviewImageInput">
+                <span>Картинка (необязательно)</span>
+                <input id="boostyReviewImageInput" class="search-input" type="url" maxlength="1000" placeholder="https://...">
+              </label>
+              <label class="trailer-form__field" for="boostyReviewMetaInput">
+                <span>Подпись (необязательно)</span>
+                <input id="boostyReviewMetaInput" class="search-input" type="text" maxlength="150" placeholder="Например, свежий обзор">
+              </label>
+              <button id="boostyReviewSubmitButton" class="btn btn-primary trailer-form__submit" type="submit">
+                <span>Добавить обзор</span>
+              </button>
+              <p id="boostyReviewFormStatus" class="trailer-form__status" aria-live="polite"></p>
+            </form>
             <div id="trailerSavedStreamsList" class="trailer-saved-streams__list" aria-live="polite"></div>
             <p id="trailerSavedStreamsEmpty" class="trailer-empty" hidden></p>
           </section>

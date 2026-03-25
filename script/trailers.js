@@ -1,5 +1,6 @@
 const TRAILER_API_URL = "/api/trailer-watchlist";
 const TRAILER_RATINGS_API_URL = "/api/trailer-ratings";
+const BOOSTY_REVIEWS_API_URL = "/api/boosty-reviews";
 const KP_API_SELECTION_URL = "/api/kp-api-selection";
 const VERIFY_ADMIN_URL = "/api/verify-admin";
 const ENV_URL = "/api/env";
@@ -33,6 +34,8 @@ let kinopoiskApiKeys = {
   "API 3": "",
 };
 let trailers = [];
+let boostyReviews = [];
+let boostyReviewsLoaded = false;
 let selectedTrailerId = null;
 let kinopoiskRequestId = 0;
 let trailerTitleSearchResults = [];
@@ -52,6 +55,8 @@ let trailerReleaseDateTrailerId = null;
 let trailerReleaseCalendarYear = null;
 let trailerReleaseCalendarMonth = null;
 let trailerActorTooltip = null;
+let trailerSidebarMode = "trailers";
+let isCreatingBoostyReview = false;
 const trailerActorCache = new Map();
 const trailerActorPending = new Map();
 const TRAILER_RATING_MEANINGS = {
@@ -354,6 +359,19 @@ function getTrailerBoostyContent() {
   };
 }
 
+function getRenderableBoostyStreams() {
+  if (boostyReviewsLoaded) {
+    return boostyReviews.map((item) => ({
+      title: String(item?.title || "").trim(),
+      href: String(item?.url || "").trim(),
+      image: String(item?.image || "").trim() || POSTER_PLACEHOLDER,
+      meta: String(item?.meta || "").trim(),
+    }));
+  }
+
+  return getTrailerBoostyContent().streams;
+}
+
 function renderBoostyStreamCard(item) {
   const link = document.createElement("a");
   link.className = "trailer-saved-stream-card";
@@ -408,6 +426,7 @@ function renderTrailerPublicSidebar() {
   }
 
   const content = getTrailerBoostyContent();
+  const streams = getRenderableBoostyStreams();
   title.textContent = content.title;
   description.textContent = content.description;
   link.href = content.profileUrl || DEFAULT_TRAILER_BOOSTY_CONTENT.profileUrl;
@@ -415,11 +434,117 @@ function renderTrailerPublicSidebar() {
   streamsTitle.textContent = content.streamsTitle;
 
   list.innerHTML = "";
-  content.streams.forEach((item) => list.appendChild(renderBoostyStreamCard(item)));
+  streams.forEach((item) => list.appendChild(renderBoostyStreamCard(item)));
 
-  list.hidden = content.streams.length === 0;
+  list.hidden = streams.length === 0;
   empty.textContent = content.emptyText;
-  empty.hidden = content.streams.length > 0;
+  empty.hidden = streams.length > 0;
+}
+
+function setBoostyReviewFormBusy(isBusy) {
+  const fields = [
+    "boostyReviewTitleInput",
+    "boostyReviewUrlInput",
+    "boostyReviewImageInput",
+    "boostyReviewMetaInput",
+  ];
+
+  fields.forEach((id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.disabled = Boolean(isBusy);
+    }
+  });
+
+  const submit = document.getElementById("boostyReviewSubmitButton");
+  if (submit) {
+    submit.disabled = Boolean(isBusy);
+    submit.setAttribute("aria-busy", String(Boolean(isBusy)));
+  }
+}
+
+function setTrailerSidebarMode(mode) {
+  const nextMode = mode === "boosty" ? "boosty" : "trailers";
+  trailerSidebarMode = nextMode;
+
+  const trailersTab = document.getElementById("trailerAdminTabTrailers");
+  const boostyTab = document.getElementById("trailerAdminTabBoosty");
+  const form = document.getElementById("trailerAddForm");
+  const plannedSection = document.querySelector(".trailer-list-section--planned");
+  const boostySection = document.getElementById("trailerBoostySection");
+  const boostyReviewForm = document.getElementById("boostyReviewForm");
+
+  if (trailersTab) {
+    trailersTab.classList.toggle("is-active", nextMode === "trailers");
+  }
+  if (boostyTab) {
+    boostyTab.classList.toggle("is-active", nextMode === "boosty");
+  }
+
+  if (hasAdminAccess) {
+    if (form) {
+      form.hidden = nextMode !== "trailers";
+    }
+    if (plannedSection) {
+      plannedSection.hidden = nextMode !== "trailers";
+    }
+    if (boostySection) {
+      boostySection.hidden = nextMode !== "boosty";
+    }
+    if (boostyReviewForm && nextMode !== "boosty") {
+      boostyReviewForm.hidden = true;
+      setStatusText("boostyReviewFormStatus", "");
+    }
+  }
+
+  syncTrailerSidebarHeight();
+}
+
+async function fetchBoostyReviews() {
+  boostyReviewsLoaded = false;
+
+  try {
+    const response = await fetch(BOOSTY_REVIEWS_API_URL, {
+      headers: getAdminAuthHeaders(),
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload?.error || `Failed to load Boosty reviews: ${response.status}`);
+    }
+
+    boostyReviews = Array.isArray(payload?.items) ? payload.items : [];
+    boostyReviewsLoaded = true;
+  } catch (error) {
+    console.error("Failed to load Boosty reviews", error);
+    boostyReviews = [];
+    boostyReviewsLoaded = false;
+  }
+
+  renderTrailerPublicSidebar();
+}
+
+async function createBoostyReview(payload) {
+  const response = await fetch(BOOSTY_REVIEWS_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAdminAuthHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data?.error || `Failed to create Boosty review: ${response.status}`);
+  }
+
+  if (data?.item) {
+    boostyReviews = [data.item, ...boostyReviews];
+    boostyReviewsLoaded = true;
+    renderTrailerPublicSidebar();
+  }
+
+  return data?.item || null;
 }
 
 function normalizeTrailerActorName(name = "") {
@@ -697,17 +822,21 @@ function renderTrailerActors(container, actorNames, filmId) {
 
 function updateTrailerAdminUi() {
   const page = document.querySelector(".trailer-page");
+  const eyebrow = document.getElementById("trailerSectionEyebrow");
+  const tabs = document.getElementById("trailerAdminTabs");
   const form = document.getElementById("trailerAddForm");
   const boostySection = document.getElementById("trailerBoostySection");
+  const addBoostyReviewButton = document.getElementById("openBoostyReviewFormButton");
+  const boostyReviewForm = document.getElementById("boostyReviewForm");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
 
-  if (form) {
-    form.hidden = !hasAdminAccess;
+  if (eyebrow) {
+    eyebrow.hidden = hasAdminAccess;
   }
 
-  if (boostySection) {
-    boostySection.hidden = hasAdminAccess;
+  if (tabs) {
+    tabs.hidden = !hasAdminAccess;
   }
 
   if (page) {
@@ -718,8 +847,28 @@ function updateTrailerAdminUi() {
     deleteButton.hidden = !hasAdminAccess;
   }
 
-  if (!hasAdminAccess) {
-    renderTrailerPublicSidebar();
+  if (addBoostyReviewButton) {
+    addBoostyReviewButton.hidden = !hasAdminAccess;
+  }
+
+  if (boostyReviewForm && !hasAdminAccess) {
+    boostyReviewForm.hidden = true;
+  }
+
+  renderTrailerPublicSidebar();
+
+  if (hasAdminAccess) {
+    if (boostySection) {
+      boostySection.hidden = false;
+    }
+    setTrailerSidebarMode(trailerSidebarMode);
+  } else {
+    if (form) {
+      form.hidden = true;
+    }
+    if (boostySection) {
+      boostySection.hidden = false;
+    }
     if (watchedButton) watchedButton.disabled = false;
   }
 }
@@ -1575,8 +1724,10 @@ function renderTrailerLists() {
 
   if (plannedLoading) plannedLoading.hidden = true;
   if (watchedLoading) watchedLoading.hidden = true;
-  if (plannedSection) plannedSection.hidden = !hasAdminAccess;
-  if (plannedList) plannedList.hidden = !hasAdminAccess;
+  if (plannedSection) {
+    plannedSection.hidden = !hasAdminAccess || trailerSidebarMode !== "trailers";
+  }
+  if (plannedList) plannedList.hidden = !hasAdminAccess || trailerSidebarMode !== "trailers";
   if (plannedEmpty) plannedEmpty.hidden = planned.length > 0;
   if (plannedCount) plannedCount.textContent = String(planned.length);
   if (plannedModalCount) plannedModalCount.textContent = String(planned.length);
@@ -1724,8 +1875,12 @@ function setTrailerListsLoading(isLoading) {
   const watchedGrid = document.getElementById("watchedTrailersGrid");
   const watchedEmpty = document.getElementById("watchedTrailersEmpty");
 
-  if (plannedSection) plannedSection.hidden = !hasAdminAccess;
-  if (plannedLoading) plannedLoading.hidden = !isLoading || !hasAdminAccess;
+  if (plannedSection) {
+    plannedSection.hidden = !hasAdminAccess || trailerSidebarMode !== "trailers";
+  }
+  if (plannedLoading) {
+    plannedLoading.hidden = !isLoading || !hasAdminAccess || trailerSidebarMode !== "trailers";
+  }
   if (watchedLoading) watchedLoading.hidden = !isLoading;
   if (plannedList) plannedList.hidden = Boolean(isLoading) || !hasAdminAccess;
   if (plannedEmpty) plannedEmpty.hidden = true;
@@ -2686,10 +2841,17 @@ function setupListEvents() {
 
 function setupFormEvents() {
   const form = document.getElementById("trailerAddForm");
+  const adminTabs = document.getElementById("trailerAdminTabs");
   const titleInput = document.getElementById("trailerTitleInput");
   const urlInput = document.getElementById("trailerUrlInput");
   const titleResults = document.getElementById("trailerTitleResults");
   const selectedMovieClear = document.getElementById("trailerSelectedMovieClear");
+  const openBoostyReviewFormButton = document.getElementById("openBoostyReviewFormButton");
+  const boostyReviewForm = document.getElementById("boostyReviewForm");
+  const boostyReviewTitleInput = document.getElementById("boostyReviewTitleInput");
+  const boostyReviewUrlInput = document.getElementById("boostyReviewUrlInput");
+  const boostyReviewImageInput = document.getElementById("boostyReviewImageInput");
+  const boostyReviewMetaInput = document.getElementById("boostyReviewMetaInput");
   const ratingInput = document.getElementById("trailerRatingInput");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
@@ -2702,6 +2864,23 @@ function setupFormEvents() {
   const releaseDateForm = document.getElementById("trailerReleaseDateForm");
   const releaseDatePrev = document.getElementById("trailerReleaseCalendarPrev");
   const releaseDateNext = document.getElementById("trailerReleaseCalendarNext");
+
+  adminTabs?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-sidebar-mode]");
+    if (!button || !hasAdminAccess) return;
+    setTrailerSidebarMode(button.dataset.sidebarMode);
+  });
+
+  openBoostyReviewFormButton?.addEventListener("click", () => {
+    if (!hasAdminAccess || !boostyReviewForm) return;
+    const nextHidden = !boostyReviewForm.hidden;
+    boostyReviewForm.hidden = nextHidden;
+    if (!nextHidden) {
+      boostyReviewTitleInput?.focus();
+    } else {
+      setStatusText("boostyReviewFormStatus", "");
+    }
+  });
 
   titleInput?.addEventListener("input", () => {
     const nextValue = String(titleInput.value || "").trim();
@@ -2802,6 +2981,56 @@ function setupFormEvents() {
     } finally {
       isCreatingTrailer = false;
       setTrailerFormBusy(false);
+    }
+  });
+
+  boostyReviewForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!hasAdminAccess || isCreatingBoostyReview) {
+      return;
+    }
+
+    const title = String(boostyReviewTitleInput?.value || "").trim();
+    const url = String(boostyReviewUrlInput?.value || "").trim();
+    const image = String(boostyReviewImageInput?.value || "").trim();
+    const meta = String(boostyReviewMetaInput?.value || "").trim();
+
+    if (!title) {
+      setStatusText("boostyReviewFormStatus", "Укажите название обзора.", true);
+      return;
+    }
+
+    if (!url) {
+      setStatusText("boostyReviewFormStatus", "Укажите ссылку на Boosty.", true);
+      return;
+    }
+
+    setStatusText("boostyReviewFormStatus", "Сохраняю обзор...");
+    isCreatingBoostyReview = true;
+    setBoostyReviewFormBusy(true);
+
+    try {
+      await createBoostyReview({
+        title,
+        url,
+        image,
+        meta,
+      });
+
+      boostyReviewForm.reset();
+      setStatusText("boostyReviewFormStatus", "Обзор добавлен.");
+      boostyReviewTitleInput?.focus();
+    } catch (error) {
+      console.error("Failed to create Boosty review", error);
+      setStatusText(
+        "boostyReviewFormStatus",
+        error?.message || "Не удалось добавить обзор.",
+        true
+      );
+    } finally {
+      isCreatingBoostyReview = false;
+      setBoostyReviewFormBusy(false);
     }
   });
 
@@ -3048,6 +3277,7 @@ async function initPage() {
     setupListEvents();
     setupFormEvents();
     setTrailerFormBusy(hasAdminAccess ? false : true);
+    await fetchBoostyReviews();
     await fetchTrailers();
     window.addEventListener("resize", syncTrailerSidebarHeight);
     requestAnimationFrame(syncTrailerSidebarHeight);

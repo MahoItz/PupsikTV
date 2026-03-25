@@ -59,6 +59,42 @@
   gap: 8px;
 }
 
+.trailer-admin-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trailer-admin-tabs__button {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid rgba(0, 212, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(8, 20, 38, 0.72);
+  color: rgba(216, 248, 255, 0.86);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.trailer-admin-tabs__button:hover,
+.trailer-admin-tabs__button:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  border-color: rgba(116, 222, 255, 0.38);
+  color: #f4fbff;
+}
+
+.trailer-admin-tabs__button.is-active {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(45, 135, 255, 0.16));
+  border-color: rgba(116, 222, 255, 0.44);
+  color: #f4fbff;
+  box-shadow: 0 10px 22px rgba(0, 212, 255, 0.16);
+}
+
 .trailer-section-heading__eyebrow,
 .trailer-player-panel__eyebrow {
   margin: 0;
@@ -299,6 +335,13 @@
 .trailer-saved-streams__list {
   display: grid;
   gap: 10px;
+}
+
+.boosty-review-form {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 212, 255, 0.14);
+  background: rgba(4, 12, 24, 0.42);
 }
 
 .trailer-saved-stream-card {
