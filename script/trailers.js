@@ -584,30 +584,50 @@ function syncTrailerRatingPreview(value, options = {}) {
 }
 
 function highlightStars(containerId, rating) {
-  const stars = document.querySelectorAll(`#${containerId} .rating-star`);
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const stars = container.querySelectorAll(".rating-star");
+  const currentRating = getCurrentRating(containerId);
 
   stars.forEach((star) => {
     star.classList.remove("hovered");
-    star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
+    star.classList.remove("selected-anchor");
     if (star.classList.contains("rating-label")) {
-      star.style.backgroundColor = "transparent";
+      star.style.backgroundColor = "";
+      return;
     }
+    star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
   });
 
   if (rating === null || rating === undefined || Number.isNaN(Number(rating))) {
     return;
   }
 
-  if (rating >= 1 && rating <= 10) {
-    for (let i = 1; i <= rating; i += 1) {
+  if (rating === 0) {
+    stars[0]?.classList.add("hovered");
+  } else if (rating >= 1 && rating <= 10) {
+    for (let i = 0; i <= rating; i += 1) {
       stars[i]?.classList.add("hovered");
-      if (stars[i]) stars[i].style.backgroundColor = "#ffc107";
+      if (stars[i] && !stars[i].classList.contains("rating-label")) {
+        stars[i].style.backgroundColor = "#ffc107";
+      }
     }
   } else if (rating === 11) {
-    for (let i = 1; i <= 10; i += 1) {
+    for (let i = 0; i <= 11; i += 1) {
       stars[i]?.classList.add("hovered");
-      if (stars[i]) stars[i].style.backgroundColor = "#ffc107";
+      if (stars[i] && !stars[i].classList.contains("rating-label")) {
+        stars[i].style.backgroundColor = "#ffc107";
+      }
     }
+  }
+
+  if (
+    Number.isInteger(currentRating) &&
+    currentRating >= 0 &&
+    currentRating <= 11 &&
+    currentRating !== rating
+  ) {
+    stars[currentRating]?.classList.add("selected-anchor");
   }
 }
 
@@ -628,7 +648,12 @@ function setRatingStars(containerId, rating, updateInput = true) {
     syncTrailerRatingPreview(hasValue ? rating : null, { updateInput });
   }
 
-  stars.forEach((star) => star.classList.remove("active"));
+  stars.forEach((star) => {
+    star.classList.remove("active");
+    if (star.classList.contains("rating-label")) {
+      star.style.backgroundColor = "";
+    }
+  });
 
   if (!hasValue) {
     return;
@@ -637,14 +662,13 @@ function setRatingStars(containerId, rating, updateInput = true) {
   if (rating === 0) {
     stars[0]?.classList.add("active");
   } else if (rating >= 1 && rating <= 10) {
-    for (let i = 1; i <= rating; i += 1) {
+    for (let i = 0; i <= rating; i += 1) {
       stars[i]?.classList.add("active");
     }
   } else if (rating === 11) {
-    for (let i = 1; i <= 10; i += 1) {
+    for (let i = 0; i <= 11; i += 1) {
       stars[i]?.classList.add("active");
     }
-    stars[11]?.classList.add("active");
   }
 }
 
