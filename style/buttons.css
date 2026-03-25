@@ -44,6 +44,12 @@
     left: 100%;
 }
 
+.btn:disabled {
+    cursor: not-allowed;
+    transform: none;
+    animation: none;
+}
+
 .btn-primary {
     background: linear-gradient(135deg, var(--primary-color), #ff8a65);
     color: white;
@@ -55,6 +61,13 @@
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 0 30px rgba(255, 108, 66, 0.6), 0 8px 25px rgba(255, 108, 66, 0.3);
     animation: pulse 0.6s ease-in-out;
+}
+
+.btn-primary:disabled {
+    background: linear-gradient(135deg, #6a7078, #8d949e);
+    border-color: #6a7078;
+    color: rgba(255, 255, 255, 0.86);
+    box-shadow: none;
 }
 
 .btn-secondary {
