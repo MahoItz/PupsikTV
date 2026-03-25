@@ -88,7 +88,7 @@
 
   async function loadEnv() {
     const response = await withTimeout(
-      fetch(buildApiPath("/env"), {
+      fetch(buildApiPath("/admin?action=env"), {
         headers: {
           Accept: "application/json",
         },
@@ -641,7 +641,7 @@
     } catch (error) {
       console.error("Failed to initialize stats page", error);
       showError(
-        "Не удалось загрузить статистику сайта. Проверь доступ к Supabase и настройки /api/env. Если страница долго грузится, значит один из запросов не ответил вовремя."
+        "Не удалось загрузить статистику сайта. Проверь доступ к Supabase и настройки /api/admin?action=env. Если страница долго грузится, значит один из запросов не ответил вовремя."
       );
     }
   }

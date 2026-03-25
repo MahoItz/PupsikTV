@@ -600,7 +600,8 @@ async function fetchStudiosFromTmdb(imdbId) {
 
   try {
     const params = new URLSearchParams({ imdbId });
-    const tmdbUrl = `${buildApiPath("/tmdb")}?${params.toString()}`;
+    params.set("provider", "tmdb");
+    const tmdbUrl = `${buildApiPath("/external")}?${params.toString()}`;
     const response = await fetch(tmdbUrl);
 
     if (!response.ok) {

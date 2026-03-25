@@ -1,5 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
-const { extractBearerToken, verifyAdminToken } = require("./_admin-session.js");
+const { extractBearerToken, verifyAdminToken } = require("../lib/admin-session.js");
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const TABLE_NAME = "kinopoisk_actors";

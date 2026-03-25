@@ -1,7 +1,12 @@
 const { createClient } = require("@supabase/supabase-js");
-const { extractBearerToken, verifyAdminToken } = require("./_admin-session.js");
+const {
+  extractBearerToken,
+  issueAdminToken,
+  verifyAdminToken,
+} = require("../lib/admin-session.js");
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
+const ALLOWED_ACTIONS = ["env", "verify-admin"];
 
 function createSupabaseClient() {
   const supabaseKey =
@@ -37,7 +42,7 @@ async function loadSelectedKinopoiskApi() {
   }
 }
 
-async function handler(req, res) {
+async function handleEnv(req, res) {
   let password;
   try {
     password =
@@ -52,7 +57,6 @@ async function handler(req, res) {
   }
 
   let isAdmin = false;
-
   const authToken = extractBearerToken(req.headers.authorization);
 
   if (authToken) {
@@ -108,7 +112,90 @@ async function handler(req, res) {
     }
   }
 
-  res.status(200).json(env);
+  return res.status(200).json(env);
 }
 
-module.exports = handler;
+function getTokenExpiresAt(payload) {
+  return payload && typeof payload.exp === "number"
+    ? new Date(payload.exp).toISOString()
+    : null;
+}
+
+function handleVerifyAdmin(req, res) {
+  const method = (req.method || "").toUpperCase();
+
+  if (method === "GET") {
+    try {
+      const token = extractBearerToken(req.headers.authorization);
+      if (!token) {
+        return res.status(401).json({ ok: false, error: "Missing token" });
+      }
+
+      const result = verifyAdminToken(token);
+      if (!result.valid) {
+        return res.status(401).json({
+          ok: false,
+          error: result.error || "Invalid token",
+          expired: Boolean(result.expired),
+        });
+      }
+
+      return res.status(200).json({
+        ok: true,
+        expiresAt: getTokenExpiresAt(result.payload),
+      });
+    } catch (err) {
+      console.error("Admin token verification error", err);
+      return res.status(500).json({ ok: false, error: "Server error" });
+    }
+  }
+
+  if (method === "POST") {
+    let password;
+    try {
+      password =
+        req.body?.password ||
+        (typeof req.body === "string"
+          ? JSON.parse(req.body || "{}").password
+          : undefined);
+    } catch {
+      return res.status(401).json({ ok: false, error: "Invalid password" });
+    }
+
+    if (password !== process.env.EDIT_PASSWORD) {
+      return res.status(401).json({ ok: false, error: "Invalid password" });
+    }
+
+    try {
+      const { token, payload } = issueAdminToken();
+      return res.status(200).json({
+        ok: true,
+        token,
+        expiresAt: getTokenExpiresAt(payload),
+      });
+    } catch (err) {
+      console.error("Admin token issue error", err);
+      return res.status(500).json({ ok: false, error: "Server error" });
+    }
+  }
+
+  res.setHeader("Allow", ["GET", "POST"]);
+  return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+}
+
+module.exports = async function handler(req, res) {
+  const action = String(req.query?.action || "").trim().toLowerCase();
+
+  if (!ALLOWED_ACTIONS.includes(action)) {
+    return res.status(400).json({
+      error: "Unknown admin action",
+      allowedActions: ALLOWED_ACTIONS,
+    });
+  }
+
+  if (action === "env") {
+    return handleEnv(req, res);
+  }
+
+  return handleVerifyAdmin(req, res);
+};

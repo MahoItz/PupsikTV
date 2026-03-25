@@ -370,12 +370,12 @@ async function verifyAdminAccess() {
   const token = localStorage.getItem("adminToken") || "";
   if (!token) return false;
 
-  const verifyRes = await fetch("/api/verify-admin", {
+  const verifyRes = await fetch("/api/admin?action=verify-admin", {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!verifyRes.ok) return false;
 
-  const envRes = await fetch("/api/env", {
+  const envRes = await fetch("/api/admin?action=env", {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!envRes.ok) return false;

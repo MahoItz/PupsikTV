@@ -2,8 +2,8 @@ const TRAILER_API_URL = "/api/trailer-watchlist";
 const TRAILER_RATINGS_API_URL = "/api/trailer-ratings";
 const BOOSTY_REVIEWS_API_URL = "/api/boosty-reviews";
 const KP_API_SELECTION_URL = "/api/kp-api-selection";
-const VERIFY_ADMIN_URL = "/api/verify-admin";
-const ENV_URL = "/api/env";
+const VERIFY_ADMIN_URL = "/api/admin?action=verify-admin";
+const ENV_URL = "/api/admin?action=env";
 const KINOPOISK_ACTORS_API_URL = "/api/kinopoisk-actors";
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";

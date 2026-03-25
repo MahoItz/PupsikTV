@@ -1,6 +1,6 @@
 const { createClient } = require("@supabase/supabase-js");
 const { createHash } = require("node:crypto");
-const { extractBearerToken, verifyAdminToken } = require("./_admin-session.js");
+const { extractBearerToken, verifyAdminToken } = require("../lib/admin-session.js");
 
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const TABLE_NAME = "admin_player_history";

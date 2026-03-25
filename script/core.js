@@ -44,7 +44,7 @@ function getGamePosterStoragePath(posterUrl) {
 
 function isPosterProxyUrl(url) {
   if (!url || typeof url !== "string") return false;
-  return url.includes("/api/poster-proxy?url=");
+  return url.includes("/api/external?provider=poster-proxy&url=");
 }
 
 function proxyPosterUrl(url) {
@@ -53,7 +53,9 @@ function proxyPosterUrl(url) {
   try {
     const host = new URL(url).hostname.toLowerCase();
     if (host.includes("steamgriddb.com")) {
-      return buildApiPath(`/poster-proxy?url=${encodeURIComponent(url)}`);
+      return buildApiPath(
+        `/external?provider=poster-proxy&url=${encodeURIComponent(url)}`
+      );
     }
   } catch (err) {
     return url;
@@ -96,7 +98,9 @@ async function uploadGamePosterToStorage({
   } else if (typeof poster === "string") {
     try {
       const fetchUrl = poster.startsWith("http")
-        ? buildApiPath(`/poster-proxy?url=${encodeURIComponent(poster)}`)
+        ? buildApiPath(
+            `/external?provider=poster-proxy&url=${encodeURIComponent(poster)}`
+          )
         : poster;
       const response = await fetch(fetchUrl);
       if (!response.ok) {
@@ -1253,7 +1257,7 @@ async function loadEnv(options = {}) {
   }
 
   try {
-    const res = await fetch("/api/env", { headers });
+    const res = await fetch("/api/admin?action=env", { headers });
     if (res.status === 401 && token && !opts._retriedWithoutToken) {
       clearAdminSession();
       return loadEnv({
@@ -1360,7 +1364,7 @@ async function verifyAdminPassword(password) {
     return { ok: false };
   }
   try {
-    const res = await fetch("/api/verify-admin", {
+    const res = await fetch("/api/admin?action=verify-admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
@@ -1384,7 +1388,7 @@ async function verifyAdminTokenRequest(token) {
     return { ok: false };
   }
   try {
-    const res = await fetch("/api/verify-admin", {
+    const res = await fetch("/api/admin?action=verify-admin", {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
@@ -3105,7 +3109,7 @@ async function fetchSteamGridPostersForTitle(title) {
   }
   try {
     const res = await fetch(
-      `/api/steamgriddb?search=${encodeURIComponent(title)}`
+      `/api/external?provider=steamgriddb&search=${encodeURIComponent(title)}`
     );
     if (!res.ok) {
       return {
