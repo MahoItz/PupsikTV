@@ -1466,7 +1466,11 @@ function renderSelectedTrailer() {
     openYoutube.setAttribute("aria-disabled", "false");
   }
   const selectedRating = hasAdminAccess
-    ? Number(trailer.streamer_rating)
+    ? trailer.streamer_rating === null ||
+      trailer.streamer_rating === undefined ||
+      trailer.streamer_rating === ""
+      ? null
+      : Number(trailer.streamer_rating)
     : getRatedTrailerValue(trailer.id);
   const normalizedSelectedRating = Number.isFinite(selectedRating) ? selectedRating : null;
   if (panelTitle) {
@@ -1474,7 +1478,7 @@ function renderSelectedTrailer() {
   }
   if (panelDescription) {
     panelDescription.textContent = hasAdminAccess
-      ? "Поставьте оценку стримера и переместите трейлер в просмотренные."
+      ? ""
       : hasRatedTrailer(trailer.id)
         ? "Здесь показана ваша оценка. Повторно оценить этот трейлер нельзя."
         : "Здесь вы тоже можете поставить свою зрительскую оценку трейлеру.";
