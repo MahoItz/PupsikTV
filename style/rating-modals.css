@@ -67,3 +67,288 @@
     max-width: 250px;
 }
 
+.modal-rating-panel {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.modal-rating-panel--with-gap {
+    margin-top: 6px;
+}
+
+.modal-rating-panel__value-row {
+    display: block;
+}
+
+.modal-rating-panel__value-box {
+    display: grid;
+    grid-template-columns: minmax(150px, 180px) minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(8, 20, 38, 0.9), rgba(11, 27, 49, 0.82));
+    border: 1px solid rgba(116, 222, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 14px 30px rgba(2, 6, 14, 0.18);
+}
+
+.modal-rating-panel__value-field {
+    display: grid;
+    gap: 4px;
+    padding: 8px 12px;
+    background: rgba(6, 16, 31, 0.26);
+}
+
+.modal-rating-panel__value-label {
+    display: none;
+}
+
+.modal-rating-input-wrapper {
+    justify-content: flex-start;
+    margin-bottom: 0;
+    gap: 10px;
+}
+
+.modal-rating-panel .rating-input {
+    width: 105px;
+    padding: 8px 12px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    text-align: left;
+    color: #f4fbff;
+    background: linear-gradient(135deg, rgba(8, 22, 44, 0.92), rgba(20, 10, 38, 0.88));
+    border: 1px solid rgba(116, 222, 255, 0.3);
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 8px 18px rgba(2, 6, 14, 0.25);
+}
+
+.modal-rating-panel .rating-input:focus {
+    outline: none;
+    border-color: rgba(116, 222, 255, 0.62);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 0 3px rgba(0, 212, 255, 0.14), 0 10px 22px rgba(2, 6, 14, 0.3);
+}
+
+.modal-rating-input-wrapper .rating-max {
+    color: rgba(212, 244, 255, 0.82);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.modal-rating-panel__meaning {
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    text-align: center;
+    border-left: 1px solid rgba(116, 222, 255, 0.16);
+    background: rgba(255, 255, 255, 0.02);
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.modal-rating-panel__meaning-text {
+    color: var(--modal-rating-meaning-color, #f4fbff);
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.modal-rating-panel__meaning.is-level-0,
+.modal-rating-panel__meaning.is-level-1,
+.modal-rating-panel__meaning.is-level-2 {
+    --modal-rating-meaning-color: #ff9b9b;
+    background: linear-gradient(135deg, rgba(92, 22, 22, 0.34), rgba(54, 12, 22, 0.2));
+    border-left-color: rgba(255, 120, 120, 0.24);
+    box-shadow: inset 0 0 0 1px rgba(255, 120, 120, 0.05);
+}
+
+.modal-rating-panel__meaning.is-level-3,
+.modal-rating-panel__meaning.is-level-4 {
+    --modal-rating-meaning-color: #ffbd80;
+    background: linear-gradient(135deg, rgba(94, 54, 18, 0.3), rgba(63, 33, 10, 0.18));
+    border-left-color: rgba(255, 177, 99, 0.24);
+    box-shadow: inset 0 0 0 1px rgba(255, 177, 99, 0.05);
+}
+
+.modal-rating-panel__meaning.is-level-5,
+.modal-rating-panel__meaning.is-level-6 {
+    --modal-rating-meaning-color: #f1de9c;
+    background: linear-gradient(135deg, rgba(92, 82, 28, 0.22), rgba(58, 47, 10, 0.14));
+    border-left-color: rgba(241, 222, 156, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(241, 222, 156, 0.04);
+}
+
+.modal-rating-panel__meaning.is-level-7,
+.modal-rating-panel__meaning.is-level-8 {
+    --modal-rating-meaning-color: #8ce3c0;
+    background: linear-gradient(135deg, rgba(16, 82, 60, 0.24), rgba(9, 48, 34, 0.14));
+    border-left-color: rgba(105, 226, 177, 0.22);
+    box-shadow: inset 0 0 0 1px rgba(105, 226, 177, 0.04);
+}
+
+.modal-rating-panel__meaning.is-level-9,
+.modal-rating-panel__meaning.is-level-10,
+.modal-rating-panel__meaning.is-level-11 {
+    --modal-rating-meaning-color: #7fdfff;
+    background: linear-gradient(135deg, rgba(10, 70, 92, 0.26), rgba(8, 34, 61, 0.16));
+    border-left-color: rgba(127, 223, 255, 0.24);
+    box-shadow: inset 0 0 0 1px rgba(127, 223, 255, 0.05);
+}
+
+.modal-rating-stars {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+    margin-top: 0;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(7, 18, 36, 0.92), rgba(12, 28, 52, 0.86));
+    border: 1px solid rgba(116, 222, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 18px 34px rgba(2, 6, 14, 0.22);
+}
+
+.modal-rating-stars .rating-star {
+    margin-bottom: 0;
+}
+
+.modal-rating-stars .rating-star:not(.rating-label) {
+    width: 100%;
+    max-width: 34px;
+    height: 34px;
+    justify-self: center;
+}
+
+.modal-rating-stars .rating-star.rating-label {
+    width: 100%;
+    max-width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    font-size: 0;
+    line-height: 0;
+    color: transparent;
+    text-shadow: none;
+    background-color: rgba(255, 235, 59, 0.3);
+    -webkit-mask: url('/images/Rat_rate.webp') center/contain no-repeat;
+    mask: url('/images/Rat_rate.webp') center/contain no-repeat;
+    justify-self: center;
+    transform: none;
+}
+
+.modal-rating-stars .rating-star.rating-label:hover,
+.modal-rating-stars .rating-star.rating-label.hover-highlight {
+    background-color: rgba(255, 235, 59, 0.3);
+    border-color: transparent;
+    color: transparent;
+    text-shadow: none;
+    transform: none;
+}
+
+.modal-rating-stars .rating-star.rating-label[data-rating="0"]:hover,
+.modal-rating-stars .rating-star.rating-label[data-rating="0"].hovered {
+    background-color: #ff8a6b;
+    -webkit-mask-image: url('/images/Rat_Worst.webp');
+    mask-image: url('/images/Rat_Worst.webp');
+}
+
+.modal-rating-stars:not(.is-hover-previewing) .rating-star.rating-label[data-rating="0"].active {
+    background-color: #ff6b57;
+    -webkit-mask-image: url('/images/Rat_Worst.webp');
+    mask-image: url('/images/Rat_Worst.webp');
+}
+
+.modal-rating-stars .rating-star.rating-label[data-rating="11"]:hover,
+.modal-rating-stars .rating-star.rating-label[data-rating="11"].hovered {
+    background-color: #00e74f;
+    -webkit-mask-image: url('/images/Rat_Best.webp');
+    mask-image: url('/images/Rat_Best.webp');
+}
+
+.modal-rating-stars:not(.is-hover-previewing) .rating-star.rating-label[data-rating="11"].active {
+    background-color: #00e74f;
+    -webkit-mask-image: url('/images/Rat_Best.webp');
+    mask-image: url('/images/Rat_Best.webp');
+}
+
+#rateMovieTitle,
+#rateGameTitle,
+#userRateMovieTitle,
+#userRateGameTitle {
+    order: -1;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    padding: 12px 0 14px;
+    font-size: 1.05rem;
+    font-weight: 900;
+    line-height: 1.25;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #cfe3ff;
+    text-align: center;
+    border-top: 1px solid rgba(116, 150, 210, 0.18);
+    border-bottom: 1px solid rgba(116, 150, 210, 0.18);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+    text-wrap: balance;
+}
+
+#rateMovieModal .rate-poster,
+#rateGameModal .rate-poster,
+#userRateModal .rate-poster,
+#userRateGameModal .rate-poster {
+    display: grid;
+    gap: 14px;
+    justify-items: center;
+    text-align: center;
+}
+
+#addMovieModal > .modal-content > h2,
+#addWatchlistModal > .modal-content > h2,
+#addGameModal > .modal-content > h2,
+#addPlayedGameModal > .modal-content > h2 {
+    margin: 0 0 18px;
+    padding: 12px 0 14px;
+    font-size: 1.05rem;
+    font-weight: 900;
+    line-height: 1.25;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #cfe3ff;
+    text-align: center;
+    border-top: 1px solid rgba(116, 150, 210, 0.18);
+    border-bottom: 1px solid rgba(116, 150, 210, 0.18);
+}
+
+@media (max-width: 640px) {
+    .modal-rating-panel__value-box {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-rating-panel__meaning {
+        min-height: 72px;
+        border-left: 0;
+        border-top: 1px solid rgba(116, 222, 255, 0.16);
+    }
+
+    .modal-rating-stars {
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .modal-rating-stars .rating-star:not(.rating-label) {
+        max-width: 28px;
+        height: 28px;
+    }
+
+    .modal-rating-panel .rating-input {
+        width: 112px;
+        font-size: 1.3rem;
+    }
+}
+

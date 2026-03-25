@@ -133,7 +133,7 @@ function openRateModal(id) {
       "https://via.placeholder.com/300x400?text=Нет+постера";
   }
   document.getElementById("rateMovieModal").style.display = "block";
-  setRatingStars("rateMovieStars", 0);
+  setRatingStars("rateMovieStars", null);
   setupRatingStars("rateMovieStars");
   const confirmBtn = document.querySelector("#rateMovieModal .btn-primary");
   if (confirmBtn) confirmBtn.disabled = isSubmittingRating;
@@ -151,7 +151,7 @@ function openRateGameModal(id) {
       "https://via.placeholder.com/300x400?text=Нет+постера";
   }
   document.getElementById("rateGameModal").style.display = "block";
-  setRatingStars("rateGameStars", 0);
+  setRatingStars("rateGameStars", null);
   setupRatingStars("rateGameStars");
 }
 
@@ -167,7 +167,7 @@ function openUserRateModal(id, targetType = "movie") {
   if (movie) {
     document.getElementById("userRateMovieTitle").textContent = movie.title;
     document.getElementById("userRateMoviePoster").src = movie.poster;
-    setRatingStars("userRateStars", 0);
+    setRatingStars("userRateStars", null);
   }
   document.getElementById("userRateModal").style.display = "block";
   setupRatingStars("userRateStars");
@@ -185,7 +185,7 @@ function openUserRateGameModal(id) {
     if (titleEl) titleEl.textContent = game.title;
     const posterEl = document.getElementById("userRateGamePoster");
     if (posterEl) posterEl.src = game.poster;
-    setRatingStars("userRateGameStars", 0);
+    setRatingStars("userRateGameStars", null);
   }
   const modal = document.getElementById("userRateGameModal");
   if (modal) modal.style.display = "block";
@@ -2395,7 +2395,7 @@ function openAddGameModal() {
 
 function openAddPlayedGameModal() {
   document.getElementById("addPlayedGameModal").style.display = "block";
-  setRatingStars("playedGameRatingStars", 0);
+  setRatingStars("playedGameRatingStars", null);
   setupRatingStars("playedGameRatingStars");
 }
 
@@ -2817,9 +2817,93 @@ function attachRatingTooltip(target, text) {
   target.addEventListener("mouseleave", hideRatingValueTooltip);
 }
 
+const MODAL_RATING_MEANINGS = {
+  0: "Абсолютный провал",
+  1: "Кошмар",
+  2: "Очень плохо",
+  3: "Плохо",
+  4: "Ниже среднего",
+  5: "Средне",
+  6: "Неплохо",
+  7: "Хорошо",
+  8: "Очень хорошо",
+  9: "Отлично",
+  10: "Великолепно",
+  11: "Легенда",
+};
+
+function getModalRatingUi(containerId) {
+  const map = {
+    ratingStars: { inputId: "ratingInput", meaningId: "ratingMeaning", meaningTextId: "ratingMeaningText" },
+    rateMovieStars: { inputId: "rateMovieInput", meaningId: "rateMovieMeaning", meaningTextId: "rateMovieMeaningText" },
+    rateGameStars: { inputId: "rateGameInput", meaningId: "rateGameMeaning", meaningTextId: "rateGameMeaningText" },
+    userRateStars: { inputId: "userRateInput", meaningId: "userRateMeaning", meaningTextId: "userRateMeaningText" },
+    userRateGameStars: { inputId: "userRateGameInput", meaningId: "userRateGameMeaning", meaningTextId: "userRateGameMeaningText" },
+    playedGameRatingStars: { inputId: "playedGameRatingInput", meaningId: "playedGameRatingMeaning", meaningTextId: "playedGameRatingMeaningText" },
+  };
+  return map[containerId] || null;
+}
+
+function clampModalRatingValue(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.min(11, Math.max(0, numeric));
+}
+
+function formatModalRatingValue(value) {
+  const normalized = clampModalRatingValue(value);
+  if (Number.isInteger(normalized)) return String(normalized);
+  return String(Math.round(normalized * 100) / 100).replace(".", ",");
+}
+
+function updateModalRatingMeaning(value, containerId) {
+  const ui = getModalRatingUi(containerId);
+  if (!ui) return;
+  const meaning = document.getElementById(ui.meaningId);
+  const meaningText = document.getElementById(ui.meaningTextId);
+  if (!meaning || !meaningText) return;
+
+  if (value === null || value === undefined || value === "") {
+    meaning.className = "modal-rating-panel__meaning";
+    meaningText.textContent = "";
+    return;
+  }
+
+  const nearest = Math.round(clampModalRatingValue(value));
+  meaning.className = `modal-rating-panel__meaning is-level-${nearest}`;
+  meaningText.textContent = MODAL_RATING_MEANINGS[nearest] || MODAL_RATING_MEANINGS[0];
+}
+
+function syncModalRatingPreview(containerId, value, options = {}) {
+  const ui = getModalRatingUi(containerId);
+  if (!ui) return;
+  const { updateInput = true } = options;
+  const input = document.getElementById(ui.inputId);
+  if (updateInput && input) {
+    input.value =
+      value === null || value === undefined || value === ""
+        ? ""
+        : formatModalRatingValue(value);
+  }
+  updateModalRatingMeaning(value, containerId);
+}
+
+function syncModalRatingInputValue(containerId, value) {
+  const ui = getModalRatingUi(containerId);
+  if (!ui) return;
+  const input = document.getElementById(ui.inputId);
+  if (input) {
+    input.value =
+      value === null || value === undefined || value === ""
+        ? ""
+        : String(value).replace(".", ",");
+  }
+}
+
 // Настройка звездного рейтинга
 function setupRatingStars(containerId = "ratingStars") {
   const container = document.getElementById(containerId);
+  if (!container || container.dataset.ready === "true") return;
   const stars = container.querySelectorAll(".rating-star");
   const inputId = container.dataset.input;
   const ratingInput = inputId ? document.getElementById(inputId) : null;
@@ -2831,8 +2915,10 @@ function setupRatingStars(containerId = "ratingStars") {
     });
 
     star.addEventListener("mouseover", function () {
+      container.classList.add("is-hover-previewing");
       const rating = parseInt(this.dataset.rating);
       highlightStars(containerId, rating);
+      syncModalRatingPreview(containerId, rating);
     });
 
     if (!star.classList.contains("rating-label")) {
@@ -2846,7 +2932,9 @@ function setupRatingStars(containerId = "ratingStars") {
 
   container.addEventListener("mouseleave", function () {
     const currentRating = getCurrentRating(containerId);
+    container.classList.remove("is-hover-previewing");
     highlightStars(containerId, currentRating);
+    syncModalRatingPreview(containerId, currentRating, { updateInput: false });
     hideRatingValueTooltip();
   });
 
@@ -2867,27 +2955,36 @@ function setupRatingStars(containerId = "ratingStars") {
       }
     });
   }
+  container.dataset.ready = "true";
 }
 
 function setRatingStars(containerId, rating, updateInput = true) {
   const container = document.getElementById(containerId);
+  if (!container) return;
   const stars = container.querySelectorAll(".rating-star");
-  container.dataset.currentRating = rating;
-  const inputId = container.dataset.input;
-  if (updateInput && inputId) {
-    const inp = document.getElementById(inputId);
-    if (inp) inp.value = String(rating).replace(".", ",");
+  const hasValue = !(rating === null || rating === undefined || rating === "");
+  container.dataset.currentRating = hasValue ? String(rating) : "";
+  if (updateInput) {
+    syncModalRatingInputValue(containerId, hasValue ? rating : null);
   }
+  syncModalRatingPreview(containerId, hasValue ? rating : null, { updateInput: false });
   stars.forEach((star) => star.classList.remove("active"));
+
+  if (!hasValue) {
+    if (containerId === "ratingStars") {
+      showKPPreview();
+    }
+    return;
+  }
 
   if (rating === 0) {
     stars[0]?.classList.add("active");
   } else if (rating >= 1 && rating <= 10) {
-    for (let i = 1; i <= rating; i++) {
+    for (let i = 0; i <= rating; i++) {
       stars[i]?.classList.add("active");
     }
   } else if (rating === 11) {
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 0; i <= 10; i++) {
       stars[i]?.classList.add("active");
     }
     stars[11]?.classList.add("active");
@@ -2900,32 +2997,46 @@ function setRatingStars(containerId, rating, updateInput = true) {
 function highlightStars(containerId, rating) {
   const stars = document.querySelectorAll(`#${containerId} .rating-star`);
 
-  stars.forEach((star, index) => {
+  stars.forEach((star) => {
     // Удаляем маску и цвет
     star.classList.remove("hovered");
     star.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
 
     if (star.classList.contains("rating-label")) {
-      star.style.backgroundColor = "transparent";
+      star.style.backgroundColor = "";
     }
   });
 
-  if (rating >= 1 && rating <= 10) {
-    for (let i = 1; i <= rating; i++) {
-      stars[i].style.backgroundColor = "#ffc107";
+  if (rating === null || rating === undefined || Number.isNaN(Number(rating))) {
+    return;
+  }
+
+  if (rating === 0) {
+    stars[0]?.classList.add("hovered");
+  } else if (rating >= 1 && rating <= 10) {
+    for (let i = 0; i <= rating; i++) {
       stars[i].classList.add("hovered");
+      if (!stars[i].classList.contains("rating-label")) {
+        stars[i].style.backgroundColor = "#ffc107";
+      }
     }
   } else if (rating === 11) {
-    for (let i = 1; i <= 10; i++) {
-      stars[i].style.backgroundColor = "#ffc107";
+    for (let i = 0; i <= 10; i++) {
       stars[i].classList.add("hovered");
+      if (!stars[i].classList.contains("rating-label")) {
+        stars[i].style.backgroundColor = "#ffc107";
+      }
     }
+    stars[11]?.classList.add("hovered");
   }
 }
 
 function getCurrentRating(containerId) {
   const container = document.getElementById(containerId);
-  return parseFloat(container.dataset.currentRating) || 0;
+  const raw = container?.dataset.currentRating;
+  if (raw === undefined || raw === null || raw === "") return null;
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function parseRatingInputValue(rawValue) {

@@ -1648,11 +1648,11 @@ function resetForm() {
     showPlayedGamePreview();
   }
 
-  setRatingStars("ratingStars", 0);
+  setRatingStars("ratingStars", null);
   setRatingStars("editRatingStars", 0);
   setRatingStars("editPlayedGameRatingStars", 0);
-  setRatingStars("playedGameRatingStars", 0);
-  setRatingStars("rateMovieStars", 0);
+  setRatingStars("playedGameRatingStars", null);
+  setRatingStars("rateMovieStars", null);
   syncRouletteAutofillState();
 }
 

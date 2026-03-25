@@ -396,9 +396,23 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Оценка:</label>
-                    <div class="rating-stars" id="ratingStars" data-input="ratingInput">
+                <div class="modal-rating-panel">
+                    <div class="modal-rating-panel__value-row">
+                        <div class="modal-rating-panel__value-box">
+                            <label class="modal-rating-panel__value-field" for="ratingInput">
+                                <span class="modal-rating-panel__value-label">Оценка</span>
+                                <div class="rating-input-wrapper modal-rating-input-wrapper">
+                                    <input id="ratingInput" type="number" min="0" max="11" step="0.01" class="rating-input"
+                                        placeholder="">
+                                    <span class="rating-max">/11</span>
+                                </div>
+                            </label>
+                            <div id="ratingMeaning" class="modal-rating-panel__meaning" aria-live="polite">
+                                <span id="ratingMeaningText" class="modal-rating-panel__meaning-text"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rating-stars modal-rating-stars" id="ratingStars" data-input="ratingInput">
                         <span class="rating-star rating-label" data-rating="0">worst</span>
                         <span class="rating-star" data-rating="1"></span>
                         <span class="rating-star" data-rating="2"></span>
@@ -411,11 +425,6 @@
                         <span class="rating-star" data-rating="9"></span>
                         <span class="rating-star" data-rating="10"></span>
                         <span class="rating-star rating-label" data-rating="11">best</span>
-                    </div>
-                    <div class="rating-input-wrapper">
-                        <input id="ratingInput" type="number" min="0" max="11" step="0.01" class="rating-input"
-                            placeholder="0">
-                        <span class="rating-max">/10</span>
                     </div>
                 </div>
 
@@ -526,9 +535,23 @@
                     src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                 <p id="rateMovieTitle"></p>
             </div>
-            <div class="form-group">
-                <label>Ваша оценка:</label>
-                <div class="rating-stars" id="rateMovieStars" data-input="rateMovieInput">
+            <div class="modal-rating-panel modal-rating-panel--with-gap">
+                <div class="modal-rating-panel__value-row">
+                    <div class="modal-rating-panel__value-box">
+                        <label class="modal-rating-panel__value-field" for="rateMovieInput">
+                            <span class="modal-rating-panel__value-label">Ваша оценка</span>
+                            <div class="rating-input-wrapper modal-rating-input-wrapper">
+                                <input id="rateMovieInput" type="number" min="0" max="11" step="0.01" class="rating-input"
+                                    placeholder="">
+                                <span class="rating-max">/11</span>
+                            </div>
+                        </label>
+                        <div id="rateMovieMeaning" class="modal-rating-panel__meaning" aria-live="polite">
+                            <span id="rateMovieMeaningText" class="modal-rating-panel__meaning-text"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="rating-stars modal-rating-stars" id="rateMovieStars" data-input="rateMovieInput">
                     <span class="rating-star rating-label" data-rating="0">worst</span>
                     <span class="rating-star" data-rating="1"></span>
                     <span class="rating-star" data-rating="2"></span>
@@ -541,11 +564,6 @@
                     <span class="rating-star" data-rating="9"></span>
                     <span class="rating-star" data-rating="10"></span>
                     <span class="rating-star rating-label" data-rating="11">best</span>
-                </div>
-                <div class="rating-input-wrapper">
-                    <input id="rateMovieInput" type="number" min="0" max="11" step="0.01" class="rating-input"
-                        placeholder="0">
-                    <span class="rating-max">/10</span>
                 </div>
             </div>
             <button onclick="submitRating()" class="btn btn-primary" style="width: 100%;">Оценить и переместить</button>
@@ -564,11 +582,23 @@
                     src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                 <p id="rateGameTitle"></p>
             </div>
-            <div class="form-group">
-                <label class="rate-game-label">
-                    <span>Ваша оценка игры:</span>
-                </label>
-                <div class="rating-stars" id="rateGameStars" data-input="rateGameInput">
+            <div class="modal-rating-panel modal-rating-panel--with-gap">
+                <div class="modal-rating-panel__value-row">
+                    <div class="modal-rating-panel__value-box">
+                        <label class="modal-rating-panel__value-field" for="rateGameInput">
+                            <span class="modal-rating-panel__value-label">Ваша оценка</span>
+                            <div class="rating-input-wrapper modal-rating-input-wrapper">
+                                <input id="rateGameInput" type="number" min="0" max="11" step="0.01" class="rating-input"
+                                    placeholder="">
+                                <span class="rating-max">/11</span>
+                            </div>
+                        </label>
+                        <div id="rateGameMeaning" class="modal-rating-panel__meaning" aria-live="polite">
+                            <span id="rateGameMeaningText" class="modal-rating-panel__meaning-text"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="rating-stars modal-rating-stars" id="rateGameStars" data-input="rateGameInput">
                     <span class="rating-star rating-label" data-rating="0">worst</span>
                     <span class="rating-star" data-rating="1"></span>
                     <span class="rating-star" data-rating="2"></span>
@@ -581,11 +611,6 @@
                     <span class="rating-star" data-rating="9"></span>
                     <span class="rating-star" data-rating="10"></span>
                     <span class="rating-star rating-label" data-rating="11">best</span>
-                </div>
-                <div class="rating-input-wrapper">
-                    <input id="rateGameInput" type="number" min="0" max="11" step="0.01" class="rating-input"
-                        placeholder="0">
-                    <span class="rating-max">/10</span>
                 </div>
             </div>
             <button onclick="submitGameRating()" class="btn btn-primary" style="width:100%;">Оценить и
@@ -616,9 +641,23 @@
                     src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                 <p id="userRateMovieTitle"></p>
             </div>
-            <div class="form-group">
-                <label>Ваша оценка:</label>
-                <div class="rating-stars" id="userRateStars" data-input="userRateInput">
+            <div class="modal-rating-panel modal-rating-panel--with-gap">
+                <div class="modal-rating-panel__value-row">
+                    <div class="modal-rating-panel__value-box">
+                        <label class="modal-rating-panel__value-field" for="userRateInput">
+                            <span class="modal-rating-panel__value-label">Ваша оценка</span>
+                            <div class="rating-input-wrapper modal-rating-input-wrapper">
+                                <input id="userRateInput" type="number" min="0" max="11" step="0.01" class="rating-input"
+                                    placeholder="">
+                                <span class="rating-max">/11</span>
+                            </div>
+                        </label>
+                        <div id="userRateMeaning" class="modal-rating-panel__meaning" aria-live="polite">
+                            <span id="userRateMeaningText" class="modal-rating-panel__meaning-text"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="rating-stars modal-rating-stars" id="userRateStars" data-input="userRateInput">
                     <span class="rating-star rating-label" data-rating="0">worst</span>
                     <span class="rating-star" data-rating="1"></span>
                     <span class="rating-star" data-rating="2"></span>
@@ -631,11 +670,6 @@
                     <span class="rating-star" data-rating="9"></span>
                     <span class="rating-star" data-rating="10"></span>
                     <span class="rating-star rating-label" data-rating="11">best</span>
-                </div>
-                <div class="rating-input-wrapper">
-                    <input id="userRateInput" type="number" min="0" max="11" step="0.01" class="rating-input"
-                        placeholder="0">
-                    <span class="rating-max">/10</span>
                 </div>
             </div>
             <button onclick="submitUserMovieRating()" class="btn btn-rate" style="width:100%;">Оценить</button>
@@ -654,9 +688,23 @@
                     src="https://dummyimage.com/300x400/181830/ffffff&text=Нет+постера" alt="Постер" loading="lazy">
                 <p id="userRateGameTitle"></p>
             </div>
-            <div class="form-group">
-                <label>Ваша оценка:</label>
-                <div class="rating-stars" id="userRateGameStars" data-input="userRateGameInput">
+            <div class="modal-rating-panel modal-rating-panel--with-gap">
+                <div class="modal-rating-panel__value-row">
+                    <div class="modal-rating-panel__value-box">
+                        <label class="modal-rating-panel__value-field" for="userRateGameInput">
+                            <span class="modal-rating-panel__value-label">Ваша оценка</span>
+                            <div class="rating-input-wrapper modal-rating-input-wrapper">
+                                <input id="userRateGameInput" type="number" min="0" max="11" step="0.01" class="rating-input"
+                                    placeholder="">
+                                <span class="rating-max">/11</span>
+                            </div>
+                        </label>
+                        <div id="userRateGameMeaning" class="modal-rating-panel__meaning" aria-live="polite">
+                            <span id="userRateGameMeaningText" class="modal-rating-panel__meaning-text"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="rating-stars modal-rating-stars" id="userRateGameStars" data-input="userRateGameInput">
                     <span class="rating-star rating-label" data-rating="0">worst</span>
                     <span class="rating-star" data-rating="1"></span>
                     <span class="rating-star" data-rating="2"></span>
@@ -669,11 +717,6 @@
                     <span class="rating-star" data-rating="9"></span>
                     <span class="rating-star" data-rating="10"></span>
                     <span class="rating-star rating-label" data-rating="11">best</span>
-                </div>
-                <div class="rating-input-wrapper">
-                    <input id="userRateGameInput" type="number" min="0" max="11" step="0.01" class="rating-input"
-                        placeholder="0">
-                    <span class="rating-max">/10</span>
                 </div>
             </div>
             <button onclick="submitUserGameRating()" class="btn btn-rate" style="width:100%;">Оценить</button>
@@ -935,9 +978,23 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Оценка:</label>
-                    <div class="rating-stars" id="playedGameRatingStars" data-input="playedGameRatingInput">
+                <div class="modal-rating-panel">
+                    <div class="modal-rating-panel__value-row">
+                        <div class="modal-rating-panel__value-box">
+                            <label class="modal-rating-panel__value-field" for="playedGameRatingInput">
+                                <span class="modal-rating-panel__value-label">Оценка</span>
+                                <div class="rating-input-wrapper modal-rating-input-wrapper">
+                                    <input id="playedGameRatingInput" type="number" min="0" max="11" step="0.01" class="rating-input"
+                                        placeholder="">
+                                    <span class="rating-max">/11</span>
+                                </div>
+                            </label>
+                            <div id="playedGameRatingMeaning" class="modal-rating-panel__meaning" aria-live="polite">
+                                <span id="playedGameRatingMeaningText" class="modal-rating-panel__meaning-text"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rating-stars modal-rating-stars" id="playedGameRatingStars" data-input="playedGameRatingInput">
                         <span class="rating-star rating-label" data-rating="0">worst</span>
                         <span class="rating-star" data-rating="1"></span>
                         <span class="rating-star" data-rating="2"></span>
@@ -950,11 +1007,6 @@
                         <span class="rating-star" data-rating="9"></span>
                         <span class="rating-star" data-rating="10"></span>
                         <span class="rating-star rating-label" data-rating="11">best</span>
-                    </div>
-                    <div class="rating-input-wrapper">
-                        <input id="playedGameRatingInput" type="number" min="0" max="11" step="0.01" class="rating-input"
-                            placeholder="0">
-                        <span class="rating-max">/10</span>
                     </div>
                 </div>
 
