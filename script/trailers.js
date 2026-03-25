@@ -277,9 +277,9 @@ function updateTrailerAdminUi() {
   }
 
   if (!hasAdminAccess) {
-    if (watchedButton) watchedButton.disabled = true;
     if (returnButton) returnButton.disabled = true;
     if (deleteButton) deleteButton.disabled = true;
+    if (watchedButton) watchedButton.disabled = false;
   }
 }
 
@@ -980,7 +980,9 @@ function renderSelectedTrailer() {
     setRatingStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
     highlightStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
   }
-  if (watchedButton) watchedButton.disabled = !hasAdminAccess;
+  if (watchedButton) {
+    watchedButton.disabled = hasAdminAccess ? false : hasRatedTrailer(trailer.id);
+  }
   if (returnButton) returnButton.disabled = !hasAdminAccess;
   if (deleteButton) deleteButton.disabled = !hasAdminAccess;
 
@@ -1855,6 +1857,7 @@ function setupFormEvents() {
   watchedButton?.addEventListener("click", async () => {
     const trailer = getSelectedTrailer();
     if (!trailer) return;
+    if (watchedButton?.disabled) return;
 
     const rawRating = String(ratingInput?.value || "").trim();
     const rating = parseRatingInputValue(rawRating);
@@ -1869,17 +1872,50 @@ function setupFormEvents() {
       return;
     }
 
-    setStatusText("trailerActionStatus", "Сохраняю оценку...");
+    if (!hasAdminAccess && hasRatedTrailer(trailer.id)) {
+      setStatusText("trailerActionStatus", "Вы уже оценили этот трейлер.", true);
+      return;
+    }
+
+    if (watchedButton) {
+      watchedButton.disabled = true;
+      watchedButton.setAttribute("aria-busy", "true");
+    }
+    setStatusText("trailerActionStatus", "Сохраняем оценку...");
+
     try {
-      await patchTrailer(trailer.id, {
-        status: "watched",
-        streamer_rating: rating,
-        watched_at: new Date().toISOString(),
-      });
-      setStatusText(
-        "trailerActionStatus",
-        "Оценка сохранена, трейлер перемещён в просмотренные."
-      );
+      if (hasAdminAccess) {
+        await patchTrailer(trailer.id, {
+          status: "watched",
+          streamer_rating: rating,
+          watched_at: new Date().toISOString(),
+        });
+        setStatusText(
+          "trailerActionStatus",
+          "Оценка сохранена, трейлер перемещён в просмотренные."
+        );
+      } else {
+        const updatedTrailer = await submitTrailerUserRating(trailer.id, rating);
+        if (updatedTrailer) {
+          trailers = sortTrailers(
+            trailers.map((item) =>
+              Number(item.id) === Number(updatedTrailer.id)
+                ? {
+                    ...item,
+                    viewer_rating_sum: updatedTrailer.viewer_rating_sum,
+                    viewer_rating_count: updatedTrailer.viewer_rating_count,
+                  }
+                : item
+            )
+          );
+        }
+        rememberRatedTrailer(trailer.id, rating);
+        renderSelectedTrailer();
+        setStatusText(
+          "trailerActionStatus",
+          `Ваша оценка: ${String(rating).replace(".", ",")} сохранена.`
+        );
+      }
     } catch (error) {
       console.error("Failed to save rating", error);
       setStatusText(
@@ -1887,6 +1923,11 @@ function setupFormEvents() {
         error?.message || "Не удалось сохранить оценку.",
         true
       );
+    } finally {
+      if (watchedButton) {
+        watchedButton.removeAttribute("aria-busy");
+        watchedButton.disabled = hasAdminAccess ? false : hasRatedTrailer(trailer.id);
+      }
     }
   });
 
