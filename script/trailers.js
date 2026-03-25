@@ -36,6 +36,9 @@ let isSwitchingKinopoiskApi = false;
 let kinopoiskQuotaDialogOpen = false;
 let hasAdminAccess = false;
 let watchedTrailersSearchQuery = "";
+let trailerReleaseDateTrailerId = null;
+let trailerReleaseCalendarYear = null;
+let trailerReleaseCalendarMonth = null;
 const TRAILER_RATING_MEANINGS = {
   0: "Абсолютный провал",
   1: "Кошмар",
@@ -433,6 +436,216 @@ function formatDate(value) {
     month: "long",
     year: "numeric",
   });
+}
+
+function formatDateLocal(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isReleaseDateMissing(value) {
+  return !value || formatDate(value) === "Дата пока не объявлена";
+}
+
+function renderTrailerReleaseValue(element, value) {
+  if (!element) return;
+
+  element.textContent = "";
+  element.classList.add("trailer-info__description--release");
+
+  const text = document.createElement("span");
+  text.textContent = formatDate(value);
+  element.appendChild(text);
+
+  if (!hasAdminAccess || !isReleaseDateMissing(value)) {
+    return;
+  }
+
+  const trailer = getSelectedTrailer();
+  if (!trailer) {
+    return;
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "trailer-release-add-button";
+  button.textContent = "Добавить дату";
+  button.addEventListener("click", () => openTrailerReleaseDateModal(trailer.id));
+  element.appendChild(button);
+}
+
+const TRAILER_RELEASE_MONTH_NAMES = [
+  "Январь",
+  "Февраль",
+  "Март",
+  "Апрель",
+  "Май",
+  "Июнь",
+  "Июль",
+  "Август",
+  "Сентябрь",
+  "Октябрь",
+  "Ноябрь",
+  "Декабрь",
+];
+
+function renderTrailerReleaseCalendar(selectedDateStr = "") {
+  const grid = document.getElementById("trailerReleaseCalendarGrid");
+  const label = document.getElementById("trailerReleaseCalendarMonthLabel");
+  const input = document.getElementById("trailerReleaseDateInput");
+
+  if (!grid || trailerReleaseCalendarYear === null || trailerReleaseCalendarMonth === null) {
+    return;
+  }
+
+  const today = new Date();
+  const selectedDate = selectedDateStr ? new Date(selectedDateStr) : null;
+  const firstDay = new Date(trailerReleaseCalendarYear, trailerReleaseCalendarMonth, 1);
+  const daysInMonth = new Date(trailerReleaseCalendarYear, trailerReleaseCalendarMonth + 1, 0).getDate();
+
+  if (label) {
+    label.textContent = `${TRAILER_RELEASE_MONTH_NAMES[trailerReleaseCalendarMonth]} ${trailerReleaseCalendarYear}`;
+  }
+
+  grid.innerHTML = "";
+
+  ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].forEach((weekday) => {
+    const cell = document.createElement("div");
+    cell.className = "plan-calendar-weekday";
+    cell.textContent = weekday;
+    grid.appendChild(cell);
+  });
+
+  const firstWeekday = (firstDay.getDay() + 6) % 7;
+  for (let i = 0; i < firstWeekday; i += 1) {
+    const empty = document.createElement("div");
+    empty.className = "plan-calendar-day is-outside";
+    grid.appendChild(empty);
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "plan-calendar-day";
+    cell.textContent = String(day);
+
+    const cellDate = new Date(trailerReleaseCalendarYear, trailerReleaseCalendarMonth, day);
+    const cellDateStr = formatDateLocal(cellDate);
+
+    if (
+      cellDate.getFullYear() === today.getFullYear() &&
+      cellDate.getMonth() === today.getMonth() &&
+      cellDate.getDate() === today.getDate()
+    ) {
+      cell.classList.add("is-today");
+    }
+
+    if (selectedDate && formatDateLocal(selectedDate) === cellDateStr) {
+      cell.classList.add("is-selected");
+    }
+
+    cell.addEventListener("click", () => {
+      if (input) {
+        input.value = cellDateStr;
+      }
+      renderTrailerReleaseCalendar(cellDateStr);
+    });
+
+    grid.appendChild(cell);
+  }
+}
+
+function closeTrailerReleaseDateModal() {
+  const modal = document.getElementById("trailerReleaseDateModal");
+  const submit = document.getElementById("trailerReleaseDateSubmit");
+
+  if (modal) modal.style.display = "none";
+  setStatusText("trailerReleaseDateStatus", "");
+  if (submit) {
+    submit.disabled = false;
+    submit.removeAttribute("aria-busy");
+  }
+  trailerReleaseDateTrailerId = null;
+}
+
+function openTrailerReleaseDateModal(trailerId) {
+  const trailer = trailers.find((item) => Number(item.id) === Number(trailerId));
+  const modal = document.getElementById("trailerReleaseDateModal");
+  const title = document.getElementById("trailerReleaseDateTitle");
+  const input = document.getElementById("trailerReleaseDateInput");
+
+  if (!trailer || !modal || !title || !input) {
+    return;
+  }
+
+  const kinopoiskData = parseTrailerKinopoiskData(trailer.kinopoisk_data) || {};
+  const initialValue = formatDateLocal(kinopoiskData.releaseDate || "");
+  const baseDate = initialValue ? new Date(initialValue) : new Date();
+
+  trailerReleaseDateTrailerId = Number(trailerId);
+  trailerReleaseCalendarYear = baseDate.getFullYear();
+  trailerReleaseCalendarMonth = baseDate.getMonth();
+  title.textContent = trailer.title || "";
+  input.value = initialValue;
+  setStatusText("trailerReleaseDateStatus", "");
+  renderTrailerReleaseCalendar(initialValue);
+  modal.style.display = "block";
+}
+
+async function saveTrailerReleaseDate() {
+  if (!hasAdminAccess || !trailerReleaseDateTrailerId) return;
+
+  const trailer = trailers.find((item) => Number(item.id) === Number(trailerReleaseDateTrailerId));
+  const input = document.getElementById("trailerReleaseDateInput");
+  const submit = document.getElementById("trailerReleaseDateSubmit");
+  const value = String(input?.value || "").trim();
+
+  if (!trailer || !value) {
+    setStatusText("trailerReleaseDateStatus", "Сначала выберите дату.", true);
+    return;
+  }
+
+  const normalizedDate = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(normalizedDate.getTime())) {
+    setStatusText("trailerReleaseDateStatus", "Некорректная дата.", true);
+    return;
+  }
+
+  if (submit) {
+    submit.disabled = true;
+    submit.setAttribute("aria-busy", "true");
+  }
+  setStatusText("trailerReleaseDateStatus", "Сохраняю дату релиза...");
+
+  try {
+    const kinopoiskData = parseTrailerKinopoiskData(trailer.kinopoisk_data) || {};
+    const updatedTrailer = await patchTrailer(trailer.id, {
+      kinopoisk_data: {
+        ...kinopoiskData,
+        releaseDate: normalizedDate.toISOString(),
+      },
+      kinopoisk_cached_at: new Date().toISOString(),
+    });
+
+    renderStoredKinopoiskInfo(parseTrailerKinopoiskData(updatedTrailer?.kinopoisk_data) || {});
+    closeTrailerReleaseDateModal();
+  } catch (error) {
+    console.error("Failed to save trailer release date", error);
+    setStatusText(
+      "trailerReleaseDateStatus",
+      error?.message || "Не удалось сохранить дату релиза.",
+      true
+    );
+  } finally {
+    if (submit) {
+      submit.disabled = false;
+      submit.removeAttribute("aria-busy");
+    }
+  }
 }
 
 function capitalizeWords(value) {
@@ -1707,7 +1920,7 @@ function renderStoredKinopoiskInfo(info) {
   actors.textContent = actorNames.length
     ? actorNames.join(", ")
     : "Список актёров не найден.";
-  release.textContent = formatDate(info?.releaseDate || "");
+  renderTrailerReleaseValue(release, info?.releaseDate || "");
 
   poster.src = resolveTrailerPosterSrc(info?.posterUrl, info?.kinopoiskId);
   poster.alt = resolvedTitle ? `Постер: ${resolvedTitle}` : "Постер фильма";
@@ -1784,7 +1997,7 @@ function renderKinopoiskInfo(details, staff) {
     details?.releaseDate ||
     details?.startYear ||
     "";
-  release.textContent = formatDate(releaseValue);
+  renderTrailerReleaseValue(release, releaseValue);
 
   poster.src = resolveTrailerPosterSrc(
     details?.posterUrl || details?.posterUrlPreview,
@@ -2033,6 +2246,11 @@ function setupFormEvents() {
   const userRateClose = document.getElementById("trailerUserRateClose");
   const userRateSubmit = document.getElementById("trailerUserRateSubmit");
   const userRateInput = document.getElementById("trailerUserRateInput");
+  const releaseDateModal = document.getElementById("trailerReleaseDateModal");
+  const releaseDateClose = document.getElementById("trailerReleaseDateClose");
+  const releaseDateForm = document.getElementById("trailerReleaseDateForm");
+  const releaseDatePrev = document.getElementById("trailerReleaseCalendarPrev");
+  const releaseDateNext = document.getElementById("trailerReleaseCalendarNext");
 
   titleInput?.addEventListener("input", () => {
     const nextValue = String(titleInput.value || "").trim();
@@ -2247,6 +2465,44 @@ function setupFormEvents() {
     if (event.target === userRateModal) {
       closeTrailerUserRateModal();
     }
+  });
+
+  releaseDateClose?.addEventListener("click", closeTrailerReleaseDateModal);
+  releaseDateClose?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    closeTrailerReleaseDateModal();
+  });
+
+  releaseDateModal?.addEventListener("click", (event) => {
+    if (event.target === releaseDateModal) {
+      closeTrailerReleaseDateModal();
+    }
+  });
+
+  releaseDatePrev?.addEventListener("click", () => {
+    if (trailerReleaseCalendarYear === null || trailerReleaseCalendarMonth === null) return;
+    trailerReleaseCalendarMonth -= 1;
+    if (trailerReleaseCalendarMonth < 0) {
+      trailerReleaseCalendarMonth = 11;
+      trailerReleaseCalendarYear -= 1;
+    }
+    renderTrailerReleaseCalendar(document.getElementById("trailerReleaseDateInput")?.value || "");
+  });
+
+  releaseDateNext?.addEventListener("click", () => {
+    if (trailerReleaseCalendarYear === null || trailerReleaseCalendarMonth === null) return;
+    trailerReleaseCalendarMonth += 1;
+    if (trailerReleaseCalendarMonth > 11) {
+      trailerReleaseCalendarMonth = 0;
+      trailerReleaseCalendarYear += 1;
+    }
+    renderTrailerReleaseCalendar(document.getElementById("trailerReleaseDateInput")?.value || "");
+  });
+
+  releaseDateForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await saveTrailerReleaseDate();
   });
 
   userRateSubmit?.addEventListener("click", async () => {

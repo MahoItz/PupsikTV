@@ -276,6 +276,30 @@
     </div>
   </div>
 
+  <div id="trailerReleaseDateModal" class="modal">
+    <div class="modal-content trailer-release-date-modal">
+      <span id="trailerReleaseDateClose" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
+      <h2>Добавить дату релиза</h2>
+      <p id="trailerReleaseDateTitle" class="modal-subtitle"></p>
+      <form id="trailerReleaseDateForm">
+        <div class="form-group plan-date-group">
+          <label for="trailerReleaseDateInput">Дата:</label>
+          <input type="date" id="trailerReleaseDateInput" class="plan-date-input" aria-hidden="true" tabindex="-1">
+          <div class="plan-calendar" aria-label="Календарь">
+            <div class="plan-calendar-header">
+              <button type="button" class="plan-calendar-nav" id="trailerReleaseCalendarPrev" aria-label="Предыдущий месяц">‹</button>
+              <div id="trailerReleaseCalendarMonthLabel" class="plan-calendar-month"></div>
+              <button type="button" class="plan-calendar-nav" id="trailerReleaseCalendarNext" aria-label="Следующий месяц">›</button>
+            </div>
+            <div class="plan-calendar-grid" id="trailerReleaseCalendarGrid" role="grid"></div>
+          </div>
+        </div>
+        <button type="submit" id="trailerReleaseDateSubmit" class="btn btn-primary" style="width:100%;">Сохранить</button>
+      </form>
+      <p id="trailerReleaseDateStatus" class="trailer-form__status" aria-live="polite"></p>
+    </div>
+  </div>
+
   <div id="plannedTrailersModal" class="modal">
     <div class="modal-content trailer-planned-modal">
       <span id="plannedTrailersModalClose" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>

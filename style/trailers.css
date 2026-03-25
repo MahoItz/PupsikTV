@@ -1069,6 +1069,28 @@
   min-height: 52px;
 }
 
+.trailer-release-date-modal {
+  max-width: 520px;
+}
+
+.trailer-release-date-modal #trailerReleaseDateTitle {
+  margin: 0 0 16px;
+  width: 100%;
+  max-width: none;
+  padding: 12px 0 14px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #cfe3ff;
+  text-align: center;
+  border-top: 1px solid rgba(116, 150, 210, 0.18);
+  border-bottom: 1px solid rgba(116, 150, 210, 0.18);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+  text-wrap: balance;
+}
+
 .trailer-info__empty {
   color: rgba(212, 244, 255, 0.72);
   overflow-y: auto;
@@ -1150,6 +1172,34 @@
 .trailer-info__description {
   margin: 0;
   color: rgba(225, 246, 255, 0.8);
+}
+
+.trailer-info__description--release {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.trailer-release-add-button {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(116, 222, 255, 0.22);
+  background: rgba(0, 212, 255, 0.08);
+  color: #c7f7ff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.trailer-release-add-button:hover,
+.trailer-release-add-button:focus-visible {
+  outline: none;
+  border-color: rgba(116, 222, 255, 0.48);
+  background: rgba(0, 212, 255, 0.14);
+  transform: translateY(-1px);
 }
 
 .trailer-info__badges {
