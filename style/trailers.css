@@ -297,6 +297,8 @@
 }
 
 .trailer-list-section--planned .trailer-list {
+  align-content: start;
+  grid-auto-rows: max-content;
   padding: 12px;
   border-radius: 16px;
   border: 1px solid rgba(0, 212, 255, 0.16);
