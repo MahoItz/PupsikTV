@@ -132,7 +132,7 @@
                     <span class="rating-max">/11</span>
                   </div>
                 </label>
-                <div class="trailer-rating-panel__meaning" aria-live="polite">
+                <div id="trailerRatingMeaning" class="trailer-rating-panel__meaning" aria-live="polite">
                 <span id="trailerRatingMeaningText" class="trailer-rating-panel__meaning-text"></span>
                 </div>
               </div>
@@ -241,9 +241,22 @@
         <img id="trailerUserRatePoster" class="movie-poster" src="/images/placeholder-poster.webp" alt="Постер трейлера">
         <p id="trailerUserRateTitle"></p>
       </div>
-      <div class="form-group">
+      <div class="trailer-rating-panel__score trailer-user-rate-modal__score">
+        <div class="trailer-rating-panel__value-row">
+          <div class="trailer-rating-panel__value-box">
+            <label class="trailer-rating-panel__value-field" for="trailerUserRateInput">
+              <div class="rating-input-wrapper trailer-rating-input-wrapper">
+                <input id="trailerUserRateInput" type="number" min="0" max="11" step="0.01" class="rating-input" placeholder="">
+                <span class="rating-max">/11</span>
+              </div>
+            </label>
+            <div id="trailerUserRateMeaning" class="trailer-rating-panel__meaning" aria-live="polite">
+              <span id="trailerUserRateMeaningText" class="trailer-rating-panel__meaning-text"></span>
+            </div>
+          </div>
+        </div>
         <label>Ваша оценка:</label>
-        <div class="rating-stars" id="trailerUserRateStars" data-input="trailerUserRateInput">
+        <div class="rating-stars trailer-rating-stars" id="trailerUserRateStars" data-input="trailerUserRateInput">
           <span class="rating-star rating-label" data-rating="0" aria-label="worst">worst</span>
           <span class="rating-star" data-rating="1"></span>
           <span class="rating-star" data-rating="2"></span>
@@ -256,10 +269,6 @@
           <span class="rating-star" data-rating="9"></span>
           <span class="rating-star" data-rating="10"></span>
           <span class="rating-star rating-label" data-rating="11" aria-label="best">best</span>
-        </div>
-        <div class="rating-input-wrapper">
-          <input id="trailerUserRateInput" type="number" min="0" max="11" step="0.01" class="rating-input" placeholder="0">
-          <span class="rating-max">/10</span>
         </div>
       </div>
       <button id="trailerUserRateSubmit" class="btn btn-rate" style="width:100%;">Оценить</button>

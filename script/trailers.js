@@ -550,9 +550,26 @@ function getTrailerRatingMeaning(value) {
   return TRAILER_RATING_MEANINGS[nearest] || TRAILER_RATING_MEANINGS[0];
 }
 
-function updateTrailerRatingMeaning(value) {
-  const meaning = document.querySelector(".trailer-rating-panel__meaning");
-  const meaningText = document.getElementById("trailerRatingMeaningText");
+function getTrailerRatingUi(containerId) {
+  if (containerId === "trailerUserRateStars") {
+    return {
+      inputId: "trailerUserRateInput",
+      meaningId: "trailerUserRateMeaning",
+      meaningTextId: "trailerUserRateMeaningText",
+    };
+  }
+
+  return {
+    inputId: "trailerRatingInput",
+    meaningId: "trailerRatingMeaning",
+    meaningTextId: "trailerRatingMeaningText",
+  };
+}
+
+function updateTrailerRatingMeaning(value, containerId = "trailerRatingStars") {
+  const ui = getTrailerRatingUi(containerId);
+  const meaning = document.getElementById(ui.meaningId);
+  const meaningText = document.getElementById(ui.meaningTextId);
   if (value === null || value === undefined || value === "") {
     if (meaning) {
       meaning.className = "trailer-rating-panel__meaning";
@@ -572,15 +589,35 @@ function updateTrailerRatingMeaning(value) {
 }
 
 function syncTrailerRatingPreview(value, options = {}) {
-  const { updateInput = true } = options;
-  const input = document.getElementById("trailerRatingInput");
+  const { containerId = "trailerRatingStars", updateInput = true } = options;
+  const ui = getTrailerRatingUi(containerId);
+  const input = document.getElementById(ui.inputId);
+
   if (updateInput && input) {
     input.value =
       value === null || value === undefined || value === ""
         ? ""
         : formatTrailerRatingValue(value);
   }
-  updateTrailerRatingMeaning(value);
+  updateTrailerRatingMeaning(value, containerId);
+}
+
+function syncTrailerRatingInputValue(containerId, value) {
+  const ui = getTrailerRatingUi(containerId);
+  const input = document.getElementById(ui.inputId);
+  if (input) {
+    input.value = value === null || value === undefined || value === ""
+      ? ""
+      : String(value).replace(".", ",");
+  }
+}
+
+function syncTrailerRatingState(containerId, value, options = {}) {
+  const { updateInput = true } = options;
+  if (updateInput) {
+    syncTrailerRatingInputValue(containerId, value);
+  }
+  syncTrailerRatingPreview(value, { containerId, updateInput: false });
 }
 
 function highlightStars(containerId, rating) {
@@ -629,12 +666,11 @@ function setRatingStars(containerId, rating, updateInput = true) {
 
   const inputId = container.dataset.input;
   if (updateInput && inputId) {
-    const input = document.getElementById(inputId);
-    if (input) input.value = hasValue ? String(rating).replace(".", ",") : "";
+    syncTrailerRatingInputValue(containerId, hasValue ? rating : null);
   }
 
-  if (containerId === "trailerRatingStars") {
-    syncTrailerRatingPreview(hasValue ? rating : null, { updateInput });
+  if (containerId === "trailerRatingStars" || containerId === "trailerUserRateStars") {
+    syncTrailerRatingPreview(hasValue ? rating : null, { containerId, updateInput: false });
   }
 
   stars.forEach((star) => {
@@ -679,8 +715,8 @@ function setupRatingStars(containerId) {
       container.classList.add("is-hover-previewing");
       const rating = parseInt(this.dataset.rating, 10);
       highlightStars(containerId, rating);
-      if (containerId === "trailerRatingStars") {
-        syncTrailerRatingPreview(rating);
+      if (containerId === "trailerRatingStars" || containerId === "trailerUserRateStars") {
+        syncTrailerRatingPreview(rating, { containerId });
       }
     });
 
@@ -696,8 +732,8 @@ function setupRatingStars(containerId) {
   container.addEventListener("mouseleave", () => {
     container.classList.remove("is-hover-previewing");
     highlightStars(containerId, getCurrentRating(containerId));
-    if (containerId === "trailerRatingStars") {
-      syncTrailerRatingPreview(getCurrentRating(containerId));
+    if (containerId === "trailerRatingStars" || containerId === "trailerUserRateStars") {
+      syncTrailerRatingPreview(getCurrentRating(containerId), { containerId });
     }
     hideTrailerRatingValueTooltip();
   });
@@ -709,8 +745,8 @@ function setupRatingStars(containerId) {
         this.setCustomValidity("");
         setRatingStars(containerId, null, false);
         highlightStars(containerId, null);
-        if (containerId === "trailerRatingStars") {
-          syncTrailerRatingPreview(null, { updateInput: false });
+        if (containerId === "trailerRatingStars" || containerId === "trailerUserRateStars") {
+          syncTrailerRatingPreview(null, { containerId, updateInput: false });
         }
         return;
       }
@@ -724,8 +760,8 @@ function setupRatingStars(containerId) {
         this.setCustomValidity("");
         setRatingStars(containerId, value, false);
         highlightStars(containerId, value);
-        if (containerId === "trailerRatingStars") {
-          syncTrailerRatingPreview(value, { updateInput: false });
+        if (containerId === "trailerRatingStars" || containerId === "trailerUserRateStars") {
+          syncTrailerRatingPreview(value, { containerId, updateInput: false });
         }
       } else {
         this.setCustomValidity("Введите число от 0 до 11");

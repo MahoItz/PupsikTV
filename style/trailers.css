@@ -834,13 +834,33 @@
   color: rgba(212, 244, 255, 0.42);
 }
 
-#trailerRatingInput.rating-input:focus {
+#trailerRatingInput.rating-input:focus,
+#trailerUserRateInput.rating-input:focus {
   outline: none;
   border-color: rgba(116, 222, 255, 0.62);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.05),
     0 0 0 3px rgba(0, 212, 255, 0.14),
     0 10px 22px rgba(2, 6, 14, 0.3);
+}
+
+#trailerUserRateInput.rating-input {
+  width: 105px;
+  padding: 12px 14px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-align: left;
+  color: #f4fbff;
+  background: linear-gradient(135deg, rgba(8, 22, 44, 0.92), rgba(20, 10, 38, 0.88));
+  border: 1px solid rgba(116, 222, 255, 0.3);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 8px 18px rgba(2, 6, 14, 0.25);
+}
+
+#trailerUserRateInput.rating-input::placeholder {
+  color: rgba(212, 244, 255, 0.42);
 }
 
 .trailer-rating-input-wrapper .rating-max {
@@ -984,6 +1004,16 @@
   max-width: 560px;
 }
 
+.trailer-user-rate-modal__score {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.trailer-user-rate-modal__score > label {
+  display: none;
+}
+
 .trailer-user-rate-modal .rate-header {
   display: flex;
   align-items: center;
@@ -1000,11 +1030,25 @@
   text-align: center;
 }
 
+.trailer-user-rate-modal .rating-stars {
+  margin-top: 0;
+}
+
 .trailer-user-rate-modal #trailerUserRatePoster {
   display: block;
   margin: 0 auto 10px auto;
   width: 60%;
   max-width: 250px;
+}
+
+.trailer-user-rate-modal #trailerUserRateTitle {
+  margin: 0;
+  font-weight: 800;
+  color: #f4fbff;
+}
+
+.trailer-user-rate-modal .btn-rate {
+  min-height: 52px;
 }
 
 .trailer-info__empty {
@@ -1235,6 +1279,11 @@
   }
 
   #trailerRatingInput.rating-input {
+    width: 112px;
+    font-size: 1.3rem;
+  }
+
+  #trailerUserRateInput.rating-input {
     width: 112px;
     font-size: 1.3rem;
   }
