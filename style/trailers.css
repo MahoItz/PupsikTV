@@ -475,6 +475,14 @@
   margin-top: 12px;
 }
 
+.trailer-watched-search {
+  margin-top: 14px;
+}
+
+.trailer-watched-search .search-input {
+  width: 100%;
+}
+
 .trailer-watched-card .movie-poster {
   aspect-ratio: 2 / 3;
   object-fit: cover;
@@ -549,7 +557,7 @@
 }
 
 .trailer-empty {
-  margin: 0;
+  margin: 12px 0 0;
   color: rgba(212, 244, 255, 0.65);
 }
 

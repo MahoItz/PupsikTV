@@ -32,6 +32,7 @@ let isSubmittingTrailerUserRating = false;
 let isSwitchingKinopoiskApi = false;
 let kinopoiskQuotaDialogOpen = false;
 let hasAdminAccess = false;
+let watchedTrailersSearchQuery = "";
 
 function normalizeKpApiValue(value) {
   if (value === "API 2" || value === "API 3") {
@@ -637,6 +638,46 @@ function sortTrailers(list) {
   });
 }
 
+function normalizeTrailerSearchText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ё/g, "е")
+    .replace(/[^a-zа-я0-9]+/gi, " ")
+    .trim();
+}
+
+function searchWatchedTrailers(query) {
+  watchedTrailersSearchQuery = String(query || "");
+  renderTrailerLists();
+}
+
+const debouncedSearchWatchedTrailers = debounce(searchWatchedTrailers, 300);
+
+function getFilteredWatchedTrailers(list) {
+  const watched = Array.isArray(list) ? list : [];
+  const normalizedQuery = normalizeTrailerSearchText(watchedTrailersSearchQuery);
+
+  if (!normalizedQuery) {
+    return watched;
+  }
+
+  const queryDigits = normalizedQuery.replace(/\D+/g, "");
+
+  return watched.filter((item) => {
+    const title = normalizeTrailerSearchText(item?.title || "");
+    const year = String(item?.year || "");
+    const normalizedYear = normalizeTrailerSearchText(year);
+    const titleMatch = title.includes(normalizedQuery);
+    const yearMatch =
+      (normalizedYear && normalizedYear.includes(normalizedQuery)) ||
+      (queryDigits && year.includes(queryDigits));
+
+    return titleMatch || yearMatch;
+  });
+}
+
 function applyTrailerList(nextList) {
   trailers = sortTrailers(nextList);
   if (!trailers.length) {
@@ -723,11 +764,13 @@ function renderTrailerLists() {
   const plannedModalCount = document.getElementById("plannedModalCount");
   const watchedLoading = document.getElementById("watchedTrailersLoading");
   const watchedCount = document.getElementById("watchedCount");
+  const watchedTrailersCount = document.getElementById("watchedTrailersCount");
 
   if (!plannedList) return;
 
   const planned = trailers.filter((item) => item.status !== "watched");
   const watched = trailers.filter((item) => item.status === "watched");
+  const filteredWatched = getFilteredWatchedTrailers(watched);
 
   plannedList.innerHTML = "";
   planned.forEach((item) => plannedList.appendChild(renderTrailerItem(item)));
@@ -739,9 +782,12 @@ function renderTrailerLists() {
   if (plannedCount) plannedCount.textContent = String(planned.length);
   if (plannedModalCount) plannedModalCount.textContent = String(planned.length);
   if (watchedCount) watchedCount.textContent = String(watched.length);
+  if (watchedTrailersCount) {
+    watchedTrailersCount.textContent = String(filteredWatched.length);
+  }
 
   renderPlannedTrailerModalList(planned);
-  renderWatchedTrailersGrid(watched);
+  renderWatchedTrailersGrid(filteredWatched);
   syncTrailerSidebarHeight();
 }
 
@@ -856,7 +902,12 @@ function renderWatchedTrailersGrid(watchedList) {
   grid.hidden = false;
   watched.forEach((item) => grid.appendChild(renderWatchedTrailerCard(item)));
 
-  if (empty) empty.hidden = watched.length > 0;
+  if (empty) {
+    empty.hidden = watched.length > 0;
+    empty.textContent = normalizeTrailerSearchText(watchedTrailersSearchQuery)
+      ? "Ничего не найдено."
+      : "Оценённых трейлеров ещё нет.";
+  }
 }
 
 function setTrailerListsLoading(isLoading) {

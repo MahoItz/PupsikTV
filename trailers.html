@@ -191,6 +191,16 @@
           <h2>Просмотренные</h2>
           <span id="watchedCount" class="trailer-count-chip trailer-count-chip--watched">0</span>
         </div>
+        <div class="search-controls search-with-count trailer-watched-search">
+          <input
+            id="watchedTrailersSearchInput"
+            type="text"
+            class="search-input"
+            placeholder="Поиск фильмов..."
+            onkeyup="debouncedSearchWatchedTrailers(this.value)"
+          >
+          <span class="search-count">Всего: <span id="watchedTrailersCount">0</span></span>
+        </div>
         <div id="watchedTrailersLoading" class="section-loader section-loader--compact trailer-section-loader">
           <div class="section-loader__spinner" aria-hidden="true">
             <span class="section-loader__ring"></span>
