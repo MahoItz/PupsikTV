@@ -649,38 +649,110 @@
 }
 
 .trailer-rating-panel__controls {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
-  align-items: center;
-  margin-top: 10px;
+  align-items: stretch;
+  margin-top: 14px;
 }
 
 .trailer-rating-panel__score {
   display: grid;
-  gap: 8px;
+  gap: 18px;
 }
 
 .trailer-rating-stars {
-  flex-wrap: wrap;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
   align-items: center;
+  margin-top: 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(7, 18, 36, 0.92), rgba(12, 28, 52, 0.86));
+  border: 1px solid rgba(116, 222, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 18px 34px rgba(2, 6, 14, 0.22);
+}
+
+.trailer-rating-stars .rating-star {
+  margin-bottom: 0;
+}
+
+.trailer-rating-stars .rating-star:not(.rating-label) {
+  width: 100%;
+  max-width: 34px;
+  height: 34px;
+  justify-self: center;
+}
+
+.trailer-rating-stars .rating-star.rating-label {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.trailer-rating-panel__header {
+  align-items: flex-start;
+}
+
+.trailer-rating-panel__heading {
+  display: grid;
+  gap: 8px;
+}
+
+.trailer-rating-panel__description {
+  margin: 0;
+  color: rgba(212, 244, 255, 0.74);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.trailer-rating-panel__value-row {
+  display: grid;
+  grid-template-columns: minmax(210px, 280px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: end;
+}
+
+.trailer-rating-panel__value-field {
+  display: grid;
+  gap: 10px;
+}
+
+.trailer-rating-panel__value-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7fdfff;
 }
 
 .trailer-rating-input-wrapper {
   justify-content: flex-start;
   margin-bottom: 0;
+  gap: 12px;
 }
 
 #trailerRatingInput.rating-input {
-  width: 72px;
-  padding: 8px 10px;
-  font-size: 1rem;
-  font-weight: 700;
-  text-align: center;
+  width: 132px;
+  padding: 12px 14px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  text-align: left;
   color: #f4fbff;
   background: linear-gradient(135deg, rgba(8, 22, 44, 0.92), rgba(20, 10, 38, 0.88));
   border: 1px solid rgba(116, 222, 255, 0.3);
-  border-radius: 10px;
+  border-radius: 14px;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     0 8px 18px rgba(2, 6, 14, 0.25);
@@ -701,6 +773,46 @@
 
 .trailer-rating-input-wrapper .rating-max {
   color: rgba(212, 244, 255, 0.82);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.trailer-rating-panel__meaning {
+  min-height: 72px;
+  display: grid;
+  gap: 6px;
+  align-content: center;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(8, 20, 38, 0.9), rgba(11, 27, 49, 0.82));
+  border: 1px solid rgba(116, 222, 255, 0.14);
+}
+
+.trailer-rating-panel__meaning-value {
+  color: #7fdfff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.trailer-rating-panel__meaning-text {
+  color: #f4fbff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+#trailerMarkWatchedButton {
+  width: 100%;
+  min-height: 52px;
+}
+
+#trailerDeleteButton {
+  min-width: 124px;
+  min-height: 52px;
 }
 
 .trailer-delete-button {
@@ -964,6 +1076,19 @@
     flex-wrap: wrap;
   }
 
+  .trailer-rating-panel__value-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .trailer-rating-panel__controls {
+    grid-template-columns: 1fr;
+  }
+
+  #trailerDeleteButton {
+    width: 100%;
+  }
+
   .trailer-watched-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -980,6 +1105,21 @@
 }
 
 @media (max-width: 640px) {
+  .trailer-rating-stars {
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .trailer-rating-stars .rating-star:not(.rating-label) {
+    max-width: 28px;
+    height: 28px;
+  }
+
+  #trailerRatingInput.rating-input {
+    width: 112px;
+    font-size: 1.3rem;
+  }
+
   .trailer-watched-grid {
     grid-template-columns: 1fr;
   }

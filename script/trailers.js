@@ -33,6 +33,20 @@ let isSwitchingKinopoiskApi = false;
 let kinopoiskQuotaDialogOpen = false;
 let hasAdminAccess = false;
 let watchedTrailersSearchQuery = "";
+const TRAILER_RATING_MEANINGS = {
+  0: "Абсолютный провал",
+  1: "Кошмар",
+  2: "Очень плохо",
+  3: "Плохо",
+  4: "Ниже среднего",
+  5: "Среднее",
+  6: "Неплохо",
+  7: "Хорошо",
+  8: "Очень хорошо",
+  9: "Отлично",
+  10: "Великолепно",
+  11: "Легенда",
+};
 
 function normalizeKpApiValue(value) {
   if (value === "API 2" || value === "API 3") {
@@ -511,6 +525,45 @@ function getCurrentRating(containerId) {
   return parseFloat(container?.dataset.currentRating) || 0;
 }
 
+function clampTrailerRatingValue(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.min(11, Math.max(0, numeric));
+}
+
+function formatTrailerRatingValue(value) {
+  const normalized = clampTrailerRatingValue(value);
+  if (Number.isInteger(normalized)) {
+    return String(normalized);
+  }
+  return String(Math.round(normalized * 100) / 100).replace(".", ",");
+}
+
+function getTrailerRatingMeaning(value) {
+  const nearest = Math.round(clampTrailerRatingValue(value));
+  return TRAILER_RATING_MEANINGS[nearest] || TRAILER_RATING_MEANINGS[0];
+}
+
+function updateTrailerRatingMeaning(value) {
+  const meaningValue = document.getElementById("trailerRatingMeaningValue");
+  const meaningText = document.getElementById("trailerRatingMeaningText");
+  if (meaningValue) {
+    meaningValue.textContent = formatTrailerRatingValue(value);
+  }
+  if (meaningText) {
+    meaningText.textContent = getTrailerRatingMeaning(value);
+  }
+}
+
+function syncTrailerRatingPreview(value, options = {}) {
+  const { updateInput = true } = options;
+  const input = document.getElementById("trailerRatingInput");
+  if (updateInput && input) {
+    input.value = formatTrailerRatingValue(value);
+  }
+  updateTrailerRatingMeaning(value);
+}
+
 function highlightStars(containerId, rating) {
   const stars = document.querySelectorAll(`#${containerId} .rating-star`);
 
@@ -547,6 +600,10 @@ function setRatingStars(containerId, rating, updateInput = true) {
     if (input) input.value = String(rating).replace(".", ",");
   }
 
+  if (containerId === "trailerRatingStars") {
+    syncTrailerRatingPreview(rating, { updateInput });
+  }
+
   stars.forEach((star) => star.classList.remove("active"));
 
   if (rating === 0) {
@@ -580,9 +637,12 @@ function setupRatingStars(containerId) {
     star.addEventListener("mouseover", function () {
       const rating = parseInt(this.dataset.rating, 10);
       highlightStars(containerId, rating);
+      if (containerId === "trailerRatingStars") {
+        syncTrailerRatingPreview(rating);
+      }
     });
 
-    if (!star.classList.contains("rating-label")) {
+    if (!star.classList.contains("rating-label") && containerId !== "trailerRatingStars") {
       star.addEventListener("mouseenter", function (event) {
         showTrailerRatingValueTooltip(event, this.dataset.rating);
       });
@@ -593,6 +653,9 @@ function setupRatingStars(containerId) {
 
   container.addEventListener("mouseleave", () => {
     highlightStars(containerId, getCurrentRating(containerId));
+    if (containerId === "trailerRatingStars") {
+      syncTrailerRatingPreview(getCurrentRating(containerId));
+    }
     hideTrailerRatingValueTooltip();
   });
 
@@ -609,6 +672,9 @@ function setupRatingStars(containerId) {
         this.setCustomValidity("");
         setRatingStars(containerId, value, false);
         highlightStars(containerId, value);
+        if (containerId === "trailerRatingStars") {
+          syncTrailerRatingPreview(value, { updateInput: false });
+        }
       } else {
         this.setCustomValidity("Введите число от 0 до 11");
         this.reportValidity();
@@ -1003,6 +1069,7 @@ function renderSelectedTrailer() {
       openYoutube.setAttribute("aria-disabled", "true");
     }
     setRatingStars("trailerRatingStars", 0);
+    updateTrailerRatingMeaning(0);
     if (watchedButton) watchedButton.disabled = true;
     if (deleteButton) deleteButton.disabled = true;
     resetKinopoiskInfo("Выберите трейлер для поиска информации.");
@@ -1028,6 +1095,7 @@ function renderSelectedTrailer() {
         : Number(trailer.streamer_rating);
     setRatingStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
     highlightStars("trailerRatingStars", Number.isFinite(nextRating) ? nextRating : 0);
+    syncTrailerRatingPreview(Number.isFinite(nextRating) ? nextRating : 0);
   }
   if (watchedButton) {
     watchedButton.disabled = hasAdminAccess ? false : hasRatedTrailer(trailer.id);
