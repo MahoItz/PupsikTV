@@ -1178,9 +1178,7 @@ async function submitUserMovieRating() {
     return;
   }
 
-  const sourceList =
-    userRatingMovieTargetType === "order" ? watchlist : allMovies;
-  const movie = sourceList.find((m) => m.id === userRatingMovieId);
+  const movie = allMovies.find((m) => m.id === userRatingMovieId);
 
   if (hasRatedMovie(movie || userRatingMovieId)) {
     alert("Вы уже оценили этот фильм");
@@ -1197,7 +1195,7 @@ async function submitUserMovieRating() {
       },
       body: JSON.stringify({
         target_id: userRatingMovieId,
-        target_type: userRatingMovieTargetType,
+        target_type: "movie",
         rating,
         user_id: getGuestId(),
         title: movie ? movie.title : null,
@@ -1209,7 +1207,7 @@ async function submitUserMovieRating() {
       throw new Error(payload?.error || ("Failed to submit rating: " + response.status));
     }
 
-    if (userRatingMovieTargetType === "movie" && movie && payload?.movie) {
+    if (movie && payload?.movie) {
       const ratingSum = Number(payload.movie.rating_sum ?? 0) || 0;
       const ratingCount = Number(payload.movie.rating_count ?? 0) || 0;
       movie.ratingSum = ratingSum;
@@ -1220,12 +1218,7 @@ async function submitUserMovieRating() {
     }
 
     rememberRatedMovie(movie || userRatingMovieId, rating);
-
-    if (userRatingMovieTargetType === "movie") {
-      renderMovies();
-    } else {
-      renderWatchlist();
-    }
+    renderMovies();
   } catch (err) {
     console.error("Error submitting user rating", err);
     alert(
@@ -1238,7 +1231,6 @@ async function submitUserMovieRating() {
 
   closeModal("userRateModal", true);
   userRatingMovieId = null;
-  userRatingMovieTargetType = "movie";
 }
 
 async function submitUserGameRating() {

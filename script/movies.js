@@ -1406,22 +1406,6 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   card.appendChild(info);
   wrapper.appendChild(card);
 
-  if (!showActions) {
-    actions = document.createElement("div");
-    actions.className = "order-actions";
-
-    const rateBtn = document.createElement("button");
-    rateBtn.className = "btn btn-rate btn-icon";
-    rateBtn.textContent = "Оценить";
-    if (hasRatedMovie(order)) {
-      rateBtn.disabled = true;
-      rateBtn.title = "Вы уже оценили";
-    } else {
-      rateBtn.onclick = () => openUserRateModal(order.id, "order");
-    }
-    actions.appendChild(rateBtn);
-  }
-
   if (actions && actions.childElementCount > 0) {
     const actionsRow = document.createElement("div");
     actionsRow.className = "order-actions-below";

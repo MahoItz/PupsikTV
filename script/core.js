@@ -1435,7 +1435,6 @@ let editingMovieId = null;
 let ratingMovieId = null;
 let isSubmittingRating = false;
 let userRatingMovieId = null;
-let userRatingMovieTargetType = "movie";
 let userRatingGameId = null;
 let ratingTooltip;
 let ratedMovies = JSON.parse(localStorage.getItem("ratedMovies") || "{}");
