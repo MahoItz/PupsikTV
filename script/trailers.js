@@ -498,6 +498,22 @@ function setBoostyDeleteBusy(isBusy) {
   }
 }
 
+function updateTrailerTabsIndicator() {
+  const tabs = document.getElementById("trailerAdminTabs");
+  const indicator = document.getElementById("trailerAdminTabsIndicator");
+  const activeButton = tabs?.querySelector(".trailer-admin-tabs__button.is-active");
+  if (!tabs || !indicator || !activeButton || tabs.hidden) {
+    return;
+  }
+
+  const tabsRect = tabs.getBoundingClientRect();
+  const activeRect = activeButton.getBoundingClientRect();
+  const offset = Math.max(0, activeRect.left - tabsRect.left);
+
+  indicator.style.width = `${Math.round(activeRect.width)}px`;
+  indicator.style.transform = `translateX(${Math.round(offset)}px)`;
+}
+
 function closeBoostyDeleteModal() {
   const modal = document.getElementById("boostyDeleteModal");
   if (modal) {
@@ -559,6 +575,7 @@ function setTrailerSidebarMode(mode) {
     }
   }
 
+  requestAnimationFrame(updateTrailerTabsIndicator);
   syncTrailerSidebarHeight();
 }
 
@@ -906,7 +923,6 @@ function renderTrailerActors(container, actorNames, filmId) {
 
 function updateTrailerAdminUi() {
   const page = document.querySelector(".trailer-page");
-  const eyebrow = document.getElementById("trailerSectionEyebrow");
   const tabs = document.getElementById("trailerAdminTabs");
   const form = document.getElementById("trailerAddForm");
   const boostySection = document.getElementById("trailerBoostySection");
@@ -914,10 +930,6 @@ function updateTrailerAdminUi() {
   const boostyReviewForm = document.getElementById("boostyReviewForm");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
-
-  if (eyebrow) {
-    eyebrow.hidden = hasAdminAccess;
-  }
 
   if (tabs) {
     tabs.hidden = !hasAdminAccess;
@@ -3403,8 +3415,14 @@ async function initPage() {
     setTrailerFormBusy(hasAdminAccess ? false : true);
     await fetchBoostyReviews();
     await fetchTrailers();
-    window.addEventListener("resize", syncTrailerSidebarHeight);
-    requestAnimationFrame(syncTrailerSidebarHeight);
+    window.addEventListener("resize", () => {
+      updateTrailerTabsIndicator();
+      syncTrailerSidebarHeight();
+    });
+    requestAnimationFrame(() => {
+      updateTrailerTabsIndicator();
+      syncTrailerSidebarHeight();
+    });
   } catch (error) {
     console.error("Trailers page init error", error);
     if (app) app.hidden = false;
