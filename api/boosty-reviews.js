@@ -4,7 +4,7 @@ const { extractBearerToken, verifyAdminToken } = require("./_admin-session.js");
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const TABLE_NAME = "boosty_reviews";
 const SELECT_FIELDS = "id, title, url, image, meta, created_at, updated_at";
-const ALLOWED_METHODS = ["GET", "POST"];
+const ALLOWED_METHODS = ["GET", "POST", "DELETE"];
 const PG_UNDEFINED_TABLE = "42P01";
 const PG_INSUFFICIENT_PRIVILEGE = "42501";
 const PG_UNIQUE_VIOLATION = "23505";
@@ -78,6 +78,11 @@ function normalizeCreatePayload(payload) {
     image: normalizeString(payload?.image, 1000) || null,
     meta: normalizeString(payload?.meta, 150) || null,
   };
+}
+
+function parseId(value) {
+  const id = Number.parseInt(value, 10);
+  return Number.isFinite(id) ? id : null;
 }
 
 async function listReviews(supabase, res) {
@@ -160,6 +165,48 @@ async function createReview(supabase, req, res) {
   return res.status(201).json({ item: data });
 }
 
+async function deleteReview(supabase, req, res) {
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
+  }
+
+  let payload = {};
+  try {
+    payload = parseBody(req);
+  } catch {
+    payload = {};
+  }
+
+  const id = parseId(req.query?.id ?? payload?.id);
+  if (!id) {
+    return res.status(400).json({ error: "Invalid id" });
+  }
+
+  const { error } = await supabase.from(TABLE_NAME).delete().eq("id", id);
+  if (error) {
+    console.error("Failed to delete Boosty review", error);
+    if (isMissingTableError(error)) {
+      return res.status(503).json({
+        error:
+          "Таблица boosty_reviews ещё не создана. Примените SQL-миграцию для списка обзоров Boosty.",
+        setupRequired: true,
+      });
+    }
+    if (isPermissionError(error)) {
+      return res.status(500).json({
+        error:
+          "Недостаточно прав для удаления из boosty_reviews. Добавьте SUPABASE_SERVICE_ROLE_KEY в серверные env либо настройте RLS policy.",
+      });
+    }
+    return res.status(500).json({ error: "Failed to delete Boosty review" });
+  }
+
+  return res.status(200).json({ ok: true });
+}
+
 module.exports = async function handler(req, res) {
   const method = (req.method || "").toUpperCase();
   if (!ALLOWED_METHODS.includes(method)) {
@@ -179,5 +226,9 @@ module.exports = async function handler(req, res) {
     return listReviews(supabase, res);
   }
 
-  return createReview(supabase, req, res);
+  if (method === "POST") {
+    return createReview(supabase, req, res);
+  }
+
+  return deleteReview(supabase, req, res);
 };

@@ -337,6 +337,33 @@
   gap: 10px;
 }
 
+.trailer-saved-streams__add-button {
+  justify-self: center;
+  min-width: 220px;
+  min-height: auto;
+  padding: 2px 0 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: rgba(168, 236, 255, 0.9);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.trailer-saved-streams__add-button:hover,
+.trailer-saved-streams__add-button:focus-visible {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: #d8f8ff;
+  transform: none;
+}
+
 .boosty-review-form {
   padding: 14px;
   border-radius: 14px;
@@ -345,6 +372,11 @@
 }
 
 .trailer-saved-stream-card {
+  position: relative;
+  width: 100%;
+}
+
+.trailer-saved-stream-card__link {
   width: 100%;
   display: grid;
   grid-template-columns: 92px minmax(0, 1fr);
@@ -359,12 +391,38 @@
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.trailer-saved-stream-card:hover,
-.trailer-saved-stream-card:focus-visible {
+.trailer-saved-stream-card__link:hover,
+.trailer-saved-stream-card__link:focus-visible {
   outline: none;
   border-color: rgba(255, 159, 92, 0.46);
   box-shadow: 0 14px 28px rgba(6, 10, 22, 0.36);
   transform: translateY(-1px);
+}
+
+.trailer-saved-stream-card__delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(8, 18, 34, 0.9);
+  color: #f4fbff;
+  cursor: pointer;
+  z-index: 2;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.trailer-saved-stream-card__delete:hover,
+.trailer-saved-stream-card__delete:focus-visible {
+  outline: none;
+  transform: scale(1.04);
+  border-color: rgba(255, 137, 137, 0.52);
+  background: rgba(88, 18, 18, 0.82);
 }
 
 .trailer-saved-stream-card__image {
@@ -403,6 +461,16 @@
 
 .trailer-page.is-public-view .trailer-sidebar {
   grid-template-rows: auto minmax(0, 1fr);
+}
+
+.trailer-boosty-delete-modal {
+  width: min(460px, calc(100% - 32px));
+}
+
+.trailer-boosty-delete-modal__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .trailer-list-section__actions {
@@ -1538,6 +1606,9 @@
   }
 
   .trailer-saved-stream-card {
+  }
+
+  .trailer-saved-stream-card__link {
     grid-template-columns: 84px minmax(0, 1fr);
   }
 

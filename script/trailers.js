@@ -57,6 +57,8 @@ let trailerReleaseCalendarMonth = null;
 let trailerActorTooltip = null;
 let trailerSidebarMode = "trailers";
 let isCreatingBoostyReview = false;
+let boostyReviewPendingDeleteId = null;
+let isDeletingBoostyReview = false;
 const trailerActorCache = new Map();
 const trailerActorPending = new Map();
 const TRAILER_RATING_MEANINGS = {
@@ -362,6 +364,7 @@ function getTrailerBoostyContent() {
 function getRenderableBoostyStreams() {
   if (boostyReviewsLoaded) {
     return boostyReviews.map((item) => ({
+      id: item?.id,
       title: String(item?.title || "").trim(),
       href: String(item?.url || "").trim(),
       image: String(item?.image || "").trim() || POSTER_PLACEHOLDER,
@@ -373,8 +376,11 @@ function getRenderableBoostyStreams() {
 }
 
 function renderBoostyStreamCard(item) {
+  const card = document.createElement("div");
+  card.className = "trailer-saved-stream-card";
+
   const link = document.createElement("a");
-  link.className = "trailer-saved-stream-card";
+  link.className = "trailer-saved-stream-card__link";
   link.href = item.href;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
@@ -408,8 +414,24 @@ function renderBoostyStreamCard(item) {
     body.appendChild(meta);
   }
 
+  if (hasAdminAccess && item?.id) {
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "trailer-saved-stream-card__delete";
+    removeButton.dataset.reviewId = String(item.id);
+    removeButton.setAttribute("aria-label", "Удалить обзор");
+    removeButton.innerHTML = "&times;";
+    removeButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openBoostyDeleteModal(item.id, item.title);
+    });
+    card.appendChild(removeButton);
+  }
+
   link.append(image, body);
-  return link;
+  card.appendChild(link);
+  return card;
 }
 
 function renderTrailerPublicSidebar() {
@@ -461,6 +483,46 @@ function setBoostyReviewFormBusy(isBusy) {
     submit.disabled = Boolean(isBusy);
     submit.setAttribute("aria-busy", String(Boolean(isBusy)));
   }
+}
+
+function setBoostyDeleteBusy(isBusy) {
+  const confirmButton = document.getElementById("boostyDeleteConfirmButton");
+  const cancelButton = document.getElementById("boostyDeleteCancelButton");
+
+  if (confirmButton) {
+    confirmButton.disabled = Boolean(isBusy);
+    confirmButton.setAttribute("aria-busy", String(Boolean(isBusy)));
+  }
+  if (cancelButton) {
+    cancelButton.disabled = Boolean(isBusy);
+  }
+}
+
+function closeBoostyDeleteModal() {
+  const modal = document.getElementById("boostyDeleteModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+  boostyReviewPendingDeleteId = null;
+  isDeletingBoostyReview = false;
+  setBoostyDeleteBusy(false);
+  setStatusText("boostyDeleteStatus", "");
+}
+
+function openBoostyDeleteModal(id, title) {
+  const modal = document.getElementById("boostyDeleteModal");
+  const text = document.getElementById("boostyDeleteModalText");
+  if (!modal) return;
+
+  boostyReviewPendingDeleteId = Number(id);
+  if (text) {
+    text.textContent = title
+      ? `Удалить обзор "${title}"? Это действие нельзя отменить.`
+      : "Это действие нельзя отменить.";
+  }
+  setStatusText("boostyDeleteStatus", "");
+  setBoostyDeleteBusy(false);
+  modal.style.display = "block";
 }
 
 function setTrailerSidebarMode(mode) {
@@ -545,6 +607,28 @@ async function createBoostyReview(payload) {
   }
 
   return data?.item || null;
+}
+
+async function deleteBoostyReview(id) {
+  const response = await fetch(`${BOOSTY_REVIEWS_API_URL}?id=${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: getAdminAuthHeaders(),
+  });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.error || `Failed to delete Boosty review: ${response.status}`);
+  }
+
+  boostyReviews = boostyReviews.filter((item) => Number(item.id) !== Number(id));
+  boostyReviewsLoaded = true;
+  renderTrailerPublicSidebar();
 }
 
 function normalizeTrailerActorName(name = "") {
@@ -2852,6 +2936,10 @@ function setupFormEvents() {
   const boostyReviewUrlInput = document.getElementById("boostyReviewUrlInput");
   const boostyReviewImageInput = document.getElementById("boostyReviewImageInput");
   const boostyReviewMetaInput = document.getElementById("boostyReviewMetaInput");
+  const boostyDeleteModal = document.getElementById("boostyDeleteModal");
+  const boostyDeleteModalClose = document.getElementById("boostyDeleteModalClose");
+  const boostyDeleteConfirmButton = document.getElementById("boostyDeleteConfirmButton");
+  const boostyDeleteCancelButton = document.getElementById("boostyDeleteCancelButton");
   const ratingInput = document.getElementById("trailerRatingInput");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
@@ -2879,6 +2967,42 @@ function setupFormEvents() {
       boostyReviewTitleInput?.focus();
     } else {
       setStatusText("boostyReviewFormStatus", "");
+    }
+  });
+
+  boostyDeleteModalClose?.addEventListener("click", closeBoostyDeleteModal);
+  boostyDeleteCancelButton?.addEventListener("click", closeBoostyDeleteModal);
+  boostyDeleteModalClose?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    closeBoostyDeleteModal();
+  });
+  boostyDeleteModal?.addEventListener("click", (event) => {
+    if (event.target === boostyDeleteModal && !isDeletingBoostyReview) {
+      closeBoostyDeleteModal();
+    }
+  });
+  boostyDeleteConfirmButton?.addEventListener("click", async () => {
+    if (!hasAdminAccess || !boostyReviewPendingDeleteId || isDeletingBoostyReview) {
+      return;
+    }
+
+    isDeletingBoostyReview = true;
+    setBoostyDeleteBusy(true);
+    setStatusText("boostyDeleteStatus", "Удаляю обзор...");
+
+    try {
+      await deleteBoostyReview(boostyReviewPendingDeleteId);
+      closeBoostyDeleteModal();
+    } catch (error) {
+      console.error("Failed to delete Boosty review", error);
+      setStatusText(
+        "boostyDeleteStatus",
+        error?.message || "Не удалось удалить обзор.",
+        true
+      );
+      isDeletingBoostyReview = false;
+      setBoostyDeleteBusy(false);
     }
   });
 

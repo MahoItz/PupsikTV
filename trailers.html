@@ -122,9 +122,6 @@
 
           <section class="trailer-saved-streams">
             <div class="trailer-list-section__header trailer-saved-streams__header">
-              <div class="trailer-list-section__actions">
-                <button id="openBoostyReviewFormButton" class="trailer-list-section__more trailer-list-section__more--link" type="button" hidden>Добавить обзор</button>
-              </div>
               <h2 id="trailerSavedStreamsTitle">Разборы стримов</h2>
             </div>
             <form id="boostyReviewForm" class="trailer-form boosty-review-form" hidden>
@@ -151,6 +148,7 @@
             </form>
             <div id="trailerSavedStreamsList" class="trailer-saved-streams__list" aria-live="polite"></div>
             <p id="trailerSavedStreamsEmpty" class="trailer-empty" hidden></p>
+            <button id="openBoostyReviewFormButton" class="trailer-saved-streams__add-button" type="button" hidden>Добавить обзор</button>
           </section>
         </section>
       </section>
@@ -384,6 +382,19 @@
       </div>
       <div id="plannedTrailerModalList" class="trailer-list trailer-list--modal" aria-live="polite"></div>
       <p id="plannedTrailerModalEmpty" class="trailer-empty">Пока список пуст.</p>
+    </div>
+  </div>
+
+  <div id="boostyDeleteModal" class="modal">
+    <div class="modal-content trailer-boosty-delete-modal">
+      <span id="boostyDeleteModalClose" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
+      <h2>Удалить обзор?</h2>
+      <p id="boostyDeleteModalText" class="modal-subtitle">Это действие нельзя отменить.</p>
+      <div class="trailer-boosty-delete-modal__actions">
+        <button id="boostyDeleteConfirmButton" class="btn btn-primary trailer-delete-button" type="button">Удалить</button>
+        <button id="boostyDeleteCancelButton" class="btn btn-secondary" type="button">Отмена</button>
+      </div>
+      <p id="boostyDeleteStatus" class="trailer-form__status" aria-live="polite"></p>
     </div>
   </div>
 
