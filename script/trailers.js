@@ -257,6 +257,14 @@ function rememberRatedTrailer(trailerId, rating) {
   localStorage.setItem("ratedTrailers", JSON.stringify(ratedTrailers));
 }
 
+function getRatedTrailerValue(trailerId) {
+  const ratedTrailers = getRatedTrailersMap();
+  const raw = ratedTrailers[String(trailerId)];
+  if (raw === undefined || raw === null || raw === "") return null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function formatViewerRating(item) {
   const ratingSum = Number(item?.viewer_rating_sum ?? 0) || 0;
   const ratingCount = Number(item?.viewer_rating_count ?? 0) || 0;
@@ -1406,6 +1414,8 @@ function renderSelectedTrailer() {
   const frame = document.getElementById("trailerPlayerFrame");
   const placeholder = document.getElementById("trailerPlayerPlaceholder");
   const openYoutube = document.getElementById("trailerOpenYoutube");
+  const panelTitle = document.getElementById("trailerRatingPanelTitle");
+  const panelDescription = document.getElementById("trailerRatingPanelDescription");
   const ratingInput = document.getElementById("trailerRatingInput");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
@@ -1428,6 +1438,8 @@ function renderSelectedTrailer() {
     setRatingStars("trailerRatingStars", null);
     updateTrailerRatingMeaning(null);
     if (watchedButton) watchedButton.disabled = true;
+    if (panelTitle) panelTitle.textContent = "Оценка";
+    if (panelDescription) panelDescription.textContent = "";
     if (deleteButton) deleteButton.disabled = true;
     resetKinopoiskInfo("Выберите трейлер для поиска информации.");
     return;
@@ -1453,17 +1465,31 @@ function renderSelectedTrailer() {
     openYoutube.href = buildYoutubeWatchUrl(trailer.youtube_video_id);
     openYoutube.setAttribute("aria-disabled", "false");
   }
+  const selectedRating = hasAdminAccess
+    ? Number(trailer.streamer_rating)
+    : getRatedTrailerValue(trailer.id);
+  const normalizedSelectedRating = Number.isFinite(selectedRating) ? selectedRating : null;
+  if (panelTitle) {
+    panelTitle.textContent = hasAdminAccess ? "Оценка Pupsik_ow" : "Ваша оценка";
+  }
+  if (panelDescription) {
+    panelDescription.textContent = hasAdminAccess
+      ? "Поставьте оценку стримера и переместите трейлер в просмотренные."
+      : hasRatedTrailer(trailer.id)
+        ? "Здесь показана ваша оценка. Повторно оценить этот трейлер нельзя."
+        : "Здесь вы тоже можете поставить свою зрительскую оценку трейлеру.";
+  }
   if (ratingInput) {
-    const nextRating =
-      trailer.streamer_rating === null || trailer.streamer_rating === undefined
-        ? null
-        : Number(trailer.streamer_rating);
-    const normalizedRating = Number.isFinite(nextRating) ? nextRating : null;
-    setRatingStars("trailerRatingStars", normalizedRating);
-    highlightStars("trailerRatingStars", normalizedRating);
-    syncTrailerRatingPreview(normalizedRating);
+    setRatingStars("trailerRatingStars", normalizedSelectedRating);
+    highlightStars("trailerRatingStars", normalizedSelectedRating);
+    syncTrailerRatingPreview(normalizedSelectedRating);
   }
   if (watchedButton) {
+    watchedButton.textContent = hasAdminAccess
+      ? "Оценить"
+      : hasRatedTrailer(trailer.id)
+        ? "Оценено"
+        : "Оценить";
     watchedButton.disabled = hasAdminAccess ? false : hasRatedTrailer(trailer.id);
   }
   if (deleteButton) {
