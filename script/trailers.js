@@ -13,6 +13,17 @@ const KINOPOISK_STAFF_URL =
 const YOUTUBE_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
 const TRAILER_PLAYER_FALLBACK_HIDE_DELAY_MS = 1200;
 const POSTER_PLACEHOLDER = "/images/placeholder-poster.webp";
+const DEFAULT_TRAILER_BOOSTY_CONTENT = {
+  profileUrl: "https://boosty.to/papsik",
+  title: "Полные разборы трейлеров",
+  description:
+    "Полные записи стримов с обзорами трейлеров и разбором новинок теперь доступны на Boosty.",
+  buttonLabel: "Смотреть на Boosty",
+  streamsTitle: "Разборы стримов",
+  emptyText:
+    "Список сохранённых стримов пока пуст. Когда на Boosty появятся первые разборы, они будут отображаться здесь.",
+  streams: [],
+};
 
 let kinopoiskApiKey = "";
 let selectedKinopoiskApi = "API 1";
@@ -299,6 +310,118 @@ function getAdminAuthHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+function getVisibleTrailers() {
+  return hasAdminAccess
+    ? trailers
+    : trailers.filter((item) => item.status === "watched");
+}
+
+function getTrailerBoostyContent() {
+  const source =
+    window.TRAILER_BOOSTY_CONTENT &&
+    typeof window.TRAILER_BOOSTY_CONTENT === "object" &&
+    !Array.isArray(window.TRAILER_BOOSTY_CONTENT)
+      ? window.TRAILER_BOOSTY_CONTENT
+      : {};
+
+  const streams = Array.isArray(source.streams)
+    ? source.streams
+        .map((item) => ({
+          title: String(item?.title || "").trim(),
+          href: String(item?.href || "").trim(),
+          image: String(item?.image || "").trim() || POSTER_PLACEHOLDER,
+          meta: String(item?.meta || "").trim(),
+        }))
+        .filter((item) => item.title && item.href)
+    : [];
+
+  return {
+    profileUrl: String(source.profileUrl || DEFAULT_TRAILER_BOOSTY_CONTENT.profileUrl).trim(),
+    title: String(source.title || DEFAULT_TRAILER_BOOSTY_CONTENT.title).trim(),
+    description: String(
+      source.description || DEFAULT_TRAILER_BOOSTY_CONTENT.description
+    ).trim(),
+    buttonLabel: String(
+      source.buttonLabel || DEFAULT_TRAILER_BOOSTY_CONTENT.buttonLabel
+    ).trim(),
+    streamsTitle: String(
+      source.streamsTitle || DEFAULT_TRAILER_BOOSTY_CONTENT.streamsTitle
+    ).trim(),
+    emptyText: String(
+      source.emptyText || DEFAULT_TRAILER_BOOSTY_CONTENT.emptyText
+    ).trim(),
+    streams,
+  };
+}
+
+function renderBoostyStreamCard(item) {
+  const link = document.createElement("a");
+  link.className = "trailer-saved-stream-card";
+  link.href = item.href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+
+  const image = document.createElement("img");
+  image.className = "trailer-saved-stream-card__image";
+  image.src = item.image || POSTER_PLACEHOLDER;
+  image.alt = item.title;
+  image.loading = "lazy";
+  image.onerror = () => {
+    image.onerror = null;
+    image.src = POSTER_PLACEHOLDER;
+  };
+
+  const body = document.createElement("div");
+  body.className = "trailer-saved-stream-card__body";
+
+  const title = document.createElement("div");
+  title.className = "trailer-saved-stream-card__title";
+  title.textContent = item.title;
+  body.appendChild(title);
+
+  if (item.meta) {
+    const meta = document.createElement("div");
+    meta.className = "trailer-saved-stream-card__meta";
+    meta.innerHTML = '<i class="fa-solid fa-fire" aria-hidden="true"></i>';
+
+    const text = document.createElement("span");
+    text.textContent = item.meta;
+    meta.appendChild(text);
+    body.appendChild(meta);
+  }
+
+  link.append(image, body);
+  return link;
+}
+
+function renderTrailerPublicSidebar() {
+  const section = document.getElementById("trailerBoostySection");
+  const title = document.getElementById("trailerBoostyTitle");
+  const description = document.getElementById("trailerBoostyDescription");
+  const link = document.getElementById("trailerBoostyLink");
+  const streamsTitle = document.getElementById("trailerSavedStreamsTitle");
+  const list = document.getElementById("trailerSavedStreamsList");
+  const empty = document.getElementById("trailerSavedStreamsEmpty");
+
+  if (!section || !title || !description || !link || !streamsTitle || !list || !empty) {
+    return;
+  }
+
+  const content = getTrailerBoostyContent();
+  title.textContent = content.title;
+  description.textContent = content.description;
+  link.href = content.profileUrl || DEFAULT_TRAILER_BOOSTY_CONTENT.profileUrl;
+  link.textContent = content.buttonLabel;
+  streamsTitle.textContent = content.streamsTitle;
+
+  list.innerHTML = "";
+  content.streams.forEach((item) => list.appendChild(renderBoostyStreamCard(item)));
+
+  list.hidden = content.streams.length === 0;
+  empty.textContent = content.emptyText;
+  empty.hidden = content.streams.length > 0;
+}
+
 function normalizeTrailerActorName(name = "") {
   return name.toString().trim().toLowerCase();
 }
@@ -573,7 +696,9 @@ function renderTrailerActors(container, actorNames, filmId) {
 }
 
 function updateTrailerAdminUi() {
+  const page = document.querySelector(".trailer-page");
   const form = document.getElementById("trailerAddForm");
+  const boostySection = document.getElementById("trailerBoostySection");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
 
@@ -581,11 +706,20 @@ function updateTrailerAdminUi() {
     form.hidden = !hasAdminAccess;
   }
 
+  if (boostySection) {
+    boostySection.hidden = hasAdminAccess;
+  }
+
+  if (page) {
+    page.classList.toggle("is-public-view", !hasAdminAccess);
+  }
+
   if (deleteButton) {
     deleteButton.hidden = !hasAdminAccess;
   }
 
   if (!hasAdminAccess) {
+    renderTrailerPublicSidebar();
     if (watchedButton) watchedButton.disabled = false;
   }
 }
@@ -956,7 +1090,7 @@ function getMovieLabel(movie) {
 
 function getSelectedTrailer() {
   return (
-    trailers.find((item) => Number(item.id) === Number(selectedTrailerId)) || null
+    getVisibleTrailers().find((item) => Number(item.id) === Number(selectedTrailerId)) || null
   );
 }
 
@@ -1332,10 +1466,11 @@ function getFilteredWatchedTrailers(list) {
 
 function applyTrailerList(nextList) {
   trailers = sortTrailers(nextList);
-  if (!trailers.length) {
+  const visibleTrailers = getVisibleTrailers();
+  if (!visibleTrailers.length) {
     selectedTrailerId = null;
   } else if (!getSelectedTrailer()) {
-    selectedTrailerId = trailers[0].id;
+    selectedTrailerId = visibleTrailers[0].id;
   }
   renderTrailerLists();
   renderSelectedTrailer();
@@ -1419,6 +1554,7 @@ function renderTrailerItem(item) {
 }
 
 function renderTrailerLists() {
+  const plannedSection = document.querySelector(".trailer-list-section--planned");
   const plannedList = document.getElementById("plannedTrailerList");
   const plannedEmpty = document.getElementById("plannedTrailerEmpty");
   const plannedLoading = document.getElementById("plannedTrailerLoading");
@@ -1439,7 +1575,8 @@ function renderTrailerLists() {
 
   if (plannedLoading) plannedLoading.hidden = true;
   if (watchedLoading) watchedLoading.hidden = true;
-  if (plannedList) plannedList.hidden = false;
+  if (plannedSection) plannedSection.hidden = !hasAdminAccess;
+  if (plannedList) plannedList.hidden = !hasAdminAccess;
   if (plannedEmpty) plannedEmpty.hidden = planned.length > 0;
   if (plannedCount) plannedCount.textContent = String(planned.length);
   if (plannedModalCount) plannedModalCount.textContent = String(planned.length);
@@ -1579,6 +1716,7 @@ function renderWatchedTrailersGrid(watchedList) {
 }
 
 function setTrailerListsLoading(isLoading) {
+  const plannedSection = document.querySelector(".trailer-list-section--planned");
   const plannedLoading = document.getElementById("plannedTrailerLoading");
   const plannedList = document.getElementById("plannedTrailerList");
   const plannedEmpty = document.getElementById("plannedTrailerEmpty");
@@ -1586,9 +1724,10 @@ function setTrailerListsLoading(isLoading) {
   const watchedGrid = document.getElementById("watchedTrailersGrid");
   const watchedEmpty = document.getElementById("watchedTrailersEmpty");
 
-  if (plannedLoading) plannedLoading.hidden = !isLoading;
+  if (plannedSection) plannedSection.hidden = !hasAdminAccess;
+  if (plannedLoading) plannedLoading.hidden = !isLoading || !hasAdminAccess;
   if (watchedLoading) watchedLoading.hidden = !isLoading;
-  if (plannedList) plannedList.hidden = Boolean(isLoading);
+  if (plannedList) plannedList.hidden = Boolean(isLoading) || !hasAdminAccess;
   if (plannedEmpty) plannedEmpty.hidden = true;
   if (watchedGrid) watchedGrid.hidden = Boolean(isLoading);
   if (watchedEmpty) watchedEmpty.hidden = true;
@@ -1783,7 +1922,9 @@ function renderSelectedTrailer() {
 }
 
 async function fetchTrailers() {
-  const response = await fetch(TRAILER_API_URL);
+  const response = await fetch(TRAILER_API_URL, {
+    headers: getAdminAuthHeaders(),
+  });
   const payload = await response.json();
   if (!response.ok) {
     throw new Error(payload?.error || `Failed to load trailers: ${response.status}`);
@@ -2891,6 +3032,7 @@ async function initPage() {
   try {
     if (app) app.hidden = false;
     if (denied) denied.hidden = true;
+    renderTrailerPublicSidebar();
     setTrailerFormBusy(true);
     setTrailerListsLoading(true);
     setTrailerInfoLoading(true, "Загружаю информацию о фильме...");

@@ -195,11 +195,17 @@ function normalizePatchPayload(payload) {
   return changes;
 }
 
-async function listTrailers(supabase, res) {
-  const { data, error } = await supabase
+async function listTrailers(supabase, res, options = {}) {
+  let query = supabase
     .from(TABLE_NAME)
     .select(SELECT_FIELDS)
     .order("created_at", { ascending: false });
+
+  if (!options.admin) {
+    query = query.eq("status", "watched");
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Failed to load trailer watchlist", error);
@@ -394,7 +400,8 @@ async function handler(req, res) {
   }
 
   if (method === "GET") {
-    return listTrailers(supabase, res);
+    const access = verifyAdminRequest(req);
+    return listTrailers(supabase, res, { admin: access.ok });
   }
 
   const access = verifyAdminRequest(req);

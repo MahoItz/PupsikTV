@@ -201,6 +201,167 @@
     inset 0 -10px 22px rgba(0, 0, 0, 0.18);
 }
 
+.trailer-boosty-section {
+  align-content: start;
+}
+
+.trailer-boosty-card,
+.trailer-saved-streams {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 212, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(9, 20, 40, 0.78), rgba(7, 15, 30, 0.58));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 -10px 22px rgba(0, 0, 0, 0.18);
+}
+
+.trailer-boosty-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.trailer-boosty-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(255, 111, 55, 0.18), transparent 46%),
+    radial-gradient(circle at bottom right, rgba(255, 166, 0, 0.14), transparent 42%);
+  pointer-events: none;
+}
+
+.trailer-boosty-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.trailer-boosty-card__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trailer-boosty-card__brand-icon {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff6f37, #ff9d00);
+  color: #fff8f0;
+  box-shadow: 0 10px 24px rgba(255, 111, 55, 0.24);
+}
+
+.trailer-boosty-card__brand-icon i {
+  font-size: 1rem;
+}
+
+.trailer-boosty-card__brand-text {
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #fff8f0;
+  text-transform: lowercase;
+}
+
+.trailer-boosty-card__body {
+  display: grid;
+  gap: 10px;
+}
+
+.trailer-boosty-card__title,
+.trailer-saved-streams__header h2 {
+  margin: 0;
+  color: #f4fbff;
+}
+
+.trailer-boosty-card__description {
+  margin: 0;
+  color: rgba(244, 251, 255, 0.82);
+  line-height: 1.45;
+}
+
+.trailer-boosty-card__button {
+  justify-self: start;
+  min-height: 44px;
+  padding-inline: 18px;
+  box-shadow:
+    0 12px 28px rgba(255, 111, 55, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.trailer-saved-streams__list {
+  display: grid;
+  gap: 10px;
+}
+
+.trailer-saved-stream-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 212, 255, 0.16);
+  background: linear-gradient(135deg, rgba(5, 15, 31, 0.92), rgba(12, 25, 47, 0.88));
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trailer-saved-stream-card:hover,
+.trailer-saved-stream-card:focus-visible {
+  outline: none;
+  border-color: rgba(255, 159, 92, 0.46);
+  box-shadow: 0 14px 28px rgba(6, 10, 22, 0.36);
+  transform: translateY(-1px);
+}
+
+.trailer-saved-stream-card__image {
+  width: 92px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.trailer-saved-stream-card__body {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.trailer-saved-stream-card__title {
+  color: #f4fbff;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.trailer-saved-stream-card__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(244, 251, 255, 0.72);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.trailer-saved-stream-card__meta i {
+  color: #ff7d45;
+}
+
+.trailer-page.is-public-view .trailer-sidebar {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
 .trailer-list-section__actions {
   display: flex;
   align-items: center;
@@ -1168,6 +1329,15 @@
   margin: 0;
 }
 
+.trailer-info__title--refreshable {
+  cursor: pointer;
+  color: #dff7ff;
+}
+
+.trailer-info__title--refreshable.is-loading {
+  opacity: 0.72;
+}
+
 .trailer-info__meta,
 .trailer-info__description {
   margin: 0;
@@ -1322,6 +1492,15 @@
 
   .trailer-watched-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .trailer-saved-stream-card {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+
+  .trailer-saved-stream-card__image {
+    width: 84px;
+    height: 58px;
   }
 }
 

@@ -79,6 +79,37 @@
           <p id="plannedTrailerEmpty" class="trailer-empty" hidden>Пока список пуст.</p>
           <button id="openPlannedTrailersModal" class="trailer-list-section__more trailer-list-section__more--link" type="button">Весь список</button>
         </section>
+        <section id="trailerBoostySection" class="trailer-list-section trailer-boosty-section" hidden>
+          <article class="trailer-boosty-card">
+            <div class="trailer-boosty-card__brand" aria-hidden="true">
+              <span class="trailer-boosty-card__brand-icon">
+                <i class="fa-solid fa-circle-dollar-to-slot"></i>
+              </span>
+              <span class="trailer-boosty-card__brand-text">boosty</span>
+            </div>
+            <div class="trailer-boosty-card__body">
+              <h2 id="trailerBoostyTitle" class="trailer-boosty-card__title"></h2>
+              <p id="trailerBoostyDescription" class="trailer-boosty-card__description"></p>
+            </div>
+            <a
+              id="trailerBoostyLink"
+              class="btn btn-primary trailer-boosty-card__button"
+              href="https://boosty.to/papsik"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Смотреть на Boosty
+            </a>
+          </article>
+
+          <section class="trailer-saved-streams">
+            <div class="trailer-list-section__header trailer-saved-streams__header">
+              <h2 id="trailerSavedStreamsTitle">Разборы стримов</h2>
+            </div>
+            <div id="trailerSavedStreamsList" class="trailer-saved-streams__list" aria-live="polite"></div>
+            <p id="trailerSavedStreamsEmpty" class="trailer-empty" hidden></p>
+          </section>
+        </section>
       </section>
 
       <section class="trailer-main">
@@ -317,6 +348,7 @@
     <p class="site-footer__text">Дата создания сайта: <span class="site-footer__date">6 июля 2025</span></p>
   </footer>
 
+  <script src="/script/trailer-boosty-content.js" defer></script>
   <script src="/script/trailers.js" defer></script>
 </body>
 
