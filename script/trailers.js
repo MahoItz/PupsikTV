@@ -807,6 +807,17 @@ function applyTrailerList(nextList) {
   renderSelectedTrailer();
 }
 
+function getNextPlannedTrailerSelectionId(currentId) {
+  const planned = trailers.filter((item) => item.status !== "watched");
+  const currentIndex = planned.findIndex((item) => Number(item.id) === Number(currentId));
+
+  if (currentIndex < 0) {
+    return planned[0]?.id || null;
+  }
+
+  return planned[currentIndex + 1]?.id || planned[currentIndex - 1]?.id || null;
+}
+
 function renderTrailerItem(item) {
   const button = document.createElement("button");
   button.type = "button";
@@ -1250,6 +1261,12 @@ async function createTrailer(payload) {
 }
 
 async function patchTrailer(id, changes) {
+  const shouldSelectNextPlanned =
+    Number(selectedTrailerId) === Number(id) && changes?.status === "watched";
+  const nextSelectedId = shouldSelectNextPlanned
+    ? getNextPlannedTrailerSelectionId(id)
+    : null;
+
   const response = await fetch(TRAILER_API_URL, {
     method: "PATCH",
     headers: {
@@ -1270,6 +1287,11 @@ async function patchTrailer(id, changes) {
   trailers = sortTrailers(
     trailers.map((item) => (Number(item.id) === Number(updated.id) ? updated : item))
   );
+  if (shouldSelectNextPlanned) {
+    selectedTrailerId = nextSelectedId;
+  } else if (!getSelectedTrailer()) {
+    selectedTrailerId = trailers[0]?.id || null;
+  }
   renderSelectedTrailer();
   return updated;
 }

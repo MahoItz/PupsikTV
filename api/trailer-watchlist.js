@@ -71,7 +71,7 @@ function parseRating(value) {
   if (value === null || value === undefined || value === "") return null;
   const rating = Number.parseFloat(value);
   if (!Number.isFinite(rating)) return null;
-  return Math.min(10, Math.max(1, Math.round(rating * 10) / 10));
+  return Math.min(11, Math.max(0, Math.round(rating * 10) / 10));
 }
 
 function normalizeStatus(value, fallback = "planned") {
