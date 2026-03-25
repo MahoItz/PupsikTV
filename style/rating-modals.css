@@ -67,3 +67,19 @@
     max-width: 250px;
 }
 
+
+#userRateModal .user-rate-status {
+    min-height: 1.2em;
+    margin: 8px 0 12px;
+    text-align: center;
+    color: #c7cce9;
+    font-size: 0.95rem;
+}
+
+#userRateModal .user-rate-status--success {
+    color: #7df0a0;
+}
+
+#userRateModal .user-rate-status--error {
+    color: #ff9c9c;
+}

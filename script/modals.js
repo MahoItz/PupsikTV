@@ -167,6 +167,18 @@ function openUserRateModal(id) {
     document.getElementById("userRateMoviePoster").src = movie.poster;
     setRatingStars("userRateStars", 0);
   }
+  const statusEl = document.getElementById("userRateStatus");
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.classList.remove("user-rate-status--success", "user-rate-status--error");
+  }
+  const submitBtn = document.getElementById("userRateSubmitBtn");
+  if (submitBtn) {
+    submitBtn.disabled = isSubmittingUserRating;
+    submitBtn.textContent = "Сохранить оценку";
+    submitBtn.classList.remove("is-loading");
+    submitBtn.removeAttribute("aria-busy");
+  }
   document.getElementById("userRateModal").style.display = "block";
   setupRatingStars("userRateStars");
 }

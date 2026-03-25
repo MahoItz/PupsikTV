@@ -1126,6 +1126,17 @@ async function submitGameRating() {
 
 async function submitUserMovieRating() {
   if (isSubmittingUserRating) return;
+
+  const submitBtn = document.getElementById("userRateSubmitBtn");
+  const statusEl = document.getElementById("userRateStatus");
+  const setStatus = (message, tone = "") => {
+    if (!statusEl) return;
+    statusEl.textContent = message || "";
+    statusEl.classList.remove("user-rate-status--success", "user-rate-status--error");
+    if (tone === "success") statusEl.classList.add("user-rate-status--success");
+    if (tone === "error") statusEl.classList.add("user-rate-status--error");
+  };
+
   isSubmittingUserRating = true;
 
   const rating = getRatingValue("userRateInput");
@@ -1142,11 +1153,14 @@ async function submitUserMovieRating() {
   }
 
   if (ratedMovies[userRatingMovieId]) {
-    alert("Вы уже оценили этот фильм");
-    closeModal("userRateModal", true);
+    setStatus(`Ваша оценка: ${ratedMovies[userRatingMovieId]} сохранена.`, "success");
+    if (submitBtn) submitBtn.disabled = true;
     isSubmittingUserRating = false;
     return;
   }
+
+  toggleSubmitLoading(submitBtn, true, "Сохраняем оценку...");
+  setStatus("Сохраняем оценку...");
 
   const movie = allMovies.find((m) => m.id === userRatingMovieId);
 
@@ -1203,13 +1217,20 @@ async function submitUserMovieRating() {
     localStorage.setItem("ratedMovies", JSON.stringify(ratedMovies));
 
     renderMovies();
+
+    setStatus(`Ваша оценка: ${rating} сохранена.`, "success");
+    toggleSubmitLoading(submitBtn, false);
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Оценка сохранена";
+    }
   } catch (err) {
     console.error("Error submitting user rating", err);
+    setStatus("Не удалось сохранить оценку. Попробуйте ещё раз.", "error");
+    toggleSubmitLoading(submitBtn, false);
   } finally {
     isSubmittingUserRating = false;
   }
-
-  closeModal("userRateModal", true);
 }
 
 async function submitUserGameRating() {
