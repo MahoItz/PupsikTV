@@ -1388,7 +1388,7 @@ function closeTrailerUserRateModal() {
     submitButton.disabled = false;
     submitButton.removeAttribute("aria-busy");
   }
-  setRatingStars("trailerUserRateStars", 0);
+  setRatingStars("trailerUserRateStars", null);
   setStatusText("trailerUserRateStatus", "");
   userRatingTrailerId = null;
 }
@@ -1416,7 +1416,7 @@ function openTrailerUserRateModal(trailerId) {
     poster.src = POSTER_PLACEHOLDER;
   };
 
-  setRatingStars("trailerUserRateStars", 0);
+  setRatingStars("trailerUserRateStars", null);
   setupRatingStars("trailerUserRateStars");
   setStatusText("trailerUserRateStatus", "");
   if (submitButton) {
@@ -2234,7 +2234,7 @@ function setupFormEvents() {
   setupRatingStars("trailerRatingStars");
   setRatingStars("trailerRatingStars", null);
   setupRatingStars("trailerUserRateStars");
-  setRatingStars("trailerUserRateStars", 0);
+  setRatingStars("trailerUserRateStars", null);
 
   userRateClose?.addEventListener("click", closeTrailerUserRateModal);
   userRateClose?.addEventListener("keydown", (event) => {

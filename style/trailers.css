@@ -1027,6 +1027,9 @@
 }
 
 .trailer-user-rate-modal .rate-poster {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
   text-align: center;
 }
 
@@ -1042,9 +1045,22 @@
 }
 
 .trailer-user-rate-modal #trailerUserRateTitle {
+  order: -1;
   margin: 0;
-  font-weight: 800;
-  color: #f4fbff;
+  width: 100%;
+  max-width: none;
+  padding: 12px 0 14px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #cfe3ff;
+  text-align: center;
+  border-top: 1px solid rgba(116, 150, 210, 0.18);
+  border-bottom: 1px solid rgba(116, 150, 210, 0.18);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+  text-wrap: balance;
 }
 
 .trailer-user-rate-modal .btn-rate {
