@@ -963,6 +963,12 @@ function renderWatchedTrailerCard(item) {
     <i class="fa-solid fa-star" aria-hidden="true"></i>
     <span>${formatViewerRating(item)}</span>
   `;
+  const votes = Math.round(item?.viewer_rating_count ?? 0);
+  viewerItem.addEventListener("mouseenter", (event) => {
+    showTrailerRatingValueTooltip(event, `Оценок: ${votes}`);
+  });
+  viewerItem.addEventListener("mousemove", updateTrailerRatingTooltipPosition);
+  viewerItem.addEventListener("mouseleave", hideTrailerRatingValueTooltip);
 
   ratingDiv.append(streamerItem, viewerItem);
   info.append(title, year, ratingDiv);
