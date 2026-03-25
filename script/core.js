@@ -152,7 +152,6 @@ async function deleteGamePosterFromStorage(posterUrl) {
   }
 }
 
-const TWITCH_REDIRECT_URI = buildAbsoluteApiUrl("/twitch-connect");
 const TWITCH_AUTH_SCOPES = ["user:read:chat", "user:bot", "channel:bot"];
 let TWITCH_CLIENT_ID = null;
 let SUPABASE_KEY;
@@ -543,50 +542,15 @@ async function checkAiModelsStatus() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
   if (label) label.textContent = "Проверка моделей...";
 
-  const concurrencyLimit = 3;
-  const queue = [...aiModelOptions];
-  const results = [];
-
-  async function runWorker() {
-    while (queue.length > 0) {
-      const modelInfo = queue.shift();
-      try {
-        const response = await fetch(buildApiPath("/check-model"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ model: modelInfo.ai_model }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          aiModelStatuses[modelInfo.ai_model] = data;
-          console.log(`Model Check [${modelInfo.ai_model_name}]:`, data);
-        } else {
-          aiModelStatuses[modelInfo.ai_model] = {
-            status: "error",
-            http_status: response.status,
-            provider: "Proxy",
-            raw: "Failed to reach check API",
-          };
-        }
-      } catch (err) {
-        aiModelStatuses[modelInfo.ai_model] = {
-          status: "error",
-          http_status: 0,
-          provider: "Network",
-          raw: err.message,
-        };
-      }
-      // Re-render after each check to show progress
-      renderAiModelOptions(aiModelOptions, selectedAiModelValue);
-    }
-  }
-
-  const workers = Array(Math.min(concurrencyLimit, queue.length))
-    .fill(null)
-    .map(() => runWorker());
-
-  await Promise.all(workers);
+  aiModelOptions.forEach((modelInfo) => {
+    aiModelStatuses[modelInfo.ai_model] = {
+      status: "unavailable",
+      http_status: 410,
+      provider: "Disabled",
+      raw: "Model status check endpoint was removed",
+    };
+  });
+  renderAiModelOptions(aiModelOptions, selectedAiModelValue);
 
   // Persist to Supabase after all checks are done
   await persistAiModelStatuses();
@@ -595,10 +559,9 @@ async function checkAiModelsStatus() {
   btn.innerHTML = originalHtml;
 
   if (label) {
-    const now = new Date().toLocaleTimeString();
-    label.textContent = `Обновлено только что (${now})`;
+    label.textContent = "Проверка моделей отключена";
     setTimeout(() => {
-      label.textContent = "Обновлено только что";
+      label.textContent = "Проверка моделей отключена";
     }, 5000);
   }
 }
@@ -1388,34 +1351,7 @@ function updateTwitchConnectButtonState() {
 }
 
 function startTwitchAdminConnect() {
-  if (!isAdmin || !adminToken) {
-    alert("Сначала войдите как админ с паролем.");
-    return;
-  }
-  if (!TWITCH_CLIENT_ID) {
-    alert("Не настроен Twitch Client ID.");
-    return;
-  }
-  const params = new URLSearchParams({
-    client_id: TWITCH_CLIENT_ID,
-    redirect_uri: TWITCH_REDIRECT_URI,
-    response_type: "code",
-    scope: TWITCH_AUTH_SCOPES.join(" "),
-  });
-  const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
-  const popupFeatures = [
-    "width=600",
-    "height=720",
-    "menubar=no",
-    "toolbar=no",
-    "status=no",
-    "resizable=yes",
-    "scrollbars=yes",
-  ].join(",");
-  const popup = window.open(authUrl, "_blank", popupFeatures);
-  if (!popup) {
-    window.location.href = authUrl;
-  }
+  alert("Интеграция Twitch отключена.");
 }
 
 async function verifyAdminPassword(password) {

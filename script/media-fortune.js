@@ -3483,72 +3483,14 @@ async function loadFortuneTranslationModel() {
 }
 
 async function translateParentGuideSections(originalSections, modelValue) {
-  const normalizedSections = normalizeParentGuideSections(originalSections);
-
-  const response = await fetch("/api/translate-parent-guide", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      sections: normalizedSections,
-      model: modelValue,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Translation failed: ${response.status}`);
-  }
-
-  const payload = await response.json();
-  const translated = payload?.translated || payload?.translation || null;
-
-  return normalizeParentGuideSections(translated || {});
+  return normalizeParentGuideSections(originalSections);
 }
 
 async function translateParentGuideSectionsWithFallback(
   originalSections,
   primaryModel
 ) {
-  // 1. Try primary model
-  try {
-    return await translateParentGuideSections(originalSections, primaryModel);
-  } catch (err) {
-    console.warn(`Primary translation model [${primaryModel}] failed:`, err);
-  }
-
-  // 2. Fallback to other active models
-  if (typeof aiModelOptions === "undefined" || !aiModelOptions.length) {
-    throw new Error("No fallback models available");
-  }
-
-  // Filter models that are marked as 'active' and are NOT the primary model
-  const activeFallbackModels = aiModelOptions
-    .filter(
-      (opt) =>
-        opt.ai_model !== primaryModel &&
-        aiModelStatuses[opt.ai_model]?.status === "active"
-    )
-    .map((opt) => opt.ai_model);
-
-  for (const fallbackModel of activeFallbackModels) {
-    try {
-      console.log(`Attempting fallback translation with model: ${fallbackModel}`);
-      const result = await translateParentGuideSections(
-        originalSections,
-        fallbackModel
-      );
-      // Auto-switch to this working model for future calls
-      if (typeof updateActiveAiModel === "function") {
-        updateActiveAiModel(fallbackModel);
-      }
-      return result;
-    } catch (err) {
-      console.warn(`Fallback model [${fallbackModel}] failed:`, err);
-    }
-  }
-
-  throw new Error("All translation models failed (including fallback)");
+  return translateParentGuideSections(originalSections, primaryModel);
 }
 
 async function startFortuneParentGuideTranslation(label, data, options = {}) {
@@ -3751,39 +3693,11 @@ async function loadFortuneParentGuideData(imdbId) {
   if (!imdbId) {
     throw new Error("Missing IMDb ID for parent guide request");
   }
-
-  const response = await fetch(
-    `/api/imdb-parent-guide?id=${encodeURIComponent(imdbId)}`
-  );
-  let payload = null;
-
-  try {
-    payload = await response.json();
-  } catch {
-    payload = null;
-  }
-
-  if (!response.ok) {
-    throw createParentGuideLoadError(
-      `Request failed: ${response.status}`,
-      {
-        status: response.status,
-        code: payload?.code || null,
-        meta: payload?.meta || null,
-      }
-    );
-  }
-
-  const hasContent = hasParentGuideContent(payload?.original || {});
-  if (!hasContent && !isExpectedEmptyParentGuide(payload)) {
-    throw createParentGuideLoadError("Parent guide content is empty", {
-      status: response.status,
-      code: payload?.code || "PARENT_GUIDE_PARSE_EMPTY",
-      meta: payload?.meta || null,
-    });
-  }
-
-  return payload;
+  return {
+    original: { sexAndNudity: [] },
+    translated: null,
+    meta: { emptyReason: "section_has_no_items", disabled: true },
+  };
 }
 
 async function loadFortuneParentGuideDataWithRetry(imdbId, options = {}) {
