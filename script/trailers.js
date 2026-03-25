@@ -1170,7 +1170,7 @@ function renderSelectedTrailer() {
   if (title) title.textContent = trailer.title || "Без названия";
   trailerPlayerLoadRequestId += 1;
   const requestId = trailerPlayerLoadRequestId;
-  setTrailerPlayerLoading(true, "Подключаю YouTube-плеер…");
+  setTrailerPlayerLoading(true, "Подключение плеера…");
   if (frame) {
     frame.onload = () => {
       if (requestId !== trailerPlayerLoadRequestId) return;
