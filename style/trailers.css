@@ -1181,6 +1181,61 @@
   gap: 10px;
 }
 
+.trailer-actor-name {
+  display: inline-block;
+}
+
+.trailer-actor-name--has-photo {
+  cursor: pointer;
+  color: #dff7ff;
+  border-bottom: 1px dashed rgba(127, 223, 255, 0.45);
+}
+
+.actor-photo-tooltip {
+  position: fixed;
+  z-index: 4000;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px;
+  width: min(240px, calc(100vw - 24px));
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(127, 223, 255, 0.18);
+  background: linear-gradient(180deg, rgba(9, 18, 33, 0.98), rgba(15, 28, 51, 0.96));
+  box-shadow: 0 20px 40px rgba(2, 6, 14, 0.42);
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+}
+
+.actor-photo-tooltip__image {
+  width: 56px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.actor-photo-tooltip__text {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+.actor-photo-tooltip__name {
+  color: #f3fbff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.actor-photo-tooltip__role {
+  color: rgba(212, 244, 255, 0.72);
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+
 .trailer-release-add-button {
   padding: 4px 10px;
   border-radius: 999px;

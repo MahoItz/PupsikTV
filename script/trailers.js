@@ -3,6 +3,7 @@ const TRAILER_RATINGS_API_URL = "/api/trailer-ratings";
 const KP_API_SELECTION_URL = "/api/kp-api-selection";
 const VERIFY_ADMIN_URL = "/api/verify-admin";
 const ENV_URL = "/api/env";
+const KINOPOISK_ACTORS_API_URL = "/api/kinopoisk-actors";
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 const KINOPOISK_FILM_URL =
@@ -39,6 +40,9 @@ let watchedTrailersSearchQuery = "";
 let trailerReleaseDateTrailerId = null;
 let trailerReleaseCalendarYear = null;
 let trailerReleaseCalendarMonth = null;
+let trailerActorTooltip = null;
+const trailerActorCache = new Map();
+const trailerActorPending = new Map();
 const TRAILER_RATING_MEANINGS = {
   0: "Абсолютный провал",
   1: "Кошмар",
@@ -293,6 +297,279 @@ function parseTrailerKinopoiskData(value) {
 function getAdminAuthHeaders() {
   const token = localStorage.getItem("adminToken") || "";
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function normalizeTrailerActorName(name = "") {
+  return name.toString().trim().toLowerCase();
+}
+
+function isTrailerActorPerson(person) {
+  const key = (person?.professionKey || "").toString().toUpperCase();
+  if (key === "ACTOR") return true;
+  const text = (person?.professionText || person?.profession_text || "")
+    .toString()
+    .trim()
+    .toLowerCase();
+  return text.includes("актер") || text.includes("актёр") || text.includes("actor");
+}
+
+function normalizeTrailerActorRecord(item, filmId) {
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  const staffId = Number.parseInt(item?.staffId ?? item?.staff_id, 10);
+  const actorName = String(
+    item?.nameRu || item?.nameEn || item?.actor_name || ""
+  ).trim();
+  const posterUrl = String(item?.posterUrl || item?.poster_url || "").trim();
+  const professionText = String(
+    item?.professionText || item?.profession_text || ""
+  ).trim();
+
+  if (!Number.isFinite(normalizedFilmId) || !Number.isFinite(staffId) || !actorName) {
+    return null;
+  }
+
+  if (!isTrailerActorPerson(item)) {
+    return null;
+  }
+
+  return {
+    kinopoisk_film_id: normalizedFilmId,
+    staff_id: staffId,
+    actor_name: actorName,
+    poster_url: posterUrl || null,
+    profession_text: professionText || null,
+  };
+}
+
+function primeTrailerActorCache(filmId, staff) {
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  if (!Number.isFinite(normalizedFilmId)) {
+    return [];
+  }
+
+  const items = [];
+  const seen = new Set();
+
+  (Array.isArray(staff) ? staff : []).forEach((person) => {
+    const row = normalizeTrailerActorRecord(person, normalizedFilmId);
+    if (!row) return;
+    const key = `${row.kinopoisk_film_id}:${row.staff_id}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    items.push(row);
+  });
+
+  trailerActorCache.set(String(normalizedFilmId), items);
+  return items;
+}
+
+function convertStoredActorToTrailerStaff(item) {
+  return {
+    staffId: item?.staff_id,
+    nameRu: item?.actor_name || "",
+    nameEn: "",
+    posterUrl: item?.poster_url || "",
+    professionText: item?.profession_text || "",
+    professionKey: "ACTOR",
+  };
+}
+
+async function loadStoredTrailerActors(filmId, options = {}) {
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  if (!Number.isFinite(normalizedFilmId)) {
+    return [];
+  }
+
+  const cacheKey = String(normalizedFilmId);
+  if (!options.force && trailerActorCache.has(cacheKey)) {
+    return trailerActorCache.get(cacheKey) || [];
+  }
+  if (!options.force && trailerActorPending.has(cacheKey)) {
+    return trailerActorPending.get(cacheKey);
+  }
+
+  const request = fetch(
+    `${KINOPOISK_ACTORS_API_URL}?filmId=${encodeURIComponent(normalizedFilmId)}`
+  )
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to load actors: ${response.status}`);
+      }
+      const payload = await response.json();
+      const items = Array.isArray(payload?.items) ? payload.items : [];
+      trailerActorCache.set(cacheKey, items);
+      return items;
+    })
+    .catch((error) => {
+      console.error("Failed to load stored trailer actors", error);
+      return trailerActorCache.get(cacheKey) || [];
+    })
+    .finally(() => {
+      trailerActorPending.delete(cacheKey);
+    });
+
+  trailerActorPending.set(cacheKey, request);
+  return request;
+}
+
+async function saveTrailerActors(filmId, staff) {
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  const token = localStorage.getItem("adminToken") || "";
+  const items = primeTrailerActorCache(normalizedFilmId, staff);
+
+  if (!Number.isFinite(normalizedFilmId) || !items.length || !token) {
+    return items;
+  }
+
+  try {
+    const response = await fetch(KINOPOISK_ACTORS_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        filmId: normalizedFilmId,
+        staff: Array.isArray(staff) ? staff : [],
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to save actors: ${response.status}`);
+    }
+    const payload = await response.json();
+    const savedItems = Array.isArray(payload?.items) ? payload.items : items;
+    trailerActorCache.set(String(normalizedFilmId), savedItems);
+    return savedItems;
+  } catch (error) {
+    console.error("Failed to persist trailer actors", error);
+    return items;
+  }
+}
+
+function ensureTrailerActorTooltip() {
+  if (trailerActorTooltip && document.body.contains(trailerActorTooltip)) {
+    return trailerActorTooltip;
+  }
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "actor-photo-tooltip";
+  tooltip.hidden = true;
+
+  const image = document.createElement("img");
+  image.className = "actor-photo-tooltip__image";
+  image.alt = "";
+
+  const textWrap = document.createElement("div");
+  textWrap.className = "actor-photo-tooltip__text";
+
+  const title = document.createElement("div");
+  title.className = "actor-photo-tooltip__name";
+
+  const subtitle = document.createElement("div");
+  subtitle.className = "actor-photo-tooltip__role";
+
+  textWrap.append(title, subtitle);
+  tooltip.append(image, textWrap);
+  tooltip._image = image;
+  tooltip._title = title;
+  tooltip._subtitle = subtitle;
+  document.body.appendChild(tooltip);
+  trailerActorTooltip = tooltip;
+  return tooltip;
+}
+
+function positionTrailerActorTooltip(event) {
+  const tooltip = ensureTrailerActorTooltip();
+  const offset = 16;
+  const width = tooltip.offsetWidth || 220;
+  const height = tooltip.offsetHeight || 84;
+  let left = event.clientX + offset;
+  let top = event.clientY + offset;
+
+  if (left + width > window.innerWidth - 12) {
+    left = event.clientX - width - offset;
+  }
+  if (top + height > window.innerHeight - 12) {
+    top = event.clientY - height - offset;
+  }
+
+  tooltip.style.left = `${Math.max(12, left)}px`;
+  tooltip.style.top = `${Math.max(12, top)}px`;
+}
+
+function showTrailerActorTooltip(event, actor) {
+  if (!actor?.poster_url) return;
+  const tooltip = ensureTrailerActorTooltip();
+  tooltip._image.src = actor.poster_url;
+  tooltip._image.alt = actor.actor_name || "";
+  tooltip._title.textContent = actor.actor_name || "";
+  tooltip._subtitle.textContent = actor.profession_text || "";
+  tooltip.hidden = false;
+  positionTrailerActorTooltip(event);
+}
+
+function hideTrailerActorTooltip() {
+  if (!trailerActorTooltip) return;
+  trailerActorTooltip.hidden = true;
+}
+
+function renderTrailerActors(container, actorNames, filmId) {
+  if (!container) return;
+
+  const names = Array.isArray(actorNames)
+    ? actorNames.map((item) => String(item || "").trim()).filter(Boolean)
+    : [];
+
+  if (!names.length) {
+    container.textContent = "Список актёров не найден.";
+    return;
+  }
+
+  container.innerHTML = "";
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  const requestKey = Number.isFinite(normalizedFilmId) ? String(normalizedFilmId) : "";
+  container.dataset.actorPhotoKey = requestKey;
+
+  names.forEach((name, index) => {
+    const actor = document.createElement("span");
+    actor.className = "trailer-actor-name";
+    actor.dataset.actorName = name;
+    actor.textContent = name;
+    container.appendChild(actor);
+    if (index < names.length - 1) {
+      container.appendChild(document.createTextNode(", "));
+    }
+  });
+
+  if (!Number.isFinite(normalizedFilmId)) {
+    return;
+  }
+
+  loadStoredTrailerActors(normalizedFilmId).then((items) => {
+    if (container.dataset.actorPhotoKey !== requestKey) {
+      return;
+    }
+
+    const actorMap = new Map(
+      (Array.isArray(items) ? items : []).map((item) => [
+        normalizeTrailerActorName(item?.actor_name),
+        item,
+      ])
+    );
+
+    container.querySelectorAll(".trailer-actor-name").forEach((actorEl) => {
+      const actor = actorMap.get(normalizeTrailerActorName(actorEl.dataset.actorName));
+      if (!actor?.poster_url || actorEl.dataset.photoBound === "true") {
+        return;
+      }
+
+      actorEl.dataset.photoBound = "true";
+      actorEl.classList.add("trailer-actor-name--has-photo");
+      actorEl.addEventListener("mouseenter", (event) => showTrailerActorTooltip(event, actor));
+      actorEl.addEventListener("mousemove", positionTrailerActorTooltip);
+      actorEl.addEventListener("mouseleave", hideTrailerActorTooltip);
+    });
+  });
 }
 
 function updateTrailerAdminUi() {
@@ -1811,11 +2088,18 @@ async function fetchKinopoiskDetails(filmId) {
 }
 
 async function fetchKinopoiskStaff(filmId) {
+  const storedActors = await loadStoredTrailerActors(filmId);
+  if (storedActors.length) {
+    return storedActors.map(convertStoredActorToTrailerStaff);
+  }
+
   const data = await fetchKinopoiskJson(
     `${KINOPOISK_STAFF_URL}?filmId=${encodeURIComponent(filmId)}`,
     "Kinopoisk staff"
   );
-  return Array.isArray(data) ? data : [];
+  const items = Array.isArray(data) ? data : [];
+  void saveTrailerActors(filmId, items);
+  return items;
 }
 
 function scoreKinopoiskCandidate(candidate, trailer) {
@@ -1947,9 +2231,7 @@ function renderStoredKinopoiskInfo(info) {
     });
 
   description.textContent = info?.description || "Описание не найдено.";
-  actors.textContent = actorNames.length
-    ? actorNames.join(", ")
-    : "Список актёров не найден.";
+  renderTrailerActors(actors, actorNames, info?.kinopoiskId);
   renderTrailerReleaseValue(release, info?.releaseDate || "");
 
   poster.src = resolveTrailerPosterSrc(info?.posterUrl, info?.kinopoiskId);
@@ -2017,9 +2299,7 @@ function renderKinopoiskInfo(details, staff) {
 
   description.textContent =
     details?.description || details?.shortDescription || "Описание не найдено.";
-  actors.textContent = actorNames.length
-    ? actorNames.join(", ")
-    : "Список актёров не найден.";
+  renderTrailerActors(actors, actorNames, details?.kinopoiskId);
 
   const releaseValue =
     details?.premiereRu ||

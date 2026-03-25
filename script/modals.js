@@ -224,7 +224,125 @@ function normalizeActorsList(value, limit = 15) {
   return [];
 }
 
-function renderActorsList(listId, sectionId, actorsValue) {
+let actorPhotoTooltip = null;
+
+function normalizeActorLookupName(name = "") {
+  return name.toString().trim().toLowerCase();
+}
+
+function ensureActorPhotoTooltip() {
+  if (actorPhotoTooltip && document.body.contains(actorPhotoTooltip)) {
+    return actorPhotoTooltip;
+  }
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "actor-photo-tooltip";
+  tooltip.hidden = true;
+
+  const image = document.createElement("img");
+  image.className = "actor-photo-tooltip__image";
+  image.alt = "";
+
+  const textWrap = document.createElement("div");
+  textWrap.className = "actor-photo-tooltip__text";
+
+  const title = document.createElement("div");
+  title.className = "actor-photo-tooltip__name";
+
+  const subtitle = document.createElement("div");
+  subtitle.className = "actor-photo-tooltip__role";
+
+  textWrap.append(title, subtitle);
+  tooltip.append(image, textWrap);
+  tooltip._image = image;
+  tooltip._title = title;
+  tooltip._subtitle = subtitle;
+  document.body.appendChild(tooltip);
+  actorPhotoTooltip = tooltip;
+  return tooltip;
+}
+
+function positionActorPhotoTooltip(event) {
+  const tooltip = ensureActorPhotoTooltip();
+  const offset = 16;
+  const width = tooltip.offsetWidth || 220;
+  const height = tooltip.offsetHeight || 84;
+  let left = event.clientX + offset;
+  let top = event.clientY + offset;
+
+  if (left + width > window.innerWidth - 12) {
+    left = event.clientX - width - offset;
+  }
+  if (top + height > window.innerHeight - 12) {
+    top = event.clientY - height - offset;
+  }
+
+  tooltip.style.left = `${Math.max(12, left)}px`;
+  tooltip.style.top = `${Math.max(12, top)}px`;
+}
+
+function showActorPhotoTooltip(event, actor) {
+  if (!actor?.poster_url) return;
+  const tooltip = ensureActorPhotoTooltip();
+  tooltip._image.src = actor.poster_url;
+  tooltip._image.alt = actor.actor_name || "";
+  tooltip._title.textContent = actor.actor_name || "";
+  tooltip._subtitle.textContent = actor.profession_text || "";
+  tooltip.hidden = false;
+  positionActorPhotoTooltip(event);
+}
+
+function hideActorPhotoTooltip() {
+  if (!actorPhotoTooltip) return;
+  actorPhotoTooltip.hidden = true;
+}
+
+function enhanceActorsListWithPhotos(listEl, filmId) {
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  if (!listEl || listEl.tagName === "SELECT") {
+    return;
+  }
+
+  const actorItems = Array.from(listEl.querySelectorAll("[data-actor-name]"));
+  if (!Number.isFinite(normalizedFilmId) || !actorItems.length) {
+    return;
+  }
+
+  const requestKey = `${listEl.id || "actors"}:${normalizedFilmId}`;
+  listEl.dataset.actorPhotoKey = requestKey;
+
+  if (typeof loadStoredKinopoiskActors !== "function") {
+    return;
+  }
+
+  loadStoredKinopoiskActors(normalizedFilmId).then((items) => {
+    if (listEl.dataset.actorPhotoKey !== requestKey) {
+      return;
+    }
+
+    const actorMap = new Map(
+      (Array.isArray(items) ? items : []).map((item) => [
+        normalizeActorLookupName(item?.actor_name),
+        item,
+      ])
+    );
+
+    actorItems.forEach((actorEl) => {
+      const actor = actorMap.get(normalizeActorLookupName(actorEl.dataset.actorName));
+      if (!actor?.poster_url || actorEl.dataset.photoBound === "true") {
+        return;
+      }
+
+      actorEl.dataset.photoBound = "true";
+      actorEl.classList.add("actor-name--has-photo");
+      actorEl.addEventListener("mouseenter", (event) => showActorPhotoTooltip(event, actor));
+      actorEl.addEventListener("mousemove", positionActorPhotoTooltip);
+      actorEl.addEventListener("mouseleave", hideActorPhotoTooltip);
+    });
+  });
+}
+
+function renderActorsList(listId, sectionId, actorsValue, options = {}) {
   const listEl = document.getElementById(listId);
   const sectionEl = document.getElementById(sectionId);
   if (!listEl || !sectionEl) {
@@ -256,12 +374,17 @@ function renderActorsList(listId, sectionId, actorsValue) {
   } else {
     actors.forEach((actor) => {
       const li = document.createElement("li");
-      li.textContent = actor;
+      const name = document.createElement("span");
+      name.className = "actor-name";
+      name.dataset.actorName = actor;
+      name.textContent = actor;
+      li.appendChild(name);
       listEl.appendChild(li);
     });
   }
 
   sectionEl.style.display = "block";
+  enhanceActorsListWithPhotos(listEl, options?.filmId);
 }
 
 // ====================== Студии ======================
@@ -1564,7 +1687,8 @@ function openMovieDetailsModal(id) {
   renderActorsList(
     "movieDetailsActorsList",
     "movieDetailsActorsSection",
-    movie.actors
+    movie.actors,
+    { filmId: movie.kinopoiskId }
   );
   setDetailsSectionLabels({
     descriptionId: "movieDetailsDescription",
@@ -2010,7 +2134,8 @@ function renderOrderDetailsModal(order) {
   renderActorsList(
     "orderDetailsActorsList",
     "orderDetailsActorsSection",
-    order.actors
+    order.actors,
+    { filmId: order.kinopoiskId }
   );
   setDetailsSectionLabels({
     descriptionId: "orderDetailsDescription",

@@ -257,6 +257,7 @@ let KINOPOISK_API_KEY;
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 const KINOPOISK_FILM_URL = "https://kinopoiskapiunofficial.tech/api/v2.2/films";
+const KINOPOISK_ACTORS_API_URL = "/api/kinopoisk-actors";
 let kpResults = [];
 let selectedKPMovie = null;
 
@@ -2906,6 +2907,146 @@ async function fetchKPFilmLength(filmId) {
   }
 }
 
+const kinopoiskActorsCache = new Map();
+const kinopoiskActorsPending = new Map();
+
+function normalizeKinopoiskActorRole(text = "") {
+  return text.toString().trim().toLowerCase();
+}
+
+function isKinopoiskActorPerson(person) {
+  const key = (person?.professionKey || "").toString().toUpperCase();
+  if (key === "ACTOR") return true;
+  const text = normalizeKinopoiskActorRole(
+    person?.professionText || person?.profession_text || ""
+  );
+  return text.includes("актер") || text.includes("актёр") || text.includes("actor");
+}
+
+function normalizeKinopoiskActorRecord(person, filmId) {
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  const staffId = Number.parseInt(person?.staffId ?? person?.staff_id, 10);
+  const actorName = String(
+    person?.nameRu || person?.nameEn || person?.actor_name || ""
+  ).trim();
+  const professionText = String(
+    person?.professionText || person?.profession_text || ""
+  ).trim();
+  const posterUrl = String(person?.posterUrl || person?.poster_url || "").trim();
+
+  if (!Number.isFinite(normalizedFilmId) || !Number.isFinite(staffId) || !actorName) {
+    return null;
+  }
+
+  if (!isKinopoiskActorPerson(person)) {
+    return null;
+  }
+
+  return {
+    kinopoisk_film_id: normalizedFilmId,
+    staff_id: staffId,
+    actor_name: actorName,
+    poster_url: posterUrl || null,
+    profession_text: professionText || null,
+  };
+}
+
+function primeKinopoiskActorsCache(filmId, staff) {
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  if (!Number.isFinite(normalizedFilmId)) {
+    return [];
+  }
+
+  const items = [];
+  const seen = new Set();
+
+  (Array.isArray(staff) ? staff : []).forEach((person) => {
+    const row = normalizeKinopoiskActorRecord(person, normalizedFilmId);
+    if (!row) return;
+    const key = `${row.kinopoisk_film_id}:${row.staff_id}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    items.push(row);
+  });
+
+  kinopoiskActorsCache.set(String(normalizedFilmId), items);
+  return items;
+}
+
+async function loadStoredKinopoiskActors(filmId, options = {}) {
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  if (!Number.isFinite(normalizedFilmId)) {
+    return [];
+  }
+
+  const cacheKey = String(normalizedFilmId);
+  if (!options.force && kinopoiskActorsCache.has(cacheKey)) {
+    return kinopoiskActorsCache.get(cacheKey) || [];
+  }
+  if (!options.force && kinopoiskActorsPending.has(cacheKey)) {
+    return kinopoiskActorsPending.get(cacheKey);
+  }
+
+  const request = fetch(
+    `${KINOPOISK_ACTORS_API_URL}?filmId=${encodeURIComponent(normalizedFilmId)}`
+  )
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to load actors: ${response.status}`);
+      }
+      const payload = await response.json();
+      const items = Array.isArray(payload?.items) ? payload.items : [];
+      kinopoiskActorsCache.set(cacheKey, items);
+      return items;
+    })
+    .catch((error) => {
+      console.error("Failed to load stored Kinopoisk actors", error);
+      return kinopoiskActorsCache.get(cacheKey) || [];
+    })
+    .finally(() => {
+      kinopoiskActorsPending.delete(cacheKey);
+    });
+
+  kinopoiskActorsPending.set(cacheKey, request);
+  return request;
+}
+
+async function saveKinopoiskActors(filmId, staff) {
+  const normalizedFilmId = Number.parseInt(filmId, 10);
+  const token = localStorage.getItem("adminToken") || "";
+  const items = primeKinopoiskActorsCache(normalizedFilmId, staff);
+
+  if (!Number.isFinite(normalizedFilmId) || !items.length || !token) {
+    return items;
+  }
+
+  try {
+    const response = await fetch(KINOPOISK_ACTORS_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        filmId: normalizedFilmId,
+        staff: Array.isArray(staff) ? staff : [],
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to save actors: ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const savedItems = Array.isArray(payload?.items) ? payload.items : items;
+    kinopoiskActorsCache.set(String(normalizedFilmId), savedItems);
+    return savedItems;
+  } catch (error) {
+    console.error("Failed to persist Kinopoisk actors", error);
+    return items;
+  }
+}
+
 async function fetchKPFilmStaff(filmId) {
   if (!filmId || !KINOPOISK_API_KEY) {
     return { actors: [], directors: [] };
@@ -2929,21 +3070,16 @@ async function fetchKPFilmStaff(filmId) {
     }
 
     const data = await res.json();
+    void saveKinopoiskActors(filmId, data);
     const actors = [];
     const directors = [];
-    const isActorRole = (person) => {
-      const key = (person?.professionKey || "").toString().toUpperCase();
-      if (key === "ACTOR") return true;
-      const text = (person?.professionText || "").toString().toLowerCase();
-      return text.includes("актер") || text.includes("актёр") || text.includes("actor");
-    };
 
     (Array.isArray(data) ? data : []).forEach((person) => {
       const name = (person?.nameRu || person?.nameEn || "").trim();
       if (!name) {
         return;
       }
-      if (isActorRole(person)) {
+      if (isKinopoiskActorPerson(person)) {
         actors.push(name);
       } else if (person?.professionKey === "DIRECTOR") {
         directors.push(name);
