@@ -626,26 +626,20 @@
   display: none;
 }
 
-.trailer-embed-placeholder p,
-.trailer-embed-placeholder i {
-  display: none;
+.trailer-embed-placeholder p {
+  display: block;
+  max-width: 320px;
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
 }
 
-.trailer-embed-placeholder::before {
-  content: "";
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-  border: 3px solid rgba(116, 222, 255, 0.18);
-  border-top-color: #74deff;
-  box-shadow: 0 0 18px rgba(116, 222, 255, 0.14);
-  animation: trailer-embed-spin 0.75s linear infinite;
+.trailer-embed-placeholder[data-state="loading"] {
+  background: rgba(4, 8, 19, 0.16);
 }
 
-@keyframes trailer-embed-spin {
-  to {
-    transform: rotate(360deg);
-  }
+.trailer-embed-placeholder[data-state="empty"] {
+  background: rgba(4, 8, 19, 0.22);
 }
 
 .trailer-rating-panel__controls {

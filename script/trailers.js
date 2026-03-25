@@ -10,6 +10,7 @@ const KINOPOISK_FILM_URL =
 const KINOPOISK_STAFF_URL =
   "https://kinopoiskapiunofficial.tech/api/v1/staff";
 const YOUTUBE_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
+const TRAILER_PLAYER_FALLBACK_HIDE_DELAY_MS = 1200;
 const POSTER_PLACEHOLDER = "/images/placeholder-poster.webp";
 
 let kinopoiskApiKey = "";
@@ -28,6 +29,8 @@ let trailerTitleRequestId = 0;
 let isCreatingTrailer = false;
 let trailerRatingTooltip = null;
 let userRatingTrailerId = null;
+let trailerPlayerLoadHideTimer = null;
+let trailerPlayerLoadRequestId = 0;
 let isSubmittingTrailerUserRating = false;
 let isSwitchingKinopoiskApi = false;
 let kinopoiskQuotaDialogOpen = false;
@@ -1076,10 +1079,44 @@ function setTrailerInfoLoading(isLoading, message = "Загружаю инфор
   if (content) content.hidden = Boolean(isLoading);
 }
 
-function setTrailerPlayerLoading(isLoading) {
+function clearTrailerPlayerLoadHideTimer() {
+  if (trailerPlayerLoadHideTimer) {
+    clearTimeout(trailerPlayerLoadHideTimer);
+    trailerPlayerLoadHideTimer = null;
+  }
+}
+
+function setTrailerPlayerPlaceholder(options = {}) {
   const placeholder = document.getElementById("trailerPlayerPlaceholder");
   if (!placeholder) return;
-  placeholder.hidden = !isLoading;
+
+  const {
+    hidden = false,
+    state = "idle",
+    message = ""
+  } = options;
+
+  placeholder.hidden = Boolean(hidden);
+  placeholder.dataset.state = state;
+
+  const text = placeholder.querySelector("p");
+  if (text && message) {
+    text.textContent = message;
+  }
+}
+
+function setTrailerPlayerLoading(isLoading, message) {
+  if (isLoading) {
+    setTrailerPlayerPlaceholder({
+      hidden: false,
+      state: "loading",
+      message: message || "Загрузка трейлера…"
+    });
+    return;
+  }
+
+  clearTrailerPlayerLoadHideTimer();
+  setTrailerPlayerPlaceholder({ hidden: true, state: "ready" });
 }
 
 function renderSelectedTrailer() {
@@ -1097,7 +1134,12 @@ function renderSelectedTrailer() {
   if (!trailer) {
     if (title) title.textContent = "Выберите трейлер из списка";
     if (frame) frame.src = "about:blank";
-    setTrailerPlayerLoading(false);
+    clearTrailerPlayerLoadHideTimer();
+    setTrailerPlayerPlaceholder({
+      hidden: false,
+      state: "empty",
+      message: "Здесь появится YouTube-плеер выбранного трейлера."
+    });
     if (openYoutube) {
       openYoutube.href = "#";
       openYoutube.setAttribute("aria-disabled", "true");
@@ -1111,13 +1153,21 @@ function renderSelectedTrailer() {
   }
 
   if (title) title.textContent = trailer.title || "Без названия";
-  setTrailerPlayerLoading(true);
+  trailerPlayerLoadRequestId += 1;
+  const requestId = trailerPlayerLoadRequestId;
+  setTrailerPlayerLoading(true, "Подключаю YouTube-плеер…");
   if (frame) {
     frame.onload = () => {
+      if (requestId !== trailerPlayerLoadRequestId) return;
       setTrailerPlayerLoading(false);
     };
     frame.src = buildYoutubeEmbedUrl(trailer.youtube_video_id);
   }
+  clearTrailerPlayerLoadHideTimer();
+  trailerPlayerLoadHideTimer = setTimeout(() => {
+    if (requestId !== trailerPlayerLoadRequestId) return;
+    setTrailerPlayerLoading(false);
+  }, TRAILER_PLAYER_FALLBACK_HIDE_DELAY_MS);
   if (openYoutube) {
     openYoutube.href = buildYoutubeWatchUrl(trailer.youtube_video_id);
     openYoutube.setAttribute("aria-disabled", "false");
