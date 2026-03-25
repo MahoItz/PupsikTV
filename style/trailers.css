@@ -735,8 +735,8 @@
   mask-image: url('/images/Rat_Worst.webp');
 }
 
-#trailerRatingStars .rating-star.rating-label[data-rating="0"].active,
-#trailerUserRateStars .rating-star.rating-label[data-rating="0"].active {
+#trailerRatingStars:not(.is-hover-previewing) .rating-star.rating-label[data-rating="0"].active,
+#trailerUserRateStars:not(.is-hover-previewing) .rating-star.rating-label[data-rating="0"].active {
   background-color: #ff6b57;
   -webkit-mask-image: url('/images/Rat_Worst.webp');
   mask-image: url('/images/Rat_Worst.webp');
@@ -751,19 +751,13 @@
   mask-image: url('/images/Rat_Best.webp');
 }
 
-#trailerRatingStars .rating-star.rating-label[data-rating="11"].active,
-#trailerUserRateStars .rating-star.rating-label[data-rating="11"].active {
+#trailerRatingStars:not(.is-hover-previewing) .rating-star.rating-label[data-rating="11"].active,
+#trailerUserRateStars:not(.is-hover-previewing) .rating-star.rating-label[data-rating="11"].active {
   background-color: #00e74f;
   -webkit-mask-image: url('/images/Rat_Best.webp');
   mask-image: url('/images/Rat_Best.webp');
 }
 
-#trailerRatingStars .rating-star.selected-anchor:not(.rating-label),
-#trailerUserRateStars .rating-star.selected-anchor:not(.rating-label) {
-  background-color: #ffc107 !important;
-  -webkit-mask: url('/images/Rat_rate2.webp') center/contain no-repeat;
-  mask: url('/images/Rat_rate2.webp') center/contain no-repeat;
-}
 
 .trailer-rating-panel__header {
   align-items: flex-start;

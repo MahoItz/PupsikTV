@@ -587,11 +587,9 @@ function highlightStars(containerId, rating) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const stars = container.querySelectorAll(".rating-star");
-  const currentRating = getCurrentRating(containerId);
 
   stars.forEach((star) => {
     star.classList.remove("hovered");
-    star.classList.remove("selected-anchor");
     if (star.classList.contains("rating-label")) {
       star.style.backgroundColor = "";
       return;
@@ -619,15 +617,6 @@ function highlightStars(containerId, rating) {
         stars[i].style.backgroundColor = "#ffc107";
       }
     }
-  }
-
-  if (
-    Number.isInteger(currentRating) &&
-    currentRating >= 0 &&
-    currentRating <= 11 &&
-    currentRating !== rating
-  ) {
-    stars[currentRating]?.classList.add("selected-anchor");
   }
 }
 
@@ -687,6 +676,7 @@ function setupRatingStars(containerId) {
     });
 
     star.addEventListener("mouseover", function () {
+      container.classList.add("is-hover-previewing");
       const rating = parseInt(this.dataset.rating, 10);
       highlightStars(containerId, rating);
       if (containerId === "trailerRatingStars") {
@@ -704,6 +694,7 @@ function setupRatingStars(containerId) {
   });
 
   container.addEventListener("mouseleave", () => {
+    container.classList.remove("is-hover-previewing");
     highlightStars(containerId, getCurrentRating(containerId));
     if (containerId === "trailerRatingStars") {
       syncTrailerRatingPreview(getCurrentRating(containerId));
