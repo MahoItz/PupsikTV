@@ -269,7 +269,6 @@ function getAdminAuthHeaders() {
 function updateTrailerAdminUi() {
   const form = document.getElementById("trailerAddForm");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
-  const returnButton = document.getElementById("trailerReturnPlannedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
 
   if (form) {
@@ -281,7 +280,6 @@ function updateTrailerAdminUi() {
   }
 
   if (!hasAdminAccess) {
-    if (returnButton) returnButton.disabled = true;
     if (watchedButton) watchedButton.disabled = false;
   }
 }
@@ -942,7 +940,6 @@ function renderSelectedTrailer() {
   const openYoutube = document.getElementById("trailerOpenYoutube");
   const ratingInput = document.getElementById("trailerRatingInput");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
-  const returnButton = document.getElementById("trailerReturnPlannedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
 
   renderTrailerLists();
@@ -957,7 +954,6 @@ function renderSelectedTrailer() {
     }
     setRatingStars("trailerRatingStars", 0);
     if (watchedButton) watchedButton.disabled = true;
-    if (returnButton) returnButton.disabled = true;
     if (deleteButton) deleteButton.disabled = true;
     resetKinopoiskInfo("Выберите трейлер для поиска информации.");
     return;
@@ -986,7 +982,6 @@ function renderSelectedTrailer() {
   if (watchedButton) {
     watchedButton.disabled = hasAdminAccess ? false : hasRatedTrailer(trailer.id);
   }
-  if (returnButton) returnButton.disabled = !hasAdminAccess;
   if (deleteButton) {
     deleteButton.disabled = !hasAdminAccess;
     deleteButton.hidden = !hasAdminAccess;
@@ -1751,7 +1746,6 @@ function setupFormEvents() {
   const selectedMovieClear = document.getElementById("trailerSelectedMovieClear");
   const ratingInput = document.getElementById("trailerRatingInput");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
-  const returnButton = document.getElementById("trailerReturnPlannedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
   const userRateModal = document.getElementById("trailerUserRateModal");
   const userRateClose = document.getElementById("trailerUserRateClose");
@@ -1937,27 +1931,6 @@ function setupFormEvents() {
     }
   });
 
-  returnButton?.addEventListener("click", async () => {
-    const trailer = getSelectedTrailer();
-    if (!trailer) return;
-
-    setStatusText("trailerActionStatus", "Возвращаю трейлер в план...");
-    try {
-      await patchTrailer(trailer.id, {
-        status: "planned",
-        watched_at: null,
-      });
-      setStatusText("trailerActionStatus", "Трейлер снова в запланированном списке.");
-    } catch (error) {
-      console.error("Failed to return trailer to planned", error);
-      setStatusText(
-        "trailerActionStatus",
-        error?.message || "Не удалось вернуть трейлер в план.",
-        true
-      );
-    }
-  });
-
   deleteButton?.addEventListener("click", async () => {
     const trailer = getSelectedTrailer();
     if (!trailer) return;
@@ -2065,7 +2038,6 @@ async function initPage() {
   const app = document.getElementById("trailersApp");
   const denied = document.getElementById("trailersAccessDenied");
   const watchedButton = document.getElementById("trailerMarkWatchedButton");
-  const returnButton = document.getElementById("trailerReturnPlannedButton");
   const deleteButton = document.getElementById("trailerDeleteButton");
 
   try {
@@ -2075,7 +2047,6 @@ async function initPage() {
     setTrailerListsLoading(true);
     setTrailerInfoLoading(true, "Загружаю информацию о фильме...");
     if (watchedButton) watchedButton.disabled = true;
-    if (returnButton) returnButton.disabled = true;
     if (deleteButton) {
       deleteButton.disabled = true;
       deleteButton.hidden = true;
