@@ -2977,7 +2977,7 @@ function clampModalRatingValue(value) {
 function formatModalRatingValue(value) {
   const normalized = clampModalRatingValue(value);
   if (Number.isInteger(normalized)) return String(normalized);
-  return String(Math.round(normalized * 100) / 100).replace(".", ",");
+  return String(Math.round(normalized * 100) / 100);
 }
 
 function updateModalRatingMeaning(value, containerId) {
@@ -3020,7 +3020,7 @@ function syncModalRatingInputValue(containerId, value) {
     input.value =
       value === null || value === undefined || value === ""
         ? ""
-        : String(value).replace(".", ",");
+        : formatModalRatingValue(value);
   }
 }
 
@@ -3058,13 +3058,20 @@ function setupRatingStars(containerId = "ratingStars") {
     const currentRating = getCurrentRating(containerId);
     container.classList.remove("is-hover-previewing");
     highlightStars(containerId, currentRating);
-    syncModalRatingPreview(containerId, currentRating, { updateInput: false });
+    syncModalRatingPreview(containerId, currentRating, { updateInput: true });
     hideRatingValueTooltip();
   });
 
   if (ratingInput) {
     ratingInput.addEventListener("input", function () {
       const value = parseRatingInputValue(this.value);
+      if (!this.value.trim()) {
+        this.setCustomValidity("");
+        setRatingStars(containerId, null, false);
+        highlightStars(containerId, null);
+        syncModalRatingPreview(containerId, null, { updateInput: false });
+        return;
+      }
       if (hasTooManyFractionDigits(this.value)) {
         this.setCustomValidity("Можно ввести не более 2 знаков после запятой");
         this.reportValidity();
@@ -3073,6 +3080,8 @@ function setupRatingStars(containerId = "ratingStars") {
       if (!isNaN(value) && value >= 0 && value <= 11) {
         this.setCustomValidity("");
         setRatingStars(containerId, value, false);
+        highlightStars(containerId, value);
+        syncModalRatingPreview(containerId, value, { updateInput: false });
       } else {
         this.setCustomValidity("Введите число от 0 до 11");
         this.reportValidity();
@@ -3187,6 +3196,11 @@ function isRatingValid(r) {
 
 function getRatingValue(inputId) {
   const el = document.getElementById(inputId);
+  const ratingContainer = document.querySelector(`.rating-stars[data-input="${inputId}"]`);
+  const committedRating = ratingContainer?.id ? getCurrentRating(ratingContainer.id) : null;
+  if (committedRating !== null) {
+    return roundRatingToTwoDigits(committedRating);
+  }
   const parsed = el ? parseRatingInputValue(el.value) : NaN;
   return roundRatingToTwoDigits(parsed);
 }

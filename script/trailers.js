@@ -1408,6 +1408,14 @@ function getCurrentRating(containerId) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function getCommittedTrailerRating(containerId, inputElement) {
+  const committedRating = getCurrentRating(containerId);
+  if (committedRating !== null) {
+    return committedRating;
+  }
+  return parseRatingInputValue(String(inputElement?.value || "").trim());
+}
+
 function clampTrailerRatingValue(value) {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return 0;
@@ -1419,7 +1427,7 @@ function formatTrailerRatingValue(value) {
   if (Number.isInteger(normalized)) {
     return String(normalized);
   }
-  return String(Math.round(normalized * 100) / 100).replace(".", ",");
+  return String(Math.round(normalized * 100) / 100);
 }
 
 function getTrailerRatingMeaning(value) {
@@ -1485,7 +1493,7 @@ function syncTrailerRatingInputValue(containerId, value) {
   if (input) {
     input.value = value === null || value === undefined || value === ""
       ? ""
-      : String(value).replace(".", ",");
+      : formatTrailerRatingValue(value);
   }
 }
 
@@ -3193,7 +3201,7 @@ function setupFormEvents() {
     if (watchedButton?.disabled) return;
 
     const rawRating = String(ratingInput?.value || "").trim();
-    const rating = parseRatingInputValue(rawRating);
+    const rating = getCommittedTrailerRating("trailerRatingStars", ratingInput);
     if (
       rawRating === "" ||
       Number.isNaN(rating) ||
@@ -3342,7 +3350,7 @@ function setupFormEvents() {
     if (!userRatingTrailerId || isSubmittingTrailerUserRating) return;
 
     const rawRating = String(userRateInput?.value || "").trim();
-    const rating = parseRatingInputValue(rawRating);
+    const rating = getCommittedTrailerRating("trailerUserRateStars", userRateInput);
     if (
       rawRating === "" ||
       Number.isNaN(rating) ||
