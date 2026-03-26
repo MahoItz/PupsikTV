@@ -121,27 +121,43 @@ async function handler(req, res) {
       .maybeSingle();
 
     if (existingError) throw existingError;
-    if (existingRating) {
-      return res.status(409).json({ error: "Вы уже оценили этот фильм" });
+
+    if (existingRating?.id) {
+      const { error: updateError } = await supabase
+        .from(RATINGS_TABLE)
+        .update({
+          rating,
+          title,
+        })
+        .eq("id", existingRating.id);
+
+      if (updateError) throw updateError;
+    } else {
+      const { error: insertError } = await supabase.from(RATINGS_TABLE).insert({
+        movie_id: targetId,
+        rating,
+        source: "user",
+        category,
+        title,
+        user_id: userId,
+      });
+
+      if (insertError) throw insertError;
     }
-
-    const { error: insertError } = await supabase.from(RATINGS_TABLE).insert({
-      movie_id: targetId,
-      rating,
-      source: "user",
-      category,
-      title,
-      user_id: userId,
-    });
-
-    if (insertError) throw insertError;
 
     if (targetType === "movie") {
       const movie = await recalculateMovieRatings(supabase, targetId);
-      return res.status(200).json({ ok: true, movie });
+      return res.status(200).json({
+        ok: true,
+        movie,
+        updatedExisting: Boolean(existingRating?.id),
+      });
     }
 
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({
+      ok: true,
+      updatedExisting: Boolean(existingRating?.id),
+    });
   } catch (error) {
     console.error("Failed to submit movie rating", error);
     return res.status(500).json({ error: "Failed to submit movie rating" });

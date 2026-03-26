@@ -406,6 +406,23 @@ function getMovieRenderKey(movie) {
   return parts.map(normalizeRenderKeyValue).join(MOVIE_RENDER_KEY_DELIMITER);
 }
 
+function refreshMovieRateButtons(root = document) {
+  const cards = root.querySelectorAll("#moviesGrid .movie-card[data-id]");
+  cards.forEach((card) => {
+    const button = card.querySelector(".movie-actions .btn-rate");
+    if (!button) return;
+
+    const movieId = Number(card.dataset.id);
+    const movie = allMovies.find((item) => Number(item.id) === movieId) || movieId;
+    const hasRating = hasRatedMovie(movie);
+
+    button.disabled = false;
+    button.textContent = hasRating ? "Изменить" : "Оценить";
+    button.title = hasRating ? "Изменить свою оценку" : "Оценить";
+    button.onclick = () => openUserRateModal(movieId);
+  });
+}
+
 function renderMovies() {
   const grid = document.getElementById("moviesGrid");
   if (!grid) return;
@@ -506,6 +523,7 @@ function renderMovies() {
 
   movieCardElements = newElements;
   movieDataMap = newData;
+  refreshMovieRateButtons(grid);
 
   renderPagination();
 }
@@ -2126,6 +2144,22 @@ function createPlayedGameCard(
   return card;
 }
 
+function refreshPlayedGameRateButtons(root = document) {
+  const cards = root.querySelectorAll("#gamesGridPlayed .movie-card[data-id]");
+  cards.forEach((card) => {
+    const button = card.querySelector(".movie-actions .btn-rate");
+    if (!button) return;
+
+    const gameId = Number(card.dataset.id);
+    const hasRating = hasRatedGame(gameId);
+
+    button.disabled = false;
+    button.textContent = hasRating ? "Изменить" : "Оценить";
+    button.title = hasRating ? "Изменить свою оценку" : "Оценить";
+    button.onclick = () => openUserRateGameModal(gameId);
+  });
+}
+
 function renderPlayedGames() {
   const grid = document.getElementById("gamesGridPlayed");
   if (!grid) return;
@@ -2161,6 +2195,7 @@ function renderPlayedGames() {
   grid.replaceChildren(fragment);
   playedGameCardElements = newElements;
   playedGameDataMap = newData;
+  refreshPlayedGameRateButtons(grid);
 
   renderGamesPagination();
 }

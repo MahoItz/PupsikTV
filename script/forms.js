@@ -1288,6 +1288,149 @@ async function submitUserGameRating() {
 }
 
 // Редактирование фильма
+async function submitUserMovieRating() {
+  if (isSubmittingUserRating) return;
+  isSubmittingUserRating = true;
+
+  const rating = getRatingValue("userRateInput");
+  if (!isRatingValid(rating)) {
+    alert("Неверная оценка");
+    document.getElementById("userRateInput").reportValidity();
+    isSubmittingUserRating = false;
+    return;
+  }
+
+  if (!userRatingMovieId) {
+    isSubmittingUserRating = false;
+    return;
+  }
+
+  const movie = allMovies.find((m) => m.id === userRatingMovieId);
+
+  try {
+    const response = await fetch("/api/movie-ratings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        target_id: userRatingMovieId,
+        target_type: "movie",
+        rating,
+        user_id: getGuestId(),
+        title: movie ? movie.title : null,
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || ("Failed to submit rating: " + response.status));
+    }
+
+    if (movie && payload?.movie) {
+      const ratingSum = Number(payload.movie.rating_sum ?? 0) || 0;
+      const ratingCount = Number(payload.movie.rating_count ?? 0) || 0;
+      movie.ratingSum = ratingSum;
+      movie.ratingCount = ratingCount;
+      movie.userRating =
+        ratingCount > 0 ? Math.round((ratingSum / ratingCount) * 10) / 10 : null;
+      localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+    }
+
+    rememberRatedMovie(movie || userRatingMovieId, rating);
+    renderMovies();
+  } catch (err) {
+    console.error("Error submitting user rating", err);
+    alert(err?.message || "Не удалось сохранить оценку");
+  } finally {
+    isSubmittingUserRating = false;
+  }
+
+  closeModal("userRateModal", true);
+  userRatingMovieId = null;
+}
+
+async function submitUserGameRating() {
+  const rating = getRatingValue("userRateGameInput");
+  if (!isRatingValid(rating)) {
+    alert("Неверная оценка");
+    const input = document.getElementById("userRateGameInput");
+    if (input) input.reportValidity();
+    return;
+  }
+  if (!userRatingGameId) return;
+
+  const game = allPlayedGames.find((g) => g.id === userRatingGameId);
+  const previousRating = Object.prototype.hasOwnProperty.call(ratedGames, String(userRatingGameId))
+    ? Number(ratedGames[String(userRatingGameId)])
+    : null;
+  const currentSum = game ? Number(game.ratingSum ?? 0) || 0 : 0;
+  const currentCount = game ? Number(game.ratingCount ?? 0) || 0 : 0;
+
+  try {
+    const { data: existingRatingRow, error: selectError } = await supabaseClient
+      .from("ratings")
+      .select("id, rating")
+      .eq("movie_id", userRatingGameId)
+      .eq("category", "Games")
+      .eq("user_id", getGuestId())
+      .maybeSingle();
+
+    if (selectError) throw selectError;
+
+    const hasExistingRating = Boolean(existingRatingRow?.id);
+    const previousStoredRating = hasExistingRating
+      ? Number(existingRatingRow.rating ?? 0) || 0
+      : previousRating;
+    const newSum = hasExistingRating
+      ? currentSum - previousStoredRating + rating
+      : currentSum + rating;
+    const newCount = hasExistingRating ? currentCount : currentCount + 1;
+
+    const { error: updateGameError } = await supabaseClient
+      .from("games")
+      .update({
+        game_rating_sum: newSum,
+        game_rating_count: newCount,
+      })
+      .eq("id", userRatingGameId);
+    if (updateGameError) throw updateGameError;
+
+    if (hasExistingRating) {
+      const { error: updateRatingError } = await supabaseClient
+        .from("ratings")
+        .update({ rating, title: game ? game.title : null })
+        .eq("id", existingRatingRow.id);
+      if (updateRatingError) throw updateRatingError;
+    } else {
+      const { error: insertRatingError } = await supabaseClient.from("ratings").insert({
+        movie_id: userRatingGameId,
+        rating,
+        source: "user",
+        category: "Games",
+        title: game ? game.title : null,
+        user_id: getGuestId(),
+      });
+      if (insertRatingError) throw insertRatingError;
+    }
+
+    if (game) {
+      game.ratingSum = newSum;
+      game.ratingCount = newCount;
+      game.userRating = newCount > 0 ? Math.round((newSum / newCount) * 10) / 10 : null;
+    }
+    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+    ratedGames[userRatingGameId] = rating;
+    localStorage.setItem("ratedGames", JSON.stringify(ratedGames));
+    renderPlayedGames();
+  } catch (err) {
+    console.error("Error submitting user game rating", err);
+    alert(err?.message || "Не удалось сохранить оценку");
+  }
+  closeModal("userRateGameModal", true);
+  userRatingGameId = null;
+}
+
 document
   .getElementById("editMovieForm")
   .addEventListener("submit", async function (e) {

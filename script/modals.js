@@ -205,6 +205,57 @@ function setMovieDetailsText(id, value, fallback = "—") {
   el.classList.toggle("movie-details-muted", text === fallback);
 }
 
+function openUserRateModal(id) {
+  const movie = allMovies.find((m) => m.id === id);
+  const existingRating = getRatedMovieValue(movie || id);
+  userRatingMovieId = id;
+
+  if (movie) {
+    document.getElementById("userRateMovieTitle").textContent = movie.title;
+    document.getElementById("userRateMoviePoster").src = movie.poster;
+  }
+
+  const modal = document.getElementById("userRateModal");
+  const submitButton = modal?.querySelector(".btn-rate");
+  if (submitButton) {
+    submitButton.textContent =
+      existingRating !== undefined ? "Изменить" : "Оценить";
+  }
+  if (modal) modal.style.display = "block";
+
+  setupRatingStars("userRateStars");
+  setRatingStars(
+    "userRateStars",
+    existingRating !== undefined ? Number(existingRating) : null
+  );
+}
+
+function openUserRateGameModal(id) {
+  const rawExistingRating = ratedGames[String(id)];
+  const existingRating =
+    rawExistingRating === undefined ? null : Number(rawExistingRating);
+
+  userRatingGameId = id;
+  const game = allPlayedGames.find((g) => g.id === id);
+  if (game) {
+    const titleEl = document.getElementById("userRateGameTitle");
+    if (titleEl) titleEl.textContent = game.title;
+    const posterEl = document.getElementById("userRateGamePoster");
+    if (posterEl) posterEl.src = game.poster;
+  }
+
+  const modal = document.getElementById("userRateGameModal");
+  const submitButton = modal?.querySelector(".btn-rate");
+  if (submitButton) {
+    submitButton.textContent =
+      existingRating !== null ? "Изменить" : "Оценить";
+  }
+  if (modal) modal.style.display = "block";
+
+  setupRatingStars("userRateGameStars");
+  setRatingStars("userRateGameStars", existingRating);
+}
+
 function normalizeActorsList(value, limit = 15) {
   if (Array.isArray(value)) {
     return value

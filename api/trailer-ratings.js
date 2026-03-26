@@ -98,25 +98,41 @@ async function handler(req, res) {
   }
 
   try {
-    const { error: insertError } = await supabase
+    const { data: existingRating, error: existingError } = await supabase
       .from(RATINGS_TABLE)
-      .insert({
-        trailer_id: trailerId,
-        rating,
-        user_id: userId,
-        source: "user",
-      });
+      .select("id")
+      .eq("trailer_id", trailerId)
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    if (insertError) {
-      const message = String(insertError?.message || "");
-      if (/duplicate key|unique/i.test(message)) {
-        return res.status(409).json({ error: "Вы уже оценили этот трейлер" });
-      }
-      throw insertError;
+    if (existingError) throw existingError;
+
+    if (existingRating?.id) {
+      const { error: updateError } = await supabase
+        .from(RATINGS_TABLE)
+        .update({ rating })
+        .eq("id", existingRating.id);
+
+      if (updateError) throw updateError;
+    } else {
+      const { error: insertError } = await supabase
+        .from(RATINGS_TABLE)
+        .insert({
+          trailer_id: trailerId,
+          rating,
+          user_id: userId,
+          source: "user",
+        });
+
+      if (insertError) throw insertError;
     }
 
     const updated = await recalculateTrailerRatings(supabase, trailerId);
-    return res.status(200).json({ ok: true, trailer: updated });
+    return res.status(200).json({
+      ok: true,
+      trailer: updated,
+      updatedExisting: Boolean(existingRating?.id),
+    });
   } catch (error) {
     console.error("Failed to submit trailer rating", error);
     return res.status(500).json({ error: "Failed to submit trailer rating" });
