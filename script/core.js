@@ -1092,6 +1092,7 @@ let currentSearchQuery = "";
 let currentSort = "date";
 let sortAscending = false;
 let selectedMovieOrderTypes = new Set();
+let selectedWatchlistOrderTypes = new Set();
 
 // Список заказанных фильмов
 let watchlist = [];
@@ -1544,7 +1545,9 @@ function normalizeOrderTypeValue(value) {
 }
 
 function getOrderTypeFilterState(kind) {
-  return kind === "games" ? selectedGameOrderTypes : selectedMovieOrderTypes;
+  if (kind === "games") return selectedGameOrderTypes;
+  if (kind === "watchlist") return selectedWatchlistOrderTypes;
+  return selectedMovieOrderTypes;
 }
 
 function getOrderTypeFilterElements(kind) {
@@ -1553,6 +1556,14 @@ function getOrderTypeFilterElements(kind) {
       button: document.getElementById("gameOrderTypeFilterBtn"),
       menu: document.getElementById("gameOrderTypeFilterMenu"),
       count: document.getElementById("gameOrderTypeFilterCount"),
+    };
+  }
+
+  if (kind === "watchlist") {
+    return {
+      button: document.getElementById("movieOrderTypeFilterBtnAction"),
+      menu: document.getElementById("movieOrderTypeFilterMenuAction"),
+      count: document.getElementById("movieOrderTypeFilterCountAction"),
     };
   }
 
@@ -1565,11 +1576,11 @@ function getOrderTypeFilterElements(kind) {
 
 function syncOrderTypeFilterButton(kind) {
   const state = getOrderTypeFilterState(kind);
-  const { count } = getOrderTypeFilterElements(kind);
-  if (!count) return;
-
-  count.textContent = String(state.size);
-  count.hidden = state.size === 0;
+  const { count, extraCounts = [] } = getOrderTypeFilterElements(kind);
+  [count, ...extraCounts].filter(Boolean).forEach((item) => {
+    item.textContent = String(state.size);
+    item.hidden = state.size === 0;
+  });
 }
 
 function syncOrderTypeFilterCheckboxes(kind) {
@@ -1581,34 +1592,63 @@ function syncOrderTypeFilterCheckboxes(kind) {
     });
 }
 
-function closeOrderTypeFilterMenu(kind) {
-  const { button, menu } = getOrderTypeFilterElements(kind);
-  if (button) button.setAttribute("aria-expanded", "false");
-  if (menu) menu.hidden = true;
+function closeOrderTypeFilterMenu(kind, source = "all") {
+  const { button, menu, extraButtons = [], extraMenus = [] } =
+    getOrderTypeFilterElements(kind);
+  const groups = [];
+  if (button || menu) groups.push({ source: "toolbar", button, menu });
+  extraButtons.forEach((extraButton, index) => {
+    groups.push({
+      source: "actions",
+      button: extraButton,
+      menu: extraMenus[index] || null,
+    });
+  });
+
+  groups.forEach((group) => {
+    if (source !== "all" && group.source !== source) return;
+    if (group.button) group.button.setAttribute("aria-expanded", "false");
+    if (group.menu) group.menu.hidden = true;
+  });
 }
 
 function closeAllOrderTypeFilterMenus() {
   closeOrderTypeFilterMenu("movies");
   closeOrderTypeFilterMenu("games");
+  closeOrderTypeFilterMenu("watchlist");
 }
 
-function toggleOrderTypeFilterMenu(kind) {
-  const { button, menu } = getOrderTypeFilterElements(kind);
-  if (!button || !menu) return;
+function toggleOrderTypeFilterMenu(kind, source = "toolbar") {
+  const { button, menu, extraButtons = [], extraMenus = [] } =
+    getOrderTypeFilterElements(kind);
+  const activeGroup =
+    source === "actions"
+      ? {
+          button: extraButtons[0] || null,
+          menu: extraMenus[0] || null,
+        }
+      : { button, menu };
+  if (!activeGroup.button || !activeGroup.menu) return;
 
-  const shouldOpen = menu.hidden;
+  const shouldOpen = activeGroup.menu.hidden;
   closeAllOrderTypeFilterMenus();
   if (!shouldOpen) return;
 
   syncOrderTypeFilterCheckboxes(kind);
-  menu.hidden = false;
-  button.setAttribute("aria-expanded", "true");
+  activeGroup.menu.hidden = false;
+  activeGroup.button.setAttribute("aria-expanded", "true");
 }
 
 function handleOrderTypeFilterChange(input) {
   if (!input) return;
 
-  const kind = input.dataset.filterKind === "games" ? "games" : "movies";
+  const rawKind = input.dataset.filterKind;
+  const kind =
+    rawKind === "games"
+      ? "games"
+      : rawKind === "watchlist"
+      ? "watchlist"
+      : "movies";
   const normalizedValue = normalizeOrderTypeValue(input.value);
   if (!normalizedValue || !ORDER_TYPE_FILTER_OPTIONS.includes(normalizedValue)) {
     input.checked = false;
@@ -1627,6 +1667,12 @@ function handleOrderTypeFilterChange(input) {
     return;
   }
 
+  if (kind === "watchlist") {
+    watchlistPage = 1;
+    renderWatchlist();
+    return;
+  }
+
   currentPage = 1;
   renderMovies();
 }
@@ -1640,6 +1686,12 @@ function clearOrderTypeFilters(kind) {
   if (kind === "games") {
     gamePage = 1;
     renderPlayedGames();
+    return;
+  }
+
+  if (kind === "watchlist") {
+    watchlistPage = 1;
+    renderWatchlist();
     return;
   }
 

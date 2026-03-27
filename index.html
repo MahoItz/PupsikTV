@@ -276,6 +276,53 @@
                                 <button class="admin-action-button admin-action-main"
                                     onclick="openAddToWatchlistModal()">Добавить фильм</button>
                                 <span class="admin-action-divider" aria-hidden="true"></span>
+                                <div class="order-type-filter order-type-filter--admin">
+                                    <button id="movieOrderTypeFilterBtnAction"
+                                        class="admin-action-button admin-action-filter btn-filter-toggle" type="button"
+                                        aria-haspopup="true" aria-expanded="false" aria-label="Фильтр по типу заказа"
+                                        title="Фильтр по типу заказа"
+                                        onclick="toggleOrderTypeFilterMenu('watchlist')">
+                                        <span class="filter-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" focusable="false">
+                                                <path d="M4 6h16l-6.2 7.1v4.9l-3.6 1.8v-6.7L4 6z" fill="currentColor"></path>
+                                            </svg>
+                                        </span>
+                                        <span id="movieOrderTypeFilterCountAction" class="filter-badge" hidden>0</span>
+                                    </button>
+                                    <div id="movieOrderTypeFilterMenuAction" class="order-type-filter-menu order-type-filter-menu--admin" hidden>
+                                        <div class="order-type-filter-menu__header">
+                                            <span>Тип заказа</span>
+                                            <button class="order-type-filter-menu__clear" type="button"
+                                                onclick="clearOrderTypeFilters('watchlist')">Сбросить</button>
+                                        </div>
+                                        <label class="order-type-filter-option">
+                                            <input type="checkbox" data-filter-kind="watchlist" value="Донат"
+                                                onchange="handleOrderTypeFilterChange(this)">
+                                            <span>Донат</span>
+                                        </label>
+                                        <label class="order-type-filter-option">
+                                            <input type="checkbox" data-filter-kind="watchlist" value="Баллы канала"
+                                                onchange="handleOrderTypeFilterChange(this)">
+                                            <span>Баллы канала</span>
+                                        </label>
+                                        <label class="order-type-filter-option">
+                                            <input type="checkbox" data-filter-kind="watchlist" value="Рулетка"
+                                                onchange="handleOrderTypeFilterChange(this)">
+                                            <span>Рулетка</span>
+                                        </label>
+                                        <label class="order-type-filter-option">
+                                            <input type="checkbox" data-filter-kind="watchlist" value="Шары"
+                                                onchange="handleOrderTypeFilterChange(this)">
+                                            <span>Шары</span>
+                                        </label>
+                                        <label class="order-type-filter-option">
+                                            <input type="checkbox" data-filter-kind="watchlist" value="Аукцион"
+                                                onchange="handleOrderTypeFilterChange(this)">
+                                            <span>Аукцион</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <span class="admin-action-divider" aria-hidden="true"></span>
                                 <button class="admin-action-button admin-action-icon"
                                     onclick="copyScheduledMoviesToClipboard()"
                                     title="Скопировать список запланированных фильмов">📋</button>

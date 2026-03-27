@@ -449,6 +449,30 @@
     border-radius: var(--border-radius-small) 0 0 var(--border-radius-small);
 }
 
+.order-type-filter--admin {
+    flex: 0 0 56px;
+}
+
+.order-type-filter--admin .btn-filter-toggle {
+    width: 56px;
+    min-width: 56px;
+    min-height: 40px;
+    height: 40px;
+}
+
+.order-type-filter-menu--admin {
+    right: 0;
+}
+
+.admin-action-filter {
+    width: 56px;
+    padding: 0;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    flex: 0 0 56px;
+}
+
 .admin-action-icon {
     flex: 0 0 10%;
     min-width: 56px;

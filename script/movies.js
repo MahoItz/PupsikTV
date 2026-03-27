@@ -1549,6 +1549,7 @@ function renderWatchlistPagination(totalPages) {
 
 function getSortedWatchlist() {
   return watchlist
+    .filter((item) => matchesSelectedOrderTypes(item, "watchlist"))
     .map((item, index) => ({ item, index }))
     .sort((a, b) => {
       const aHasPlan = Boolean(a.item.planDate);
