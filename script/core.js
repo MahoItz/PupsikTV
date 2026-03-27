@@ -2696,29 +2696,37 @@ function closeFortuneWinnerModal() {
 }
 
 if (fortuneWinnerWatchBtn) {
-  fortuneWinnerWatchBtn.addEventListener("click", () => {
+  fortuneWinnerWatchBtn.addEventListener("click", async () => {
     stopVictoryTheme();
-    const baseUrl = REYOHOHO_BASE_URL;
 
     if (!fortuneWinnerMovie) {
-      window.open(baseUrl, "_blank");
       return;
     }
 
-    const storedKinopoiskId = getStoredFortuneKinopoiskId(
-      fortuneWinnerMovie.label
-    );
-    const kinopoiskId =
-      storedKinopoiskId ||
+    const watchOrder =
+      buildFortuneWinnerOrderData(
+        fortuneWinnerOrderByInput?.value || ""
+      ) || {
+        title: fortuneWinnerMovie.title || fortuneWinnerMovie.label || "",
+        kinopoiskId: null,
+        poster: resolveFortuneWinnerPoster(fortuneWinnerMovie),
+      };
+
+    const resolvedKinopoiskId =
+      getStoredFortuneKinopoiskId(fortuneWinnerMovie.label) ||
       getKinopoiskIdFromMovie(fortuneWinnerMovie) ||
       getKinopoiskIdFromMovie(fortuneWinnerMovie.match) ||
-      fortuneWinnerMovie.kinopoiskId;
+      fortuneWinnerMovie.kinopoiskId ||
+      (await resolveFortuneMovieKinopoiskId(fortuneWinnerMovie));
 
-    const targetUrl = kinopoiskId ? `${baseUrl}#${kinopoiskId}` : baseUrl;
-    const newWindow = window.open(targetUrl, "_blank");
+    if (resolvedKinopoiskId) {
+      watchOrder.kinopoiskId = resolvedKinopoiskId;
+    }
 
-    if (!newWindow) {
-      console.warn("ReYohoho window was blocked by the browser");
+    closeFortuneWinnerModal();
+
+    if (typeof openOrderOnReyohoho === "function") {
+      await openOrderOnReyohoho(watchOrder);
     }
   });
 }
