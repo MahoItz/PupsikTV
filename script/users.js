@@ -214,6 +214,60 @@ async function recordUserOrder({ userName, type }) {
   }
 }
 
+async function removeUserOrder({ userName, type }) {
+  const normalized = normalizeUserName(userName);
+  if (!normalized) return;
+
+  const key = type === "games" ? "games" : "movies";
+
+  try {
+    const client = await waitForSupabaseClientForUsers();
+    const { data, error } = await client
+      .from("users")
+      .select("user, movies, games")
+      .ilike("user", normalized)
+      .limit(1);
+
+    if (error) throw error;
+
+    const existing = Array.isArray(data) ? data[0] : null;
+    if (!existing) return;
+
+    const payload = {
+      movies: Math.max(0, Number(existing.movies ?? 0) || 0),
+      games: Math.max(0, Number(existing.games ?? 0) || 0),
+    };
+    payload[key] = Math.max(0, (payload[key] || 0) - 1);
+
+    if (payload.movies === 0 && payload.games === 0) {
+      const { error: deleteError } = await client
+        .from("users")
+        .delete()
+        .eq("user", existing.user);
+      if (deleteError) throw deleteError;
+
+      usersList = usersList.filter((item) => item.user !== existing.user);
+    } else {
+      const { error: updateError } = await client
+        .from("users")
+        .update(payload)
+        .eq("user", existing.user);
+      if (updateError) throw updateError;
+
+      usersList = usersList.filter((item) => item.user !== existing.user);
+      usersList.push({
+        user: existing.user,
+        movies: payload.movies,
+        games: payload.games,
+      });
+    }
+
+    usersLoaded = true;
+  } catch (err) {
+    console.error("Failed to decrement user stats", err);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   USER_PICKER_INPUTS.forEach(({ id, type }) => setupUserPickerField(id, type));
 });

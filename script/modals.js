@@ -2456,6 +2456,9 @@ async function performDeleteMovie(id) {
     }
 
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
+    if (typeof removeUserOrder === "function" && removedMovie?.orderBy) {
+      await removeUserOrder({ userName: removedMovie.orderBy, type: "movies" });
+    }
   } catch (err) {
     console.error("Error deleting movie from Supabase", err);
     allMovies.splice(index, 0, removedMovie);
@@ -2486,6 +2489,10 @@ async function performDeleteOrder(id) {
     if (error) throw error;
     if (!data) {
       throw new Error("Movie order delete was blocked by security rules.");
+    }
+
+    if (typeof removeUserOrder === "function" && removedOrder?.orderBy) {
+      await removeUserOrder({ userName: removedOrder.orderBy, type: "movies" });
     }
   } catch (err) {
     console.error("Error deleting order from Supabase", err);
