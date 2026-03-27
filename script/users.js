@@ -6,6 +6,7 @@ let usersLoadingPromise = null;
 const USER_PICKER_INPUTS = [
   { id: "watchOrderBy", type: "movies" },
   { id: "rouletteOrderBy", type: "movies" },
+  { id: "fortuneWinnerOrderBy", type: "movies" },
   { id: "gameOrderBy", type: "games" },
   { id: "playedGameOrderBy", type: "games" },
   { id: "editPlayedGameOrderBy", type: "games" },

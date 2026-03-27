@@ -1664,6 +1664,10 @@ const fortuneWinnerOriginalTitleEl = document.getElementById(
   "fortuneWinnerOriginalTitle"
 );
 const fortuneWinnerYearEl = document.getElementById("fortuneWinnerYear");
+const fortuneWinnerOrderByInput = document.getElementById(
+  "fortuneWinnerOrderBy"
+);
+const fortuneWinnerSaveBtn = document.getElementById("fortuneWinnerSave");
 const fortuneWinnerWatchBtn = document.getElementById("fortuneWinnerWatch");
 const fortuneWinnerCancelBtn = document.getElementById("fortuneWinnerCancel");
 let fortuneWinnerMovie = null;
@@ -2261,6 +2265,129 @@ async function resolveFortuneMovieKinopoiskId(movie) {
   return null;
 }
 
+function resolveFortuneWinnerValue(...values) {
+  for (const value of values) {
+    if (value === null || value === undefined) {
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      const normalizedArray = value
+        .map((item) => String(item || "").trim())
+        .filter(Boolean);
+      if (normalizedArray.length) {
+        return normalizedArray.join(", ");
+      }
+      continue;
+    }
+
+    const normalizedValue = String(value).trim();
+    if (normalizedValue) {
+      return normalizedValue;
+    }
+  }
+
+  return "";
+}
+
+function buildFortuneWinnerOrderData(orderBy) {
+  if (!fortuneWinnerMovie) {
+    return null;
+  }
+
+  const metadata = getFortuneWinnerMetadata(fortuneWinnerMovie.label);
+  const metadataMovie = metadata.movie || {};
+  const matchedMovie = fortuneWinnerMovie.match || {};
+  const metadataGenres = Array.isArray(metadataMovie.genres)
+    ? metadataMovie.genres.map((item) => item?.genre).filter(Boolean)
+    : [];
+  const metadataCountries = Array.isArray(metadataMovie.countries)
+    ? metadataMovie.countries.map((item) => item?.country).filter(Boolean)
+    : [];
+
+  const title = resolveFortuneWinnerValue(
+    fortuneWinnerMovie.title,
+    matchedMovie.title,
+    metadataMovie.title,
+    fortuneWinnerMovie.label
+  );
+  if (!title) {
+    return null;
+  }
+
+  return {
+    title,
+    originalTitle: resolveFortuneWinnerValue(
+      fortuneWinnerMovie.originalTitle,
+      matchedMovie.originalTitle,
+      matchedMovie.original_title,
+      metadataMovie.originalTitle,
+      metadataMovie.original_title,
+      metadataMovie.nameEn,
+      metadataMovie.nameOriginal
+    ),
+    year: resolveFortuneWinnerValue(
+      fortuneWinnerMovie.year,
+      matchedMovie.year,
+      metadataMovie.year
+    ),
+    kinopoiskId:
+      fortuneWinnerMovie.kinopoiskId ||
+      metadata.kinopoiskId ||
+      getKinopoiskIdFromMovie(metadataMovie) ||
+      getKinopoiskIdFromMovie(matchedMovie) ||
+      null,
+    imdbId: resolveFortuneWinnerValue(
+      metadata.imdbId,
+      fortuneWinnerMovie.imdbId,
+      matchedMovie.imdbId,
+      matchedMovie.imdb_id,
+      metadataMovie.imdbId,
+      metadataMovie.imdb_id
+    ) || null,
+    kpRating: resolveFortuneWinnerValue(
+      matchedMovie.kpRating,
+      matchedMovie.rating_OMDB,
+      matchedMovie.rating,
+      metadataMovie.rating,
+      metadataMovie.ratingKinopoisk
+    ) || "-",
+    poster: resolveFortuneWinnerPoster(fortuneWinnerMovie),
+    genres: resolveFortuneWinnerValue(
+      matchedMovie.genre,
+      matchedMovie.genres,
+      metadataMovie.genre,
+      metadataGenres
+    ),
+    description: resolveFortuneWinnerValue(
+      matchedMovie.description,
+      metadataMovie.description,
+      metadataMovie.shortDescription
+    ),
+    country: resolveFortuneWinnerValue(
+      matchedMovie.country,
+      metadataMovie.country,
+      metadataCountries
+    ),
+    actors: Array.isArray(matchedMovie.actors)
+      ? matchedMovie.actors
+      : Array.isArray(metadataMovie.actors)
+        ? metadataMovie.actors
+        : [],
+    director: resolveFortuneWinnerValue(
+      matchedMovie.director,
+      metadataMovie.director
+    ),
+    orderBy: String(orderBy || "").trim(),
+    orderType: ROULETTE_ORDER_TYPE,
+    length: resolveFortuneWinnerValue(
+      matchedMovie.length,
+      metadataMovie.length,
+      metadataMovie.filmLength
+    ) || null,
+  };
+}
+
 function getAutoTitleInput() {
   return document.getElementById("autoTitle");
 }
@@ -2464,20 +2591,10 @@ function showFortuneWinnerModal(label) {
   }
 
   fortuneWinnerMovie = buildFortuneWinnerMovie(label);
-
-  const storageValue =
-    (fortuneWinnerMovie?.title || fortuneWinnerMovie?.label || label || "").trim();
-
-  if (storageValue) {
-    rouletteLastWinner = storageValue;
-    rouletteAutofillActive = false;
-    if (isAddMovieModalOpen()) {
-      applyRouletteAutofill({ force: true, triggerSuggestions: true });
-    } else {
-      toggleRouletteAutofillVisibility(false);
-    }
-    persistRouletteLastWinner(storageValue);
-  }
+  rouletteLastWinner = "";
+  rouletteAutofillActive = false;
+  toggleRouletteAutofillVisibility(false);
+  persistRouletteLastWinner(null);
 
   if (fortuneWinnerFilmNameEl) {
     if (fortuneWinnerMovie.displayText) {
@@ -2533,8 +2650,15 @@ function showFortuneWinnerModal(label) {
     modalAudioPlayer.currentTime = 0;
   }
 
+  if (fortuneWinnerOrderByInput) {
+    fortuneWinnerOrderByInput.value = "";
+  }
+
   playVictoryTheme();
   fortuneWinnerModal.style.display = "block";
+  if (fortuneWinnerOrderByInput) {
+    setTimeout(() => fortuneWinnerOrderByInput.focus(), 0);
+  }
 }
 
 function closeFortuneWinnerModal() {
@@ -2555,6 +2679,9 @@ function closeFortuneWinnerModal() {
   if (fortuneWinnerPosterEl) {
     fortuneWinnerPosterEl.src = DEFAULT_POSTER_PLACEHOLDER;
     fortuneWinnerPosterEl.alt = "Постер выигравшего фильма";
+  }
+  if (fortuneWinnerOrderByInput) {
+    fortuneWinnerOrderByInput.value = "";
   }
   closeModal("fortuneWinnerModal");
 }
@@ -2590,6 +2717,58 @@ if (fortuneWinnerWatchBtn) {
 if (fortuneWinnerCancelBtn) {
   fortuneWinnerCancelBtn.addEventListener("click", () => {
     closeFortuneWinnerModal();
+  });
+}
+
+if (fortuneWinnerSaveBtn) {
+  fortuneWinnerSaveBtn.addEventListener("click", async () => {
+    if (!fortuneWinnerMovie || !fortuneWinnerOrderByInput) {
+      return;
+    }
+
+    const orderBy = fortuneWinnerOrderByInput.value.trim();
+    if (!orderBy) {
+      fortuneWinnerOrderByInput.reportValidity();
+      fortuneWinnerOrderByInput.focus();
+      return;
+    }
+
+    const originalButtonText = fortuneWinnerSaveBtn.textContent;
+    fortuneWinnerSaveBtn.disabled = true;
+    fortuneWinnerSaveBtn.textContent = "Сохраняем...";
+
+    try {
+      const resolvedKinopoiskId =
+        (await resolveFortuneMovieKinopoiskId(fortuneWinnerMovie)) ||
+        fortuneWinnerMovie.kinopoiskId ||
+        null;
+
+      const orderData = buildFortuneWinnerOrderData(orderBy);
+      if (!orderData) {
+        throw new Error("Fortune winner order data is incomplete");
+      }
+
+      if (resolvedKinopoiskId) {
+        orderData.kinopoiskId = resolvedKinopoiskId;
+      }
+
+      if (typeof saveMovieOrder !== "function") {
+        throw new Error("saveMovieOrder is not available");
+      }
+
+      const result = await saveMovieOrder(orderData);
+      if (result?.ok) {
+        fortuneWinnerSaveBtn.blur();
+      }
+    } catch (err) {
+      console.error("Failed to save roulette winner to watchlist", err);
+      alert(
+        "Не удалось сохранить победивший фильм в заказанные. Попробуйте ещё раз."
+      );
+    } finally {
+      fortuneWinnerSaveBtn.disabled = false;
+      fortuneWinnerSaveBtn.textContent = originalButtonText;
+    }
   });
 }
 

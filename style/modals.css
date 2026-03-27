@@ -95,6 +95,8 @@
 #fortuneWinnerModal .modal-content {
     text-align: left;
     max-width: 780px;
+    max-height: none;
+    overflow: visible;
 }
 
 #fortuneWinnerModal .modal-content h2 {
@@ -106,7 +108,7 @@
     flex-direction: column;
     gap: 18px;
     padding: 28px;
-    min-height: 420px;
+    min-height: 520px;
 }
 
 #fortuneWinnerModal .fortune-winner-body {
@@ -184,6 +186,32 @@
     flex-wrap: wrap;
 }
 
+#fortuneWinnerModal .fortune-winner-order-group {
+    width: 100%;
+    margin-top: 8px;
+}
+
+#fortuneWinnerModal .fortune-winner-order-group label {
+    margin-bottom: 8px;
+}
+
+#fortuneWinnerModal .fortune-winner-order-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+}
+
+#fortuneWinnerModal .fortune-winner-order-row .user-picker-input {
+    position: relative;
+    flex: 1 1 auto;
+}
+
+#fortuneWinnerModal .fortune-winner-order-row .btn {
+    flex: 0 0 auto;
+    min-width: 132px;
+}
+
 #fortuneWinnerModal .fortune-winner-badge {
     display: inline-flex;
     align-items: center;
@@ -226,6 +254,16 @@
     justify-content: flex-end;
     padding-top: 16px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 640px) {
+    #fortuneWinnerModal .fortune-winner-order-row {
+        flex-direction: column;
+    }
+
+    #fortuneWinnerModal .fortune-winner-order-row .btn {
+        width: 100%;
+    }
 }
 
 .close {

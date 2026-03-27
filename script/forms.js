@@ -75,6 +75,122 @@ function getSelectedGameMode(mode, autoSelectId, manualSelectId) {
 syncGameModeSelectGroup("add-game");
 syncGameModeSelectGroup("played-game");
 
+function mapInsertedMovieOrder(data, orderData) {
+  return {
+    id: data.id,
+    title: data.order_title,
+    originalTitle: data.order_origin_title,
+    genres: data.order_genres,
+    poster: data.order_poster,
+    year: data.order_year || "",
+    length: data.order_length || null,
+    planDate: data.plan_date || null,
+    kpRating: data.kinopoisk_rate,
+    kinopoiskId: data.kp_id || orderData.kinopoiskId,
+    imdbId: data.imdb_id || orderData.imdbId || null,
+    orderBy: data.order_by,
+    orderType: data.order_type,
+    dateAdded: data.created_at,
+    parentGuide: null,
+    parentGuideStatus: null,
+    parentGuideError: null,
+    description: orderData.description,
+    country: orderData.country,
+    actors: orderData.actors,
+    director: orderData.director,
+  };
+}
+
+async function saveMovieOrder(orderData) {
+  const normalizedTitle = String(orderData?.title || "").trim();
+  if (!normalizedTitle) {
+    return { ok: false, reason: "missing_title" };
+  }
+
+  const normalizedOrder = {
+    ...orderData,
+    title: normalizedTitle,
+    originalTitle: String(orderData?.originalTitle || "").trim(),
+    year: orderData?.year || "",
+    kpRating: orderData?.kpRating || "-",
+    poster:
+      orderData?.poster || "https://via.placeholder.com/300x400?text=РќРµС‚+РїРѕСЃС‚РµСЂР°",
+    genres: orderData?.genres || "",
+    description: orderData?.description || "",
+    country: orderData?.country || "",
+    actors: Array.isArray(orderData?.actors) ? orderData.actors : [],
+    director: orderData?.director || "",
+    orderBy: String(orderData?.orderBy || "").trim(),
+    orderType: orderData?.orderType || "",
+    length: orderData?.length || null,
+    kinopoiskId: orderData?.kinopoiskId || null,
+    imdbId: orderData?.imdbId || null,
+  };
+
+  const duplicateOrder = watchlist.some(
+    (o) =>
+      o.title.trim().toLowerCase() === normalizedOrder.title.trim().toLowerCase() &&
+      Number(o.year) === Number(normalizedOrder.year)
+  );
+  if (duplicateOrder) {
+    if (typeof showDuplicateModal === "function") {
+      showDuplicateModal();
+    }
+    return { ok: false, reason: "duplicate" };
+  }
+
+  normalizedOrder.imdbId = await resolveKinopoiskImdbId(
+    normalizedOrder.kinopoiskId,
+    normalizedOrder.imdbId
+  );
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("Movie_Orders")
+      .insert({
+        order_title: normalizedOrder.title,
+        order_origin_title: normalizedOrder.originalTitle,
+        order_year: normalizedOrder.year,
+        order_genres: normalizedOrder.genres,
+        order_poster: normalizedOrder.poster,
+        order_by: normalizedOrder.orderBy,
+        order_type: normalizedOrder.orderType,
+        kinopoisk_rate: normalizedOrder.kpRating,
+        kp_id: normalizedOrder.kinopoiskId,
+        imdb_id: normalizedOrder.imdbId,
+        order_length: normalizedOrder.length,
+        description: normalizedOrder.description,
+        country: normalizedOrder.country,
+        actors: normalizeActorsForStorage(normalizedOrder.actors),
+        director: normalizedOrder.director,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const newOrder = mapInsertedMovieOrder(data, normalizedOrder);
+    watchlist.push(newOrder);
+    renderWatchlist();
+
+    if (typeof prefetchOrderParentGuideForOrder === "function") {
+      prefetchOrderParentGuideForOrder(newOrder);
+    }
+
+    if (typeof recordUserOrder === "function") {
+      await recordUserOrder({
+        userName: normalizedOrder.orderBy,
+        type: "movies",
+      });
+    }
+
+    return { ok: true, order: newOrder };
+  } catch (err) {
+    console.error("Error adding order", err);
+    return { ok: false, reason: "error", error: err };
+  }
+}
+
 document
   .getElementById("addMovieForm")
   .addEventListener("submit", async function (e) {
@@ -410,90 +526,15 @@ document
       };
     }
 
-    const duplicateOrder = watchlist.some(
-      (o) =>
-        o.title.trim().toLowerCase() ===
-          orderData.title.trim().toLowerCase() &&
-        Number(o.year) === Number(orderData.year)
-    );
-    if (duplicateOrder) {
-      showDuplicateModal();
-      return;
+    const saveResult = await saveMovieOrder(orderData);
+
+    if (saveResult?.ok) {
+      closeModal("addWatchlistModal", true);
+      this.reset();
+      selectedKPOrderMovie = null;
+      kpOrderResults = [];
+      showWatchlistKPPreview();
     }
-
-    orderData.imdbId = await resolveKinopoiskImdbId(
-      orderData.kinopoiskId,
-      orderData.imdbId
-    );
-
-    try {
-      const { data, error } = await supabaseClient
-        .from("Movie_Orders")
-        .insert({
-          order_title: orderData.title,
-          order_origin_title: orderData.originalTitle || "",
-          order_year: orderData.year,
-          order_genres: orderData.genres,
-          order_poster: orderData.poster,
-          order_by: orderData.orderBy,
-          order_type: orderData.orderType,
-          kinopoisk_rate: orderData.kpRating,
-          kp_id: orderData.kinopoiskId,
-          imdb_id: orderData.imdbId,
-          order_length: orderData.length,
-          description: orderData.description,
-          country: orderData.country,
-          actors: normalizeActorsForStorage(orderData.actors),
-          director: orderData.director,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newOrder = {
-        id: data.id,
-        title: data.order_title,
-        originalTitle: data.order_origin_title,
-        genres: data.order_genres,
-        poster: data.order_poster,
-        year: data.order_year || "",
-        length: data.order_length || null,
-        planDate: data.plan_date || null,
-        kpRating: data.kinopoisk_rate,
-        kinopoiskId: data.kp_id || orderData.kinopoiskId,
-        imdbId: data.imdb_id || orderData.imdbId || null,
-        orderBy: data.order_by,
-        orderType: data.order_type,
-        dateAdded: data.created_at,
-        parentGuide: null,
-        parentGuideStatus: null,
-        parentGuideError: null,
-        description: orderData.description,
-        country: orderData.country,
-        actors: orderData.actors,
-        director: orderData.director,
-      };
-
-      watchlist.push(newOrder);
-      renderWatchlist();
-
-      if (typeof prefetchOrderParentGuideForOrder === "function") {
-        prefetchOrderParentGuideForOrder(newOrder);
-      }
-
-      if (typeof recordUserOrder === "function") {
-        await recordUserOrder({ userName: orderData.orderBy, type: "movies" });
-      }
-    } catch (err) {
-      console.error("Error adding order", err);
-    }
-
-    closeModal("addWatchlistModal", true);
-    this.reset();
-    selectedKPOrderMovie = null;
-    kpOrderResults = [];
-    showWatchlistKPPreview();
     } finally {
       isSubmittingWatchlistOrder = false;
       toggleSubmitLoading(submitBtn, false);

@@ -29,7 +29,6 @@ function openAddMovieModal() {
   if (modal) {
     modal.style.display = "block";
   }
-  applyRouletteAutofill({ force: true, triggerSuggestions: true });
 }
 
 function openAddToWatchlistModal() {

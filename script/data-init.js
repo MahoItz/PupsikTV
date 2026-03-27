@@ -262,17 +262,12 @@ async function loadSettingsFromSupabase() {
       return;
     }
 
-    rouletteLastWinner = remoteValue;
+    rouletteLastWinner = "";
+    rouletteAutofillActive = false;
+    toggleRouletteAutofillVisibility(false);
 
-    if (!rouletteLastWinner) {
-      syncRouletteAutofillState();
-    } else {
-      rouletteAutofillActive = false;
-      if (isAddMovieModalOpen()) {
-        applyRouletteAutofill({ triggerSuggestions: true });
-      } else {
-        toggleRouletteAutofillVisibility(false);
-      }
+    if (remoteValue) {
+      persistRouletteLastWinner(null);
     }
   } catch (err) {
     console.error("Error loading settings from Supabase", err);
