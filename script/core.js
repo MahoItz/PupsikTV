@@ -1668,6 +1668,9 @@ const fortuneWinnerOrderByInput = document.getElementById(
   "fortuneWinnerOrderBy"
 );
 const fortuneWinnerSaveBtn = document.getElementById("fortuneWinnerSave");
+const fortuneWinnerSaveStatusEl = document.getElementById(
+  "fortuneWinnerSaveStatus"
+);
 const fortuneWinnerWatchBtn = document.getElementById("fortuneWinnerWatch");
 const fortuneWinnerCancelBtn = document.getElementById("fortuneWinnerCancel");
 let fortuneWinnerMovie = null;
@@ -2653,6 +2656,9 @@ function showFortuneWinnerModal(label) {
   if (fortuneWinnerOrderByInput) {
     fortuneWinnerOrderByInput.value = "";
   }
+  if (fortuneWinnerSaveStatusEl) {
+    fortuneWinnerSaveStatusEl.textContent = "";
+  }
 
   playVictoryTheme();
   fortuneWinnerModal.style.display = "block";
@@ -2682,6 +2688,9 @@ function closeFortuneWinnerModal() {
   }
   if (fortuneWinnerOrderByInput) {
     fortuneWinnerOrderByInput.value = "";
+  }
+  if (fortuneWinnerSaveStatusEl) {
+    fortuneWinnerSaveStatusEl.textContent = "";
   }
   closeModal("fortuneWinnerModal");
 }
@@ -2733,6 +2742,10 @@ if (fortuneWinnerSaveBtn) {
       return;
     }
 
+    if (fortuneWinnerSaveStatusEl) {
+      fortuneWinnerSaveStatusEl.textContent = "";
+    }
+
     const originalButtonText = fortuneWinnerSaveBtn.textContent;
     fortuneWinnerSaveBtn.disabled = true;
     fortuneWinnerSaveBtn.textContent = "Сохраняем...";
@@ -2759,6 +2772,10 @@ if (fortuneWinnerSaveBtn) {
       const result = await saveMovieOrder(orderData);
       if (result?.ok) {
         fortuneWinnerSaveBtn.blur();
+        if (fortuneWinnerSaveStatusEl) {
+          fortuneWinnerSaveStatusEl.textContent =
+            "Фильм сохранён в список заказанных.";
+        }
       }
     } catch (err) {
       console.error("Failed to save roulette winner to watchlist", err);
