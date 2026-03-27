@@ -1443,8 +1443,12 @@ function renderWatchlist() {
   container.innerHTML = "";
   const paginationEl = document.getElementById("watchlistPagination");
   const paginationTopEl = document.getElementById("watchlistPaginationTop");
+  const countEl = document.getElementById("watchlistCount");
   const sortedWatchlist = getSortedWatchlist();
   const totalWatchlist = sortedWatchlist.length;
+  if (countEl) {
+    countEl.textContent = String(totalWatchlist);
+  }
   if (totalWatchlist === 0) {
     renderEmptyState(container, "Заказанных фильмов пока нет");
     if (paginationEl) paginationEl.innerHTML = "";
