@@ -1687,6 +1687,21 @@ function normalizeSearchText(str) {
   return normalizeFortuneText(str);
 }
 
+function containsNormalizedPhrase(haystack, needle) {
+  const normalizedHaystack = normalizeFortuneText(haystack);
+  const normalizedNeedle = normalizeFortuneText(needle);
+
+  if (!normalizedHaystack || !normalizedNeedle) {
+    return false;
+  }
+
+  if (normalizedHaystack === normalizedNeedle) {
+    return true;
+  }
+
+  return ` ${normalizedHaystack} `.includes(` ${normalizedNeedle} `);
+}
+
 function levenshteinDistance(a, b) {
   const strA = String(a || "");
   const strB = String(b || "");
@@ -1920,11 +1935,14 @@ function findFortuneMovieMatch(parsed, candidateList = null) {
       if (movieTitle === normalizedTitle) {
         score += 6;
       } else if (
-        movieTitle.includes(normalizedTitle) ||
-        normalizedTitle.includes(movieTitle)
+        containsNormalizedPhrase(movieTitle, normalizedTitle) ||
+        containsNormalizedPhrase(normalizedTitle, movieTitle)
       ) {
         score += 3;
-      } else if (normalizedLabel && normalizedLabel.includes(movieTitle)) {
+      } else if (
+        normalizedLabel &&
+        containsNormalizedPhrase(normalizedLabel, movieTitle)
+      ) {
         score += 2;
       }
     }
@@ -1933,18 +1951,21 @@ function findFortuneMovieMatch(parsed, candidateList = null) {
       if (movieOriginal === normalizedOriginal) {
         score += 5;
       } else if (
-        movieOriginal.includes(normalizedOriginal) ||
-        normalizedOriginal.includes(movieOriginal)
+        containsNormalizedPhrase(movieOriginal, normalizedOriginal) ||
+        containsNormalizedPhrase(normalizedOriginal, movieOriginal)
       ) {
         score += 2;
-      } else if (normalizedLabel && normalizedLabel.includes(movieOriginal)) {
+      } else if (
+        normalizedLabel &&
+        containsNormalizedPhrase(normalizedLabel, movieOriginal)
+      ) {
         score += 2;
       }
     } else if (
       !normalizedTitle &&
       normalizedLabel &&
       movieOriginal &&
-      normalizedLabel.includes(movieOriginal)
+      containsNormalizedPhrase(normalizedLabel, movieOriginal)
     ) {
       score += 2;
     }
@@ -1953,7 +1974,7 @@ function findFortuneMovieMatch(parsed, candidateList = null) {
       !normalizedTitle &&
       normalizedLabel &&
       movieTitle &&
-      normalizedLabel.includes(movieTitle)
+      containsNormalizedPhrase(normalizedLabel, movieTitle)
     ) {
       score += 2;
     }
