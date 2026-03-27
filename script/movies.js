@@ -8,6 +8,7 @@ function getFilteredSortedMovies() {
 
   if (normalizedQuery) {
     const queryDigits = normalizedQuery.replace(/\D+/g, "");
+    const useYearSearch = shouldUseYearSearch(normalizedQuery, queryDigits);
 
     // Вес совпадения для каждого фильма
     const scored = result.map((movie) => {
@@ -32,7 +33,7 @@ function getFilteredSortedMovies() {
       // Ник заказчика
       score = Math.max(
         score,
-        scoreMatch(normalizedQuery, movie.orderBy || "") - 5
+        scoreStrictIdentifierMatch(normalizedQuery, movie.orderBy || "") - 5
       );
 
       // Год
@@ -40,7 +41,7 @@ function getFilteredSortedMovies() {
       const normalizedYear = normalizeSearchText(yearString);
       if (
         (normalizedYear && normalizedYear.includes(normalizedQuery)) ||
-        (queryDigits && yearString.includes(queryDigits))
+        (useYearSearch && yearString.includes(queryDigits))
       ) {
         score += 5;
       }
@@ -1921,6 +1922,7 @@ function getFilteredSortedPlayedGames() {
 
   if (normalizedQuery) {
     const queryDigits = normalizedQuery.replace(/\D+/g, "");
+    const useYearSearch = shouldUseYearSearch(normalizedQuery, queryDigits);
 
     const scored = result.map((game) => {
       let score = 0;
@@ -1937,7 +1939,7 @@ function getFilteredSortedPlayedGames() {
       // Ник заказчика
       score = Math.max(
         score,
-        scoreMatch(normalizedQuery, game.orderBy || "") - 5
+        scoreStrictIdentifierMatch(normalizedQuery, game.orderBy || "") - 5
       );
 
       // Год
@@ -1945,7 +1947,7 @@ function getFilteredSortedPlayedGames() {
       const normalizedYear = normalizeSearchText(yearString);
       if (
         (normalizedYear && normalizedYear.includes(normalizedQuery)) ||
-        (queryDigits && yearString.includes(queryDigits))
+        (useYearSearch && yearString.includes(queryDigits))
       ) {
         score += 5;
       }

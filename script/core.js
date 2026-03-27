@@ -1830,6 +1830,34 @@ function scoreMatch(normalizedQuery, value) {
   return bestScore;
 }
 
+function scoreStrictIdentifierMatch(normalizedQuery, value) {
+  const normalizedValue = normalizeSearchText(value);
+  if (!normalizedQuery || !normalizedValue) return 0;
+
+  if (normalizedValue === normalizedQuery) return 100;
+  if (normalizedValue.startsWith(normalizedQuery)) return 90;
+  if (normalizedValue.includes(normalizedQuery)) return 85;
+
+  const tokens = normalizedValue.split(/\s+/).filter(Boolean);
+  if (!tokens.length) return 0;
+
+  for (const token of tokens) {
+    if (token === normalizedQuery) return 88;
+    if (token.startsWith(normalizedQuery)) return 82;
+  }
+
+  return 0;
+}
+
+function shouldUseYearSearch(normalizedQuery, queryDigits) {
+  if (!normalizedQuery || !queryDigits) return false;
+
+  if (/^\d{4}$/.test(normalizedQuery)) return true;
+  if (normalizedQuery === queryDigits && queryDigits.length >= 3) return true;
+
+  return false;
+}
+
 function extractYearValue(value) {
   if (!value) return "";
   const match = String(value).match(/(19|20)\d{2}/);
