@@ -1678,9 +1678,6 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .trailer-saved-stream-card {
-  }
-
   .trailer-saved-stream-card__link {
     grid-template-columns: 84px minmax(0, 1fr);
   }

@@ -1,14 +1,14 @@
-const { createClient } = require("@supabase/supabase-js");
+const { createClient } = require('@supabase/supabase-js');
 
-const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const WATCHLIST_TABLE = "trailer_watchlist";
-const RATINGS_TABLE = "trailer_ratings";
+const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
+const WATCHLIST_TABLE = 'trailer_watchlist';
+const RATINGS_TABLE = 'trailer_ratings';
 
 function createSupabaseClient() {
   const supabaseKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
   if (!supabaseKey) {
-    throw new Error("Missing SUPABASE key");
+    throw new Error('Missing SUPABASE key');
   }
 
   return createClient(SUPABASE_URL, supabaseKey, {
@@ -18,8 +18,8 @@ function createSupabaseClient() {
 
 function parseBody(req) {
   if (!req.body) return {};
-  if (typeof req.body === "string") {
-    return JSON.parse(req.body || "{}");
+  if (typeof req.body === 'string') {
+    return JSON.parse(req.body || '{}');
   }
   return req.body;
 }
@@ -37,20 +37,25 @@ function parseRating(value) {
 }
 
 function normalizeUserId(value) {
-  const userId = String(value || "").trim().slice(0, 255);
+  const userId = String(value || '')
+    .trim()
+    .slice(0, 255);
   return userId || null;
 }
 
 async function recalculateTrailerRatings(supabase, trailerId) {
   const { data, error } = await supabase
     .from(RATINGS_TABLE)
-    .select("rating")
-    .eq("trailer_id", trailerId);
+    .select('rating')
+    .eq('trailer_id', trailerId);
 
   if (error) throw error;
 
   const rows = Array.isArray(data) ? data : [];
-  const ratingSum = rows.reduce((sum, row) => sum + Number(row?.rating || 0), 0);
+  const ratingSum = rows.reduce(
+    (sum, row) => sum + Number(row?.rating || 0),
+    0
+  );
   const ratingCount = rows.length;
 
   const { data: updated, error: updateError } = await supabase
@@ -59,8 +64,8 @@ async function recalculateTrailerRatings(supabase, trailerId) {
       viewer_rating_sum: ratingSum,
       viewer_rating_count: ratingCount,
     })
-    .eq("id", trailerId)
-    .select("id, viewer_rating_sum, viewer_rating_count")
+    .eq('id', trailerId)
+    .select('id, viewer_rating_sum, viewer_rating_count')
     .single();
 
   if (updateError) throw updateError;
@@ -68,17 +73,17 @@ async function recalculateTrailerRatings(supabase, trailerId) {
 }
 
 async function handler(req, res) {
-  const method = (req.method || "").toUpperCase();
-  if (method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: "Method Not Allowed" });
+  const method = (req.method || '').toUpperCase();
+  if (method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   let payload;
   try {
     payload = parseBody(req);
   } catch {
-    return res.status(400).json({ error: "Invalid JSON" });
+    return res.status(400).json({ error: 'Invalid JSON' });
   }
 
   const trailerId = parseTrailerId(payload?.trailer_id);
@@ -86,23 +91,23 @@ async function handler(req, res) {
   const userId = normalizeUserId(payload?.user_id);
 
   if (!trailerId || rating === null || !userId) {
-    return res.status(400).json({ error: "Invalid payload" });
+    return res.status(400).json({ error: 'Invalid payload' });
   }
 
   let supabase;
   try {
     supabase = createSupabaseClient();
   } catch (error) {
-    console.error("Supabase configuration error", error);
-    return res.status(500).json({ error: "Server configuration error" });
+    console.error('Supabase configuration error', error);
+    return res.status(500).json({ error: 'Server configuration error' });
   }
 
   try {
     const { data: existingRating, error: existingError } = await supabase
       .from(RATINGS_TABLE)
-      .select("id")
-      .eq("trailer_id", trailerId)
-      .eq("user_id", userId)
+      .select('id')
+      .eq('trailer_id', trailerId)
+      .eq('user_id', userId)
       .maybeSingle();
 
     if (existingError) throw existingError;
@@ -111,18 +116,16 @@ async function handler(req, res) {
       const { error: updateError } = await supabase
         .from(RATINGS_TABLE)
         .update({ rating })
-        .eq("id", existingRating.id);
+        .eq('id', existingRating.id);
 
       if (updateError) throw updateError;
     } else {
-      const { error: insertError } = await supabase
-        .from(RATINGS_TABLE)
-        .insert({
-          trailer_id: trailerId,
-          rating,
-          user_id: userId,
-          source: "user",
-        });
+      const { error: insertError } = await supabase.from(RATINGS_TABLE).insert({
+        trailer_id: trailerId,
+        rating,
+        user_id: userId,
+        source: 'user',
+      });
 
       if (insertError) throw insertError;
     }
@@ -134,8 +137,8 @@ async function handler(req, res) {
       updatedExisting: Boolean(existingRating?.id),
     });
   } catch (error) {
-    console.error("Failed to submit trailer rating", error);
-    return res.status(500).json({ error: "Failed to submit trailer rating" });
+    console.error('Failed to submit trailer rating', error);
+    return res.status(500).json({ error: 'Failed to submit trailer rating' });
   }
 }
 

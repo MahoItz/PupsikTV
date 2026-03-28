@@ -398,8 +398,6 @@
     padding: 6px 16px;
 
     border-radius: var(--border-radius-small);
-    border: 1px solid rgba(120, 100, 220, 0.35);
-
     background: linear-gradient(180deg, rgb(49 31 129 / 70%), rgb(37 32 57 / 70%));
     border: 1px solid rgb(47 42 75 / 35%);
     color: #dcd6ff;

@@ -1,18 +1,18 @@
-const { createClient } = require("@supabase/supabase-js");
+const { createClient } = require('@supabase/supabase-js');
 const {
   extractBearerToken,
   issueAdminToken,
   verifyAdminToken,
-} = require("../lib/admin-session.js");
+} = require('../lib/admin-session.js');
 
-const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const ALLOWED_ACTIONS = ["env", "verify-admin"];
+const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
+const ALLOWED_ACTIONS = ['env', 'verify-admin'];
 
 function createSupabaseClient() {
   const supabaseKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
   if (!supabaseKey) {
-    throw new Error("Missing SUPABASE key");
+    throw new Error('Missing SUPABASE key');
   }
 
   return createClient(SUPABASE_URL, supabaseKey, {
@@ -24,21 +24,21 @@ async function loadSelectedKinopoiskApi() {
   try {
     const supabase = createSupabaseClient();
     const { data, error } = await supabase
-      .from("settings")
-      .select("kp_api")
-      .order("id", { ascending: true })
+      .from('settings')
+      .select('kp_api')
+      .order('id', { ascending: true })
       .limit(1)
       .maybeSingle();
 
     if (error) {
-      console.error("Failed to load selected Kinopoisk API", error);
-      return "API 1";
+      console.error('Failed to load selected Kinopoisk API', error);
+      return 'API 1';
     }
 
-    return data?.kp_api || "API 1";
+    return data?.kp_api || 'API 1';
   } catch (error) {
-    console.error("Supabase configuration error while loading kp_api", error);
-    return "API 1";
+    console.error('Supabase configuration error while loading kp_api', error);
+    return 'API 1';
   }
 }
 
@@ -46,14 +46,14 @@ async function handleEnv(req, res) {
   let password;
   try {
     password =
-      req.headers["x-admin-password"] ||
+      req.headers['x-admin-password'] ||
       req.query.password ||
       req.body?.password ||
-      (typeof req.body === "string"
-        ? JSON.parse(req.body || "{}").password
+      (typeof req.body === 'string'
+        ? JSON.parse(req.body || '{}').password
         : undefined);
   } catch {
-    return res.status(400).json({ error: "Invalid JSON" });
+    return res.status(400).json({ error: 'Invalid JSON' });
   }
 
   let isAdmin = false;
@@ -64,26 +64,26 @@ async function handleEnv(req, res) {
       const verification = verifyAdminToken(authToken);
       if (!verification.valid) {
         return res.status(401).json({
-          error: verification.error || "Invalid token",
+          error: verification.error || 'Invalid token',
           expired: Boolean(verification.expired),
         });
       }
       isAdmin = true;
     } catch (err) {
-      console.error("Admin token verification error", err);
-      return res.status(500).json({ error: "Server error" });
+      console.error('Admin token verification error', err);
+      return res.status(500).json({ error: 'Server error' });
     }
   }
 
   if (!isAdmin && password) {
     if (password !== process.env.EDIT_PASSWORD) {
-      return res.status(401).json({ error: "Invalid password" });
+      return res.status(401).json({ error: 'Invalid password' });
     }
     isAdmin = true;
   }
 
   if (!process.env.SUPABASE_KEY) {
-    return res.status(500).json({ error: "Missing SUPABASE_KEY" });
+    return res.status(500).json({ error: 'Missing SUPABASE_KEY' });
   }
 
   const env = {
@@ -116,26 +116,26 @@ async function handleEnv(req, res) {
 }
 
 function getTokenExpiresAt(payload) {
-  return payload && typeof payload.exp === "number"
+  return payload && typeof payload.exp === 'number'
     ? new Date(payload.exp).toISOString()
     : null;
 }
 
 function handleVerifyAdmin(req, res) {
-  const method = (req.method || "").toUpperCase();
+  const method = (req.method || '').toUpperCase();
 
-  if (method === "GET") {
+  if (method === 'GET') {
     try {
       const token = extractBearerToken(req.headers.authorization);
       if (!token) {
-        return res.status(401).json({ ok: false, error: "Missing token" });
+        return res.status(401).json({ ok: false, error: 'Missing token' });
       }
 
       const result = verifyAdminToken(token);
       if (!result.valid) {
         return res.status(401).json({
           ok: false,
-          error: result.error || "Invalid token",
+          error: result.error || 'Invalid token',
           expired: Boolean(result.expired),
         });
       }
@@ -145,25 +145,25 @@ function handleVerifyAdmin(req, res) {
         expiresAt: getTokenExpiresAt(result.payload),
       });
     } catch (err) {
-      console.error("Admin token verification error", err);
-      return res.status(500).json({ ok: false, error: "Server error" });
+      console.error('Admin token verification error', err);
+      return res.status(500).json({ ok: false, error: 'Server error' });
     }
   }
 
-  if (method === "POST") {
+  if (method === 'POST') {
     let password;
     try {
       password =
         req.body?.password ||
-        (typeof req.body === "string"
-          ? JSON.parse(req.body || "{}").password
+        (typeof req.body === 'string'
+          ? JSON.parse(req.body || '{}').password
           : undefined);
     } catch {
-      return res.status(401).json({ ok: false, error: "Invalid password" });
+      return res.status(401).json({ ok: false, error: 'Invalid password' });
     }
 
     if (password !== process.env.EDIT_PASSWORD) {
-      return res.status(401).json({ ok: false, error: "Invalid password" });
+      return res.status(401).json({ ok: false, error: 'Invalid password' });
     }
 
     try {
@@ -174,26 +174,28 @@ function handleVerifyAdmin(req, res) {
         expiresAt: getTokenExpiresAt(payload),
       });
     } catch (err) {
-      console.error("Admin token issue error", err);
-      return res.status(500).json({ ok: false, error: "Server error" });
+      console.error('Admin token issue error', err);
+      return res.status(500).json({ ok: false, error: 'Server error' });
     }
   }
 
-  res.setHeader("Allow", ["GET", "POST"]);
-  return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  res.setHeader('Allow', ['GET', 'POST']);
+  return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
 }
 
 module.exports = async function handler(req, res) {
-  const action = String(req.query?.action || "").trim().toLowerCase();
+  const action = String(req.query?.action || '')
+    .trim()
+    .toLowerCase();
 
   if (!ALLOWED_ACTIONS.includes(action)) {
     return res.status(400).json({
-      error: "Unknown admin action",
+      error: 'Unknown admin action',
       allowedActions: ALLOWED_ACTIONS,
     });
   }
 
-  if (action === "env") {
+  if (action === 'env') {
     return handleEnv(req, res);
   }
 

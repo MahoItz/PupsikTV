@@ -1,28 +1,31 @@
-const { createClient } = require("@supabase/supabase-js");
-const { createHash } = require("node:crypto");
-const { extractBearerToken, verifyAdminToken } = require("../lib/admin-session.js");
+const { createClient } = require('@supabase/supabase-js');
+const { createHash } = require('node:crypto');
+const {
+  extractBearerToken,
+  verifyAdminToken,
+} = require('../lib/admin-session.js');
 
-const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const TABLE_NAME = "admin_player_history";
+const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
+const TABLE_NAME = 'admin_player_history';
 const MAX_PLAYER_HISTORY = 15;
-const HISTORY_CACHE_CONTROL = "private, max-age=30, must-revalidate";
+const HISTORY_CACHE_CONTROL = 'private, max-age=30, must-revalidate';
 
 function createHistoryEtag(rows) {
   const payload = (Array.isArray(rows) ? rows : [])
-    .map((row) => `${row?.kp_id || ""}:${row?.created_at || ""}`)
-    .join("|");
+    .map((row) => `${row?.kp_id || ''}:${row?.created_at || ''}`)
+    .join('|');
 
-  const hash = createHash("sha1").update(payload).digest("hex");
+  const hash = createHash('sha1').update(payload).digest('hex');
   return `"${hash}"`;
 }
 
 function normalizeEtag(value) {
-  if (typeof value !== "string") return "";
+  if (typeof value !== 'string') return '';
   return value.trim();
 }
 
 function parseYear(value) {
-  if (value === null || value === undefined || value === "") return null;
+  if (value === null || value === undefined || value === '') return null;
   const year = Number.parseInt(value, 10);
   if (!Number.isFinite(year)) return null;
   return year;
@@ -34,9 +37,9 @@ function normalizeRowPayload(payload) {
 
   return {
     kp_id: kpId,
-    title: String(payload?.title || "Без названия").slice(0, 500),
+    title: String(payload?.title || 'Без названия').slice(0, 500),
     year: parseYear(payload?.year),
-    poster: typeof payload?.poster === "string" ? payload.poster : null,
+    poster: typeof payload?.poster === 'string' ? payload.poster : null,
     created_at: new Date().toISOString(),
   };
 }
@@ -44,7 +47,7 @@ function normalizeRowPayload(payload) {
 function createSupabaseClient() {
   const supabaseKey = process.env.SUPABASE_KEY;
   if (!supabaseKey) {
-    throw new Error("Missing SUPABASE_KEY");
+    throw new Error('Missing SUPABASE_KEY');
   }
 
   return createClient(SUPABASE_URL, supabaseKey, {
@@ -55,7 +58,7 @@ function createSupabaseClient() {
 function verifyAdminRequest(req) {
   const token = extractBearerToken(req.headers.authorization);
   if (!token) {
-    return { ok: false, status: 401, error: "Missing token" };
+    return { ok: false, status: 401, error: 'Missing token' };
   }
 
   const verification = verifyAdminToken(token);
@@ -63,7 +66,7 @@ function verifyAdminRequest(req) {
     return {
       ok: false,
       status: 401,
-      error: verification.error || "Invalid token",
+      error: verification.error || 'Invalid token',
       expired: Boolean(verification.expired),
     };
   }
@@ -74,21 +77,21 @@ function verifyAdminRequest(req) {
 async function getHistory(supabase, req, res) {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select("created_at, kp_id, title, year, poster")
-    .order("created_at", { ascending: false })
+    .select('created_at, kp_id, title, year, poster')
+    .order('created_at', { ascending: false })
     .limit(MAX_PLAYER_HISTORY);
 
   if (error) {
-    console.error("Failed to load admin player history", error);
-    return res.status(500).json({ error: "Failed to load history" });
+    console.error('Failed to load admin player history', error);
+    return res.status(500).json({ error: 'Failed to load history' });
   }
 
   const items = data || [];
   const etag = createHistoryEtag(items);
-  const requestEtag = normalizeEtag(req.headers["if-none-match"]);
+  const requestEtag = normalizeEtag(req.headers['if-none-match']);
 
-  res.setHeader("Cache-Control", HISTORY_CACHE_CONTROL);
-  res.setHeader("ETag", etag);
+  res.setHeader('Cache-Control', HISTORY_CACHE_CONTROL);
+  res.setHeader('ETag', etag);
 
   if (requestEtag && requestEtag === etag) {
     return res.status(304).end();
@@ -99,27 +102,27 @@ async function getHistory(supabase, req, res) {
 
 async function saveHistoryItem(supabase, req, res) {
   let payload = req.body;
-  if (typeof payload === "string") {
+  if (typeof payload === 'string') {
     try {
-      payload = JSON.parse(payload || "{}");
+      payload = JSON.parse(payload || '{}');
     } catch {
-      return res.status(400).json({ error: "Invalid JSON" });
+      return res.status(400).json({ error: 'Invalid JSON' });
     }
   }
 
   const normalized = normalizeRowPayload(payload || {});
   if (!normalized) {
-    return res.status(400).json({ error: "Invalid kp_id" });
+    return res.status(400).json({ error: 'Invalid kp_id' });
   }
 
   const { error: deleteError } = await supabase
     .from(TABLE_NAME)
     .delete()
-    .eq("kp_id", normalized.kp_id);
+    .eq('kp_id', normalized.kp_id);
 
   if (deleteError) {
-    console.error("Failed to dedupe admin player history", deleteError);
-    return res.status(500).json({ error: "Failed to save history" });
+    console.error('Failed to dedupe admin player history', deleteError);
+    return res.status(500).json({ error: 'Failed to save history' });
   }
 
   const { error: insertError } = await supabase
@@ -127,19 +130,19 @@ async function saveHistoryItem(supabase, req, res) {
     .insert(normalized);
 
   if (insertError) {
-    console.error("Failed to insert admin player history", insertError);
-    return res.status(500).json({ error: "Failed to save history" });
+    console.error('Failed to insert admin player history', insertError);
+    return res.status(500).json({ error: 'Failed to save history' });
   }
 
   const { data: tailRows, error: tailError } = await supabase
     .from(TABLE_NAME)
-    .select("created_at")
-    .order("created_at", { ascending: false })
+    .select('created_at')
+    .order('created_at', { ascending: false })
     .range(MAX_PLAYER_HISTORY, MAX_PLAYER_HISTORY + 1000);
 
   if (tailError) {
-    console.error("Failed to trim admin player history", tailError);
-    return res.status(500).json({ error: "Failed to save history" });
+    console.error('Failed to trim admin player history', tailError);
+    return res.status(500).json({ error: 'Failed to save history' });
   }
 
   if (Array.isArray(tailRows) && tailRows.length) {
@@ -147,11 +150,14 @@ async function saveHistoryItem(supabase, req, res) {
     const { error: trimError } = await supabase
       .from(TABLE_NAME)
       .delete()
-      .lte("created_at", cutoffCreatedAt);
+      .lte('created_at', cutoffCreatedAt);
 
     if (trimError) {
-      console.error("Failed to delete old admin player history rows", trimError);
-      return res.status(500).json({ error: "Failed to save history" });
+      console.error(
+        'Failed to delete old admin player history rows',
+        trimError
+      );
+      return res.status(500).json({ error: 'Failed to save history' });
     }
   }
 
@@ -159,47 +165,52 @@ async function saveHistoryItem(supabase, req, res) {
 }
 
 async function handler(req, res) {
-  const method = (req.method || "").toUpperCase();
-  if (!["GET", "POST", "DELETE"].includes(method)) {
-    res.setHeader("Allow", ["GET", "POST", "DELETE"]);
-    return res.status(405).json({ error: "Method Not Allowed" });
+  const method = (req.method || '').toUpperCase();
+  if (!['GET', 'POST', 'DELETE'].includes(method)) {
+    res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   let access;
   try {
     access = verifyAdminRequest(req);
   } catch (error) {
-    console.error("Failed to verify admin request", error);
-    return res.status(500).json({ error: "Server error" });
+    console.error('Failed to verify admin request', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 
   if (!access.ok) {
-    return res.status(access.status).json({ error: access.error, expired: access.expired || false });
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
   }
 
   let supabase;
   try {
     supabase = createSupabaseClient();
   } catch (error) {
-    console.error("Supabase configuration error", error);
-    return res.status(500).json({ error: "Server configuration error" });
+    console.error('Supabase configuration error', error);
+    return res.status(500).json({ error: 'Server configuration error' });
   }
 
-  if (method === "GET") {
+  if (method === 'GET') {
     return getHistory(supabase, req, res);
   }
 
-  if (method === "DELETE") {
+  if (method === 'DELETE') {
     const rawId = req.query?.kp_id ?? req.body?.kp_id;
     const kpId = Number.parseInt(rawId, 10);
     if (!Number.isFinite(kpId)) {
-      return res.status(400).json({ error: "Invalid kp_id" });
+      return res.status(400).json({ error: 'Invalid kp_id' });
     }
 
-    const { error } = await supabase.from(TABLE_NAME).delete().eq("kp_id", kpId);
+    const { error } = await supabase
+      .from(TABLE_NAME)
+      .delete()
+      .eq('kp_id', kpId);
     if (error) {
-      console.error("Failed to delete admin player history row", error);
-      return res.status(500).json({ error: "Failed to delete history item" });
+      console.error('Failed to delete admin player history row', error);
+      return res.status(500).json({ error: 'Failed to delete history item' });
     }
 
     return getHistory(supabase, req, res);

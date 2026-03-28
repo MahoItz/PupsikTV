@@ -1,14 +1,14 @@
-const { createClient } = require("@supabase/supabase-js");
+const { createClient } = require('@supabase/supabase-js');
 
-const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const RATINGS_TABLE = "ratings";
-const MOVIES_TABLE = "movies";
+const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
+const RATINGS_TABLE = 'ratings';
+const MOVIES_TABLE = 'movies';
 
 function createSupabaseClient() {
   const supabaseKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
   if (!supabaseKey) {
-    throw new Error("Missing SUPABASE key");
+    throw new Error('Missing SUPABASE key');
   }
 
   return createClient(SUPABASE_URL, supabaseKey, {
@@ -18,8 +18,8 @@ function createSupabaseClient() {
 
 function parseBody(req) {
   if (!req.body) return {};
-  if (typeof req.body === "string") {
-    return JSON.parse(req.body || "{}");
+  if (typeof req.body === 'string') {
+    return JSON.parse(req.body || '{}');
   }
   return req.body;
 }
@@ -37,31 +37,40 @@ function parseRating(value) {
 }
 
 function normalizeUserId(value) {
-  const userId = String(value || "").trim().slice(0, 255);
+  const userId = String(value || '')
+    .trim()
+    .slice(0, 255);
   return userId || null;
 }
 
 function normalizeTitle(value) {
-  const title = String(value || "").trim().slice(0, 500);
+  const title = String(value || '')
+    .trim()
+    .slice(0, 500);
   return title || null;
 }
 
 function normalizeTargetType(value) {
-  const normalized = String(value || "").trim().toLowerCase();
-  return normalized === "order" ? "order" : "movie";
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase();
+  return normalized === 'order' ? 'order' : 'movie';
 }
 
 async function recalculateMovieRatings(supabase, movieId) {
   const { data, error } = await supabase
     .from(RATINGS_TABLE)
-    .select("rating")
-    .eq("movie_id", movieId)
-    .eq("category", "Movie");
+    .select('rating')
+    .eq('movie_id', movieId)
+    .eq('category', 'Movie');
 
   if (error) throw error;
 
   const rows = Array.isArray(data) ? data : [];
-  const ratingSum = rows.reduce((sum, row) => sum + Number(row?.rating || 0), 0);
+  const ratingSum = rows.reduce(
+    (sum, row) => sum + Number(row?.rating || 0),
+    0
+  );
   const ratingCount = rows.length;
 
   const { data: updated, error: updateError } = await supabase
@@ -70,8 +79,8 @@ async function recalculateMovieRatings(supabase, movieId) {
       rating_sum: ratingSum,
       rating_count: ratingCount,
     })
-    .eq("id", movieId)
-    .select("id, rating_sum, rating_count")
+    .eq('id', movieId)
+    .select('id, rating_sum, rating_count')
     .single();
 
   if (updateError) throw updateError;
@@ -79,17 +88,17 @@ async function recalculateMovieRatings(supabase, movieId) {
 }
 
 async function handler(req, res) {
-  const method = (req.method || "").toUpperCase();
-  if (method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: "Method Not Allowed" });
+  const method = (req.method || '').toUpperCase();
+  if (method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   let payload;
   try {
     payload = parseBody(req);
   } catch {
-    return res.status(400).json({ error: "Invalid JSON" });
+    return res.status(400).json({ error: 'Invalid JSON' });
   }
 
   const targetId = parseTargetId(payload?.target_id);
@@ -97,27 +106,27 @@ async function handler(req, res) {
   const userId = normalizeUserId(payload?.user_id);
   const title = normalizeTitle(payload?.title);
   const targetType = normalizeTargetType(payload?.target_type);
-  const category = targetType === "order" ? "MovieOrder" : "Movie";
+  const category = targetType === 'order' ? 'MovieOrder' : 'Movie';
 
   if (!targetId || rating === null || !userId) {
-    return res.status(400).json({ error: "Invalid payload" });
+    return res.status(400).json({ error: 'Invalid payload' });
   }
 
   let supabase;
   try {
     supabase = createSupabaseClient();
   } catch (error) {
-    console.error("Supabase configuration error", error);
-    return res.status(500).json({ error: "Server configuration error" });
+    console.error('Supabase configuration error', error);
+    return res.status(500).json({ error: 'Server configuration error' });
   }
 
   try {
     const { data: existingRating, error: existingError } = await supabase
       .from(RATINGS_TABLE)
-      .select("id")
-      .eq("movie_id", targetId)
-      .eq("category", category)
-      .eq("user_id", userId)
+      .select('id')
+      .eq('movie_id', targetId)
+      .eq('category', category)
+      .eq('user_id', userId)
       .maybeSingle();
 
     if (existingError) throw existingError;
@@ -129,14 +138,14 @@ async function handler(req, res) {
           rating,
           title,
         })
-        .eq("id", existingRating.id);
+        .eq('id', existingRating.id);
 
       if (updateError) throw updateError;
     } else {
       const { error: insertError } = await supabase.from(RATINGS_TABLE).insert({
         movie_id: targetId,
         rating,
-        source: "user",
+        source: 'user',
         category,
         title,
         user_id: userId,
@@ -145,7 +154,7 @@ async function handler(req, res) {
       if (insertError) throw insertError;
     }
 
-    if (targetType === "movie") {
+    if (targetType === 'movie') {
       const movie = await recalculateMovieRatings(supabase, targetId);
       return res.status(200).json({
         ok: true,
@@ -159,8 +168,8 @@ async function handler(req, res) {
       updatedExisting: Boolean(existingRating?.id),
     });
   } catch (error) {
-    console.error("Failed to submit movie rating", error);
-    return res.status(500).json({ error: "Failed to submit movie rating" });
+    console.error('Failed to submit movie rating', error);
+    return res.status(500).json({ error: 'Failed to submit movie rating' });
   }
 }
 

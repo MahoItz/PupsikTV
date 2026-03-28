@@ -757,12 +757,6 @@ body.order-player-fullscreen #orderPlayerModal .modal-content {
     display: flex;
     flex-direction: column;
     gap: 6px;
-}
-
-#movieDetailsModal .movie-details-meta,
-#gameDetailsModal .movie-details-meta,
-#orderDetailsModal .movie-details-meta,
-#gameOrderDetailsModal .movie-details-meta {
     padding: 10px 12px;
     border-radius: 12px;
     background: rgba(12, 18, 30, 0.55);
@@ -912,17 +906,14 @@ body.order-player-fullscreen #orderPlayerModal .modal-content {
 
 .details-edit-input[type="number"] {
     width: 80px;
+    appearance: textfield;
+    -moz-appearance: textfield;
 }
 
 .details-edit-input[type="number"]::-webkit-outer-spin-button,
 .details-edit-input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
-}
-
-.details-edit-input[type="number"] {
-    appearance: textfield;
-    -moz-appearance: textfield;
 }
 
 .details-edit-input:focus,

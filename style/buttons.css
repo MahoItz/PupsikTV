@@ -1,7 +1,6 @@
 /* Кнопки */
 .btn {
     padding: 14px 28px;
-    border: none;
     border-radius: var(--border-radius-small);
     cursor: pointer;
     font-weight: 700;

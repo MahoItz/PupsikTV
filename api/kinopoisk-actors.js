@@ -1,19 +1,22 @@
-const { createClient } = require("@supabase/supabase-js");
-const { extractBearerToken, verifyAdminToken } = require("../lib/admin-session.js");
+const { createClient } = require('@supabase/supabase-js');
+const {
+  extractBearerToken,
+  verifyAdminToken,
+} = require('../lib/admin-session.js');
 
-const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const TABLE_NAME = "kinopoisk_actors";
+const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
+const TABLE_NAME = 'kinopoisk_actors';
 const SELECT_FIELDS =
-  "id, kinopoisk_film_id, staff_id, actor_name, poster_url, profession_text, created_at, updated_at";
-const ALLOWED_METHODS = ["GET", "POST"];
-const PG_UNDEFINED_TABLE = "42P01";
-const PG_INSUFFICIENT_PRIVILEGE = "42501";
+  'id, kinopoisk_film_id, staff_id, actor_name, poster_url, profession_text, created_at, updated_at';
+const ALLOWED_METHODS = ['GET', 'POST'];
+const PG_UNDEFINED_TABLE = '42P01';
+const PG_INSUFFICIENT_PRIVILEGE = '42501';
 
 function createSupabaseClient() {
   const supabaseKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
   if (!supabaseKey) {
-    throw new Error("Missing SUPABASE key");
+    throw new Error('Missing SUPABASE key');
   }
 
   return createClient(SUPABASE_URL, supabaseKey, {
@@ -24,7 +27,7 @@ function createSupabaseClient() {
 function verifyAdminRequest(req) {
   const token = extractBearerToken(req.headers.authorization);
   if (!token) {
-    return { ok: false, status: 401, error: "Missing token" };
+    return { ok: false, status: 401, error: 'Missing token' };
   }
 
   const verification = verifyAdminToken(token);
@@ -32,7 +35,7 @@ function verifyAdminRequest(req) {
     return {
       ok: false,
       status: 401,
-      error: verification.error || "Invalid token",
+      error: verification.error || 'Invalid token',
     };
   }
 
@@ -46,33 +49,37 @@ function parseFilmId(value) {
 
 function parseBody(req) {
   if (!req.body) return {};
-  if (typeof req.body === "string") {
-    return JSON.parse(req.body || "{}");
+  if (typeof req.body === 'string') {
+    return JSON.parse(req.body || '{}');
   }
   return req.body;
 }
 
 function normalizeString(value, maxLength) {
-  return String(value || "").trim().slice(0, maxLength);
+  return String(value || '')
+    .trim()
+    .slice(0, maxLength);
 }
 
 function isMissingTableError(error) {
-  return String(error?.code || "") === PG_UNDEFINED_TABLE;
+  return String(error?.code || '') === PG_UNDEFINED_TABLE;
 }
 
 function isPermissionError(error) {
-  return String(error?.code || "") === PG_INSUFFICIENT_PRIVILEGE;
+  return String(error?.code || '') === PG_INSUFFICIENT_PRIVILEGE;
 }
 
 function isActorRole(person) {
-  const key = String(person?.professionKey || "").trim().toUpperCase();
-  if (key === "ACTOR") return true;
-  const text = String(
-    person?.professionText || person?.profession_text || ""
-  )
+  const key = String(person?.professionKey || '')
+    .trim()
+    .toUpperCase();
+  if (key === 'ACTOR') return true;
+  const text = String(person?.professionText || person?.profession_text || '')
     .trim()
     .toLowerCase();
-  return text.includes("актер") || text.includes("актёр") || text.includes("actor");
+  return (
+    text.includes('актер') || text.includes('актёр') || text.includes('actor')
+  );
 }
 
 function normalizeActorRows(filmId, staff) {
@@ -121,32 +128,32 @@ function normalizeActorRows(filmId, staff) {
 async function listActors(supabase, req, res) {
   const filmId = parseFilmId(req.query?.filmId);
   if (!Number.isFinite(filmId)) {
-    return res.status(400).json({ error: "filmId is required" });
+    return res.status(400).json({ error: 'filmId is required' });
   }
 
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select(SELECT_FIELDS)
-    .eq("kinopoisk_film_id", filmId)
-    .order("actor_name", { ascending: true });
+    .eq('kinopoisk_film_id', filmId)
+    .order('actor_name', { ascending: true });
 
   if (error) {
-    console.error("Failed to load Kinopoisk actors", error);
+    console.error('Failed to load Kinopoisk actors', error);
     if (isMissingTableError(error)) {
       return res.status(200).json({
         items: [],
         setupRequired: true,
         message:
-          "Таблица kinopoisk_actors ещё не создана. Примените SQL-миграцию для фото актёров.",
+          'Таблица kinopoisk_actors ещё не создана. Примените SQL-миграцию для фото актёров.',
       });
     }
     if (isPermissionError(error)) {
       return res.status(500).json({
         error:
-          "Недостаточно прав для чтения kinopoisk_actors. Для server API нужен SUPABASE_SERVICE_ROLE_KEY либо отдельные RLS policy.",
+          'Недостаточно прав для чтения kinopoisk_actors. Для server API нужен SUPABASE_SERVICE_ROLE_KEY либо отдельные RLS policy.',
       });
     }
-    return res.status(500).json({ error: "Failed to load actors" });
+    return res.status(500).json({ error: 'Failed to load actors' });
   }
 
   return res.status(200).json({ items: data || [] });
@@ -162,14 +169,14 @@ async function saveActors(supabase, req, res) {
   try {
     payload = parseBody(req);
   } catch {
-    return res.status(400).json({ error: "Invalid JSON" });
+    return res.status(400).json({ error: 'Invalid JSON' });
   }
 
   const filmId = parseFilmId(payload?.filmId);
   const rows = normalizeActorRows(filmId, payload?.staff);
 
   if (!Number.isFinite(filmId)) {
-    return res.status(400).json({ error: "filmId is required" });
+    return res.status(400).json({ error: 'filmId is required' });
   }
 
   if (!rows.length) {
@@ -179,26 +186,26 @@ async function saveActors(supabase, req, res) {
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .upsert(rows, {
-      onConflict: "kinopoisk_film_id,staff_id",
+      onConflict: 'kinopoisk_film_id,staff_id',
       ignoreDuplicates: false,
     })
     .select(SELECT_FIELDS);
 
   if (error) {
-    console.error("Failed to save Kinopoisk actors", error);
+    console.error('Failed to save Kinopoisk actors', error);
     if (isMissingTableError(error)) {
       return res.status(500).json({
         error:
-          "Таблица kinopoisk_actors ещё не создана. Примените SQL-миграцию для фото актёров.",
+          'Таблица kinopoisk_actors ещё не создана. Примените SQL-миграцию для фото актёров.',
       });
     }
     if (isPermissionError(error)) {
       return res.status(500).json({
         error:
-          "Недостаточно прав для записи в kinopoisk_actors. Добавьте SUPABASE_SERVICE_ROLE_KEY в серверные env либо настройте RLS policy.",
+          'Недостаточно прав для записи в kinopoisk_actors. Добавьте SUPABASE_SERVICE_ROLE_KEY в серверные env либо настройте RLS policy.',
       });
     }
-    return res.status(500).json({ error: "Failed to save actors" });
+    return res.status(500).json({ error: 'Failed to save actors' });
   }
 
   return res.status(200).json({ items: data || rows });
@@ -206,19 +213,19 @@ async function saveActors(supabase, req, res) {
 
 module.exports = async function handler(req, res) {
   if (!ALLOWED_METHODS.includes(req.method)) {
-    res.setHeader("Allow", ALLOWED_METHODS.join(", "));
-    return res.status(405).json({ error: "Method not allowed" });
+    res.setHeader('Allow', ALLOWED_METHODS.join(', '));
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   let supabase;
   try {
     supabase = createSupabaseClient();
   } catch (error) {
-    console.error("Failed to initialize Supabase client", error);
-    return res.status(500).json({ error: "Supabase is not configured" });
+    console.error('Failed to initialize Supabase client', error);
+    return res.status(500).json({ error: 'Supabase is not configured' });
   }
 
-  if (req.method === "GET") {
+  if (req.method === 'GET') {
     return listActors(supabase, req, res);
   }
 

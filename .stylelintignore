@@ -1,0 +1,9 @@
+node_modules/
+.git/
+.venv/
+.vercel/
+images/
+Music/
+Video/
+imdb_service/
+supabase/

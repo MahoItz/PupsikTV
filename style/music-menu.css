@@ -126,9 +126,6 @@
 .top-left-actions__menu .rules-panel-toggle,
 .top-left-actions__menu .channel-stats-link,
 .top-left-actions__menu .admin-player-link {
-    position: static;
-    top: auto;
-    left: auto;
     width: 100%;
     height: 44px;
     padding: 0 10px;
@@ -458,20 +455,14 @@
 }
 
 .music-menu.collapsed .fortune-wheel-card__content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: relative;
-    min-height: 100%;
-    padding: 0;
-}
-
-.music-menu.collapsed .fortune-wheel-card__header {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+    height: 100%;
+    min-height: 100%;
+    padding: clamp(8px, calc(var(--music-menu-visible-width) / 10), 18px);
 }
 
 .music-menu.collapsed .fortune-wheel-card__header .fortune-spin-settings,
@@ -545,16 +536,6 @@
     background: linear-gradient(180deg, rgba(7, 11, 25, 0.08) 0%, rgba(7, 11, 25, 0.82) 65%, rgba(7, 11, 25, 0.92) 100%);
     box-shadow: none;
     z-index: 5;
-}
-
-.music-menu.collapsed .fortune-wheel-card__content {
-    position: relative;
-    display: flex;
-    align-items: stretch;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: clamp(8px, calc(var(--music-menu-visible-width) / 10), 18px);
 }
 
 .music-menu.collapsed .fortune-wheel-card__header {
@@ -2444,7 +2425,7 @@
 
 .fortune-items-link-icon {
     width: 28px;
-    height: 28x;
+    height: 28px;
     object-fit: contain;
     display: block;
     pointer-events: none;
