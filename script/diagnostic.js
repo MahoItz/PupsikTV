@@ -13,6 +13,8 @@ class DiagnosticManager {
         this.longTasks = [];
         this.startTime = performance.now();
         this.revertTimer = null;
+        this.reportingFrameId = null;
+        this.performanceObserver = null;
         this.metrics = {
             fps: null,
             frameTime: null,
@@ -28,8 +30,6 @@ class DiagnosticManager {
     init() {
         this.createPanel();
         this.setupEventListeners();
-        this.setupPerformanceObserver();
-        this.startReporting();
         this.restoreSettings();
     }
 
@@ -143,19 +143,32 @@ class DiagnosticManager {
         });
     }
 
-    setupPerformanceObserver() {
+    startPerformanceObserver() {
+        if (this.performanceObserver) {
+            return;
+        }
+
         try {
-            const observer = new PerformanceObserver((list) => {
+            this.performanceObserver = new PerformanceObserver((list) => {
                 for (const entry of list.getEntries()) {
                     if (entry.entryType === 'longtask') {
                         this.addLongTask(entry);
                     }
                 }
             });
-            observer.observe({ entryTypes: ['longtask'] });
+            this.performanceObserver.observe({ entryTypes: ['longtask'] });
         } catch (e) {
             console.warn('PerformanceObserver longtask not supported');
         }
+    }
+
+    stopPerformanceObserver() {
+        if (!this.performanceObserver) {
+            return;
+        }
+
+        this.performanceObserver.disconnect();
+        this.performanceObserver = null;
     }
 
     addLongTask(entry) {
@@ -181,7 +194,16 @@ class DiagnosticManager {
     }
 
     startReporting() {
+        if (this.reportingFrameId !== null) {
+            return;
+        }
+
         const update = () => {
+            if (!this.isOpen) {
+                this.reportingFrameId = null;
+                return;
+            }
+
             const now = performance.now();
             this.frames++;
             
@@ -196,10 +218,33 @@ class DiagnosticManager {
             this.lastFrameTime = now;
 
             if (this.isOpen) {
-                requestAnimationFrame(update);
+                this.reportingFrameId = requestAnimationFrame(update);
             }
         };
-        requestAnimationFrame(update);
+
+        this.lastFrameTime = performance.now();
+        this.lastFpsUpdate = this.lastFrameTime;
+        this.frames = 0;
+        this.reportingFrameId = requestAnimationFrame(update);
+    }
+
+    stopReporting() {
+        if (this.reportingFrameId === null) {
+            return;
+        }
+
+        cancelAnimationFrame(this.reportingFrameId);
+        this.reportingFrameId = null;
+    }
+
+    startMonitoring() {
+        this.startPerformanceObserver();
+        this.startReporting();
+    }
+
+    stopMonitoring() {
+        this.stopReporting();
+        this.stopPerformanceObserver();
     }
 
     updateUI() {
@@ -288,7 +333,10 @@ class DiagnosticManager {
         this.panel.classList.toggle('visible', this.isOpen);
         document.getElementById('diagnosticToggleButton')?.classList.toggle('active', this.isOpen);
         if (this.isOpen) {
-            this.startReporting();
+            this.startMonitoring();
+            this.updateUI();
+        } else {
+            this.stopMonitoring();
         }
     }
 
@@ -423,7 +471,19 @@ class DiagnosticManager {
     }
 }
 
-// Initialize when ready
-window.addEventListener('load', () => {
-    window.diagnosticManager = new DiagnosticManager();
-});
+function initDiagnosticManagerOnDemand() {
+    const toggleButton = document.getElementById('diagnosticToggleButton');
+    if (!toggleButton) {
+        return;
+    }
+
+    toggleButton.addEventListener('click', () => {
+        if (!window.diagnosticManager) {
+            window.diagnosticManager = new DiagnosticManager();
+            window.diagnosticManager.toggle();
+        }
+    }, { once: true });
+}
+
+// Lazy init: diagnostics should not start in production path until explicitly requested.
+window.addEventListener('load', initDiagnosticManagerOnDemand);
