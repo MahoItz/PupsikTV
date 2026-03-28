@@ -114,12 +114,12 @@ const fortuneSuggestionsState = {
   lastFetch: 0,
   dropdownOpen: false,
   signature: null,
-  supabaseWaitPromise: null,
   initialized: false,
   pendingIds: new Set(),
   highlightIds: null,
   notifyNewItems: false,
 };
+const supabaseClientWaitPromises = new Map();
 let fortuneSuggestionsSupabaseErrorLogged = false;
 let fortuneWheelApi = null;
 let rulesPanelManuallyCollapsed = false;
@@ -412,12 +412,23 @@ function refreshFortuneBanwordHighlights() {
   }
 }
 
-function waitForSupabaseClient(timeoutMs = 10000) {
+function waitForSupabaseClient(options = {}) {
+  const timeoutMs =
+    typeof options === "number" ? options : Number(options?.timeoutMs) || 10000;
+  const reuseKey =
+    typeof options === "object" && options?.reuseKey
+      ? String(options.reuseKey)
+      : null;
+
   if (supabaseClient && typeof supabaseClient.from === "function") {
     return Promise.resolve(supabaseClient);
   }
 
-  return new Promise((resolve, reject) => {
+  if (reuseKey && supabaseClientWaitPromises.has(reuseKey)) {
+    return supabaseClientWaitPromises.get(reuseKey);
+  }
+
+  const waitPromise = new Promise((resolve, reject) => {
     const startedAt = Date.now();
 
     const attempt = () => {
@@ -435,6 +446,18 @@ function waitForSupabaseClient(timeoutMs = 10000) {
     };
 
     attempt();
+  });
+
+  if (!reuseKey) {
+    return waitPromise;
+  }
+
+  supabaseClientWaitPromises.set(reuseKey, waitPromise);
+
+  return waitPromise.finally(() => {
+    if (supabaseClientWaitPromises.get(reuseKey) === waitPromise) {
+      supabaseClientWaitPromises.delete(reuseKey);
+    }
   });
 }
 
@@ -643,38 +666,6 @@ if (collapseRulesPanel) {
     rulesPanelStandaloneOpen = false;
     updateRulesPanelState();
   });
-}
-
-function waitForSupabaseClientForSuggestions() {
-  if (supabaseClient && typeof supabaseClient.from === "function") {
-    return Promise.resolve(supabaseClient);
-  }
-
-  if (fortuneSuggestionsState.supabaseWaitPromise) {
-    return fortuneSuggestionsState.supabaseWaitPromise;
-  }
-
-  fortuneSuggestionsState.supabaseWaitPromise = new Promise(
-    (resolve, reject) => {
-      const startedAt = Date.now();
-      const attempt = () => {
-        if (supabaseClient && typeof supabaseClient.from === "function") {
-          fortuneSuggestionsState.supabaseWaitPromise = null;
-          resolve(supabaseClient);
-          return;
-        }
-        if (Date.now() - startedAt > 10000) {
-          fortuneSuggestionsState.supabaseWaitPromise = null;
-          reject(new Error("Supabase client is not ready"));
-          return;
-        }
-        setTimeout(attempt, 150);
-      };
-      attempt();
-    }
-  );
-
-  return fortuneSuggestionsState.supabaseWaitPromise;
 }
 
 function updateFortuneSuggestionsBadge(count) {
@@ -952,7 +943,10 @@ async function fetchFortuneSuggestions(force = false) {
 
   let client;
   try {
-    client = await waitForSupabaseClientForSuggestions();
+    client = await waitForSupabaseClient({
+      timeoutMs: 10000,
+      reuseKey: "fortune-suggestions",
+    });
   } catch (err) {
     if (!fortuneSuggestionsSupabaseErrorLogged) {
       console.error(
@@ -1144,7 +1138,10 @@ async function mutateFortuneSuggestion(item, afterDelete) {
 
   let client;
   try {
-    client = await waitForSupabaseClientForSuggestions();
+    client = await waitForSupabaseClient({
+      timeoutMs: 10000,
+      reuseKey: "fortune-suggestions",
+    });
   } catch (err) {
     console.error("Supabase недоступен для удаления предложенного фильма", err);
     fortuneSuggestionsState.pendingIds.delete(id);
@@ -3728,7 +3725,10 @@ async function loadFortuneTimingsData(kinopoiskId) {
     return null;
   }
 
-  const client = await waitForSupabaseClientForSuggestions();
+  const client = await waitForSupabaseClient({
+    timeoutMs: 10000,
+    reuseKey: "fortune-suggestions",
+  });
   const { data, error } = await client
     .from("timings")
     .select("timing_text, username")
