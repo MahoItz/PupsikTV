@@ -215,10 +215,17 @@ function openUserRateModal(id) {
   }
 
   const modal = document.getElementById("userRateModal");
-  const submitButton = modal?.querySelector(".btn-rate");
+  const submitButton = document.getElementById("userRateSubmitButton");
+  const status = document.getElementById("userRateStatus");
   if (submitButton) {
     submitButton.textContent =
       existingRating !== undefined ? "Изменить" : "Оценить";
+    submitButton.disabled = false;
+    submitButton.removeAttribute("aria-busy");
+  }
+  if (status) {
+    status.textContent = "";
+    status.style.color = "";
   }
   if (modal) modal.style.display = "block";
 
@@ -244,10 +251,17 @@ function openUserRateGameModal(id) {
   }
 
   const modal = document.getElementById("userRateGameModal");
-  const submitButton = modal?.querySelector(".btn-rate");
+  const submitButton = document.getElementById("userRateGameSubmitButton");
+  const status = document.getElementById("userRateGameStatus");
   if (submitButton) {
     submitButton.textContent =
       existingRating !== null ? "Изменить" : "Оценить";
+    submitButton.disabled = false;
+    submitButton.removeAttribute("aria-busy");
+  }
+  if (status) {
+    status.textContent = "";
+    status.style.color = "";
   }
   if (modal) modal.style.display = "block";
 
@@ -2846,6 +2860,30 @@ function closeModal(modalId, shouldReset = false) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.style.display = "none";
+  }
+  if (modalId === "userRateModal") {
+    const submitButton = document.getElementById("userRateSubmitButton");
+    const status = document.getElementById("userRateStatus");
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.removeAttribute("aria-busy");
+    }
+    if (status) {
+      status.textContent = "";
+      status.style.color = "";
+    }
+  }
+  if (modalId === "userRateGameModal") {
+    const submitButton = document.getElementById("userRateGameSubmitButton");
+    const status = document.getElementById("userRateGameStatus");
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.removeAttribute("aria-busy");
+    }
+    if (status) {
+      status.textContent = "";
+      status.style.color = "";
+    }
   }
   if (modalId === "duplicateModal") {
     resetDuplicateModalState();

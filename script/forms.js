@@ -1329,24 +1329,44 @@ async function submitUserGameRating() {
 }
 
 // Редактирование фильма
+function setUserRateStatus(elementId, message, isError = false) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  element.textContent = message || "";
+  element.style.color = isError ? "#ffbcbc" : "";
+}
+
+function setUserRateSubmitState(buttonId, isBusy) {
+  const button = document.getElementById(buttonId);
+  if (!button) return;
+  button.disabled = Boolean(isBusy);
+  if (isBusy) {
+    button.setAttribute("aria-busy", "true");
+  } else {
+    button.removeAttribute("aria-busy");
+  }
+}
+
 async function submitUserMovieRating() {
   if (isSubmittingUserRating) return;
-  isSubmittingUserRating = true;
 
+  const input = document.getElementById("userRateInput");
   const rating = getRatingValue("userRateInput");
   if (!isRatingValid(rating)) {
-    alert("Неверная оценка");
-    document.getElementById("userRateInput").reportValidity();
-    isSubmittingUserRating = false;
+    setUserRateStatus("userRateStatus", "Введите корректную оценку от 0 до 11.", true);
+    input?.reportValidity();
     return;
   }
 
   if (!userRatingMovieId) {
-    isSubmittingUserRating = false;
     return;
   }
 
   const movie = allMovies.find((m) => m.id === userRatingMovieId);
+
+  isSubmittingUserRating = true;
+  setUserRateSubmitState("userRateSubmitButton", true);
+  setUserRateStatus("userRateStatus", "Сохраняем оценку...");
 
   try {
     const response = await fetch("/api/movie-ratings", {
@@ -1380,23 +1400,29 @@ async function submitUserMovieRating() {
 
     rememberRatedMovie(movie || userRatingMovieId, rating);
     renderMovies();
+    closeModal("userRateModal", true);
+    userRatingMovieId = null;
   } catch (err) {
     console.error("Error submitting user rating", err);
-    alert(err?.message || "Не удалось сохранить оценку");
+    setUserRateStatus(
+      "userRateStatus",
+      err?.message || "Не удалось сохранить оценку",
+      true
+    );
   } finally {
     isSubmittingUserRating = false;
+    setUserRateSubmitState("userRateSubmitButton", false);
   }
-
-  closeModal("userRateModal", true);
-  userRatingMovieId = null;
 }
 
 async function submitUserGameRating() {
+  if (isSubmittingUserRating) return;
+
+  const input = document.getElementById("userRateGameInput");
   const rating = getRatingValue("userRateGameInput");
   if (!isRatingValid(rating)) {
-    alert("Неверная оценка");
-    const input = document.getElementById("userRateGameInput");
-    if (input) input.reportValidity();
+    setUserRateStatus("userRateGameStatus", "Введите корректную оценку от 0 до 11.", true);
+    input?.reportValidity();
     return;
   }
   if (!userRatingGameId) return;
@@ -1407,6 +1433,10 @@ async function submitUserGameRating() {
     : null;
   const currentSum = game ? Number(game.ratingSum ?? 0) || 0 : 0;
   const currentCount = game ? Number(game.ratingCount ?? 0) || 0 : 0;
+
+  isSubmittingUserRating = true;
+  setUserRateSubmitState("userRateGameSubmitButton", true);
+  setUserRateStatus("userRateGameStatus", "Сохраняем оценку...");
 
   try {
     const { data: existingRatingRow, error: selectError } = await supabaseClient
@@ -1464,12 +1494,19 @@ async function submitUserGameRating() {
     ratedGames[userRatingGameId] = rating;
     localStorage.setItem("ratedGames", JSON.stringify(ratedGames));
     renderPlayedGames();
+    closeModal("userRateGameModal", true);
+    userRatingGameId = null;
   } catch (err) {
     console.error("Error submitting user game rating", err);
-    alert(err?.message || "Не удалось сохранить оценку");
+    setUserRateStatus(
+      "userRateGameStatus",
+      err?.message || "Не удалось сохранить оценку",
+      true
+    );
+  } finally {
+    isSubmittingUserRating = false;
+    setUserRateSubmitState("userRateGameSubmitButton", false);
   }
-  closeModal("userRateGameModal", true);
-  userRatingGameId = null;
 }
 
 document

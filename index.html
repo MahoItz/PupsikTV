@@ -720,7 +720,8 @@
                     <span class="rating-star rating-label" data-rating="11">best</span>
                 </div>
             </div>
-            <button onclick="submitUserMovieRating()" class="btn btn-rate" style="width:100%;">Оценить</button>
+            <button id="userRateSubmitButton" onclick="submitUserMovieRating()" class="btn btn-rate" style="width:100%;">Оценить</button>
+            <p id="userRateStatus" class="user-rate-status" aria-live="polite"></p>
         </div>
     </div>
 
@@ -767,7 +768,8 @@
                     <span class="rating-star rating-label" data-rating="11">best</span>
                 </div>
             </div>
-            <button onclick="submitUserGameRating()" class="btn btn-rate" style="width:100%;">Оценить</button>
+            <button id="userRateGameSubmitButton" onclick="submitUserGameRating()" class="btn btn-rate" style="width:100%;">Оценить</button>
+            <p id="userRateGameStatus" class="user-rate-status" aria-live="polite"></p>
         </div>
     </div>
 
