@@ -3361,6 +3361,7 @@ function setupFormEvents() {
   const selectedMovieClear = document.getElementById("trailerSelectedMovieClear");
   const openBoostyReviewFormButton = document.getElementById("openBoostyReviewFormButton");
   const boostyReviewForm = document.getElementById("boostyReviewForm");
+  const closeBoostyReviewFormButton = document.getElementById("closeBoostyReviewFormButton");
   const boostyReviewTitleInput = document.getElementById("boostyReviewTitleInput");
   const boostyReviewUrlInput = document.getElementById("boostyReviewUrlInput");
   const boostyReviewMetaInput = document.getElementById("boostyReviewMetaInput");
@@ -3401,6 +3402,12 @@ function setupFormEvents() {
       resetBoostyReviewPreview();
       setStatusText("boostyReviewFormStatus", "");
     }
+  });
+  closeBoostyReviewFormButton?.addEventListener("click", () => {
+    if (!boostyReviewForm || boostyReviewForm.hidden) return;
+    boostyReviewForm.hidden = true;
+    resetBoostyReviewPreview();
+    setStatusText("boostyReviewFormStatus", "");
   });
 
   boostyReviewTitleInput?.addEventListener("input", renderBoostyReviewPreview);
