@@ -1,6 +1,8 @@
 const TRAILER_API_URL = "/api/trailer-watchlist";
 const TRAILER_RATINGS_API_URL = "/api/trailer-ratings";
 const BOOSTY_REVIEWS_API_URL = "/api/boosty-reviews";
+const BOOSTY_PREVIEW_API_URL = "/api/preview";
+const EXTERNAL_API_URL = "/api/external";
 const KP_API_SELECTION_URL = "/api/kp-api-selection";
 const VERIFY_ADMIN_URL = "/api/admin?action=verify-admin";
 const ENV_URL = "/api/admin?action=env";
@@ -59,6 +61,10 @@ let trailerSidebarMode = "trailers";
 let isCreatingBoostyReview = false;
 let boostyReviewPendingDeleteId = null;
 let isDeletingBoostyReview = false;
+let boostyReviewPreviewImage = "";
+let boostyReviewPreviewUrl = "";
+let boostyReviewPreviewTimer = null;
+let boostyReviewPreviewRequestId = 0;
 const trailerActorCache = new Map();
 const trailerActorPending = new Map();
 const TRAILER_RATING_MEANINGS = {
@@ -336,12 +342,27 @@ function getRenderableBoostyStreams() {
       id: item?.id,
       title: String(item?.title || "").trim(),
       href: String(item?.url || "").trim(),
-      image: String(item?.image || "").trim() || POSTER_PLACEHOLDER,
+      image: toDisplayImageUrl(String(item?.image || "").trim()) || POSTER_PLACEHOLDER,
       meta: String(item?.meta || "").trim(),
     }));
   }
 
   return getTrailerBoostyContent().streams;
+}
+
+function toDisplayImageUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "";
+
+  try {
+    const parsed = new URL(value, window.location.origin);
+    if (parsed.hostname === "images.boosty.to") {
+      return `${EXTERNAL_API_URL}?provider=poster-proxy&url=${encodeURIComponent(parsed.toString())}`;
+    }
+    return parsed.toString();
+  } catch {
+    return value;
+  }
 }
 
 function renderBoostyStreamCard(item) {
@@ -356,7 +377,7 @@ function renderBoostyStreamCard(item) {
 
   const image = document.createElement("img");
   image.className = "trailer-saved-stream-card__image";
-  image.src = item.image || POSTER_PLACEHOLDER;
+  image.src = toDisplayImageUrl(item.image) || POSTER_PLACEHOLDER;
   image.alt = item.title;
   image.loading = "lazy";
   image.onerror = () => {
@@ -403,6 +424,131 @@ function renderBoostyStreamCard(item) {
   return card;
 }
 
+function setBoostyReviewPreviewStatus(message, isError = false) {
+  const status = document.getElementById("boostyReviewPreviewStatus");
+  if (!status) return;
+  status.textContent = message || "";
+  status.style.color = isError ? "#ffbcbc" : "";
+}
+
+function renderBoostyReviewPreview() {
+  const container = document.getElementById("boostyReviewPreview");
+  const card = document.getElementById("boostyReviewPreviewCard");
+  const titleInput = document.getElementById("boostyReviewTitleInput");
+  const urlInput = document.getElementById("boostyReviewUrlInput");
+  const metaInput = document.getElementById("boostyReviewMetaInput");
+
+  if (!container || !card) return;
+
+  const title = String(titleInput?.value || "").trim();
+  const href = String(urlInput?.value || "").trim();
+  const meta = String(metaInput?.value || "").trim();
+  const hasAnyValue = Boolean(title || href || meta || boostyReviewPreviewImage);
+
+  container.hidden = !hasAnyValue;
+  card.innerHTML = "";
+
+  if (!hasAnyValue) {
+    setBoostyReviewPreviewStatus("");
+    return;
+  }
+
+  const previewCard = renderBoostyStreamCard({
+    title: title || "Название обзора",
+    href: href || "#",
+    image: boostyReviewPreviewImage || POSTER_PLACEHOLDER,
+    meta,
+  });
+
+  const link = previewCard.querySelector(".trailer-saved-stream-card__link");
+  if (link) {
+    if (href) {
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.removeAttribute("aria-disabled");
+    } else {
+      link.href = "#";
+      link.target = "_self";
+      link.removeAttribute("rel");
+      link.setAttribute("aria-disabled", "true");
+      link.addEventListener("click", (event) => event.preventDefault(), { once: true });
+    }
+  }
+
+  const removeButton = previewCard.querySelector(".trailer-saved-stream-card__delete");
+  if (removeButton) {
+    removeButton.remove();
+  }
+
+  card.appendChild(previewCard);
+}
+
+function resetBoostyReviewPreview() {
+  if (boostyReviewPreviewTimer) {
+    clearTimeout(boostyReviewPreviewTimer);
+    boostyReviewPreviewTimer = null;
+  }
+  boostyReviewPreviewImage = "";
+  boostyReviewPreviewUrl = "";
+  boostyReviewPreviewRequestId += 1;
+  renderBoostyReviewPreview();
+  setBoostyReviewPreviewStatus("");
+}
+
+function scheduleBoostyReviewPreviewUpdate() {
+  const urlInput = document.getElementById("boostyReviewUrlInput");
+  const url = String(urlInput?.value || "").trim();
+
+  renderBoostyReviewPreview();
+
+  if (boostyReviewPreviewTimer) {
+    clearTimeout(boostyReviewPreviewTimer);
+    boostyReviewPreviewTimer = null;
+  }
+
+  if (!url) {
+    boostyReviewPreviewImage = "";
+    boostyReviewPreviewUrl = "";
+    renderBoostyReviewPreview();
+    setBoostyReviewPreviewStatus("");
+    return;
+  }
+
+  const requestId = ++boostyReviewPreviewRequestId;
+  setBoostyReviewPreviewStatus("Загружаю превью...");
+
+  boostyReviewPreviewTimer = setTimeout(async () => {
+    try {
+      const image = await fetchBoostyPreviewImage(url);
+      if (requestId !== boostyReviewPreviewRequestId) {
+        return;
+      }
+      boostyReviewPreviewImage = image;
+      boostyReviewPreviewUrl = url;
+      renderBoostyReviewPreview();
+      setBoostyReviewPreviewStatus(
+        image ? "Картинка получена из og:image." : "Превью обновлено."
+      );
+    } catch (error) {
+      if (requestId !== boostyReviewPreviewRequestId) {
+        return;
+      }
+      boostyReviewPreviewImage = "";
+      boostyReviewPreviewUrl = "";
+      renderBoostyReviewPreview();
+      setBoostyReviewPreviewStatus(
+        error?.message || "Не удалось загрузить превью по ссылке.",
+        true
+      );
+    } finally {
+      if (requestId === boostyReviewPreviewRequestId) {
+        boostyReviewPreviewTimer = null;
+      }
+    }
+  }, 450);
+}
+
 function renderTrailerPublicSidebar() {
   const section = document.getElementById("trailerBoostySection");
   const title = document.getElementById("trailerBoostyTitle");
@@ -436,7 +582,6 @@ function setBoostyReviewFormBusy(isBusy) {
   const fields = [
     "boostyReviewTitleInput",
     "boostyReviewUrlInput",
-    "boostyReviewImageInput",
     "boostyReviewMetaInput",
   ];
 
@@ -593,6 +738,25 @@ async function createBoostyReview(payload) {
   }
 
   return data?.item || null;
+}
+
+async function fetchBoostyPreviewImage(url) {
+  const response = await fetch(
+    `${BOOSTY_PREVIEW_API_URL}?url=${encodeURIComponent(String(url || "").trim())}`
+  );
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.error || `Failed to fetch preview image: ${response.status}`);
+  }
+
+  return String(data?.image || "").trim();
 }
 
 async function deleteBoostyReview(id) {
@@ -1094,7 +1258,7 @@ function renderTrailerReleaseValue(element, value) {
   text.textContent = formatDate(value);
   element.appendChild(text);
 
-  if (!hasAdminAccess || !isReleaseDateMissing(value)) {
+  if (!hasAdminAccess) {
     return;
   }
 
@@ -1105,8 +1269,15 @@ function renderTrailerReleaseValue(element, value) {
 
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "trailer-release-add-button";
-  button.textContent = "Добавить дату";
+  button.className = isReleaseDateMissing(value)
+    ? "trailer-release-add-button"
+    : "trailer-release-edit-button";
+  button.textContent = isReleaseDateMissing(value) ? "Добавить дату" : "✎";
+  button.setAttribute(
+    "aria-label",
+    isReleaseDateMissing(value) ? "Добавить дату релиза" : "Редактировать дату релиза"
+  );
+  button.title = isReleaseDateMissing(value) ? "Добавить дату релиза" : "Изменить дату релиза";
   button.addEventListener("click", () => openTrailerReleaseDateModal(trailer.id));
   element.appendChild(button);
 }
@@ -1208,10 +1379,11 @@ function closeTrailerReleaseDateModal() {
 function openTrailerReleaseDateModal(trailerId) {
   const trailer = trailers.find((item) => Number(item.id) === Number(trailerId));
   const modal = document.getElementById("trailerReleaseDateModal");
+  const heading = document.getElementById("trailerReleaseDateHeading");
   const title = document.getElementById("trailerReleaseDateTitle");
   const input = document.getElementById("trailerReleaseDateInput");
 
-  if (!trailer || !modal || !title || !input) {
+  if (!trailer || !modal || !heading || !title || !input) {
     return;
   }
 
@@ -1222,6 +1394,7 @@ function openTrailerReleaseDateModal(trailerId) {
   trailerReleaseDateTrailerId = Number(trailerId);
   trailerReleaseCalendarYear = baseDate.getFullYear();
   trailerReleaseCalendarMonth = baseDate.getMonth();
+  heading.textContent = initialValue ? "Изменить дату релиза" : "Добавить дату релиза";
   title.textContent = trailer.title || "";
   input.value = initialValue;
   setStatusText("trailerReleaseDateStatus", "");
@@ -3091,7 +3264,6 @@ function setupFormEvents() {
   const boostyReviewForm = document.getElementById("boostyReviewForm");
   const boostyReviewTitleInput = document.getElementById("boostyReviewTitleInput");
   const boostyReviewUrlInput = document.getElementById("boostyReviewUrlInput");
-  const boostyReviewImageInput = document.getElementById("boostyReviewImageInput");
   const boostyReviewMetaInput = document.getElementById("boostyReviewMetaInput");
   const boostyDeleteModal = document.getElementById("boostyDeleteModal");
   const boostyDeleteModalClose = document.getElementById("boostyDeleteModalClose");
@@ -3121,11 +3293,18 @@ function setupFormEvents() {
     const nextHidden = !boostyReviewForm.hidden;
     boostyReviewForm.hidden = nextHidden;
     if (!nextHidden) {
+      resetBoostyReviewPreview();
       boostyReviewTitleInput?.focus();
     } else {
+      resetBoostyReviewPreview();
       setStatusText("boostyReviewFormStatus", "");
     }
   });
+
+  boostyReviewTitleInput?.addEventListener("input", renderBoostyReviewPreview);
+  boostyReviewMetaInput?.addEventListener("input", renderBoostyReviewPreview);
+  boostyReviewUrlInput?.addEventListener("input", scheduleBoostyReviewPreviewUpdate);
+  boostyReviewUrlInput?.addEventListener("blur", scheduleBoostyReviewPreviewUpdate);
 
   boostyDeleteModalClose?.addEventListener("click", closeBoostyDeleteModal);
   boostyDeleteCancelButton?.addEventListener("click", closeBoostyDeleteModal);
@@ -3274,7 +3453,6 @@ function setupFormEvents() {
 
     const title = String(boostyReviewTitleInput?.value || "").trim();
     const url = String(boostyReviewUrlInput?.value || "").trim();
-    const image = String(boostyReviewImageInput?.value || "").trim();
     const meta = String(boostyReviewMetaInput?.value || "").trim();
 
     if (!title) {
@@ -3292,6 +3470,21 @@ function setupFormEvents() {
     setBoostyReviewFormBusy(true);
 
     try {
+      let image = boostyReviewPreviewUrl === url ? boostyReviewPreviewImage : "";
+      if (!image) {
+        try {
+          setStatusText("boostyReviewFormStatus", "Получаю превью Boosty...");
+          image = await fetchBoostyPreviewImage(url);
+        } catch (previewError) {
+          console.warn("Failed to load Boosty preview image", previewError);
+          setStatusText(
+            "boostyReviewFormStatus",
+            "Не удалось получить og:image, сохраню обзор без картинки."
+          );
+        }
+      }
+
+      setStatusText("boostyReviewFormStatus", "Сохраняю обзор...");
       await createBoostyReview({
         title,
         url,
@@ -3300,6 +3493,7 @@ function setupFormEvents() {
       });
 
       boostyReviewForm.reset();
+      resetBoostyReviewPreview();
       setStatusText("boostyReviewFormStatus", "Обзор добавлен.");
       boostyReviewTitleInput?.focus();
     } catch (error) {

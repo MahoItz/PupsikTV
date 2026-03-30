@@ -141,14 +141,15 @@
                 <span>Ссылка на Boosty</span>
                 <input id="boostyReviewUrlInput" class="search-input" type="url" maxlength="1000" placeholder="https://boosty.to/..." required>
               </label>
-              <label class="trailer-form__field" for="boostyReviewImageInput">
-                <span>Картинка (необязательно)</span>
-                <input id="boostyReviewImageInput" class="search-input" type="url" maxlength="1000" placeholder="https://...">
-              </label>
               <label class="trailer-form__field" for="boostyReviewMetaInput">
                 <span>Подпись (необязательно)</span>
                 <input id="boostyReviewMetaInput" class="search-input" type="text" maxlength="150" placeholder="Например, свежий обзор">
               </label>
+              <div id="boostyReviewPreview" class="boosty-review-preview" hidden>
+                <p class="boosty-review-preview__label">Превью карточки</p>
+                <div id="boostyReviewPreviewCard" class="boosty-review-preview__card"></div>
+                <p id="boostyReviewPreviewStatus" class="boosty-review-preview__status" aria-live="polite"></p>
+              </div>
               <button id="boostyReviewSubmitButton" class="btn btn-primary trailer-form__submit" type="submit">
                 <span>Добавить обзор</span>
               </button>
@@ -360,7 +361,7 @@
   <div id="trailerReleaseDateModal" class="modal">
     <div class="modal-content trailer-release-date-modal">
       <span id="trailerReleaseDateClose" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
-      <h2>Добавить дату релиза</h2>
+      <h2 id="trailerReleaseDateHeading">Добавить дату релиза</h2>
       <p id="trailerReleaseDateTitle" class="modal-subtitle"></p>
       <form id="trailerReleaseDateForm">
         <div class="form-group plan-date-group">

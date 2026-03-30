@@ -1,5 +1,10 @@
 const TMDB_API_BASE_URL = 'https://api.themoviedb.org/3';
-const ALLOWED_HOST_SUFFIXES = ['steamgriddb.com', 'rawg.io', 'media.rawg.io'];
+const ALLOWED_HOST_SUFFIXES = [
+  'steamgriddb.com',
+  'rawg.io',
+  'media.rawg.io',
+  'images.boosty.to',
+];
 const ALLOWED_PROVIDERS = ['poster-proxy', 'steamgriddb', 'tmdb'];
 
 function isAllowedHost(hostname) {
@@ -10,6 +15,10 @@ function isAllowedHost(hostname) {
 
 function normalizeImdbId(id) {
   return typeof id === 'string' ? id.trim() : '';
+}
+
+function isBoostyImageHost(hostname) {
+  return hostname === 'images.boosty.to';
 }
 
 function resolveFetch() {
@@ -87,7 +96,16 @@ async function handlePosterProxy(req, res) {
   }
 
   try {
-    const response = await fetch(target.toString());
+    const headers = isBoostyImageHost(target.hostname)
+      ? {
+          Referer: 'https://boosty.to/',
+          'User-Agent': 'Mozilla/5.0 (compatible; PupsikTVImageProxy/1.0)',
+        }
+      : undefined;
+
+    const response = await fetch(target.toString(), {
+      headers,
+    });
     if (!response.ok) {
       return res
         .status(response.status)
@@ -97,6 +115,7 @@ async function handlePosterProxy(req, res) {
     const buffer = Buffer.from(await response.arrayBuffer());
     const contentType =
       response.headers.get('content-type') || 'application/octet-stream';
+    res.setHeader('Cache-Control', 'public, max-age=86400');
     res.setHeader('Content-Type', contentType);
     return res.status(200).send(buffer);
   } catch {
