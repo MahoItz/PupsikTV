@@ -405,7 +405,9 @@ function initTopLeftActionsMenu() {
   const isPinnedBar = topLeftActions.classList.contains("top-left-actions--bar");
 
   decorateMenuButton(musicButton, "Рулетка");
-  topLeftActionsMenu.prepend(musicButton);
+  if (musicButton.parentElement !== topLeftActionsMenu) {
+    topLeftActionsMenu.prepend(musicButton);
+  }
 
   if (settingsButton && !isPinnedBar) {
     decorateMenuButton(settingsButton, "Настройки");

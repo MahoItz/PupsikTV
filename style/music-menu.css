@@ -126,6 +126,9 @@
 .top-left-actions__menu .rules-panel-toggle,
 .top-left-actions__menu .channel-stats-link,
 .top-left-actions__menu .admin-player-link {
+    position: relative;
+    top: auto;
+    left: auto;
     width: 100%;
     height: 44px;
     padding: 0 10px;
@@ -216,6 +219,7 @@
     min-width: max-content;
     flex: 0 0 auto;
     justify-content: center;
+    align-self: center;
     padding: 0 10px;
 }
 
@@ -243,6 +247,18 @@
 .top-left-actions--bar > .rules-panel-toggle {
     right: 20px;
     z-index: 12;
+}
+
+/* Prevent the standalone roulette button from flashing over the brand
+   before JS moves it into the pinned top bar menu. */
+.top-left-actions--bar ~ .music-menu-button {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.top-left-actions--bar .top-left-actions__menu .music-menu-button {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .music-menu-button {
