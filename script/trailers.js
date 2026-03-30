@@ -57,6 +57,8 @@ let watchedTrailersSearchQuery = "";
 let trailerReleaseDateTrailerId = null;
 let trailerReleaseCalendarYear = null;
 let trailerReleaseCalendarMonth = null;
+let trailerReleaseCalendarView = "days";
+let trailerReleaseCalendarYearPageStart = null;
 let trailerActorTooltip = null;
 let trailerSidebarMode = "trailers";
 let isCreatingBoostyReview = false;
@@ -1399,6 +1401,7 @@ const TRAILER_RELEASE_MONTH_NAMES = [
 function renderTrailerReleaseCalendar(selectedDateStr = "") {
   const grid = document.getElementById("trailerReleaseCalendarGrid");
   const label = document.getElementById("trailerReleaseCalendarMonthLabel");
+  const yearButton = document.getElementById("trailerReleaseCalendarYearButton");
   const input = document.getElementById("trailerReleaseDateInput");
 
   if (!grid || trailerReleaseCalendarYear === null || trailerReleaseCalendarMonth === null) {
@@ -1411,10 +1414,48 @@ function renderTrailerReleaseCalendar(selectedDateStr = "") {
   const daysInMonth = new Date(trailerReleaseCalendarYear, trailerReleaseCalendarMonth + 1, 0).getDate();
 
   if (label) {
-    label.textContent = `${TRAILER_RELEASE_MONTH_NAMES[trailerReleaseCalendarMonth]} ${trailerReleaseCalendarYear}`;
+    label.textContent = TRAILER_RELEASE_MONTH_NAMES[trailerReleaseCalendarMonth];
+  }
+
+  if (yearButton) {
+    yearButton.textContent = String(trailerReleaseCalendarYear);
   }
 
   grid.innerHTML = "";
+  grid.classList.toggle("trailer-release-calendar-grid--years", trailerReleaseCalendarView === "years");
+
+  if (trailerReleaseCalendarView === "years") {
+    const selectedYear = selectedDate ? selectedDate.getFullYear() : null;
+    const pageStart = Number.isFinite(trailerReleaseCalendarYearPageStart)
+      ? trailerReleaseCalendarYearPageStart
+      : trailerReleaseCalendarYear - 5;
+
+    for (let year = pageStart; year < pageStart + 12; year += 1) {
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "plan-calendar-day trailer-release-calendar-year-option";
+      cell.textContent = String(year);
+
+      if (year === today.getFullYear()) {
+        cell.classList.add("is-today");
+      }
+
+      if (selectedYear === year || trailerReleaseCalendarYear === year) {
+        cell.classList.add("is-selected");
+      }
+
+      cell.addEventListener("click", () => {
+        trailerReleaseCalendarYear = year;
+        trailerReleaseCalendarView = "days";
+        trailerReleaseCalendarYearPageStart = null;
+        renderTrailerReleaseCalendar(selectedDateStr);
+      });
+
+      grid.appendChild(cell);
+    }
+
+    return;
+  }
 
   ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].forEach((weekday) => {
     const cell = document.createElement("div");
@@ -1473,6 +1514,8 @@ function closeTrailerReleaseDateModal() {
     submit.removeAttribute("aria-busy");
   }
   trailerReleaseDateTrailerId = null;
+  trailerReleaseCalendarView = "days";
+  trailerReleaseCalendarYearPageStart = null;
 }
 
 function openTrailerReleaseDateModal(trailerId) {
@@ -1493,6 +1536,8 @@ function openTrailerReleaseDateModal(trailerId) {
   trailerReleaseDateTrailerId = Number(trailerId);
   trailerReleaseCalendarYear = baseDate.getFullYear();
   trailerReleaseCalendarMonth = baseDate.getMonth();
+  trailerReleaseCalendarView = "days";
+  trailerReleaseCalendarYearPageStart = null;
   heading.textContent = initialValue ? "Изменить дату релиза" : "Добавить дату релиза";
   title.textContent = trailer.title || "";
   input.value = initialValue;
@@ -3384,6 +3429,7 @@ function setupFormEvents() {
   const releaseDateForm = document.getElementById("trailerReleaseDateForm");
   const releaseDatePrev = document.getElementById("trailerReleaseCalendarPrev");
   const releaseDateNext = document.getElementById("trailerReleaseCalendarNext");
+  const releaseDateYearButton = document.getElementById("trailerReleaseCalendarYearButton");
 
   adminTabs?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-sidebar-mode]");
@@ -3775,21 +3821,44 @@ function setupFormEvents() {
 
   releaseDatePrev?.addEventListener("click", () => {
     if (trailerReleaseCalendarYear === null || trailerReleaseCalendarMonth === null) return;
-    trailerReleaseCalendarMonth -= 1;
-    if (trailerReleaseCalendarMonth < 0) {
-      trailerReleaseCalendarMonth = 11;
-      trailerReleaseCalendarYear -= 1;
+    if (trailerReleaseCalendarView === "years") {
+      trailerReleaseCalendarYearPageStart =
+        (Number.isFinite(trailerReleaseCalendarYearPageStart)
+          ? trailerReleaseCalendarYearPageStart
+          : trailerReleaseCalendarYear - 5) - 12;
+    } else {
+      trailerReleaseCalendarMonth -= 1;
+      if (trailerReleaseCalendarMonth < 0) {
+        trailerReleaseCalendarMonth = 11;
+        trailerReleaseCalendarYear -= 1;
+      }
     }
     renderTrailerReleaseCalendar(document.getElementById("trailerReleaseDateInput")?.value || "");
   });
 
   releaseDateNext?.addEventListener("click", () => {
     if (trailerReleaseCalendarYear === null || trailerReleaseCalendarMonth === null) return;
-    trailerReleaseCalendarMonth += 1;
-    if (trailerReleaseCalendarMonth > 11) {
-      trailerReleaseCalendarMonth = 0;
-      trailerReleaseCalendarYear += 1;
+    if (trailerReleaseCalendarView === "years") {
+      trailerReleaseCalendarYearPageStart =
+        (Number.isFinite(trailerReleaseCalendarYearPageStart)
+          ? trailerReleaseCalendarYearPageStart
+          : trailerReleaseCalendarYear - 5) + 12;
+    } else {
+      trailerReleaseCalendarMonth += 1;
+      if (trailerReleaseCalendarMonth > 11) {
+        trailerReleaseCalendarMonth = 0;
+        trailerReleaseCalendarYear += 1;
+      }
     }
+    renderTrailerReleaseCalendar(document.getElementById("trailerReleaseDateInput")?.value || "");
+  });
+
+  releaseDateYearButton?.addEventListener("click", () => {
+    if (trailerReleaseCalendarYear === null) return;
+    trailerReleaseCalendarView =
+      trailerReleaseCalendarView === "years" ? "days" : "years";
+    trailerReleaseCalendarYearPageStart =
+      trailerReleaseCalendarView === "years" ? trailerReleaseCalendarYear - 5 : null;
     renderTrailerReleaseCalendar(document.getElementById("trailerReleaseDateInput")?.value || "");
   });
 

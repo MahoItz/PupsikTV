@@ -384,7 +384,15 @@
           <div class="plan-calendar" aria-label="Календарь">
             <div class="plan-calendar-header">
               <button type="button" class="plan-calendar-nav" id="trailerReleaseCalendarPrev" aria-label="Предыдущий месяц">‹</button>
-              <div id="trailerReleaseCalendarMonthLabel" class="plan-calendar-month"></div>
+              <div class="trailer-release-calendar-title">
+                <div id="trailerReleaseCalendarMonthLabel" class="plan-calendar-month"></div>
+                <button
+                  type="button"
+                  id="trailerReleaseCalendarYearButton"
+                  class="trailer-release-calendar-year"
+                  aria-label="Выбрать год"
+                ></button>
+              </div>
               <button type="button" class="plan-calendar-nav" id="trailerReleaseCalendarNext" aria-label="Следующий месяц">›</button>
             </div>
             <div class="plan-calendar-grid" id="trailerReleaseCalendarGrid" role="grid"></div>

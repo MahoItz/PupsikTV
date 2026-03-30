@@ -1512,6 +1512,40 @@
   text-wrap: balance;
 }
 
+.trailer-release-calendar-title {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.trailer-release-calendar-year {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(116, 222, 255, 0.86);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.trailer-release-calendar-year:hover,
+.trailer-release-calendar-year:focus-visible {
+  outline: none;
+  color: #f4fbff;
+  text-shadow: 0 0 12px rgba(116, 222, 255, 0.3);
+}
+
+.trailer-release-calendar-grid--years {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.trailer-release-calendar-year-option {
+  height: 42px;
+}
+
 .trailer-info__empty {
   color: rgba(212, 244, 255, 0.72);
   overflow-y: auto;
