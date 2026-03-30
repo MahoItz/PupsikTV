@@ -2,6 +2,7 @@ const TRAILER_API_URL = "/api/trailer-watchlist";
 const TRAILER_RATINGS_API_URL = "/api/trailer-ratings";
 const BOOSTY_REVIEWS_API_URL = "/api/boosty-reviews";
 const BOOSTY_PREVIEW_API_URL = "/api/preview";
+const BOOSTY_REVIEW_IMAGE_API_URL = "/api/boosty-review-image";
 const EXTERNAL_API_URL = "/api/external";
 const KP_API_SELECTION_URL = "/api/kp-api-selection";
 const VERIFY_ADMIN_URL = "/api/admin?action=verify-admin";
@@ -65,6 +66,8 @@ let boostyReviewPreviewImage = "";
 let boostyReviewPreviewUrl = "";
 let boostyReviewPreviewTimer = null;
 let boostyReviewPreviewRequestId = 0;
+let boostyReviewManualImageFile = null;
+let boostyReviewManualImageUrl = "";
 const trailerActorCache = new Map();
 const trailerActorPending = new Map();
 const TRAILER_RATING_MEANINGS = {
@@ -431,6 +434,10 @@ function setBoostyReviewPreviewStatus(message, isError = false) {
   status.style.color = isError ? "#ffbcbc" : "";
 }
 
+function getBoostyReviewEffectivePreviewImage() {
+  return boostyReviewManualImageUrl || boostyReviewPreviewImage || "";
+}
+
 function renderBoostyReviewPreview() {
   const container = document.getElementById("boostyReviewPreview");
   const card = document.getElementById("boostyReviewPreviewCard");
@@ -443,7 +450,8 @@ function renderBoostyReviewPreview() {
   const title = String(titleInput?.value || "").trim();
   const href = String(urlInput?.value || "").trim();
   const meta = String(metaInput?.value || "").trim();
-  const hasAnyValue = Boolean(title || href || meta || boostyReviewPreviewImage);
+  const previewImage = getBoostyReviewEffectivePreviewImage();
+  const hasAnyValue = Boolean(title || href || meta || previewImage);
 
   container.hidden = !hasAnyValue;
   card.innerHTML = "";
@@ -456,7 +464,7 @@ function renderBoostyReviewPreview() {
   const previewCard = renderBoostyStreamCard({
     title: title || "Название обзора",
     href: href || "#",
-    image: boostyReviewPreviewImage || POSTER_PLACEHOLDER,
+    image: previewImage || POSTER_PLACEHOLDER,
     meta,
   });
 
@@ -491,9 +499,28 @@ function resetBoostyReviewPreview() {
   }
   boostyReviewPreviewImage = "";
   boostyReviewPreviewUrl = "";
+  if (boostyReviewManualImageUrl?.startsWith("blob:")) {
+    URL.revokeObjectURL(boostyReviewManualImageUrl);
+  }
+  boostyReviewManualImageFile = null;
+  boostyReviewManualImageUrl = "";
   boostyReviewPreviewRequestId += 1;
   renderBoostyReviewPreview();
   setBoostyReviewPreviewStatus("");
+
+  const fileInput = document.getElementById("boostyReviewImageFileInput");
+  const fileName = document.getElementById("boostyReviewImageFileName");
+  const clearButton = document.getElementById("boostyReviewImageClearButton");
+  if (fileInput) {
+    fileInput.value = "";
+  }
+  if (fileName) {
+    fileName.hidden = true;
+    fileName.textContent = "";
+  }
+  if (clearButton) {
+    clearButton.hidden = true;
+  }
 }
 
 function scheduleBoostyReviewPreviewUpdate() {
@@ -528,7 +555,11 @@ function scheduleBoostyReviewPreviewUpdate() {
       boostyReviewPreviewUrl = url;
       renderBoostyReviewPreview();
       setBoostyReviewPreviewStatus(
-        image ? "Картинка получена из og:image." : "Превью обновлено."
+        boostyReviewManualImageFile
+          ? "Используется загруженное фото."
+          : image
+            ? "Картинка получена из og:image."
+            : "Превью обновлено."
       );
     } catch (error) {
       if (requestId !== boostyReviewPreviewRequestId) {
@@ -547,6 +578,72 @@ function scheduleBoostyReviewPreviewUpdate() {
       }
     }
   }, 450);
+}
+
+async function readFileAsDataUrl(file) {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadBoostyReviewImage(file, title) {
+  const dataUrl = await readFileAsDataUrl(file);
+  const response = await fetch(BOOSTY_REVIEW_IMAGE_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAdminAuthHeaders(),
+    },
+    body: JSON.stringify({
+      title,
+      fileName: file?.name || "",
+      dataUrl,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data?.error || `Failed to upload image: ${response.status}`);
+  }
+
+  return String(data?.imageUrl || "").trim();
+}
+
+function applyBoostyReviewManualImage(file) {
+  const fileName = document.getElementById("boostyReviewImageFileName");
+  const clearButton = document.getElementById("boostyReviewImageClearButton");
+
+  if (boostyReviewManualImageUrl?.startsWith("blob:")) {
+    URL.revokeObjectURL(boostyReviewManualImageUrl);
+  }
+
+  boostyReviewManualImageFile = file instanceof File ? file : null;
+  boostyReviewManualImageUrl = boostyReviewManualImageFile
+    ? URL.createObjectURL(boostyReviewManualImageFile)
+    : "";
+
+  if (fileName) {
+    fileName.hidden = !boostyReviewManualImageFile;
+    fileName.textContent = boostyReviewManualImageFile
+      ? `Загружено фото: ${boostyReviewManualImageFile.name}`
+      : "";
+  }
+
+  if (clearButton) {
+    clearButton.hidden = !boostyReviewManualImageFile;
+  }
+
+  renderBoostyReviewPreview();
+  setBoostyReviewPreviewStatus(
+    boostyReviewManualImageFile
+      ? "Используется загруженное фото. Оно заменит автоматически найденную картинку."
+      : boostyReviewPreviewImage
+        ? "Картинка получена из og:image."
+        : ""
+  );
 }
 
 function renderTrailerPublicSidebar() {
@@ -583,6 +680,8 @@ function setBoostyReviewFormBusy(isBusy) {
     "boostyReviewTitleInput",
     "boostyReviewUrlInput",
     "boostyReviewMetaInput",
+    "boostyReviewImageUploadButton",
+    "boostyReviewImageClearButton",
   ];
 
   fields.forEach((id) => {
@@ -3265,6 +3364,9 @@ function setupFormEvents() {
   const boostyReviewTitleInput = document.getElementById("boostyReviewTitleInput");
   const boostyReviewUrlInput = document.getElementById("boostyReviewUrlInput");
   const boostyReviewMetaInput = document.getElementById("boostyReviewMetaInput");
+  const boostyReviewImageFileInput = document.getElementById("boostyReviewImageFileInput");
+  const boostyReviewImageUploadButton = document.getElementById("boostyReviewImageUploadButton");
+  const boostyReviewImageClearButton = document.getElementById("boostyReviewImageClearButton");
   const boostyDeleteModal = document.getElementById("boostyDeleteModal");
   const boostyDeleteModalClose = document.getElementById("boostyDeleteModalClose");
   const boostyDeleteConfirmButton = document.getElementById("boostyDeleteConfirmButton");
@@ -3305,6 +3407,27 @@ function setupFormEvents() {
   boostyReviewMetaInput?.addEventListener("input", renderBoostyReviewPreview);
   boostyReviewUrlInput?.addEventListener("input", scheduleBoostyReviewPreviewUpdate);
   boostyReviewUrlInput?.addEventListener("blur", scheduleBoostyReviewPreviewUpdate);
+  boostyReviewImageUploadButton?.addEventListener("click", () => {
+    boostyReviewImageFileInput?.click();
+  });
+  boostyReviewImageFileInput?.addEventListener("change", () => {
+    const file = boostyReviewImageFileInput.files?.[0] || null;
+    if (!file) {
+      applyBoostyReviewManualImage(null);
+      return;
+    }
+    if (!String(file.type || "").startsWith("image/")) {
+      setStatusText("boostyReviewFormStatus", "Нужен файл изображения.", true);
+      boostyReviewImageFileInput.value = "";
+      applyBoostyReviewManualImage(null);
+      return;
+    }
+    setStatusText("boostyReviewFormStatus", "");
+    applyBoostyReviewManualImage(file);
+  });
+  boostyReviewImageClearButton?.addEventListener("click", () => {
+    applyBoostyReviewManualImage(null);
+  });
 
   boostyDeleteModalClose?.addEventListener("click", closeBoostyDeleteModal);
   boostyDeleteCancelButton?.addEventListener("click", closeBoostyDeleteModal);
@@ -3470,8 +3593,15 @@ function setupFormEvents() {
     setBoostyReviewFormBusy(true);
 
     try {
-      let image = boostyReviewPreviewUrl === url ? boostyReviewPreviewImage : "";
-      if (!image) {
+      let image = "";
+      if (boostyReviewManualImageFile) {
+        setStatusText("boostyReviewFormStatus", "Загружаю выбранное фото...");
+        image = await uploadBoostyReviewImage(boostyReviewManualImageFile, title);
+      } else if (boostyReviewPreviewUrl === url) {
+        image = boostyReviewPreviewImage;
+      }
+
+      if (!image && !boostyReviewManualImageFile) {
         try {
           setStatusText("boostyReviewFormStatus", "Получаю превью Boosty...");
           image = await fetchBoostyPreviewImage(url);
@@ -3495,6 +3625,7 @@ function setupFormEvents() {
       boostyReviewForm.reset();
       resetBoostyReviewPreview();
       setStatusText("boostyReviewFormStatus", "Обзор добавлен.");
+      boostyReviewForm.hidden = true;
       boostyReviewTitleInput?.focus();
     } catch (error) {
       console.error("Failed to create Boosty review", error);

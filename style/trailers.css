@@ -441,6 +441,24 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.boosty-review-upload {
+  display: grid;
+  gap: 8px;
+}
+
+.boosty-review-upload__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.boosty-review-upload__name {
+  margin: 0;
+  color: rgba(216, 248, 255, 0.72);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 .boosty-review-preview__label {
   margin: 0;
   color: rgba(216, 248, 255, 0.82);

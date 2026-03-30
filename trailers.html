@@ -145,6 +145,14 @@
                 <span>Подпись (необязательно)</span>
                 <input id="boostyReviewMetaInput" class="search-input" type="text" maxlength="150" placeholder="Например, свежий обзор">
               </label>
+              <div class="boosty-review-upload">
+                <input id="boostyReviewImageFileInput" type="file" accept="image/*" hidden>
+                <div class="boosty-review-upload__actions">
+                  <button id="boostyReviewImageUploadButton" class="trailer-list-section__more trailer-list-section__more--link" type="button">Загрузить фото</button>
+                  <button id="boostyReviewImageClearButton" class="trailer-list-section__more trailer-list-section__more--link" type="button" hidden>Удалить фото</button>
+                </div>
+                <p id="boostyReviewImageFileName" class="boosty-review-upload__name" hidden></p>
+              </div>
               <div id="boostyReviewPreview" class="boosty-review-preview" hidden>
                 <p class="boosty-review-preview__label">Превью карточки</p>
                 <div id="boostyReviewPreviewCard" class="boosty-review-preview__card"></div>
