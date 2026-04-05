@@ -1152,6 +1152,10 @@ body.order-player-fullscreen #orderPlayerModal .modal-content {
     border-bottom: 1px dashed rgba(127, 223, 255, 0.45);
 }
 
+.actor-photo-tooltip[hidden] {
+    display: none;
+}
+
 .actor-photo-tooltip {
     position: fixed;
     z-index: 4000;
