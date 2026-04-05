@@ -92,6 +92,16 @@
             <h2>Запланированные</h2>
             <div class="trailer-list-section__actions">
               <span id="plannedCount" class="trailer-count-chip">0</span>
+              <button
+                id="plannedSectionToggle"
+                class="trailer-section-toggle"
+                type="button"
+                aria-expanded="false"
+                aria-controls="plannedTrailerLoading plannedTrailerList plannedTrailerEmpty openPlannedTrailersModal"
+                aria-label="Развернуть блок Запланированные"
+              >
+                <span class="trailer-section-toggle__icon" aria-hidden="true"></span>
+              </button>
             </div>
           </div>
           <div id="plannedTrailerLoading" class="section-loader section-loader--compact trailer-section-loader">

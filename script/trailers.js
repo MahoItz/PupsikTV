@@ -70,6 +70,8 @@ let boostyReviewPreviewTimer = null;
 let boostyReviewPreviewRequestId = 0;
 let boostyReviewManualImageFile = null;
 let boostyReviewManualImageUrl = "";
+let isTrailerListsLoading = false;
+let isPlannedSectionCollapsed = true;
 const trailerActorCache = new Map();
 const trailerActorPending = new Map();
 const TRAILER_RATING_MEANINGS = {
@@ -2235,8 +2237,6 @@ function renderTrailerLists() {
   if (plannedSection) {
     plannedSection.hidden = !hasAdminAccess || trailerSidebarMode !== "trailers";
   }
-  if (plannedList) plannedList.hidden = !hasAdminAccess || trailerSidebarMode !== "trailers";
-  if (plannedEmpty) plannedEmpty.hidden = planned.length > 0;
   if (plannedCount) plannedCount.textContent = String(planned.length);
   if (plannedModalCount) plannedModalCount.textContent = String(planned.length);
   if (watchedCount) watchedCount.textContent = String(watched.length);
@@ -2244,6 +2244,8 @@ function renderTrailerLists() {
     watchedTrailersCount.textContent = String(filteredWatched.length);
   }
 
+  isTrailerListsLoading = false;
+  syncPlannedSectionState();
   renderPlannedTrailerModalList(planned);
   renderWatchedTrailersGrid(filteredWatched);
   refreshTrailerRateButtons();
@@ -2378,11 +2380,10 @@ function renderWatchedTrailersGrid(watchedList) {
 function setTrailerListsLoading(isLoading) {
   const plannedSection = document.querySelector(".trailer-list-section--planned");
   const plannedLoading = document.getElementById("plannedTrailerLoading");
-  const plannedList = document.getElementById("plannedTrailerList");
-  const plannedEmpty = document.getElementById("plannedTrailerEmpty");
   const watchedLoading = document.getElementById("watchedTrailersLoading");
   const watchedGrid = document.getElementById("watchedTrailersGrid");
   const watchedEmpty = document.getElementById("watchedTrailersEmpty");
+  isTrailerListsLoading = Boolean(isLoading);
 
   if (plannedSection) {
     plannedSection.hidden = !hasAdminAccess || trailerSidebarMode !== "trailers";
@@ -2391,8 +2392,7 @@ function setTrailerListsLoading(isLoading) {
     plannedLoading.hidden = !isLoading || !hasAdminAccess || trailerSidebarMode !== "trailers";
   }
   if (watchedLoading) watchedLoading.hidden = !isLoading;
-  if (plannedList) plannedList.hidden = Boolean(isLoading) || !hasAdminAccess;
-  if (plannedEmpty) plannedEmpty.hidden = true;
+  syncPlannedSectionState();
   if (watchedGrid) watchedGrid.hidden = Boolean(isLoading);
   if (watchedEmpty) watchedEmpty.hidden = true;
 }
@@ -2446,6 +2446,49 @@ function resetKinopoiskInfo(message) {
   if (link) {
     link.hidden = true;
     link.href = "#";
+  }
+}
+
+function syncPlannedSectionState() {
+  const plannedSection = document.querySelector(".trailer-list-section--planned");
+  const plannedList = document.getElementById("plannedTrailerList");
+  const plannedEmpty = document.getElementById("plannedTrailerEmpty");
+  const plannedLoading = document.getElementById("plannedTrailerLoading");
+  const plannedToggle = document.getElementById("plannedSectionToggle");
+  const plannedMoreButton = document.getElementById("openPlannedTrailersModal");
+  const canShowSection = hasAdminAccess && trailerSidebarMode === "trailers";
+  const plannedItems = trailers.filter((item) => item.status !== "watched");
+  const isExpanded = !isPlannedSectionCollapsed;
+  const showBody = canShowSection && isExpanded;
+
+  if (plannedSection) {
+    plannedSection.hidden = !canShowSection;
+    plannedSection.classList.toggle("is-collapsed", !isExpanded);
+  }
+
+  if (plannedToggle) {
+    plannedToggle.hidden = !canShowSection;
+    plannedToggle.setAttribute("aria-expanded", String(isExpanded));
+    plannedToggle.setAttribute(
+      "aria-label",
+      isExpanded ? "Свернуть блок Запланированные" : "Развернуть блок Запланированные"
+    );
+  }
+
+  if (plannedLoading) {
+    plannedLoading.hidden = !showBody || !isTrailerListsLoading;
+  }
+
+  if (plannedList) {
+    plannedList.hidden = !showBody || isTrailerListsLoading;
+  }
+
+  if (plannedEmpty) {
+    plannedEmpty.hidden = !showBody || isTrailerListsLoading || plannedItems.length > 0;
+  }
+
+  if (plannedMoreButton) {
+    plannedMoreButton.hidden = !showBody;
   }
 }
 
@@ -3342,6 +3385,7 @@ function setupListEvents() {
   const plannedModal = document.getElementById("plannedTrailersModal");
   const plannedModalClose = document.getElementById("plannedTrailersModalClose");
   const openPlannedModalButton = document.getElementById("openPlannedTrailersModal");
+  const plannedSectionToggle = document.getElementById("plannedSectionToggle");
 
   const clickHandler = (event) => {
     const item = event.target.closest(".trailer-item");
@@ -3365,6 +3409,12 @@ function setupListEvents() {
     if (plannedModal) {
       plannedModal.style.display = "block";
     }
+  });
+
+  plannedSectionToggle?.addEventListener("click", () => {
+    isPlannedSectionCollapsed = !isPlannedSectionCollapsed;
+    syncPlannedSectionState();
+    syncTrailerSidebarHeight();
   });
 
   const closePlannedModal = () => {
