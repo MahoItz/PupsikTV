@@ -139,10 +139,9 @@ const fortuneMovieDelete = document.getElementById("fortuneMovieDelete");
 const fortuneParentGuideStatus = document.getElementById(
   "fortuneParentGuideStatus"
 );
-const fortuneParentGuideTranslate = document.getElementById(
-  "fortuneParentGuideTranslate"
+const fortuneParentGuideImdbLink = document.getElementById(
+  "fortuneParentGuideImdbLink"
 );
-const fortuneParentGuideAI = document.getElementById("fortuneParentGuideAI");
 const fortuneParentGuideContent = document.getElementById(
   "fortuneParentGuideContent"
 );
@@ -169,12 +168,10 @@ const fortuneTimingsStatus = document.getElementById("fortuneTimingsStatus");
 const fortuneTimingsList = document.getElementById("fortuneTimingsList");
 const fortuneTimingsAuthor = document.getElementById("fortuneTimingsAuthor");
 const orderDetailsModal = document.getElementById("orderDetailsModal");
-const orderParentGuideTitle = document.getElementById("orderParentGuideTitle");
 const orderParentGuideStatus = document.getElementById("orderParentGuideStatus");
-const orderParentGuideTranslate = document.getElementById(
-  "orderParentGuideTranslate"
+const orderParentGuideImdbLink = document.getElementById(
+  "orderParentGuideImdbLink"
 );
-const orderParentGuideAI = document.getElementById("orderParentGuideAI");
 const orderParentGuideContent = document.getElementById(
   "orderParentGuideContent"
 );
@@ -337,6 +334,50 @@ function setFortuneItemMetadata(label, metadata = {}) {
   } else {
     fortuneItemMetadata.delete(normalizedLabel);
   }
+
+  if (selectedFortuneLabel === normalizedLabel) {
+    updateFortuneParentGuideImdbLink(normalizedMetadata.imdbId || null);
+  }
+}
+
+function buildImdbParentGuideUrl(imdbId) {
+  const normalizedImdbId = String(imdbId || "").trim();
+  if (!normalizedImdbId) {
+    return "";
+  }
+
+  return `https://www.imdb.com/title/${encodeURIComponent(
+    normalizedImdbId
+  )}/parentalguide/?ref_=tt_stry_pg`;
+}
+
+function setParentGuideImdbLinkState(linkEl, imdbId) {
+  if (!linkEl) {
+    return;
+  }
+
+  const url = buildImdbParentGuideUrl(imdbId);
+  const isEnabled = Boolean(url);
+
+  if (isEnabled) {
+    linkEl.href = url;
+    linkEl.removeAttribute("aria-disabled");
+    linkEl.removeAttribute("tabindex");
+  } else {
+    linkEl.removeAttribute("href");
+    linkEl.setAttribute("aria-disabled", "true");
+    linkEl.setAttribute("tabindex", "-1");
+  }
+
+  linkEl.classList.toggle("btn-disabled", !isEnabled);
+}
+
+function updateFortuneParentGuideImdbLink(imdbId) {
+  setParentGuideImdbLinkState(fortuneParentGuideImdbLink, imdbId);
+}
+
+function updateOrderParentGuideImdbLink(imdbId) {
+  setParentGuideImdbLinkState(orderParentGuideImdbLink, imdbId);
 }
 function hasFortuneBanwordInText(text = "") {
   if (!fortuneBanwordRegex) {
@@ -1711,18 +1752,8 @@ function showFortuneStudioFromMetadata(label) {
   return false;
 }
 
-function updateFortuneTranslateButton(isEnabled) {
-  if (!fortuneParentGuideTranslate) {
-    return;
-  }
-
-  fortuneParentGuideTranslate.disabled = !isEnabled;
-  fortuneParentGuideTranslate.classList.toggle("btn-disabled", !isEnabled);
-}
-
 function setCurrentFortuneParentGuideData(data) {
   fortuneCurrentParentGuideData = data || null;
-  updateFortuneTranslateButton(Boolean(data));
 }
 
 function setFortuneTimingsStatus(message) {
@@ -1866,6 +1897,10 @@ function setOrderMetadata(order, metadata = {}) {
       order[key] = metadata[key];
     }
   });
+
+  if (order.id && activeOrderDetailsId === order.id) {
+    updateOrderParentGuideImdbLink(order.imdbId || null);
+  }
 }
 
 async function persistOrderParentGuide(orderId, guide) {
@@ -2301,26 +2336,6 @@ function getActiveOrderDetails() {
   return watchlist.find((order) => order.id === activeOrderDetailsId) || null;
 }
 
-function reloadParentGuideForActiveOrder() {
-  const order = getActiveOrderDetails();
-  if (!order) {
-    return;
-  }
-
-  if (
-    typeof prefetchOrderParentGuideForOrder === "function" &&
-    order.id &&
-    supabaseClient
-  ) {
-    prefetchOrderParentGuideForOrder(order, { force: true });
-    return;
-  }
-
-  if (typeof fetchOrderParentGuideForOrder === "function") {
-    fetchOrderParentGuideForOrder(order);
-  }
-}
-
 function setOrderParentGuideStatus(message, options = {}) {
   if (!orderParentGuideStatus) {
     return;
@@ -2334,20 +2349,8 @@ function setOrderParentGuideStatus(message, options = {}) {
   );
 }
 
-function updateOrderTranslateButton(isEnabled) {
-  if (orderParentGuideTranslate) {
-    orderParentGuideTranslate.disabled = !isEnabled;
-    orderParentGuideTranslate.classList.toggle("btn-disabled", !isEnabled);
-  }
-  if (orderParentGuideAI) {
-    orderParentGuideAI.disabled = !isEnabled;
-    orderParentGuideAI.classList.toggle("btn-disabled", !isEnabled);
-  }
-}
-
 function setCurrentOrderParentGuideData(data) {
   orderCurrentParentGuideData = data || null;
-  updateOrderTranslateButton(Boolean(data));
 }
 
 function resetOrderParentGuideSections() {
@@ -2413,7 +2416,7 @@ function renderOrderParentGuide(data) {
     if (orderParentGuideContent) {
       orderParentGuideContent.style.display = "none";
     }
-    setOrderParentGuideStatus("Нет данных в разделах Parent Guide.");
+    setOrderParentGuideStatus("");
     return;
   }
 
@@ -2826,46 +2829,6 @@ async function prefetchOrderParentGuideForOrder(order, options = {}) {
   }
 }
 
-async function openOrderGuideInGoogleTranslate() {
-  const activeOrder = getActiveOrderDetails();
-  const activeGuideData =
-    orderCurrentParentGuideData || activeOrder?.parentGuide || null;
-  const label =
-    typeof formatMovieDetailsValue === "function"
-      ? formatMovieDetailsValue(activeOrder?.title, "Без названия")
-      : (activeOrder?.title || "");
-
-  const guideText = buildFortuneParentGuideText(activeGuideData, label);
-
-  if (!guideText) {
-    setOrderParentGuideStatus("Нет данных из IMDb для перевода.");
-    return;
-  }
-
-  const buildTranslateUrl = (textValue) =>
-    textValue
-      ? `https://translate.google.com/?sl=auto&tl=ru&text=${encodeURIComponent(
-          textValue
-        )}&op=translate`
-      : "https://translate.google.com/?sl=auto&tl=ru";
-
-  const initialUrl = buildTranslateUrl(guideText);
-
-  window.open(initialUrl, "_blank", "noopener,noreferrer");
-}
-
-async function startOrderParentGuideManualTranslation() {
-  const activeOrder = getActiveOrderDetails();
-  if (!activeOrder?.parentGuide) {
-    setOrderParentGuideStatus("Нет данных для перевода.");
-    return;
-  }
-  await startOrderParentGuideTranslation(activeOrder, activeOrder.parentGuide, {
-    requestId: orderParentGuideRequestId,
-    force: true,
-  });
-}
-
 function setOrderTimingsStatus(message) {
   if (orderTimingsStatus) {
     orderTimingsStatus.textContent = message;
@@ -3082,6 +3045,7 @@ function updateOrderDetailsExtras(order) {
   activeOrderDetailsOverride = order?.__virtual ? order : null;
   resetOrderParentGuide();
   resetOrderTimings();
+  updateOrderParentGuideImdbLink(order?.imdbId || null);
 
   if (!order) {
     return;
@@ -3163,91 +3127,6 @@ function showFortuneTimingsFromMetadata(label) {
   return false;
 }
 
-function buildFortuneParentGuideText(data, label = null) {
-  if (!data) {
-    return "";
-  }
-
-  const originalSections = data?.original || {};
-  const sectionTitles = {
-    sexAndNudity: "Sex & Nudity",
-  };
-
-  const lines = [];
-  if (label) {
-    lines.push(`Фильм: ${label}`);
-  }
-
-  Object.entries(sectionTitles).forEach(([key, title]) => {
-    const originalItems = Array.isArray(originalSections[key])
-      ? originalSections[key]
-      : [];
-
-    if (originalItems.length === 0) {
-      return;
-    }
-
-    lines.push(`== ${title} ==`);
-    if (originalItems.length > 0) {
-      originalItems.forEach((item, index) => {
-        lines.push(`${index + 1}. ${item}`);
-      });
-    }
-
-    lines.push("");
-  });
-
-  return lines.join("\n").trim();
-}
-
-async function openFortuneGuideInGoogleTranslate() {
-  const activeGuideData =
-    fortuneCurrentParentGuideData ||
-    (selectedFortuneLabel
-      ? fortuneItemMetadata.get(selectedFortuneLabel)?.parentGuide || null
-      : null);
-  const guideText = buildFortuneParentGuideText(
-    activeGuideData,
-    selectedFortuneLabel
-  );
-
-  if (!guideText) {
-    setFortuneParentGuideStatus("Нет данных из IMDb для перевода.");
-    return;
-  }
-
-  const buildTranslateUrl = (textValue) =>
-    textValue
-      ? `https://translate.google.com/?sl=auto&tl=ru&text=${encodeURIComponent(
-          textValue
-        )}&op=translate`
-      : "https://translate.google.com/?sl=auto&tl=ru";
-
-  const initialUrl = buildTranslateUrl(guideText);
-
-  window.open(initialUrl, "_blank", "noopener,noreferrer");
-}
-
-async function startFortuneParentGuideManualTranslation() {
-  if (!selectedFortuneLabel) {
-    setFortuneParentGuideStatus("Нет данных для перевода.");
-    return;
-  }
-  const metadata = fortuneItemMetadata.get(selectedFortuneLabel) || {};
-  if (!metadata.parentGuide) {
-    setFortuneParentGuideStatus("Нет данных для перевода.");
-    return;
-  }
-  await startFortuneParentGuideTranslation(
-    selectedFortuneLabel,
-    metadata.parentGuide,
-    {
-      requestId: fortuneParentGuideRequestId,
-      force: true,
-    }
-  );
-}
-
 function resetFortuneParentGuideSections() {
   Object.entries(fortuneParentGuideSections).forEach(([key, section]) => {
     if (!section) return;
@@ -3256,20 +3135,8 @@ function resetFortuneParentGuideSections() {
   });
 }
 
-function updateFortuneTranslateButton(isEnabled) {
-  if (fortuneParentGuideTranslate) {
-    fortuneParentGuideTranslate.disabled = !isEnabled;
-    fortuneParentGuideTranslate.classList.toggle("btn-disabled", !isEnabled);
-  }
-  if (fortuneParentGuideAI) {
-    fortuneParentGuideAI.disabled = !isEnabled;
-    fortuneParentGuideAI.classList.toggle("btn-disabled", !isEnabled);
-  }
-}
-
 function setCurrentFortuneParentGuideData(data) {
   fortuneCurrentParentGuideData = data || null;
-  updateFortuneTranslateButton(Boolean(data));
 }
 
 function resetFortuneParentGuide(
@@ -3328,7 +3195,7 @@ function renderFortuneParentGuide(data) {
     if (fortuneParentGuideContent) {
       fortuneParentGuideContent.style.display = "none";
     }
-    setFortuneParentGuideStatus("Нет данных в разделах Parent Guide.");
+    setFortuneParentGuideStatus("");
     return;
   }
 
@@ -3824,6 +3691,7 @@ async function openFortuneMovieModal(movie, options = {}) {
 
   selectedFortuneKPMovie = movie || null;
   selectedFortuneLabel = displayLabel || null;
+  updateFortuneParentGuideImdbLink(movie?.imdbId || null);
 
   const canRemoveFromWheel = Boolean(
     fortuneWheelApi?.hasItem &&
@@ -3994,6 +3862,7 @@ function closeFortuneMovieModal() {
   }
   selectedFortuneKPMovie = null;
   selectedFortuneLabel = null;
+  updateFortuneParentGuideImdbLink(null);
   if (fortuneItemInput) {
     fortuneItemInput.focus();
   }
@@ -4118,31 +3987,6 @@ if (fortuneMovieModal) {
     if (event.target === fortuneMovieModal) {
       closeFortuneMovieModal();
     }
-  });
-}
-
-if (fortuneParentGuideTranslate) {
-  fortuneParentGuideTranslate.addEventListener(
-    "click",
-    openFortuneGuideInGoogleTranslate
-  );
-}
-
-if (orderParentGuideTranslate) {
-  orderParentGuideTranslate.addEventListener(
-    "click",
-    openOrderGuideInGoogleTranslate
-  );
-}
-
-if (orderParentGuideTitle) {
-  orderParentGuideTitle.addEventListener("click", reloadParentGuideForActiveOrder);
-  orderParentGuideTitle.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== " ") {
-      return;
-    }
-    event.preventDefault();
-    reloadParentGuideForActiveOrder();
   });
 }
 
@@ -5807,34 +5651,6 @@ function initFortuneWheel() {
   }
   if (shuffleBtn) {
     shuffleBtn.addEventListener("click", reshuffle);
-  }
-
-  if (fortuneParentGuideAI) {
-    fortuneParentGuideAI.addEventListener(
-      "click",
-      startFortuneParentGuideManualTranslation
-    );
-  }
-
-  if (orderParentGuideAI) {
-    orderParentGuideAI.addEventListener(
-      "click",
-      startOrderParentGuideManualTranslation
-    );
-  }
-
-  if (fortuneParentGuideAI) {
-    fortuneParentGuideAI.addEventListener(
-      "click",
-      startFortuneParentGuideManualTranslation
-    );
-  }
-
-  if (orderParentGuideAI) {
-    orderParentGuideAI.addEventListener(
-      "click",
-      startOrderParentGuideManualTranslation
-    );
   }
 
   input.value = items.join("\n");
