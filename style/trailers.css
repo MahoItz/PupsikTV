@@ -1645,6 +1645,25 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+.trailer-info__poster-wrap.is-editable {
+  cursor: pointer;
+  position: relative;
+}
+
+.trailer-info__poster-wrap.is-editable::after {
+  content: "Заменить";
+  position: absolute;
+  inset: auto 8px 8px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(6, 16, 28, 0.86);
+  border: 1px solid rgba(116, 222, 255, 0.26);
+  color: #e2fbff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
 .trailer-info__poster {
   width: 100%;
   height: 100%;
@@ -1810,6 +1829,75 @@
   gap: 8px;
 }
 
+.trailer-info__edit-form {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(116, 222, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.trailer-form-row {
+  display: grid;
+  gap: 12px;
+}
+
+.trailer-form-row--double {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trailer-form-field {
+  display: grid;
+  gap: 8px;
+}
+
+.trailer-form-field > span {
+  color: rgba(216, 248, 255, 0.82);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.trailer-form-input {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(116, 222, 255, 0.14);
+  background: rgba(8, 18, 34, 0.92);
+  color: #f3fbff;
+  font: inherit;
+}
+
+.trailer-form-input:focus {
+  outline: none;
+  border-color: rgba(116, 222, 255, 0.42);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12);
+}
+
+.trailer-form-textarea {
+  min-height: 132px;
+  resize: vertical;
+}
+
+.trailer-info__edit-hint {
+  color: rgba(216, 248, 255, 0.68);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.trailer-info__edit-actions,
+.trailer-info__footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.trailer-info__footer {
+  margin-top: 2px;
+}
+
 .trailer-kp-matches {
   display: grid;
   gap: 8px;
@@ -1837,6 +1925,10 @@
 @media (max-width: 1280px) {
   .trailer-app {
     grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  }
+
+  .trailer-form-row--double {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .trailer-info {

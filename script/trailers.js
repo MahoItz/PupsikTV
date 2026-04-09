@@ -125,6 +125,10 @@ let boostyReviewPreviewTimer = null;
 let boostyReviewPreviewRequestId = 0;
 let boostyReviewManualImageFile = null;
 let boostyReviewManualImageUrl = "";
+let isTrailerInfoEditing = false;
+let isSavingTrailerInfo = false;
+let trailerInfoManualPosterFile = null;
+let trailerInfoManualPosterPreviewUrl = "";
 let isTrailerListsLoading = false;
 let isPlannedSectionCollapsed = true;
 const trailerActorCache = new Map();
@@ -657,6 +661,29 @@ async function uploadBoostyReviewImage(file, title) {
   }
 
   return String(data?.imageUrl || "").trim();
+}
+
+async function uploadTrailerInfoPoster(file, title) {
+  const dataUrl = await readFileAsDataUrl(file);
+  const response = await fetch("/api/admin?action=game-posters", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAdminAuthHeaders(),
+    },
+    body: JSON.stringify({
+      source: dataUrl,
+      title,
+      folder: "trailers",
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.error || `Failed to upload poster: ${response.status}`);
+  }
+
+  return String(data?.publicUrl || "").trim();
 }
 
 function applyBoostyReviewManualImage(file) {
@@ -1350,8 +1377,8 @@ function buildKinopoiskPosterUrl(kinopoiskId) {
 
 function resolveTrailerPosterSrc(poster, kinopoiskId) {
   return (
-    buildKinopoiskPosterUrl(kinopoiskId) ||
     String(poster || "").trim() ||
+    buildKinopoiskPosterUrl(kinopoiskId) ||
     POSTER_PLACEHOLDER
   );
 }
@@ -1671,6 +1698,202 @@ function getSelectedTrailer() {
   return (
     getVisibleTrailers().find((item) => Number(item.id) === Number(selectedTrailerId)) || null
   );
+}
+
+function resetTrailerInfoPosterSelection() {
+  if (trailerInfoManualPosterPreviewUrl?.startsWith("blob:")) {
+    URL.revokeObjectURL(trailerInfoManualPosterPreviewUrl);
+  }
+  trailerInfoManualPosterFile = null;
+  trailerInfoManualPosterPreviewUrl = "";
+
+  const input = document.getElementById("trailerInfoPosterInput");
+  if (input) {
+    input.value = "";
+  }
+}
+
+function getTrailerInfoDraft(trailer = getSelectedTrailer()) {
+  const kinopoiskData = parseTrailerKinopoiskData(trailer?.kinopoisk_data) || {};
+  const countries = Array.isArray(kinopoiskData.countries)
+    ? kinopoiskData.countries.filter(Boolean)
+    : [];
+
+  return {
+    title: String(trailer?.title || kinopoiskData.title || "").trim(),
+    year:
+      trailer?.year !== null && trailer?.year !== undefined && trailer?.year !== ""
+        ? String(trailer.year)
+        : kinopoiskData?.year
+          ? String(kinopoiskData.year)
+          : "",
+    country: countries.join(", "),
+    description: String(kinopoiskData.description || "").trim(),
+    posterRaw:
+      String(trailer?.poster || "").trim() || String(kinopoiskData.posterUrl || "").trim(),
+    posterPreview: resolveTrailerPosterSrc(
+      String(trailer?.poster || "").trim() || String(kinopoiskData.posterUrl || "").trim(),
+      trailer?.kinopoisk_id || kinopoiskData?.kinopoiskId
+    ),
+  };
+}
+
+function populateTrailerInfoEditForm(trailer = getSelectedTrailer()) {
+  const draft = getTrailerInfoDraft(trailer);
+  const titleInput = document.getElementById("trailerInfoEditTitle");
+  const yearInput = document.getElementById("trailerInfoEditYear");
+  const countryInput = document.getElementById("trailerInfoEditCountry");
+  const descriptionInput = document.getElementById("trailerInfoEditDescription");
+  const poster = document.getElementById("trailerPoster");
+
+  if (titleInput) titleInput.value = draft.title;
+  if (yearInput) yearInput.value = draft.year;
+  if (countryInput) countryInput.value = draft.country;
+  if (descriptionInput) descriptionInput.value = draft.description;
+  if (poster) {
+    poster.src = draft.posterPreview;
+    poster.alt = draft.title ? `Постер: ${draft.title}` : "Постер фильма";
+    poster.onerror = () => {
+      poster.onerror = null;
+      poster.src = POSTER_PLACEHOLDER;
+    };
+  }
+}
+
+function setTrailerInfoEditMode(isEditing) {
+  isTrailerInfoEditing = Boolean(isEditing) && hasAdminAccess && Boolean(getSelectedTrailer());
+
+  const form = document.getElementById("trailerInfoEditForm");
+  const toggle = document.getElementById("trailerInfoEditToggle");
+  const posterWrap = document.querySelector(".trailer-info__poster-wrap");
+  const saveButton = document.getElementById("trailerInfoEditSave");
+
+  if (form) {
+    form.hidden = !isTrailerInfoEditing;
+  }
+
+  if (toggle) {
+    toggle.hidden = !hasAdminAccess || !getSelectedTrailer();
+    toggle.textContent = isTrailerInfoEditing ? "Скрыть редактирование" : "Редактировать";
+  }
+
+  if (posterWrap) {
+    posterWrap.classList.toggle("is-editable", isTrailerInfoEditing);
+  }
+
+  if (saveButton) {
+    saveButton.disabled = isSavingTrailerInfo;
+  }
+
+  if (isTrailerInfoEditing) {
+    populateTrailerInfoEditForm();
+  } else {
+    resetTrailerInfoPosterSelection();
+    setStatusText("trailerInfoEditStatus", "");
+  }
+}
+
+function applyTrailerInfoManualPoster(file) {
+  const poster = document.getElementById("trailerPoster");
+  if (!poster) return;
+
+  resetTrailerInfoPosterSelection();
+
+  if (!(file instanceof File)) {
+    populateTrailerInfoEditForm();
+    return;
+  }
+
+  trailerInfoManualPosterFile = file;
+  trailerInfoManualPosterPreviewUrl = URL.createObjectURL(file);
+  poster.src = trailerInfoManualPosterPreviewUrl;
+  poster.alt = "Постер фильма";
+  poster.onerror = () => {
+    poster.onerror = null;
+    poster.src = POSTER_PLACEHOLDER;
+  };
+}
+
+async function saveTrailerInfoEdits() {
+  if (!hasAdminAccess || isSavingTrailerInfo) return;
+
+  const trailer = getSelectedTrailer();
+  const titleInput = document.getElementById("trailerInfoEditTitle");
+  const yearInput = document.getElementById("trailerInfoEditYear");
+  const countryInput = document.getElementById("trailerInfoEditCountry");
+  const descriptionInput = document.getElementById("trailerInfoEditDescription");
+  const saveButton = document.getElementById("trailerInfoEditSave");
+
+  if (!trailer || !titleInput || !yearInput || !countryInput || !descriptionInput) {
+    return;
+  }
+
+  const title = String(titleInput.value || "").trim();
+  const yearRaw = String(yearInput.value || "").trim();
+  const description = String(descriptionInput.value || "").trim();
+  const countries = String(countryInput.value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (!title) {
+    setStatusText("trailerInfoEditStatus", "Введите название фильма.", true);
+    titleInput.focus();
+    return;
+  }
+
+  const year = yearRaw === "" ? null : Number.parseInt(yearRaw, 10);
+  if (yearRaw !== "" && (!Number.isFinite(year) || year < 1888 || year > 2100)) {
+    setStatusText("trailerInfoEditStatus", "Укажите корректный год.", true);
+    yearInput.focus();
+    return;
+  }
+
+  isSavingTrailerInfo = true;
+  if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.setAttribute("aria-busy", "true");
+  }
+  setStatusText("trailerInfoEditStatus", "Сохраняю изменения...");
+
+  try {
+    const kinopoiskData = parseTrailerKinopoiskData(trailer.kinopoisk_data) || {};
+    const poster =
+      trailerInfoManualPosterFile instanceof File
+        ? await uploadTrailerInfoPoster(trailerInfoManualPosterFile, title)
+        : String(trailer.poster || kinopoiskData.posterUrl || "").trim() || null;
+
+    await patchTrailer(trailer.id, {
+      title,
+      year,
+      poster,
+      kinopoisk_data: {
+        ...kinopoiskData,
+        title,
+        year,
+        description,
+        countries,
+        posterUrl: poster || String(kinopoiskData.posterUrl || "").trim() || null,
+      },
+      kinopoisk_cached_at: new Date().toISOString(),
+    });
+
+    setTrailerInfoEditMode(false);
+    setStatusText("trailerInfoEditStatus", "Изменения сохранены.");
+  } catch (error) {
+    console.error("Failed to save trailer info edits", error);
+    setStatusText(
+      "trailerInfoEditStatus",
+      error?.message || "Не удалось сохранить изменения.",
+      true
+    );
+  } finally {
+    isSavingTrailerInfo = false;
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.removeAttribute("aria-busy");
+    }
+  }
 }
 
 function setStatusText(elementId, message, isError = false) {
@@ -2488,11 +2711,26 @@ function toggleInfoVisibility(hasContent) {
 
 function resetKinopoiskInfo(message) {
   toggleInfoVisibility(false);
+  const empty = document.getElementById("trailerInfoEmpty");
   const link = document.getElementById("trailerKinopoiskLink");
+  const toggle = document.getElementById("trailerInfoEditToggle");
+  const form = document.getElementById("trailerInfoEditForm");
+  if (empty && message) {
+    empty.textContent = message;
+  }
   if (link) {
     link.hidden = true;
     link.href = "#";
   }
+  if (toggle) {
+    toggle.hidden = true;
+  }
+  if (form) {
+    form.hidden = true;
+  }
+  isTrailerInfoEditing = false;
+  resetTrailerInfoPosterSelection();
+  setStatusText("trailerInfoEditStatus", "");
 }
 
 function syncPlannedSectionState() {
@@ -2607,6 +2845,7 @@ function renderSelectedTrailer() {
   const deleteButton = document.getElementById("trailerDeleteButton");
 
   renderTrailerLists();
+  setTrailerInfoEditMode(false);
 
   if (!trailer) {
     if (title) title.textContent = "Выберите трейлер из списка";
@@ -3188,6 +3427,7 @@ function renderStoredKinopoiskInfo(info) {
   kpLink.hidden = !kpLink.href || kpLink.href === "#";
 
   toggleInfoVisibility(true);
+  setTrailerInfoEditMode(isTrailerInfoEditing);
 }
 
 function renderKinopoiskInfo(details, staff) {
@@ -3267,6 +3507,7 @@ function renderKinopoiskInfo(details, staff) {
   kpLink.hidden = !kpLink.href || kpLink.href === "#";
 
   toggleInfoVisibility(true);
+  setTrailerInfoEditMode(isTrailerInfoEditing);
 }
 
 async function applyKinopoiskSelection(trailer, filmId, searchResults) {
@@ -3526,6 +3767,11 @@ function setupFormEvents() {
   const releaseDatePrev = document.getElementById("trailerReleaseCalendarPrev");
   const releaseDateNext = document.getElementById("trailerReleaseCalendarNext");
   const releaseDateYearButton = document.getElementById("trailerReleaseCalendarYearButton");
+  const trailerInfoEditToggle = document.getElementById("trailerInfoEditToggle");
+  const trailerInfoEditForm = document.getElementById("trailerInfoEditForm");
+  const trailerInfoEditCancel = document.getElementById("trailerInfoEditCancel");
+  const trailerInfoPosterInput = document.getElementById("trailerInfoPosterInput");
+  const trailerInfoPosterWrap = document.querySelector(".trailer-info__poster-wrap");
 
   adminTabs?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-sidebar-mode]");
@@ -3573,6 +3819,40 @@ function setupFormEvents() {
     }
     setStatusText("boostyReviewFormStatus", "");
     applyBoostyReviewManualImage(file);
+  });
+
+  trailerInfoEditToggle?.addEventListener("click", () => {
+    if (!hasAdminAccess || !getSelectedTrailer()) return;
+    setTrailerInfoEditMode(!isTrailerInfoEditing);
+  });
+
+  trailerInfoEditCancel?.addEventListener("click", () => {
+    setTrailerInfoEditMode(false);
+  });
+
+  trailerInfoEditForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await saveTrailerInfoEdits();
+  });
+
+  trailerInfoPosterWrap?.addEventListener("click", () => {
+    if (!isTrailerInfoEditing) return;
+    trailerInfoPosterInput?.click();
+  });
+
+  trailerInfoPosterInput?.addEventListener("change", () => {
+    const file = trailerInfoPosterInput.files?.[0] || null;
+    if (!file) {
+      applyTrailerInfoManualPoster(null);
+      return;
+    }
+    if (!String(file.type || "").startsWith("image/")) {
+      setStatusText("trailerInfoEditStatus", "Нужен файл изображения.", true);
+      trailerInfoPosterInput.value = "";
+      return;
+    }
+    applyTrailerInfoManualPoster(file);
+    setStatusText("trailerInfoEditStatus", `Выбран постер: ${file.name}`);
   });
   boostyReviewImageClearButton?.addEventListener("click", () => {
     applyBoostyReviewManualImage(null);

@@ -277,6 +277,7 @@
           <div class="trailer-info__hero">
             <div class="trailer-info__poster-wrap">
               <img id="trailerPoster" class="trailer-info__poster" src="/images/placeholder-poster.webp" alt="Постер фильма">
+              <input id="trailerInfoPosterInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden>
             </div>
             <div class="trailer-info__headline">
               <h3 id="trailerInfoTitle">Без названия</h3>
@@ -284,6 +285,36 @@
               <div id="trailerInfoBadges" class="trailer-info__badges"></div>
             </div>
           </div>
+
+          <form id="trailerInfoEditForm" class="trailer-info__edit-form" hidden>
+            <div class="trailer-form-row">
+              <label class="trailer-form-field">
+                <span>Название фильма</span>
+                <input id="trailerInfoEditTitle" class="trailer-form-input" type="text" maxlength="300" autocomplete="off">
+              </label>
+            </div>
+            <div class="trailer-form-row trailer-form-row--double">
+              <label class="trailer-form-field">
+                <span>Год</span>
+                <input id="trailerInfoEditYear" class="trailer-form-input" type="number" min="1888" max="2100" inputmode="numeric">
+              </label>
+              <label class="trailer-form-field">
+                <span>Страна</span>
+                <input id="trailerInfoEditCountry" class="trailer-form-input" type="text" maxlength="250" autocomplete="off">
+              </label>
+            </div>
+            <div class="trailer-form-row">
+              <label class="trailer-form-field">
+                <span>Описание</span>
+                <textarea id="trailerInfoEditDescription" class="trailer-form-input trailer-form-textarea" rows="5" maxlength="5000"></textarea>
+              </label>
+            </div>
+            <div class="trailer-info__edit-hint">Нажмите на постер, чтобы загрузить свой файл.</div>
+            <div class="trailer-info__edit-actions">
+              <button id="trailerInfoEditSave" class="btn btn-primary" type="submit">Сохранить</button>
+              <button id="trailerInfoEditCancel" class="btn btn-secondary" type="button">Отмена</button>
+            </div>
+          </form>
 
           <div class="trailer-info__block">
             <h4>Описание</h4>
@@ -299,6 +330,10 @@
             <h4>Релиз</h4>
             <p id="trailerInfoRelease" class="trailer-info__description"></p>
           </div>
+          <div class="trailer-info__footer">
+            <button id="trailerInfoEditToggle" class="trailer-list-section__more trailer-list-section__more--link" type="button" hidden>Редактировать</button>
+          </div>
+          <p id="trailerInfoEditStatus" class="trailer-form__status" aria-live="polite"></p>
         </div>
       </aside>
 
