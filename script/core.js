@@ -158,7 +158,7 @@ async function deleteGamePosterFromStorage(posterUrl) {
 
 const TWITCH_AUTH_SCOPES = ["user:read:chat", "user:bot", "channel:bot"];
 let TWITCH_CLIENT_ID = null;
-let SUPABASE_KEY;
+let SUPABASE_PUBLIC_KEY;
 let supabaseClient;
 let currentSupabaseKey = null;
 
@@ -220,6 +220,7 @@ let adminToken = localStorage.getItem("adminToken") || null;
 let adminTokenExpiresAt = localStorage.getItem("adminTokenExpiresAt") || null;
 let isAdmin = false;
 let adminElements = [];
+const SETTINGS_API_URL = "/api/settings";
 // Kinopoisk (unofficial API)
 
 function updateAdminSession(token, expiresAt) {
@@ -256,6 +257,10 @@ function clearAdminSession() {
   if (typeof hideAdminControls === "function") {
     hideAdminControls(true);
   }
+}
+
+function getAdminAuthHeaders() {
+  return adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
 }
 let KINOPOISK_API_KEY;
 const KINOPOISK_SEARCH_URL =
@@ -574,18 +579,13 @@ async function checkAiModelsStatus() {
 }
 
 async function persistAiModelStatuses() {
-  if (!supabaseClient || !settingsRowId) {
-    console.warn("Cannot persist AI statuses: Supabase client or settingsRowId missing");
+  if (!adminToken) {
+    console.warn("Cannot persist AI statuses: admin token missing");
     return;
   }
 
   try {
-    const { error } = await supabaseClient
-      .from("settings")
-      .update({ ai_model_statuses: aiModelStatuses })
-      .eq("id", settingsRowId);
-
-    if (error) throw error;
+    await persistSettingsPayload({ ai_model_statuses: aiModelStatuses });
     console.log("AI model statuses persisted to Supabase");
   } catch (err) {
     console.error("Failed to persist AI statuses", err);
@@ -593,55 +593,42 @@ async function persistAiModelStatuses() {
 }
 
 async function persistSettingsPayload(payload) {
-  if (!supabaseClient) {
-    throw new Error("Supabase client is not initialized");
+  if (!adminToken) {
+    throw new Error("Admin token is missing");
   }
 
-  if (settingsRowId) {
-    const { error } = await supabaseClient
-      .from("settings")
-      .update(payload)
-      .eq("id", settingsRowId);
-    if (error) throw error;
-    return;
+  const response = await fetch(SETTINGS_API_URL, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAdminAuthHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  let result = null;
+  try {
+    result = await response.json();
+  } catch {
+    result = null;
   }
 
-  const { data, error } = await supabaseClient
-    .from("settings")
-    .select("id")
-    .order("id", { ascending: true })
-    .limit(1);
-
-  if (error) throw error;
-
-  const existing = Array.isArray(data) && data.length > 0 ? data[0] : null;
-
-  if (existing) {
-    settingsRowId = existing.id ?? settingsRowId;
-    const { error: updateError } = await supabaseClient
-      .from("settings")
-      .update(payload)
-      .eq("id", settingsRowId);
-    if (updateError) throw updateError;
-    return;
+  if (response.status === 401) {
+    clearAdminSession();
   }
 
-  const { data: inserted, error: insertError } = await supabaseClient
-    .from("settings")
-    .insert(payload)
-    .select("id")
-    .single();
+  if (!response.ok) {
+    throw new Error(
+      result?.error || `Failed to persist settings: ${response.status}`
+    );
+  }
 
-  if (insertError) throw insertError;
-
-  settingsRowId = inserted?.id ?? settingsRowId;
+  if (typeof result?.id === "number") {
+    settingsRowId = result.id;
+  }
 }
 
 async function persistAiModelSelection(modelValue, modelName) {
-  if (!supabaseClient) {
-    throw new Error("Supabase client is not initialized");
-  }
-
   const payload = {
     selected_ai_model: modelValue || null,
     selected_ai_model_name: modelName || null,
@@ -1305,18 +1292,18 @@ async function loadEnv(options = {}) {
       error.status = 500;
       throw error;
     }
-    const key = env.SUPABASE_KEY;
+    const key = env.SUPABASE_PUBLIC_KEY || env.SUPABASE_KEY;
     if (!key) {
-      const error = new Error("В ответе сервера отсутствует SUPABASE_KEY.");
+      const error = new Error("В ответе сервера отсутствует SUPABASE_PUBLIC_KEY.");
       error.status = 500;
       throw error;
     }
     if (!supabaseClient || currentSupabaseKey !== key) {
-      SUPABASE_KEY = key;
+      SUPABASE_PUBLIC_KEY = key;
       supabaseClient = window.supabase.createClient(SUPABASE_URL, key);
       currentSupabaseKey = key;
     } else {
-      SUPABASE_KEY = key;
+      SUPABASE_PUBLIC_KEY = key;
     }
     if (env.KINOPOISK_API_KEY) {
       kpApiPrimaryKey = env.KINOPOISK_API_KEY;
@@ -2589,60 +2576,14 @@ async function persistRouletteLastWinner(value) {
       ? null
       : String(value).trim() || null;
 
-  if (!supabaseClient) {
+  if (!adminToken) {
     rouletteLastWinnerHasPendingSync = true;
     rouletteLastWinnerPendingValue = normalizedValue;
     return;
   }
 
   try {
-    if (settingsRowId) {
-      const { error } = await supabaseClient
-        .from("settings")
-        .update({ roulette_last_winner: normalizedValue })
-        .eq("id", settingsRowId);
-      if (error) throw error;
-      rouletteLastWinnerHasPendingSync = false;
-      rouletteLastWinnerPendingValue = null;
-      return;
-    }
-
-    const { data, error } = await supabaseClient
-      .from("settings")
-      .select("id")
-      .limit(1);
-
-    if (error) throw error;
-
-    const existing = Array.isArray(data) && data.length > 0 ? data[0] : null;
-
-    if (existing) {
-      settingsRowId = existing.id ?? settingsRowId;
-      const { error: updateError } = await supabaseClient
-        .from("settings")
-        .update({ roulette_last_winner: normalizedValue })
-        .eq("id", settingsRowId);
-      if (updateError) throw updateError;
-      rouletteLastWinnerHasPendingSync = false;
-      rouletteLastWinnerPendingValue = null;
-      return;
-    }
-
-    if (normalizedValue === null) {
-      rouletteLastWinnerHasPendingSync = false;
-      rouletteLastWinnerPendingValue = null;
-      return;
-    }
-
-    const { data: inserted, error: insertError } = await supabaseClient
-      .from("settings")
-      .insert({ roulette_last_winner: normalizedValue })
-      .select("id")
-      .single();
-
-    if (insertError) throw insertError;
-
-    settingsRowId = inserted?.id ?? settingsRowId;
+    await persistSettingsPayload({ roulette_last_winner: normalizedValue });
     rouletteLastWinnerHasPendingSync = false;
     rouletteLastWinnerPendingValue = null;
   } catch (err) {

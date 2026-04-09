@@ -1,28 +1,15 @@
-const { createClient } = require('@supabase/supabase-js');
 const {
   extractBearerToken,
   verifyAdminToken,
 } = require('../lib/admin-session.js');
+const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
-const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
 const TABLE_NAME = 'kinopoisk_actors';
 const SELECT_FIELDS =
   'id, kinopoisk_film_id, staff_id, actor_name, poster_url, profession_text, created_at, updated_at';
 const ALLOWED_METHODS = ['GET', 'POST'];
 const PG_UNDEFINED_TABLE = '42P01';
 const PG_INSUFFICIENT_PRIVILEGE = '42501';
-
-function createSupabaseClient() {
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
-  if (!supabaseKey) {
-    throw new Error('Missing SUPABASE key');
-  }
-
-  return createClient(SUPABASE_URL, supabaseKey, {
-    auth: { persistSession: false },
-  });
-}
 
 function verifyAdminRequest(req) {
   const token = extractBearerToken(req.headers.authorization);
@@ -219,7 +206,7 @@ module.exports = async function handler(req, res) {
 
   let supabase;
   try {
-    supabase = createSupabaseClient();
+    supabase = createSupabaseServerClient();
   } catch (error) {
     console.error('Failed to initialize Supabase client', error);
     return res.status(500).json({ error: 'Supabase is not configured' });

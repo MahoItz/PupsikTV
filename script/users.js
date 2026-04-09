@@ -1,4 +1,5 @@
 const USER_LIST_LIMIT = 30;
+const USERS_API_URL = "/api/users";
 let usersList = [];
 let usersLoaded = false;
 let usersLoadingPromise = null;
@@ -159,11 +160,33 @@ async function deleteUserFromSupabase(name) {
   const normalized = normalizeUserName(name);
   if (!normalized) return;
   try {
-    const client = await waitForSupabaseClientForUsers();
-    const { error } = await client.from("users").delete().eq("user", normalized);
-    if (error) throw error;
-    usersList = usersList.filter((item) => item.user !== normalized);
-    usersLoaded = false;
+    const token = localStorage.getItem("adminToken") || "";
+    if (!token) {
+      throw new Error("Admin token is missing");
+    }
+
+    const response = await fetch(USERS_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "delete",
+        userName: normalized,
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(
+        payload?.error || `Failed to delete user: ${response.status}`
+      );
+    }
+
+    const deletedUserName = payload?.item?.user || normalized;
+    usersList = usersList.filter((item) => item.user !== deletedUserName);
+    usersLoaded = true;
   } catch (err) {
     console.error("Failed to delete user", err);
   }
@@ -172,42 +195,40 @@ async function deleteUserFromSupabase(name) {
 async function recordUserOrder({ userName, type }) {
   const normalized = normalizeUserName(userName);
   if (!normalized) return;
-  const key = type === "games" ? "games" : "movies";
   try {
-    const client = await waitForSupabaseClientForUsers();
-    const { data, error } = await client
-      .from("users")
-      .select("user, movies, games")
-      .ilike("user", normalized)
-      .limit(1);
-    if (error) throw error;
-    const existing = Array.isArray(data) ? data[0] : null;
-    if (existing) {
-      const payload = {
-        movies: Number(existing.movies ?? 0) || 0,
-        games: Number(existing.games ?? 0) || 0,
-      };
-      payload[key] = (payload[key] || 0) + 1;
-      const { error: updateError } = await client
-        .from("users")
-        .update(payload)
-        .eq("user", existing.user);
-      if (updateError) throw updateError;
-      usersList = usersList.filter((item) => item.user !== existing.user);
+    const token = localStorage.getItem("adminToken") || "";
+    if (!token) {
+      throw new Error("Admin token is missing");
+    }
+
+    const response = await fetch(USERS_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "increment",
+        userName: normalized,
+        type,
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(
+        payload?.error || `Failed to update user stats: ${response.status}`
+      );
+    }
+
+    const item = payload?.item;
+    if (item?.user) {
+      usersList = usersList.filter((entry) => entry.user !== item.user);
       usersList.push({
-        user: existing.user,
-        movies: payload.movies,
-        games: payload.games,
+        user: item.user,
+        movies: Number(item.movies ?? 0) || 0,
+        games: Number(item.games ?? 0) || 0,
       });
-    } else {
-      const payload = {
-        user: normalized,
-        movies: type === "movies" ? 1 : 0,
-        games: type === "games" ? 1 : 0,
-      };
-      const { error: insertError } = await client.from("users").insert(payload);
-      if (insertError) throw insertError;
-      usersList.push(payload);
     }
     usersLoaded = true;
   } catch (err) {
@@ -219,47 +240,41 @@ async function removeUserOrder({ userName, type }) {
   const normalized = normalizeUserName(userName);
   if (!normalized) return;
 
-  const key = type === "games" ? "games" : "movies";
-
   try {
-    const client = await waitForSupabaseClientForUsers();
-    const { data, error } = await client
-      .from("users")
-      .select("user, movies, games")
-      .ilike("user", normalized)
-      .limit(1);
+    const token = localStorage.getItem("adminToken") || "";
+    if (!token) {
+      throw new Error("Admin token is missing");
+    }
 
-    if (error) throw error;
+    const response = await fetch(USERS_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "decrement",
+        userName: normalized,
+        type,
+      }),
+    });
 
-    const existing = Array.isArray(data) ? data[0] : null;
-    if (!existing) return;
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(
+        payload?.error || `Failed to decrement user stats: ${response.status}`
+      );
+    }
 
-    const payload = {
-      movies: Math.max(0, Number(existing.movies ?? 0) || 0),
-      games: Math.max(0, Number(existing.games ?? 0) || 0),
-    };
-    payload[key] = Math.max(0, (payload[key] || 0) - 1);
-
-    if (payload.movies === 0 && payload.games === 0) {
-      const { error: deleteError } = await client
-        .from("users")
-        .delete()
-        .eq("user", existing.user);
-      if (deleteError) throw deleteError;
-
-      usersList = usersList.filter((item) => item.user !== existing.user);
-    } else {
-      const { error: updateError } = await client
-        .from("users")
-        .update(payload)
-        .eq("user", existing.user);
-      if (updateError) throw updateError;
-
-      usersList = usersList.filter((item) => item.user !== existing.user);
+    const item = payload?.item;
+    if (payload?.deleted && item?.user) {
+      usersList = usersList.filter((entry) => entry.user !== item.user);
+    } else if (item?.user) {
+      usersList = usersList.filter((entry) => entry.user !== item.user);
       usersList.push({
-        user: existing.user,
-        movies: payload.movies,
-        games: payload.games,
+        user: item.user,
+        movies: Number(item.movies ?? 0) || 0,
+        games: Number(item.games ?? 0) || 0,
       });
     }
 

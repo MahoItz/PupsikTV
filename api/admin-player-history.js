@@ -1,11 +1,10 @@
-const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('node:crypto');
 const {
   extractBearerToken,
   verifyAdminToken,
 } = require('../lib/admin-session.js');
+const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
-const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
 const TABLE_NAME = 'admin_player_history';
 const MAX_PLAYER_HISTORY = 15;
 const HISTORY_CACHE_CONTROL = 'private, max-age=30, must-revalidate';
@@ -42,17 +41,6 @@ function normalizeRowPayload(payload) {
     poster: typeof payload?.poster === 'string' ? payload.poster : null,
     created_at: new Date().toISOString(),
   };
-}
-
-function createSupabaseClient() {
-  const supabaseKey = process.env.SUPABASE_KEY;
-  if (!supabaseKey) {
-    throw new Error('Missing SUPABASE_KEY');
-  }
-
-  return createClient(SUPABASE_URL, supabaseKey, {
-    auth: { persistSession: false },
-  });
 }
 
 function verifyAdminRequest(req) {
@@ -187,7 +175,7 @@ async function handler(req, res) {
 
   let supabase;
   try {
-    supabase = createSupabaseClient();
+    supabase = createSupabaseServerClient();
   } catch (error) {
     console.error('Supabase configuration error', error);
     return res.status(500).json({ error: 'Server configuration error' });

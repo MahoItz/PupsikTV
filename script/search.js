@@ -773,15 +773,29 @@ async function persistKinopoiskMetadata({ table, itemId, kinopoiskId, imdbId }) 
     return;
   }
   try {
-    const { error } = await supabaseClient
-      .from(table)
-      .update({
-        kp_id: kinopoiskId,
-        imdb_id: imdbId || null,
-      })
-      .eq("id", itemId);
-    if (error) {
-      throw error;
+    const token = localStorage.getItem("adminToken") || "";
+    if (!token) {
+      throw new Error("Admin token is missing");
+    }
+
+    const response = await fetch("/api/media-admin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "update_kinopoisk_metadata",
+        table,
+        itemId,
+        kinopoiskId,
+        imdbId: imdbId || null,
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Failed to persist Kinopoisk IDs: ${response.status}`);
     }
   } catch (err) {
     console.error("Failed to persist Kinopoisk IDs", err);

@@ -1062,11 +1062,26 @@ async function submitRating() {
         studios: data.studios ?? watchedMovie.studios,
       };
 
-      const { error: deleteError } = await supabaseClient
-        .from("Movie_Orders")
-        .delete()
-        .eq("id", ratingMovieId);
-      if (deleteError) throw deleteError;
+      const token = localStorage.getItem("adminToken") || "";
+      const deleteResponse = await fetch("/api/media-admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "delete_item",
+          table: "Movie_Orders",
+          id: ratingMovieId,
+        }),
+      });
+      const deletePayload = await deleteResponse.json().catch(() => ({}));
+      if (!deleteResponse.ok) {
+        throw new Error(
+          deletePayload?.error ||
+            `Movie order delete failed: ${deleteResponse.status}`
+        );
+      }
 
       allMovies.unshift(newMovie);
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
@@ -1181,11 +1196,27 @@ async function submitGameRating() {
         userRating: null,
       };
 
-      const { error: deleteError } = await supabaseClient
-        .from("Game_Orders")
-        .delete()
-        .eq("id", ratingGameId);
-      if (deleteError) throw deleteError;
+      const token = localStorage.getItem("adminToken") || "";
+      const deleteResponse = await fetch("/api/media-admin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "delete_item",
+          table: "Game_Orders",
+          id: ratingGameId,
+          posterUrl: source?.poster || "",
+        }),
+      });
+      const deletePayload = await deleteResponse.json().catch(() => ({}));
+      if (!deleteResponse.ok) {
+        throw new Error(
+          deletePayload?.error ||
+            `Game order delete failed: ${deleteResponse.status}`
+        );
+      }
 
       allPlayedGames.unshift(newGame);
       localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
@@ -1439,51 +1470,26 @@ async function submitUserGameRating() {
   setUserRateStatus("userRateGameStatus", "Сохраняем оценку...");
 
   try {
-    const { data: existingRatingRow, error: selectError } = await supabaseClient
-      .from("ratings")
-      .select("id, rating")
-      .eq("movie_id", userRatingGameId)
-      .eq("category", "Games")
-      .eq("user_id", getGuestId())
-      .maybeSingle();
-
-    if (selectError) throw selectError;
-
-    const hasExistingRating = Boolean(existingRatingRow?.id);
-    const previousStoredRating = hasExistingRating
-      ? Number(existingRatingRow.rating ?? 0) || 0
-      : previousRating;
-    const newSum = hasExistingRating
-      ? currentSum - previousStoredRating + rating
-      : currentSum + rating;
-    const newCount = hasExistingRating ? currentCount : currentCount + 1;
-
-    const { error: updateGameError } = await supabaseClient
-      .from("games")
-      .update({
-        game_rating_sum: newSum,
-        game_rating_count: newCount,
-      })
-      .eq("id", userRatingGameId);
-    if (updateGameError) throw updateGameError;
-
-    if (hasExistingRating) {
-      const { error: updateRatingError } = await supabaseClient
-        .from("ratings")
-        .update({ rating, title: game ? game.title : null })
-        .eq("id", existingRatingRow.id);
-      if (updateRatingError) throw updateRatingError;
-    } else {
-      const { error: insertRatingError } = await supabaseClient.from("ratings").insert({
-        movie_id: userRatingGameId,
+    const response = await fetch("/api/game-ratings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        target_id: userRatingGameId,
         rating,
-        source: "user",
-        category: "Games",
-        title: game ? game.title : null,
         user_id: getGuestId(),
-      });
-      if (insertRatingError) throw insertRatingError;
+        title: game ? game.title : null,
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || ("Failed to submit rating: " + response.status));
     }
+
+    const newSum = Number(payload?.game?.game_rating_sum ?? currentSum) || 0;
+    const newCount = Number(payload?.game?.game_rating_count ?? currentCount) || 0;
 
     if (game) {
       game.ratingSum = newSum;

@@ -1,28 +1,18 @@
-const { createClient } = require('@supabase/supabase-js');
 const {
   extractBearerToken,
   issueAdminToken,
   verifyAdminToken,
 } = require('../lib/admin-session.js');
+const {
+  createSupabaseServerClient,
+  getSupabasePublicKey,
+} = require('../lib/supabase-config.js');
 
-const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
 const ALLOWED_ACTIONS = ['env', 'verify-admin'];
-
-function createSupabaseClient() {
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
-  if (!supabaseKey) {
-    throw new Error('Missing SUPABASE key');
-  }
-
-  return createClient(SUPABASE_URL, supabaseKey, {
-    auth: { persistSession: false },
-  });
-}
 
 async function loadSelectedKinopoiskApi() {
   try {
-    const supabase = createSupabaseClient();
+    const supabase = createSupabaseServerClient();
     const { data, error } = await supabase
       .from('settings')
       .select('kp_api')
@@ -82,12 +72,13 @@ async function handleEnv(req, res) {
     isAdmin = true;
   }
 
-  if (!process.env.SUPABASE_KEY) {
-    return res.status(500).json({ error: 'Missing SUPABASE_KEY' });
+  const supabasePublicKey = getSupabasePublicKey();
+  if (!supabasePublicKey) {
+    return res.status(500).json({ error: 'Missing SUPABASE_PUBLIC_KEY' });
   }
 
   const env = {
-    SUPABASE_KEY: process.env.SUPABASE_KEY,
+    SUPABASE_PUBLIC_KEY: supabasePublicKey,
     isAdmin,
     TMDB_ENABLED: Boolean(process.env.TMDB_API),
   };

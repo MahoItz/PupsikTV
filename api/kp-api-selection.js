@@ -1,23 +1,10 @@
-const { createClient } = require('@supabase/supabase-js');
 const {
   extractBearerToken,
   verifyAdminToken,
 } = require('../lib/admin-session.js');
+const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
-const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
 const ALLOWED_METHODS = ['PATCH'];
-
-function createSupabaseClient() {
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
-  if (!supabaseKey) {
-    throw new Error('Missing SUPABASE key');
-  }
-
-  return createClient(SUPABASE_URL, supabaseKey, {
-    auth: { persistSession: false },
-  });
-}
 
 function parseBody(req) {
   if (!req.body) return {};
@@ -79,7 +66,7 @@ async function handler(req, res) {
 
   let supabase;
   try {
-    supabase = createSupabaseClient();
+    supabase = createSupabaseServerClient();
   } catch (error) {
     console.error('Supabase configuration error', error);
     return res.status(500).json({ error: 'Server configuration error' });

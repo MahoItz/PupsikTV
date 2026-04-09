@@ -9,13 +9,15 @@ This repository contains the source code for the PupsikTV website. The project i
 3. Create a `.env` file in the project root and provide the required environment variables:
 
 ```
-SUPABASE_KEY=<your supabase key>
+SUPABASE_PUBLIC_KEY=<your public anon/publishable key>
+SUPABASE_SERVICE_ROLE_KEY=<optional for now, recommended for server API routes>
 KINOPOISK_API_KEY=<optional, used for admin search>
 RAWG_API_KEY=<optional, used for admin search>
 EDIT_PASSWORD=<admin password>
+ADMIN_SESSION_SECRET=<required for admin token signing>
 ```
 
-Only `SUPABASE_KEY` and `EDIT_PASSWORD` are required for basic operation. The other keys enable additional admin features.
+For backward compatibility the code still falls back to `SUPABASE_KEY`, but new deployments should use `SUPABASE_PUBLIC_KEY` for the browser and `SUPABASE_SERVICE_ROLE_KEY` for server-side API routes.
 
 ## Running locally
 

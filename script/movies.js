@@ -2292,18 +2292,24 @@ async function deletePlayedGame(id) {
   renderPlayedGames();
 
   try {
-    const { data, error } = await supabaseClient
-      .from("games")
-      .delete()
-      .eq("id", id)
-      .select("id")
-      .maybeSingle();
-    if (error) throw error;
-    if (!data) {
-      throw new Error("Played game delete was blocked by security rules.");
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/media-admin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "delete_item",
+        table: "games",
+        id,
+        posterUrl: removedGame?.poster || "",
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Played game delete failed: ${response.status}`);
     }
-
-    await deleteGamePosterFromStorage(removedGame.poster);
 
     if (hadUserRating) {
       delete ratedGames[id];

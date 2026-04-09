@@ -2457,15 +2457,22 @@ async function performDeleteMovie(id) {
   renderMovies();
 
   try {
-    const { data, error } = await supabaseClient
-      .from("movies")
-      .delete()
-      .eq("id", id)
-      .select("id")
-      .maybeSingle();
-    if (error) throw error;
-    if (!data) {
-      throw new Error("Movie delete was blocked by security rules.");
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/media-admin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "delete_item",
+        table: "movies",
+        id,
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Movie delete failed: ${response.status}`);
     }
 
     localStorage.setItem("moviesCache", JSON.stringify(allMovies));
@@ -2493,15 +2500,22 @@ async function performDeleteOrder(id) {
   renderWatchlist();
 
   try {
-    const { data, error } = await supabaseClient
-      .from("Movie_Orders")
-      .delete()
-      .eq("id", id)
-      .select("id")
-      .maybeSingle();
-    if (error) throw error;
-    if (!data) {
-      throw new Error("Movie order delete was blocked by security rules.");
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/media-admin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "delete_item",
+        table: "Movie_Orders",
+        id,
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Movie order delete failed: ${response.status}`);
     }
 
     if (typeof removeUserOrder === "function" && removedOrder?.orderBy) {
@@ -2527,17 +2541,24 @@ async function performDeleteGameOrder(id) {
   renderGames();
 
   try {
-    const { data, error } = await supabaseClient
-      .from("Game_Orders")
-      .delete()
-      .eq("id", id)
-      .select("id")
-      .maybeSingle();
-    if (error) throw error;
-    if (!data) {
-      throw new Error("Game order delete was blocked by security rules.");
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/media-admin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "delete_item",
+        table: "Game_Orders",
+        id,
+        posterUrl: removedOrder?.poster || "",
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Game order delete failed: ${response.status}`);
     }
-    await deleteGamePosterFromStorage(removedOrder.poster);
   } catch (err) {
     console.error("Error deleting game order from Supabase", err);
     gameOrders.splice(index, 0, removedOrder);

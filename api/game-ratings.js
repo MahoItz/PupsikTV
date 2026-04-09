@@ -1,7 +1,7 @@
 const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
 const RATINGS_TABLE = 'ratings';
-const MOVIES_TABLE = 'movies';
+const GAMES_TABLE = 'games';
 
 function parseBody(req) {
   if (!req.body) return {};
@@ -37,19 +37,12 @@ function normalizeTitle(value) {
   return title || null;
 }
 
-function normalizeTargetType(value) {
-  const normalized = String(value || '')
-    .trim()
-    .toLowerCase();
-  return normalized === 'order' ? 'order' : 'movie';
-}
-
-async function recalculateMovieRatings(supabase, movieId) {
+async function recalculateGameRatings(supabase, gameId) {
   const { data, error } = await supabase
     .from(RATINGS_TABLE)
     .select('rating')
-    .eq('movie_id', movieId)
-    .eq('category', 'Movie');
+    .eq('movie_id', gameId)
+    .eq('category', 'Games');
 
   if (error) throw error;
 
@@ -61,13 +54,13 @@ async function recalculateMovieRatings(supabase, movieId) {
   const ratingCount = rows.length;
 
   const { data: updated, error: updateError } = await supabase
-    .from(MOVIES_TABLE)
+    .from(GAMES_TABLE)
     .update({
-      rating_sum: ratingSum,
-      rating_count: ratingCount,
+      game_rating_sum: ratingSum,
+      game_rating_count: ratingCount,
     })
-    .eq('id', movieId)
-    .select('id, rating_sum, rating_count')
+    .eq('id', gameId)
+    .select('id, game_rating_sum, game_rating_count')
     .single();
 
   if (updateError) throw updateError;
@@ -92,8 +85,6 @@ async function handler(req, res) {
   const rating = parseRating(payload?.rating);
   const userId = normalizeUserId(payload?.user_id);
   const title = normalizeTitle(payload?.title);
-  const targetType = normalizeTargetType(payload?.target_type);
-  const category = targetType === 'order' ? 'MovieOrder' : 'Movie';
 
   if (!targetId || rating === null || !userId) {
     return res.status(400).json({ error: 'Invalid payload' });
@@ -104,7 +95,7 @@ async function handler(req, res) {
     supabase = createSupabaseServerClient();
   } catch (error) {
     console.error('Supabase configuration error', error);
-    return res.status(500).json({ error: 'Server configuration error' });
+    return res.status(500).json({ error: error?.message || 'Server configuration error' });
   }
 
   try {
@@ -112,7 +103,7 @@ async function handler(req, res) {
       .from(RATINGS_TABLE)
       .select('id')
       .eq('movie_id', targetId)
-      .eq('category', category)
+      .eq('category', 'Games')
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -133,7 +124,7 @@ async function handler(req, res) {
         movie_id: targetId,
         rating,
         source: 'user',
-        category,
+        category: 'Games',
         title,
         user_id: userId,
       });
@@ -141,22 +132,15 @@ async function handler(req, res) {
       if (insertError) throw insertError;
     }
 
-    if (targetType === 'movie') {
-      const movie = await recalculateMovieRatings(supabase, targetId);
-      return res.status(200).json({
-        ok: true,
-        movie,
-        updatedExisting: Boolean(existingRating?.id),
-      });
-    }
-
+    const game = await recalculateGameRatings(supabase, targetId);
     return res.status(200).json({
       ok: true,
+      game,
       updatedExisting: Boolean(existingRating?.id),
     });
   } catch (error) {
-    console.error('Failed to submit movie rating', error);
-    return res.status(500).json({ error: 'Failed to submit movie rating' });
+    console.error('Failed to submit game rating', error);
+    return res.status(500).json({ error: error?.message || 'Failed to submit game rating' });
   }
 }
 

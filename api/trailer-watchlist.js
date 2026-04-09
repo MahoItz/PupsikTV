@@ -1,10 +1,9 @@
-const { createClient } = require('@supabase/supabase-js');
 const {
   extractBearerToken,
   verifyAdminToken,
 } = require('../lib/admin-session.js');
+const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
-const SUPABASE_URL = 'https://shwekurmzyzivtworjup.supabase.co';
 const TABLE_NAME = 'trailer_watchlist';
 const ALLOWED_METHODS = ['GET', 'POST', 'PATCH', 'DELETE'];
 const VALID_STATUSES = new Set(['planned', 'watched']);
@@ -13,18 +12,6 @@ const PG_UNDEFINED_COLUMN = '42703';
 const PG_INSUFFICIENT_PRIVILEGE = '42501';
 const SELECT_FIELDS =
   'id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, kinopoisk_data, kinopoisk_cached_at, watched_at, created_at, updated_at';
-
-function createSupabaseClient() {
-  const supabaseKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
-  if (!supabaseKey) {
-    throw new Error('Missing SUPABASE key');
-  }
-
-  return createClient(SUPABASE_URL, supabaseKey, {
-    auth: { persistSession: false },
-  });
-}
 
 function verifyAdminRequest(req) {
   const token = extractBearerToken(req.headers.authorization);
@@ -411,7 +398,7 @@ async function handler(req, res) {
 
   let supabase;
   try {
-    supabase = createSupabaseClient();
+    supabase = createSupabaseServerClient();
   } catch (error) {
     console.error('Supabase configuration error', error);
     return res.status(500).json({ error: 'Server configuration error' });
