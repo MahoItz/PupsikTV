@@ -1,7 +1,6 @@
 const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
 const RATINGS_TABLE = 'ratings';
-const MOVIES_TABLE = 'movies';
 
 function parseBody(req) {
   if (!req.body) return {};
@@ -41,15 +40,24 @@ function normalizeTargetType(value) {
   const normalized = String(value || '')
     .trim()
     .toLowerCase();
-  return normalized === 'order' ? 'order' : 'movie';
+  if (normalized === 'order') return 'order';
+  if (normalized === 'game') return 'game';
+  return 'movie';
 }
 
-async function recalculateMovieRatings(supabase, movieId) {
+function getCategory(targetType) {
+  if (targetType === 'order') return 'MovieOrder';
+  if (targetType === 'game') return 'Games';
+  return 'Movie';
+}
+
+async function recalculateAggregate(supabase, targetType, targetId) {
+  const category = getCategory(targetType);
   const { data, error } = await supabase
     .from(RATINGS_TABLE)
     .select('rating')
-    .eq('movie_id', movieId)
-    .eq('category', 'Movie');
+    .eq('movie_id', targetId)
+    .eq('category', category);
 
   if (error) throw error;
 
@@ -60,18 +68,37 @@ async function recalculateMovieRatings(supabase, movieId) {
   );
   const ratingCount = rows.length;
 
-  const { data: updated, error: updateError } = await supabase
-    .from(MOVIES_TABLE)
-    .update({
-      rating_sum: ratingSum,
-      rating_count: ratingCount,
-    })
-    .eq('id', movieId)
-    .select('id, rating_sum, rating_count')
-    .single();
+  if (targetType === 'game') {
+    const { data: updated, error: updateError } = await supabase
+      .from('games')
+      .update({
+        game_rating_sum: ratingSum,
+        game_rating_count: ratingCount,
+      })
+      .eq('id', targetId)
+      .select('id, game_rating_sum, game_rating_count')
+      .single();
 
-  if (updateError) throw updateError;
-  return updated;
+    if (updateError) throw updateError;
+    return { game: updated };
+  }
+
+  if (targetType === 'movie') {
+    const { data: updated, error: updateError } = await supabase
+      .from('movies')
+      .update({
+        rating_sum: ratingSum,
+        rating_count: ratingCount,
+      })
+      .eq('id', targetId)
+      .select('id, rating_sum, rating_count')
+      .single();
+
+    if (updateError) throw updateError;
+    return { movie: updated };
+  }
+
+  return null;
 }
 
 async function handler(req, res) {
@@ -93,7 +120,7 @@ async function handler(req, res) {
   const userId = normalizeUserId(payload?.user_id);
   const title = normalizeTitle(payload?.title);
   const targetType = normalizeTargetType(payload?.target_type);
-  const category = targetType === 'order' ? 'MovieOrder' : 'Movie';
+  const category = getCategory(targetType);
 
   if (!targetId || rating === null || !userId) {
     return res.status(400).json({ error: 'Invalid payload' });
@@ -104,7 +131,9 @@ async function handler(req, res) {
     supabase = createSupabaseServerClient();
   } catch (error) {
     console.error('Supabase configuration error', error);
-    return res.status(500).json({ error: 'Server configuration error' });
+    return res.status(500).json({
+      error: error?.message || 'Server configuration error',
+    });
   }
 
   try {
@@ -141,22 +170,17 @@ async function handler(req, res) {
       if (insertError) throw insertError;
     }
 
-    if (targetType === 'movie') {
-      const movie = await recalculateMovieRatings(supabase, targetId);
-      return res.status(200).json({
-        ok: true,
-        movie,
-        updatedExisting: Boolean(existingRating?.id),
-      });
-    }
-
+    const aggregate = await recalculateAggregate(supabase, targetType, targetId);
     return res.status(200).json({
       ok: true,
       updatedExisting: Boolean(existingRating?.id),
+      ...(aggregate || {}),
     });
   } catch (error) {
-    console.error('Failed to submit movie rating', error);
-    return res.status(500).json({ error: 'Failed to submit movie rating' });
+    console.error('Failed to submit rating', error);
+    return res.status(500).json({
+      error: error?.message || 'Failed to submit rating',
+    });
   }
 }
 

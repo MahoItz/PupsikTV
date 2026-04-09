@@ -778,7 +778,7 @@ async function persistKinopoiskMetadata({ table, itemId, kinopoiskId, imdbId }) 
       throw new Error("Admin token is missing");
     }
 
-    const response = await fetch("/api/media-admin", {
+    const response = await fetch("/api/admin?action=media-admin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

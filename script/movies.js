@@ -1579,14 +1579,24 @@ async function clearPlanDate(orderId) {
   renderWatchlist();
 
   try {
-    const { error } = await supabaseClient
-      .from("Movie_Orders")
-      .update({ plan_date: null })
-      .eq("id", orderId)
-      .select("id")
-      .maybeSingle();
-
-    if (error) throw error;
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "update_item",
+        table: "Movie_Orders",
+        id: orderId,
+        changes: { plan_date: null },
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Plan date clear failed: ${response.status}`);
+    }
   } catch (err) {
     console.error("Error clearing plan date", err);
     order.planDate = previousPlan;
@@ -1604,14 +1614,24 @@ async function clearGamePlanDate(gameId) {
   renderGames();
 
   try {
-    const { error } = await supabaseClient
-      .from("Game_Orders")
-      .update({ game_plan_date: null })
-      .eq("id", gameId)
-      .select("id")
-      .maybeSingle();
-
-    if (error) throw error;
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "update_item",
+        table: "Game_Orders",
+        id: gameId,
+        changes: { game_plan_date: null },
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Game plan date clear failed: ${response.status}`);
+    }
   } catch (err) {
     console.error("Error clearing game plan date", err);
     game.planDate = previousPlan;
@@ -2293,7 +2313,7 @@ async function deletePlayedGame(id) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/media-admin", {
+    const response = await fetch("/api/admin?action=media-admin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

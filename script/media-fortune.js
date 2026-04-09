@@ -1191,13 +1191,25 @@ async function mutateFortuneSuggestion(item, afterDelete) {
   }
 
   try {
-    const { error } = await client
-      .from("movie_suggestions")
-      .delete()
-      .eq("id", id);
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-admin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "delete_item",
+        table: "movie_suggestions",
+        id,
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
 
-    if (error) {
-      throw error;
+    if (!response.ok) {
+      throw new Error(
+        payload?.error || `Failed to delete suggestion: ${response.status}`
+      );
     }
 
     fortuneSuggestionsState.items = fortuneSuggestionsState.items.filter(
@@ -1904,52 +1916,97 @@ function setOrderMetadata(order, metadata = {}) {
 }
 
 async function persistOrderParentGuide(orderId, guide) {
-  if (!orderId || !supabaseClient || String(orderId).startsWith("kp-")) {
+  if (!orderId || String(orderId).startsWith("kp-")) {
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("Movie_Orders")
-    .update({ parents_guide: guide })
-    .eq("id", orderId)
-    .select("id")
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "update_item",
+        table: "Movie_Orders",
+        id: orderId,
+        changes: { parents_guide: guide },
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.error(
+        "Failed to store parent guide for order",
+        payload?.error || response.status
+      );
+    }
+  } catch (error) {
     console.error("Failed to store parent guide for order", error);
   }
 }
 
 async function persistOrderGameDescription(gameOrderId, descriptionData) {
-  if (!gameOrderId || !supabaseClient || !descriptionData) {
+  if (!gameOrderId || !descriptionData) {
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("Game_Orders")
-    .update({ description: descriptionData })
-    .eq("id", gameOrderId)
-    .select("id")
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "update_item",
+        table: "Game_Orders",
+        id: gameOrderId,
+        changes: { description: descriptionData },
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.error(
+        "Failed to store game description for order",
+        payload?.error || response.status
+      );
+    }
+  } catch (error) {
     console.error("Failed to store game description for order", error);
   }
 }
 
 async function persistPlayedGameDescription(gameId, descriptionData) {
-  if (!gameId || !supabaseClient || !descriptionData) {
+  if (!gameId || !descriptionData) {
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("games")
-    .update({ description: descriptionData })
-    .eq("id", gameId)
-    .select("id")
-    .maybeSingle();
-
-  if (error) {
+  try {
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "update_item",
+        table: "games",
+        id: gameId,
+        changes: { description: descriptionData },
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.error(
+        "Failed to store game description",
+        payload?.error || response.status
+      );
+    }
+  } catch (error) {
     console.error("Failed to store game description", error);
   }
 }

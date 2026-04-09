@@ -145,9 +145,17 @@ async function saveMovieOrder(orderData) {
   );
 
   try {
-    const { data, error } = await supabaseClient
-      .from("Movie_Orders")
-      .insert({
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "create_item",
+        table: "Movie_Orders",
+        changes: {
         order_title: normalizedOrder.title,
         order_origin_title: normalizedOrder.originalTitle,
         order_year: normalizedOrder.year,
@@ -163,11 +171,15 @@ async function saveMovieOrder(orderData) {
         country: normalizedOrder.country,
         actors: normalizeActorsForStorage(normalizedOrder.actors),
         director: normalizedOrder.director,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
+        },
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Movie order create failed: ${response.status}`);
+    }
+    const data = payload?.row;
+    if (!data) throw new Error("Movie order create returned no row");
 
     const newOrder = mapInsertedMovieOrder(data, normalizedOrder);
     watchlist.push(newOrder);
@@ -350,9 +362,17 @@ document
             rouletteLastWinner));
 
     try {
-      const { data, error } = await supabaseClient
-        .from("movies")
-        .insert({
+      const token = localStorage.getItem("adminToken") || "";
+      const response = await fetch("/api/admin?action=media-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "create_item",
+          table: "movies",
+          changes: {
           title: movieData.title,
           original_title: movieData.originalTitle || "",
           genres: movieData.genre,
@@ -371,11 +391,15 @@ document
           country: movieData.country,
           actors: normalizeActorsForStorage(movieData.actors),
           director: movieData.director,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || `Movie create failed: ${response.status}`);
+      }
+      const data = payload?.row;
+      if (!data) throw new Error("Movie create returned no row");
 
       allMovies.unshift({
         id: data.id,
@@ -689,9 +713,17 @@ document
           ? { original: gameData.description, translated: null }
           : null;
 
-      const { data, error } = await supabaseClient
-        .from("Game_Orders")
-        .insert({
+      const token = localStorage.getItem("adminToken") || "";
+      const response = await fetch("/api/admin?action=media-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "create_item",
+          table: "Game_Orders",
+          changes: {
           game_title: gameData.title,
           game_year: gameData.year,
           game_genres: gameData.genres,
@@ -708,11 +740,15 @@ document
           developers: gameData.developers,
           publishers: gameData.publishers,
           rawg_id: gameData.rawgId
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || `Game order create failed: ${response.status}`);
+      }
+      const data = payload?.row;
+      if (!data) throw new Error("Game order create returned no row");
 
       const newGameOrder = {
         id: data.id,
@@ -862,9 +898,17 @@ document
         folder: "played",
       });
 
-      const { data, error } = await supabaseClient
-        .from("games")
-        .insert({
+      const token = localStorage.getItem("adminToken") || "";
+      const response = await fetch("/api/admin?action=media-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "create_item",
+          table: "games",
+          changes: {
           title: gameData.title,
           genres: gameData.genres,
           poster: gameData.poster,
@@ -877,11 +921,15 @@ document
           game_rating_sum: 0,
           game_rating_count: 0,
           rawg_id: gameData.rawgId ?? null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || `Played game create failed: ${response.status}`);
+      }
+      const data = payload?.row;
+      if (!data) throw new Error("Played game create returned no row");
 
       allPlayedGames.unshift({
         id: data.id,
@@ -974,30 +1022,21 @@ async function submitRating() {
     isSubmittingRating = true;
     if (confirmBtn) confirmBtn.disabled = true;
     try {
-      const { data: pendingRatingsData, error: pendingRatingsError } =
-        await supabaseClient
-          .from("ratings")
-          .select("rating")
-          .eq("movie_id", ratingMovieId)
-          .eq("category", "MovieOrder");
-      if (pendingRatingsError) throw pendingRatingsError;
-
-      const pendingRatings = Array.isArray(pendingRatingsData)
-        ? pendingRatingsData
-        : [];
-      const pendingRatingSum = pendingRatings.reduce(
-        (sum, row) => sum + Number(row?.rating ?? 0),
-        0
-      );
-      const pendingRatingCount = pendingRatings.length;
-
       watchedMovie.imdbId = await resolveKinopoiskImdbId(
         watchedMovie.kinopoiskId,
         watchedMovie.imdbId
       );
-      const { data, error } = await supabaseClient
-        .from("movies")
-        .insert({
+      const token = localStorage.getItem("adminToken") || "";
+      const response = await fetch("/api/admin?action=media-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "promote_movie_order",
+          orderId: ratingMovieId,
+          movie: {
           title: watchedMovie.title,
           original_title: watchedMovie.originalTitle,
           genres: watchedMovie.genre,
@@ -1015,25 +1054,17 @@ async function submitRating() {
           actors: normalizeActorsForStorage(watchedMovie.actors),
           director: watchedMovie.director,
           studios: watchedMovie.studios,
-          rating_sum: pendingRatingSum,
-          rating_count: pendingRatingCount,
-        })
-        .select()
-        .single();
-      if (error) throw error;
-
-      if (pendingRatingCount > 0) {
-        const { error: moveRatingsError } = await supabaseClient
-          .from("ratings")
-          .update({
-            movie_id: data.id,
-            category: "Movie",
-            title: watchedMovie.title,
-          })
-          .eq("movie_id", ratingMovieId)
-          .eq("category", "MovieOrder");
-        if (moveRatingsError) throw moveRatingsError;
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || `Movie promotion failed: ${response.status}`);
       }
+      const data = payload?.row;
+      const pendingRatingSum = Number(payload?.pendingRatingSum ?? 0) || 0;
+      const pendingRatingCount = Number(payload?.pendingRatingCount ?? 0) || 0;
+      if (!data) throw new Error("Movie promotion returned no row");
 
       const newMovie = {
         id: data.id,
@@ -1061,27 +1092,6 @@ async function submitRating() {
         director: watchedMovie.director,
         studios: data.studios ?? watchedMovie.studios,
       };
-
-      const token = localStorage.getItem("adminToken") || "";
-      const deleteResponse = await fetch("/api/media-admin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "delete_item",
-          table: "Movie_Orders",
-          id: ratingMovieId,
-        }),
-      });
-      const deletePayload = await deleteResponse.json().catch(() => ({}));
-      if (!deleteResponse.ok) {
-        throw new Error(
-          deletePayload?.error ||
-            `Movie order delete failed: ${deleteResponse.status}`
-        );
-      }
 
       allMovies.unshift(newMovie);
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
@@ -1143,9 +1153,17 @@ async function submitGameRating() {
       rawgId: source.rawgId ?? null,
     };
     try {
-      const { data, error } = await supabaseClient
-        .from("games")
-        .insert({
+      const token = localStorage.getItem("adminToken") || "";
+      const response = await fetch("/api/admin?action=media-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "promote_game_order",
+          orderId: ratingGameId,
+          game: {
           title: played.title,
           genres: played.genres,
           poster: played.poster,
@@ -1166,10 +1184,15 @@ async function submitGameRating() {
           developers: played.developers,
           publishers: played.publishers,
           rawg_id: played.rawgId,
-        })
-        .select()
-        .single();
-      if (error) throw error;
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || `Game promotion failed: ${response.status}`);
+      }
+      const data = payload?.row;
+      if (!data) throw new Error("Game promotion returned no row");
 
       const newGame = {
         id: data.id,
@@ -1195,28 +1218,6 @@ async function submitGameRating() {
         ratingCount: Number(data.game_rating_count ?? 0) || 0,
         userRating: null,
       };
-
-      const token = localStorage.getItem("adminToken") || "";
-      const deleteResponse = await fetch("/api/media-admin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          action: "delete_item",
-          table: "Game_Orders",
-          id: ratingGameId,
-          posterUrl: source?.poster || "",
-        }),
-      });
-      const deletePayload = await deleteResponse.json().catch(() => ({}));
-      if (!deleteResponse.ok) {
-        throw new Error(
-          deletePayload?.error ||
-            `Game order delete failed: ${deleteResponse.status}`
-        );
-      }
 
       allPlayedGames.unshift(newGame);
       localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
@@ -1326,23 +1327,25 @@ async function submitUserGameRating() {
   const newSum = currentSum + rating;
   const newCount = currentCount + 1;
   try {
-    const { error } = await supabaseClient
-      .from("games")
-      .update({
-        game_rating_sum: newSum,
-        game_rating_count: newCount,
-      })
-      .eq("id", userRatingGameId);
-    if (error) throw error;
-    const { error: ratingError } = await supabaseClient.from("ratings").insert({
-      movie_id: userRatingGameId,
-      rating,
-      source: "user",
-      category: "Games",
-      title: game ? game.title : null,
-      user_id: getGuestId(),
+    const response = await fetch("/api/movie-ratings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        target_id: userRatingGameId,
+        target_type: "game",
+        rating,
+        user_id: getGuestId(),
+        title: game ? game.title : null,
+      }),
     });
-    if (ratingError) throw ratingError;
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || ("Failed to submit rating: " + response.status));
+    }
+    const newSum = Number(payload?.game?.game_rating_sum ?? currentSum) || 0;
+    const newCount = Number(payload?.game?.game_rating_count ?? currentCount) || 0;
     if (game) {
       game.ratingSum = newSum;
       game.ratingCount = newCount;
@@ -1470,13 +1473,14 @@ async function submitUserGameRating() {
   setUserRateStatus("userRateGameStatus", "Сохраняем оценку...");
 
   try {
-    const response = await fetch("/api/game-ratings", {
+    const response = await fetch("/api/movie-ratings", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         target_id: userRatingGameId,
+        target_type: "game",
         rating,
         user_id: getGuestId(),
         title: game ? game.title : null,
@@ -1546,9 +1550,18 @@ document
     };
 
     try {
-      const { error } = await supabaseClient
-        .from("movies")
-        .update({
+      const token = localStorage.getItem("adminToken") || "";
+      const response = await fetch("/api/admin?action=media-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "update_item",
+          table: "movies",
+          id: editingMovieId,
+          changes: {
           title: updatedMovie.title,
           genres: updatedMovie.genre,
           poster: updatedMovie.poster,
@@ -1557,10 +1570,13 @@ document
           rating_OMDB: movie.kpRating,
           order_by: updatedMovie.orderBy,
           order_type: updatedMovie.orderType || null,
-        })
-        .eq("id", editingMovieId);
-
-      if (error) throw error;
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || `Movie update failed: ${response.status}`);
+      }
 
       movie.title = updatedMovie.title;
       movie.year = updatedMovie.year;
@@ -1625,14 +1641,25 @@ document
 
     try {
       const column = isGamePlan ? "game_plan_date" : "plan_date";
-      const { data, error } = await supabaseClient
-        .from(isGamePlan ? "Game_Orders" : "Movie_Orders")
-        .update({ [column]: planValue })
-        .eq("id", planDateOrderId)
-        .select(column)
-        .single();
-
-      if (error) throw error;
+      const token = localStorage.getItem("adminToken") || "";
+      const response = await fetch("/api/admin?action=media-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "update_item",
+          table: isGamePlan ? "Game_Orders" : "Movie_Orders",
+          id: planDateOrderId,
+          changes: { [column]: planValue },
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || `Plan date update failed: ${response.status}`);
+      }
+      const data = payload?.row;
 
       if (order) {
         order.planDate = data?.[column] || null;
@@ -1699,9 +1726,18 @@ document
           Boolean(getGamePosterStoragePath(previousPoster));
       }
 
-      const { error } = await supabaseClient
-        .from("games")
-        .update({
+      const token = localStorage.getItem("adminToken") || "";
+      const response = await fetch("/api/admin?action=media-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "update_item",
+          table: "games",
+          id: editingPlayedGameId,
+          changes: {
           title: updatedGame.title,
           genres: updatedGame.genres,
           poster: updatedGame.poster,
@@ -1709,10 +1745,13 @@ document
           rating_numeric: updatedGame.rating,
           order_by: updatedGame.orderBy,
           order_type: updatedGame.orderType,
-        })
-        .eq("id", editingPlayedGameId);
-
-      if (error) throw error;
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || `Played game update failed: ${response.status}`);
+      }
 
       if (shouldDeletePreviousPoster) {
         await deleteGamePosterFromStorage(previousPoster);

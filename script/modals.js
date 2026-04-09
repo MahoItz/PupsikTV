@@ -688,17 +688,30 @@ async function fetchStudiosFromTmdb(imdbId) {
 }
 
 async function saveStudiosToDb(id, studiosData, tableName = "movies") {
-  if (!id || !studiosData || !supabaseClient) return;
+  if (!id || !studiosData) return;
 
   try {
     const studiosJson = JSON.stringify(studiosData);
-    const { error } = await supabaseClient
-      .from(tableName)
-      .update({ studios: studiosJson })
-      .eq("id", id);
-
-    if (error) {
-      console.error(`Failed to save studios to ${tableName}`, error);
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "update_item",
+        table: tableName,
+        id,
+        changes: { studios: studiosJson },
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.error(
+        `Failed to save studios to ${tableName}`,
+        payload?.error || response.status
+      );
     }
   } catch (err) {
     console.error(`Error saving studios to ${tableName}`, err);
@@ -1613,11 +1626,24 @@ async function saveDetailsEdit(key) {
       }
     }
 
-    const { error } = await supabaseClient
-      .from(config.table)
-      .update(payload)
-      .eq("id", record.id);
-    if (error) throw error;
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "update_item",
+        table: config.table,
+        id: record.id,
+        changes: payload,
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result?.error || `Details update failed: ${response.status}`);
+    }
 
     config.fields.forEach((field) => {
       if (updates[field.key] !== undefined) {
@@ -2088,11 +2114,24 @@ async function prefetchPlayedGameDetails(game) {
         rawg_id: rawgId ?? null,
       };
 
-      const { error } = await supabaseClient
-        .from("games")
-        .update(payload)
-        .eq("id", updatedGame.id);
-      if (error) throw error;
+      const token = localStorage.getItem("adminToken") || "";
+      const response = await fetch("/api/admin?action=media-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: "update_item",
+          table: "games",
+          id: updatedGame.id,
+          changes: payload,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error || `RAWG details update failed: ${response.status}`);
+      }
 
       updatedGame = applyGameDetails(updatedGame, payload);
       updateLocalPlayedGame(updatedGame);
@@ -2458,7 +2497,7 @@ async function performDeleteMovie(id) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/media-admin", {
+    const response = await fetch("/api/admin?action=media-admin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2501,7 +2540,7 @@ async function performDeleteOrder(id) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/media-admin", {
+    const response = await fetch("/api/admin?action=media-admin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2542,7 +2581,7 @@ async function performDeleteGameOrder(id) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/media-admin", {
+    const response = await fetch("/api/admin?action=media-admin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

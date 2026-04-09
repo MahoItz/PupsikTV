@@ -78,8 +78,6 @@ async function uploadGamePosterToStorage({
   title,
   folder = "orders",
 }) {
-  if (!supabaseClient || !supabaseClient.storage) return poster;
-
   if (
     !file &&
     (!poster ||
@@ -89,69 +87,63 @@ async function uploadGamePosterToStorage({
     return poster;
   }
 
-  let blob;
-  let contentType;
+  let source = typeof poster === "string" ? poster : "";
 
   if (file instanceof File) {
-    blob = file;
-    contentType = file.type;
-  } else if (typeof poster === "string") {
     try {
-      const fetchUrl = poster.startsWith("http")
-        ? buildApiPath(
-            `/external?provider=poster-proxy&url=${encodeURIComponent(poster)}`
-          )
-        : poster;
-      const response = await fetch(fetchUrl);
-      if (!response.ok) {
-        throw new Error(`Poster fetch failed with ${response.status}`);
-      }
-      blob = await response.blob();
-      contentType = blob.type;
+      source = await readFileAsDataURL(file);
     } catch (err) {
-      console.error("Error fetching poster for upload", err);
+      console.error("Error reading poster file", err);
       return poster;
     }
-  } else {
+  } else if (!source) {
     return poster;
   }
 
-  const ext =
-    contentType && contentType.includes("/")
-      ? contentType.split("/")[1]
-      : "jpg";
-  const fileName = buildGamePosterFileName(title);
-  const path = `${folder}/${fileName}.${ext}`;
-
-  const { error: uploadError } = await supabaseClient.storage
-    .from(GAME_POSTER_BUCKET)
-    .upload(path, blob, {
-      contentType: contentType || "image/jpeg",
-      upsert: false,
+  try {
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=game-posters", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        source,
+        title,
+        folder,
+      }),
     });
-
-  if (uploadError) {
-    console.error("Error uploading game poster", uploadError);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Poster upload failed: ${response.status}`);
+    }
+    return payload?.publicUrl || poster;
+  } catch (err) {
+    console.error("Error uploading game poster", err);
     return poster;
   }
-
-  const { data } = supabaseClient.storage
-    .from(GAME_POSTER_BUCKET)
-    .getPublicUrl(path);
-
-  return data?.publicUrl || poster;
 }
 
 async function deleteGamePosterFromStorage(posterUrl) {
-  if (!supabaseClient || !supabaseClient.storage) return;
   const path = getGamePosterStoragePath(posterUrl);
   if (!path) return;
 
-  const { error } = await supabaseClient.storage
-    .from(GAME_POSTER_BUCKET)
-    .remove([path]);
-
-  if (error) {
+  try {
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=game-posters", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ posterUrl }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || `Poster delete failed: ${response.status}`);
+    }
+  } catch (error) {
     console.error("Error deleting game poster from storage", error);
   }
 }
@@ -220,7 +212,7 @@ let adminToken = localStorage.getItem("adminToken") || null;
 let adminTokenExpiresAt = localStorage.getItem("adminTokenExpiresAt") || null;
 let isAdmin = false;
 let adminElements = [];
-const SETTINGS_API_URL = "/api/settings";
+const SETTINGS_API_URL = "/api/admin?action=settings";
 // Kinopoisk (unofficial API)
 
 function updateAdminSession(token, expiresAt) {

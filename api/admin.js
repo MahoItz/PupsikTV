@@ -8,7 +8,213 @@ const {
   getSupabasePublicKey,
 } = require('../lib/supabase-config.js');
 
-const ALLOWED_ACTIONS = ['env', 'verify-admin'];
+const GAME_POSTER_BUCKET = 'game-posters';
+const PLACEHOLDER_POSTER_HOST = 'images/placeholder-poster.webp';
+const ALLOWED_CONTENT_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]);
+const SETTINGS_COLUMNS = new Set([
+  'roulette_last_winner',
+  'ai_model_statuses',
+  'selected_ai_model',
+  'selected_ai_model_name',
+  'kp_api',
+  'victory_volume',
+  'lose_volume',
+  'spin_volume',
+]);
+const TABLE_COLUMNS = {
+  movies: new Set([
+    'title',
+    'original_title',
+    'genres',
+    'poster',
+    'year',
+    'rating_numeric',
+    'rating_OMDB',
+    'kp_id',
+    'imdb_id',
+    'date',
+    'order_by',
+    'order_type',
+    'rating_sum',
+    'rating_count',
+    'description',
+    'country',
+    'actors',
+    'director',
+    'studios',
+  ]),
+  Movie_Orders: new Set([
+    'order_title',
+    'order_origin_title',
+    'order_year',
+    'order_genres',
+    'order_poster',
+    'order_by',
+    'order_type',
+    'kinopoisk_rate',
+    'kp_id',
+    'imdb_id',
+    'order_length',
+    'description',
+    'country',
+    'actors',
+    'director',
+    'studios',
+    'plan_date',
+    'parents_guide',
+  ]),
+  Game_Orders: new Set([
+    'game_title',
+    'game_year',
+    'game_genres',
+    'game_poster',
+    'game_order_by',
+    'game_order_type',
+    'game_mode',
+    'description',
+    'rawg_rating',
+    'metacritic',
+    'released',
+    'playtime',
+    'platforms',
+    'developers',
+    'publishers',
+    'rawg_id',
+    'game_plan_date',
+  ]),
+  games: new Set([
+    'title',
+    'genres',
+    'poster',
+    'year',
+    'rating_numeric',
+    'date',
+    'order_by',
+    'order_type',
+    'game_mode',
+    'game_rating_sum',
+    'game_rating_count',
+    'description',
+    'rawg_rating',
+    'metacritic',
+    'released',
+    'playtime',
+    'platforms',
+    'developers',
+    'publishers',
+    'rawg_id',
+    'studios',
+  ]),
+};
+const ALLOWED_METADATA_TABLES = new Set([
+  'movies',
+  'Movie_Orders',
+  'games',
+  'Game_Orders',
+]);
+const ALLOWED_DELETE_TABLES = new Set([
+  'movies',
+  'Movie_Orders',
+  'games',
+  'Game_Orders',
+  'movie_suggestions',
+]);
+const ALLOWED_ACTIONS = [
+  'env',
+  'verify-admin',
+  'settings',
+  'users',
+  'media-admin',
+  'media-items',
+  'game-posters',
+];
+
+function parseBody(req) {
+  if (!req.body) return {};
+  if (typeof req.body === 'string') {
+    return JSON.parse(req.body || '{}');
+  }
+  return req.body;
+}
+
+function parseId(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeTable(value) {
+  const table = String(value || '').trim();
+  return table || null;
+}
+
+function normalizeManagedTable(value) {
+  const table = String(value || '').trim();
+  return TABLE_COLUMNS[table] ? table : null;
+}
+
+function normalizeImdbId(value) {
+  if (value === undefined) return undefined;
+  const normalized = String(value || '').trim();
+  return normalized || null;
+}
+
+function normalizeUserName(value) {
+  return String(value || '')
+    .trim()
+    .slice(0, 255);
+}
+
+function normalizeUserType(value) {
+  return value === 'games' ? 'games' : 'movies';
+}
+
+function pickAllowedSettings(payload) {
+  const changes = {};
+  for (const [key, value] of Object.entries(payload || {})) {
+    if (SETTINGS_COLUMNS.has(key)) {
+      changes[key] = value;
+    }
+  }
+  return changes;
+}
+
+function pickAllowedChanges(table, changes) {
+  const allowedColumns = TABLE_COLUMNS[table];
+  const sanitized = {};
+
+  for (const [key, value] of Object.entries(changes || {})) {
+    if (allowedColumns.has(key)) {
+      sanitized[key] = value;
+    }
+  }
+
+  return sanitized;
+}
+
+function verifyAdminRequest(req) {
+  const token = extractBearerToken(req.headers.authorization);
+  if (!token) {
+    return { ok: false, status: 401, error: 'Missing token' };
+  }
+
+  const verification = verifyAdminToken(token);
+  if (!verification.valid) {
+    return {
+      ok: false,
+      status: 401,
+      error: verification.error || 'Invalid token',
+      expired: Boolean(verification.expired),
+    };
+  }
+
+  return { ok: true, payload: verification.payload };
+}
 
 async function loadSelectedKinopoiskApi() {
   try {
@@ -30,6 +236,446 @@ async function loadSelectedKinopoiskApi() {
     console.error('Supabase configuration error while loading kp_api', error);
     return 'API 1';
   }
+}
+
+async function upsertSettingsRow(supabase, changes) {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('id')
+    .order('id', { ascending: true })
+    .limit(1);
+
+  if (error) throw error;
+
+  const existing = Array.isArray(data) && data.length > 0 ? data[0] : null;
+
+  if (existing?.id) {
+    const { error: updateError } = await supabase
+      .from('settings')
+      .update(changes)
+      .eq('id', existing.id);
+    if (updateError) throw updateError;
+
+    return { id: existing.id, changes };
+  }
+
+  const { data: inserted, error: insertError } = await supabase
+    .from('settings')
+    .insert(changes)
+    .select('id')
+    .single();
+
+  if (insertError) throw insertError;
+
+  return { id: inserted?.id || null, changes };
+}
+
+async function findUserRow(supabase, userName) {
+  const { data, error } = await supabase
+    .from('users')
+    .select('user, movies, games')
+    .ilike('user', userName)
+    .limit(1);
+
+  if (error) throw error;
+  return Array.isArray(data) ? data[0] || null : null;
+}
+
+async function mutateUsersTable(supabase, payload) {
+  const action = String(payload?.action || '').trim().toLowerCase();
+  const userName = normalizeUserName(payload?.userName);
+  if (!userName) {
+    return { status: 400, body: { error: 'Invalid userName' } };
+  }
+
+  if (action === 'increment') {
+    const key = normalizeUserType(payload?.type);
+    const existing = await findUserRow(supabase, userName);
+
+    if (existing) {
+      const changes = {
+        movies: Number(existing.movies ?? 0) || 0,
+        games: Number(existing.games ?? 0) || 0,
+      };
+      changes[key] += 1;
+
+      const { error } = await supabase
+        .from('users')
+        .update(changes)
+        .eq('user', existing.user);
+      if (error) throw error;
+
+      return {
+        status: 200,
+        body: {
+          ok: true,
+          deleted: false,
+          item: {
+            user: existing.user,
+            movies: changes.movies,
+            games: changes.games,
+          },
+        },
+      };
+    }
+
+    const inserted = {
+      user: userName,
+      movies: key === 'movies' ? 1 : 0,
+      games: key === 'games' ? 1 : 0,
+    };
+    const { error } = await supabase.from('users').insert(inserted);
+    if (error) throw error;
+    return { status: 200, body: { ok: true, deleted: false, item: inserted } };
+  }
+
+  if (action === 'decrement') {
+    const key = normalizeUserType(payload?.type);
+    const existing = await findUserRow(supabase, userName);
+    if (!existing) {
+      return { status: 200, body: { ok: true, deleted: false, item: null } };
+    }
+
+    const changes = {
+      movies: Math.max(0, Number(existing.movies ?? 0) || 0),
+      games: Math.max(0, Number(existing.games ?? 0) || 0),
+    };
+    changes[key] = Math.max(0, changes[key] - 1);
+
+    if (changes.movies === 0 && changes.games === 0) {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('user', existing.user);
+      if (error) throw error;
+      return {
+        status: 200,
+        body: { ok: true, deleted: true, item: { user: existing.user } },
+      };
+    }
+
+    const { error } = await supabase
+      .from('users')
+      .update(changes)
+      .eq('user', existing.user);
+    if (error) throw error;
+
+    return {
+      status: 200,
+      body: {
+        ok: true,
+        deleted: false,
+        item: {
+          user: existing.user,
+          movies: changes.movies,
+          games: changes.games,
+        },
+      },
+    };
+  }
+
+  if (action === 'delete') {
+    const existing = await findUserRow(supabase, userName);
+    if (!existing) {
+      return { status: 200, body: { ok: true, deleted: false, item: null } };
+    }
+
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('user', existing.user);
+    if (error) throw error;
+
+    return {
+      status: 200,
+      body: { ok: true, deleted: true, item: { user: existing.user } },
+    };
+  }
+
+  return { status: 400, body: { error: 'Unsupported action' } };
+}
+
+async function createItem(supabase, payload) {
+  const table = normalizeManagedTable(payload?.table);
+  if (!table) {
+    return { status: 400, body: { error: 'Invalid table' } };
+  }
+
+  const changes = pickAllowedChanges(table, payload?.changes);
+  if (!Object.keys(changes).length) {
+    return { status: 400, body: { error: 'No allowed fields provided' } };
+  }
+
+  const { data, error } = await supabase
+    .from(table)
+    .insert(changes)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { status: 200, body: { ok: true, row: data } };
+}
+
+async function updateItem(supabase, payload) {
+  const table = normalizeManagedTable(payload?.table);
+  const id = parseId(payload?.id);
+  if (!table || !id) {
+    return { status: 400, body: { error: 'Invalid update payload' } };
+  }
+
+  const changes = pickAllowedChanges(table, payload?.changes);
+  if (!Object.keys(changes).length) {
+    return { status: 400, body: { error: 'No allowed fields provided' } };
+  }
+
+  const { data, error } = await supabase
+    .from(table)
+    .update(changes)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { status: 200, body: { ok: true, row: data } };
+}
+
+async function promoteMovieOrder(supabase, payload) {
+  const orderId = parseId(payload?.orderId);
+  const movieChanges = pickAllowedChanges('movies', payload?.movie);
+  if (!orderId || !Object.keys(movieChanges).length) {
+    return {
+      status: 400,
+      body: { error: 'Invalid movie order promotion payload' },
+    };
+  }
+
+  const { data: pendingRatingsData, error: pendingRatingsError } = await supabase
+    .from('ratings')
+    .select('id, rating')
+    .eq('movie_id', orderId)
+    .eq('category', 'MovieOrder');
+  if (pendingRatingsError) throw pendingRatingsError;
+
+  const pendingRatings = Array.isArray(pendingRatingsData)
+    ? pendingRatingsData
+    : [];
+  const pendingRatingSum = pendingRatings.reduce(
+    (sum, row) => sum + Number(row?.rating ?? 0),
+    0
+  );
+  const pendingRatingCount = pendingRatings.length;
+
+  movieChanges.rating_sum = pendingRatingSum;
+  movieChanges.rating_count = pendingRatingCount;
+
+  const { data: insertedMovie, error: insertError } = await supabase
+    .from('movies')
+    .insert(movieChanges)
+    .select()
+    .single();
+  if (insertError) throw insertError;
+
+  if (pendingRatingCount > 0) {
+    const { error: moveRatingsError } = await supabase
+      .from('ratings')
+      .update({
+        movie_id: insertedMovie.id,
+        category: 'Movie',
+        title: movieChanges.title || null,
+      })
+      .eq('movie_id', orderId)
+      .eq('category', 'MovieOrder');
+    if (moveRatingsError) throw moveRatingsError;
+  }
+
+  const { error: deleteOrderError } = await supabase
+    .from('Movie_Orders')
+    .delete()
+    .eq('id', orderId);
+  if (deleteOrderError) throw deleteOrderError;
+
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      row: insertedMovie,
+      pendingRatingSum,
+      pendingRatingCount,
+    },
+  };
+}
+
+async function promoteGameOrder(supabase, payload) {
+  const orderId = parseId(payload?.orderId);
+  const gameChanges = pickAllowedChanges('games', payload?.game);
+  if (!orderId || !Object.keys(gameChanges).length) {
+    return {
+      status: 400,
+      body: { error: 'Invalid game order promotion payload' },
+    };
+  }
+
+  const { data: insertedGame, error: insertError } = await supabase
+    .from('games')
+    .insert(gameChanges)
+    .select()
+    .single();
+  if (insertError) throw insertError;
+
+  const { error: deleteOrderError } = await supabase
+    .from('Game_Orders')
+    .delete()
+    .eq('id', orderId);
+  if (deleteOrderError) throw deleteOrderError;
+
+  return {
+    status: 200,
+    body: { ok: true, row: insertedGame },
+  };
+}
+
+async function updateKinopoiskMetadata(supabase, payload) {
+  const table = normalizeTable(payload?.table);
+  const itemId = parseId(payload?.itemId);
+  const kinopoiskId = parseId(payload?.kinopoiskId);
+  const imdbId = normalizeImdbId(payload?.imdbId);
+
+  if (!table || !ALLOWED_METADATA_TABLES.has(table) || !itemId || !kinopoiskId) {
+    return { status: 400, body: { error: 'Invalid metadata payload' } };
+  }
+
+  const { error } = await supabase
+    .from(table)
+    .update({
+      kp_id: kinopoiskId,
+      imdb_id: imdbId,
+    })
+    .eq('id', itemId);
+
+  if (error) throw error;
+  return {
+    status: 200,
+    body: { ok: true, table, itemId, kinopoiskId, imdbId },
+  };
+}
+
+function getGamePosterStoragePath(posterUrl) {
+  if (!posterUrl || typeof posterUrl !== 'string') return null;
+  try {
+    const url = new URL(posterUrl);
+    const marker = `/storage/v1/object/public/${GAME_POSTER_BUCKET}/`;
+    const idx = url.pathname.indexOf(marker);
+    if (idx === -1) return null;
+    const path = url.pathname.slice(idx + marker.length);
+    return path.replace(/^\/+/, '') || null;
+  } catch {
+    return null;
+  }
+}
+
+async function deletePosterIfNeeded(supabase, posterUrl) {
+  const path = getGamePosterStoragePath(posterUrl);
+  if (!path) return;
+
+  const { error } = await supabase.storage
+    .from(GAME_POSTER_BUCKET)
+    .remove([path]);
+
+  if (error) throw error;
+}
+
+async function deleteItem(supabase, payload) {
+  const table = normalizeTable(payload?.table);
+  const id = parseId(payload?.id);
+  const posterUrl =
+    typeof payload?.posterUrl === 'string' ? payload.posterUrl : '';
+
+  if (!table || !ALLOWED_DELETE_TABLES.has(table) || !id) {
+    return { status: 400, body: { error: 'Invalid delete payload' } };
+  }
+
+  const { data, error } = await supabase
+    .from(table)
+    .delete()
+    .eq('id', id)
+    .select('id')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    return { status: 404, body: { error: 'Item not found or delete blocked' } };
+  }
+
+  if ((table === 'games' || table === 'Game_Orders') && posterUrl) {
+    await deletePosterIfNeeded(supabase, posterUrl);
+  }
+
+  return { status: 200, body: { ok: true, table, id } };
+}
+
+function buildGamePosterFileName(title) {
+  const safeTitle = (title || 'game')
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${safeTitle || 'game'}-${suffix}`;
+}
+
+function getExtensionFromContentType(contentType) {
+  if (!contentType || !contentType.includes('/')) return 'jpg';
+  const ext = contentType.split('/')[1].toLowerCase();
+  return ext === 'jpeg' ? 'jpg' : ext;
+}
+
+function decodeDataUrl(value) {
+  const match = String(value || '').match(/^data:([^;,]+);base64,(.+)$/);
+  if (!match) return null;
+  const [, contentType, base64Payload] = match;
+  if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
+    throw new Error('Unsupported poster content type');
+  }
+  return {
+    contentType,
+    buffer: Buffer.from(base64Payload, 'base64'),
+  };
+}
+
+async function fetchRemotePoster(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Poster fetch failed with ${response.status}`);
+  }
+  const contentType = response.headers.get('content-type') || 'image/jpeg';
+  if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
+    throw new Error('Unsupported remote poster content type');
+  }
+  return {
+    contentType,
+    buffer: Buffer.from(await response.arrayBuffer()),
+  };
+}
+
+async function resolvePosterSource(source) {
+  if (!source || typeof source !== 'string') {
+    throw new Error('Missing poster source');
+  }
+
+  if (source.includes(PLACEHOLDER_POSTER_HOST)) {
+    return null;
+  }
+
+  if (source.startsWith('data:')) {
+    return decodeDataUrl(source);
+  }
+
+  if (source.startsWith('http://') || source.startsWith('https://')) {
+    return fetchRemotePoster(source);
+  }
+
+  throw new Error('Unsupported poster source');
 }
 
 async function handleEnv(req, res) {
@@ -174,6 +820,278 @@ function handleVerifyAdmin(req, res) {
   return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
 }
 
+async function handleSettings(req, res) {
+  const method = (req.method || '').toUpperCase();
+  if (method !== 'PATCH') {
+    res.setHeader('Allow', ['PATCH']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
+  }
+
+  let payload;
+  try {
+    payload = parseBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  const changes = pickAllowedSettings(payload);
+  if (!Object.keys(changes).length) {
+    return res.status(400).json({ error: 'No allowed settings fields provided' });
+  }
+
+  try {
+    const supabase = createSupabaseServerClient();
+    const result = await upsertSettingsRow(supabase, changes);
+    return res.status(200).json({ ok: true, ...result });
+  } catch (error) {
+    console.error('Failed to persist settings', error);
+    return res.status(500).json({
+      error: error?.message || 'Failed to persist settings',
+    });
+  }
+}
+
+async function handleUsers(req, res) {
+  const method = (req.method || '').toUpperCase();
+  if (method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
+  }
+
+  let payload;
+  try {
+    payload = parseBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  try {
+    const supabase = createSupabaseServerClient();
+    const result = await mutateUsersTable(supabase, payload);
+    return res.status(result.status).json(result.body);
+  } catch (error) {
+    console.error('Failed to mutate users table', error);
+    return res.status(500).json({
+      error: error?.message || 'Failed to mutate users table',
+    });
+  }
+}
+
+async function handleMediaAdmin(req, res) {
+  const method = (req.method || '').toUpperCase();
+  if (method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
+  }
+
+  let payload;
+  try {
+    payload = parseBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  let supabase;
+  try {
+    supabase = createSupabaseServerClient();
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error?.message || 'Server configuration error' });
+  }
+
+  try {
+    const action = String(payload?.action || '').trim().toLowerCase();
+    let result;
+
+    if (action === 'update_kinopoisk_metadata') {
+      result = await updateKinopoiskMetadata(supabase, payload);
+    } else if (action === 'delete_item') {
+      result = await deleteItem(supabase, payload);
+    } else {
+      return res.status(400).json({ error: 'Unsupported action' });
+    }
+
+    return res.status(result.status).json(result.body);
+  } catch (error) {
+    console.error('Failed to handle media admin action', error);
+    return res.status(500).json({
+      error: error?.message || 'Failed to handle media admin action',
+    });
+  }
+}
+
+async function handleMediaItems(req, res) {
+  const method = (req.method || '').toUpperCase();
+  if (method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
+  }
+
+  let payload;
+  try {
+    payload = parseBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  let supabase;
+  try {
+    supabase = createSupabaseServerClient();
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error?.message || 'Server configuration error' });
+  }
+
+  try {
+    const action = String(payload?.action || '').trim().toLowerCase();
+    let result;
+
+    if (action === 'create_item') {
+      result = await createItem(supabase, payload);
+    } else if (action === 'update_item') {
+      result = await updateItem(supabase, payload);
+    } else if (action === 'promote_movie_order') {
+      result = await promoteMovieOrder(supabase, payload);
+    } else if (action === 'promote_game_order') {
+      result = await promoteGameOrder(supabase, payload);
+    } else {
+      return res.status(400).json({ error: 'Unsupported action' });
+    }
+
+    return res.status(result.status).json(result.body);
+  } catch (error) {
+    console.error('Failed to handle media item action', error);
+    return res.status(500).json({
+      error: error?.message || 'Failed to handle media item action',
+    });
+  }
+}
+
+async function handleGamePosters(req, res) {
+  const method = (req.method || '').toUpperCase();
+  if (method !== 'POST' && method !== 'DELETE') {
+    res.setHeader('Allow', ['POST', 'DELETE']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
+  }
+
+  let payload;
+  try {
+    payload = parseBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  if (method === 'DELETE') {
+    const posterUrl =
+      typeof payload?.posterUrl === 'string' ? payload.posterUrl : '';
+    const path = getGamePosterStoragePath(posterUrl);
+    if (!path) {
+      return res.status(200).json({ ok: true, deleted: false });
+    }
+
+    try {
+      const supabase = createSupabaseServerClient();
+      const { error } = await supabase.storage
+        .from(GAME_POSTER_BUCKET)
+        .remove([path]);
+      if (error) throw error;
+      return res.status(200).json({ ok: true, deleted: true, path });
+    } catch (error) {
+      console.error('Failed to delete game poster', error);
+      return res.status(500).json({
+        error: error?.message || 'Failed to delete game poster',
+      });
+    }
+  }
+
+  const source = typeof payload?.source === 'string' ? payload.source : '';
+  const title = typeof payload?.title === 'string' ? payload.title : 'game';
+  const folder =
+    typeof payload?.folder === 'string' && payload.folder.trim()
+      ? payload.folder.trim()
+      : 'orders';
+
+  let resolved;
+  try {
+    resolved = await resolvePosterSource(source);
+  } catch (error) {
+    return res.status(400).json({
+      error: error?.message || 'Invalid poster source',
+    });
+  }
+
+  if (!resolved) {
+    return res.status(200).json({ ok: true, publicUrl: source || null });
+  }
+
+  try {
+    const supabase = createSupabaseServerClient();
+    const ext = getExtensionFromContentType(resolved.contentType);
+    const path = `${folder}/${buildGamePosterFileName(title)}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(GAME_POSTER_BUCKET)
+      .upload(path, resolved.buffer, {
+        contentType: resolved.contentType,
+        upsert: false,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from(GAME_POSTER_BUCKET)
+      .getPublicUrl(path);
+
+    return res.status(200).json({
+      ok: true,
+      publicUrl: data?.publicUrl || null,
+      path,
+    });
+  } catch (error) {
+    console.error('Failed to upload game poster', error);
+    return res.status(500).json({
+      error: error?.message || 'Failed to upload game poster',
+    });
+  }
+}
+
 module.exports = async function handler(req, res) {
   const action = String(req.query?.action || '')
     .trim()
@@ -189,6 +1107,21 @@ module.exports = async function handler(req, res) {
   if (action === 'env') {
     return handleEnv(req, res);
   }
+  if (action === 'verify-admin') {
+    return handleVerifyAdmin(req, res);
+  }
+  if (action === 'settings') {
+    return handleSettings(req, res);
+  }
+  if (action === 'users') {
+    return handleUsers(req, res);
+  }
+  if (action === 'media-admin') {
+    return handleMediaAdmin(req, res);
+  }
+  if (action === 'media-items') {
+    return handleMediaItems(req, res);
+  }
 
-  return handleVerifyAdmin(req, res);
+  return handleGamePosters(req, res);
 };
