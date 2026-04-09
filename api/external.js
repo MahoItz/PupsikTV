@@ -1,3 +1,7 @@
+const {
+  extractBearerToken,
+  verifyAdminToken,
+} = require('../lib/admin-session.js');
 const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
 const TMDB_API_BASE_URL = 'https://api.themoviedb.org/3';
@@ -27,6 +31,25 @@ function normalizeImdbId(id) {
 
 function isBoostyImageHost(hostname) {
   return hostname === 'images.boosty.to';
+}
+
+function verifyAdminRequest(req) {
+  const token = extractBearerToken(req.headers.authorization);
+  if (!token) {
+    return { ok: false, status: 401, error: 'Missing token' };
+  }
+
+  const verification = verifyAdminToken(token);
+  if (!verification.valid) {
+    return {
+      ok: false,
+      status: 401,
+      error: verification.error || 'Invalid token',
+      expired: Boolean(verification.expired),
+    };
+  }
+
+  return { ok: true };
 }
 
 function resolveFetch() {
@@ -307,6 +330,12 @@ async function handleKinopoisk(req, res) {
       filmId
     )}`;
   } else if (resource === 'quota') {
+    const access = verifyAdminRequest(req);
+    if (!access.ok) {
+      return res
+        .status(access.status)
+        .json({ error: access.error, expired: access.expired || false });
+    }
     url = `https://kinopoiskapiunofficial.tech/api/v1/api_keys/${encodeURIComponent(
       apiKey
     )}`;
@@ -322,7 +351,11 @@ async function handleKinopoisk(req, res) {
       },
     });
     const text = await response.text();
-    res.setHeader('Cache-Control', 'no-store');
+    if (resource === 'film' || resource === 'staff') {
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    } else {
+      res.setHeader('Cache-Control', 'private, no-store');
+    }
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     return res.status(response.status).send(text);
   } catch (error) {
@@ -332,6 +365,13 @@ async function handleKinopoisk(req, res) {
 }
 
 async function handleRawg(req, res) {
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
+  }
+
   const apiKey = process.env.RAWG_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'RAWG API key is not configured.' });
@@ -368,7 +408,7 @@ async function handleRawg(req, res) {
   try {
     const response = await fetch(url);
     const text = await response.text();
-    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     return res.status(response.status).send(text);
   } catch (error) {

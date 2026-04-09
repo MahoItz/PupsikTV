@@ -571,10 +571,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     return;
   }
 
-  if (
-    !initialEnv ||
-    (!initialEnv.SUPABASE_PUBLIC_KEY && !initialEnv.SUPABASE_KEY)
-  ) {
+  if (!initialEnv || !initialEnv.SUPABASE_PUBLIC_KEY) {
     showFatalErrorBanner(
       "От сервера не получены настройки Supabase. Попробуйте обновить страницу позже."
     );

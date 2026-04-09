@@ -10,14 +10,12 @@ This repository contains the source code for the PupsikTV website. The project i
 
 ```
 SUPABASE_PUBLIC_KEY=<your public anon/publishable key>
-SUPABASE_SERVICE_ROLE_KEY=<optional for now, recommended for server API routes>
+SUPABASE_SERVICE_ROLE_KEY=<required for server API routes>
 KINOPOISK_API_KEY=<optional, used for admin search>
 RAWG_API_KEY=<optional, used for admin search>
 EDIT_PASSWORD=<admin password>
 ADMIN_SESSION_SECRET=<required for admin token signing>
 ```
-
-For backward compatibility the code still falls back to `SUPABASE_KEY`, but new deployments should use `SUPABASE_PUBLIC_KEY` for the browser and `SUPABASE_SERVICE_ROLE_KEY` for server-side API routes.
 
 ## Running locally
 

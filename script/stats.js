@@ -102,7 +102,7 @@
     }
 
     const payload = await response.json();
-    if (!payload?.SUPABASE_PUBLIC_KEY && !payload?.SUPABASE_KEY) {
+    if (!payload?.SUPABASE_PUBLIC_KEY) {
       throw new Error("SUPABASE_PUBLIC_KEY is missing in env response.");
     }
 
@@ -618,7 +618,7 @@
       const env = await loadEnv();
       const client = window.supabase.createClient(
         SUPABASE_URL,
-        env.SUPABASE_PUBLIC_KEY || env.SUPABASE_KEY
+        env.SUPABASE_PUBLIC_KEY
       );
       const data = await loadStatsData(client);
       const stats = computeStats(data);

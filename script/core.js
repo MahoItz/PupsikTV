@@ -42,6 +42,7 @@ function buildAbsoluteApiUrl(path) {
     const host = url.hostname.toLowerCase();
     if (host === "kinopoiskapiunofficial.tech") {
       const params = new URLSearchParams({ provider: "kinopoisk" });
+      let requiresAdmin = false;
       if (url.pathname === "/api/v2.1/films/search-by-keyword") {
         params.set("resource", "search");
         params.set("keyword", url.searchParams.get("keyword") || "");
@@ -54,10 +55,14 @@ function buildAbsoluteApiUrl(path) {
         params.set("filmId", url.searchParams.get("filmId") || "");
       } else if (url.pathname.startsWith("/api/v1/api_keys/")) {
         params.set("resource", "quota");
+        requiresAdmin = true;
       } else {
         return null;
       }
-      return `${EXTERNAL_API_URL}?${params.toString()}`;
+      return {
+        url: `${EXTERNAL_API_URL}?${params.toString()}`,
+        requiresAdmin,
+      };
     }
 
     if (host === "api.rawg.io") {
@@ -72,16 +77,28 @@ function buildAbsoluteApiUrl(path) {
       } else {
         return null;
       }
-      return `${EXTERNAL_API_URL}?${params.toString()}`;
+      return {
+        url: `${EXTERNAL_API_URL}?${params.toString()}`,
+        requiresAdmin: true,
+      };
     }
 
     return null;
   }
 
   window.fetch = function proxiedFetch(input, init) {
-    const rewrittenUrl = rewriteExternalUrl(input);
-    if (rewrittenUrl) {
-      return nativeFetch(rewrittenUrl, init);
+    const rewritten = rewriteExternalUrl(input);
+    if (rewritten) {
+      const nextInit = init ? { ...init } : {};
+      if (rewritten.requiresAdmin) {
+        const token = localStorage.getItem("adminToken") || "";
+        if (token) {
+          const headers = new Headers(nextInit.headers || (input instanceof Request ? input.headers : undefined) || {});
+          headers.set("Authorization", `Bearer ${token}`);
+          nextInit.headers = headers;
+        }
+      }
+      return nativeFetch(rewritten.url, nextInit);
     }
     return nativeFetch(input, init);
   };
@@ -1358,7 +1375,7 @@ async function loadEnv(options = {}) {
       error.status = 500;
       throw error;
     }
-    const key = env.SUPABASE_PUBLIC_KEY || env.SUPABASE_KEY;
+    const key = env.SUPABASE_PUBLIC_KEY;
     if (!key) {
       const error = new Error("В ответе сервера отсутствует SUPABASE_PUBLIC_KEY.");
       error.status = 500;
