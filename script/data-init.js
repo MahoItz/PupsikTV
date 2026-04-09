@@ -583,20 +583,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   TMDB_ENABLED = Boolean(initialEnv.TMDB_ENABLED);
 
-  const kpStored = localStorage.getItem("KINOPOISK_API_KEY");
-  if (kpStored) {
-    kpApiPrimaryKey = kpStored;
-  }
-  const kpStoredSecondary = localStorage.getItem("KINOPOISK_API_KEY2");
-  if (kpStoredSecondary) {
-    kpApiSecondaryKey = kpStoredSecondary;
-  }
-  const kpStoredTertiary = localStorage.getItem("KINOPOISK_API_KEY3");
-  if (kpStoredTertiary) {
-    kpApiTertiaryKey = kpStoredTertiary;
-  }
-  const rawgStored = localStorage.getItem("RAWG_API_KEY");
-  if (rawgStored) RAWG_API_KEY = rawgStored;
+  localStorage.removeItem("KINOPOISK_API_KEY");
+  localStorage.removeItem("KINOPOISK_API_KEY2");
+  localStorage.removeItem("KINOPOISK_API_KEY3");
+  localStorage.removeItem("RAWG_API_KEY");
   const cached = localStorage.getItem("moviesCache");
   if (cached) {
     allMovies = JSON.parse(cached);
@@ -706,22 +696,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           isAdmin = true;
           updateAdminSession(storedToken, verification.expiresAt);
           showAdminControls(true);
-          if (env.KINOPOISK_API_KEY) {
-            kpApiPrimaryKey = env.KINOPOISK_API_KEY;
-            localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
-          }
-          if (env.KINOPOISK_API_KEY2) {
-            kpApiSecondaryKey = env.KINOPOISK_API_KEY2;
-            localStorage.setItem("KINOPOISK_API_KEY2", env.KINOPOISK_API_KEY2);
-          }
-          if (env.KINOPOISK_API_KEY3) {
-            kpApiTertiaryKey = env.KINOPOISK_API_KEY3;
-            localStorage.setItem("KINOPOISK_API_KEY3", env.KINOPOISK_API_KEY3);
-          }
           TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
-          if (env.RAWG_API_KEY) {
-            localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
-          }
           applyKpApiSelection(selectedKpApiValue);
         } else {
           clearAdminSession();
@@ -837,31 +812,7 @@ document.addEventListener("DOMContentLoaded", async function () {
               updateAdminSession(token, result.expiresAt);
               isAdmin = true;
               showAdminControls();
-              if (env.KINOPOISK_API_KEY) {
-                kpApiPrimaryKey = env.KINOPOISK_API_KEY;
-                localStorage.setItem(
-                  "KINOPOISK_API_KEY",
-                  env.KINOPOISK_API_KEY
-                );
-              }
-              if (env.KINOPOISK_API_KEY2) {
-                kpApiSecondaryKey = env.KINOPOISK_API_KEY2;
-                localStorage.setItem(
-                  "KINOPOISK_API_KEY2",
-                  env.KINOPOISK_API_KEY2
-                );
-              }
-              if (env.KINOPOISK_API_KEY3) {
-                kpApiTertiaryKey = env.KINOPOISK_API_KEY3;
-                localStorage.setItem(
-                  "KINOPOISK_API_KEY3",
-                  env.KINOPOISK_API_KEY3
-                );
-              }
               TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
-              if (env.RAWG_API_KEY) {
-                localStorage.setItem("RAWG_API_KEY", env.RAWG_API_KEY);
-              }
               applyKpApiSelection(selectedKpApiValue);
               await loadSettingsFromSupabase();
               closeModal("adminModal");

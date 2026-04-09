@@ -1,3 +1,5 @@
+const { createSupabaseServerClient } = require('../lib/supabase-config.js');
+
 const TMDB_API_BASE_URL = 'https://api.themoviedb.org/3';
 const ALLOWED_HOST_SUFFIXES = [
   'steamgriddb.com',
@@ -5,7 +7,13 @@ const ALLOWED_HOST_SUFFIXES = [
   'media.rawg.io',
   'images.boosty.to',
 ];
-const ALLOWED_PROVIDERS = ['poster-proxy', 'steamgriddb', 'tmdb'];
+const ALLOWED_PROVIDERS = [
+  'poster-proxy',
+  'steamgriddb',
+  'tmdb',
+  'kinopoisk',
+  'rawg',
+];
 
 function isAllowedHost(hostname) {
   return ALLOWED_HOST_SUFFIXES.some(
@@ -72,6 +80,38 @@ async function fetchJson(url, fetchImpl) {
   }
 
   return await response.json();
+}
+
+async function getSelectedKinopoiskApiKey() {
+  const apiKeys = {
+    'API 1': process.env.KINOPOISK_API_KEY || '',
+    'API 2': process.env.KINOPOISK_API_KEY2 || '',
+    'API 3': process.env.KINOPOISK_API_KEY3 || '',
+  };
+
+  let selectedApi = 'API 1';
+  try {
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from('settings')
+      .select('kp_api')
+      .order('id', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (!error && data?.kp_api) {
+      selectedApi = data.kp_api;
+    }
+  } catch (error) {
+    console.warn('[external] Failed to load selected kp_api', error);
+  }
+
+  return (
+    apiKeys[selectedApi] ||
+    apiKeys['API 1'] ||
+    apiKeys['API 2'] ||
+    apiKeys['API 3'] ||
+    ''
+  );
 }
 
 async function handlePosterProxy(req, res) {
@@ -230,6 +270,113 @@ async function handleTmdb(req, res) {
   }
 }
 
+async function handleKinopoisk(req, res) {
+  const resource = String(req.query?.resource || '')
+    .trim()
+    .toLowerCase();
+  const apiKey = await getSelectedKinopoiskApiKey();
+
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Kinopoisk API key is not configured.' });
+  }
+
+  let url;
+  if (resource === 'search') {
+    const keyword = String(req.query?.keyword || '').trim();
+    const page = String(req.query?.page || '1').trim() || '1';
+    if (!keyword) {
+      return res.status(400).json({ error: 'Missing keyword' });
+    }
+    url = `https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword?keyword=${encodeURIComponent(
+      keyword
+    )}&page=${encodeURIComponent(page)}`;
+  } else if (resource === 'film') {
+    const id = String(req.query?.id || '').trim();
+    if (!id) {
+      return res.status(400).json({ error: 'Missing id' });
+    }
+    url = `https://kinopoiskapiunofficial.tech/api/v2.2/films/${encodeURIComponent(
+      id
+    )}`;
+  } else if (resource === 'staff') {
+    const filmId = String(req.query?.filmId || '').trim();
+    if (!filmId) {
+      return res.status(400).json({ error: 'Missing filmId' });
+    }
+    url = `https://kinopoiskapiunofficial.tech/api/v1/staff?filmId=${encodeURIComponent(
+      filmId
+    )}`;
+  } else if (resource === 'quota') {
+    url = `https://kinopoiskapiunofficial.tech/api/v1/api_keys/${encodeURIComponent(
+      apiKey
+    )}`;
+  } else {
+    return res.status(400).json({ error: 'Unknown Kinopoisk resource' });
+  }
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'X-API-KEY': apiKey,
+        'Content-Type': 'application/json',
+      },
+    });
+    const text = await response.text();
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    return res.status(response.status).send(text);
+  } catch (error) {
+    console.error('[kinopoisk] Proxy error', error);
+    return res.status(500).json({ error: 'Failed to fetch Kinopoisk data' });
+  }
+}
+
+async function handleRawg(req, res) {
+  const apiKey = process.env.RAWG_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'RAWG API key is not configured.' });
+  }
+
+  const resource = String(req.query?.resource || '')
+    .trim()
+    .toLowerCase();
+  let url;
+
+  if (resource === 'search') {
+    const search = String(req.query?.search || '').trim();
+    const pageSize = String(req.query?.page_size || '5').trim() || '5';
+    if (!search) {
+      return res.status(400).json({ error: 'Missing search' });
+    }
+    url = `https://api.rawg.io/api/games?key=${encodeURIComponent(
+      apiKey
+    )}&search=${encodeURIComponent(search)}&page_size=${encodeURIComponent(
+      pageSize
+    )}`;
+  } else if (resource === 'game') {
+    const id = String(req.query?.id || '').trim();
+    if (!id) {
+      return res.status(400).json({ error: 'Missing id' });
+    }
+    url = `https://api.rawg.io/api/games/${encodeURIComponent(
+      id
+    )}?key=${encodeURIComponent(apiKey)}`;
+  } else {
+    return res.status(400).json({ error: 'Unknown RAWG resource' });
+  }
+
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    return res.status(response.status).send(text);
+  } catch (error) {
+    console.error('[rawg] Proxy error', error);
+    return res.status(500).json({ error: 'Failed to fetch RAWG data' });
+  }
+}
+
 module.exports = async function handler(req, res) {
   const provider = String(req.query?.provider || '')
     .trim()
@@ -248,6 +395,14 @@ module.exports = async function handler(req, res) {
 
   if (provider === 'steamgriddb') {
     return handleSteamGridDb(req, res);
+  }
+
+  if (provider === 'kinopoisk') {
+    return handleKinopoisk(req, res);
+  }
+
+  if (provider === 'rawg') {
+    return handleRawg(req, res);
   }
 
   return handleTmdb(req, res);

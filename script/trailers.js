@@ -4,7 +4,7 @@ const BOOSTY_REVIEWS_API_URL = "/api/boosty-reviews";
 const BOOSTY_PREVIEW_API_URL = "/api/preview";
 const BOOSTY_REVIEW_IMAGE_API_URL = "/api/boosty-review-image";
 const EXTERNAL_API_URL = "/api/external";
-const KP_API_SELECTION_URL = "/api/kp-api-selection";
+const KP_API_SELECTION_URL = "/api/admin?action=kp-api-selection";
 const VERIFY_ADMIN_URL = "/api/admin?action=verify-admin";
 const ENV_URL = "/api/admin?action=env";
 const KINOPOISK_ACTORS_API_URL = "/api/kinopoisk-actors";
@@ -28,6 +28,61 @@ const DEFAULT_TRAILER_BOOSTY_CONTENT = {
     "Список сохранённых стримов пока пуст. Когда на Boosty появятся первые разборы, они будут отображаться здесь.",
   streams: [],
 };
+
+(function installExternalApiFetchProxy() {
+  if (
+    typeof window === "undefined" ||
+    typeof window.fetch !== "function" ||
+    window.__pupsikExternalProxyInstalled
+  ) {
+    return;
+  }
+
+  const nativeFetch = window.fetch.bind(window);
+
+  function rewriteExternalUrl(input) {
+    let url;
+    try {
+      url =
+        input instanceof Request
+          ? new URL(input.url, window.location.origin)
+          : new URL(String(input), window.location.origin);
+    } catch {
+      return null;
+    }
+
+    const host = url.hostname.toLowerCase();
+    if (host === "kinopoiskapiunofficial.tech") {
+      const params = new URLSearchParams({ provider: "kinopoisk" });
+      if (url.pathname === "/api/v2.1/films/search-by-keyword") {
+        params.set("resource", "search");
+        params.set("keyword", url.searchParams.get("keyword") || "");
+        params.set("page", url.searchParams.get("page") || "1");
+      } else if (url.pathname.startsWith("/api/v2.2/films/")) {
+        params.set("resource", "film");
+        params.set("id", url.pathname.split("/").pop() || "");
+      } else if (url.pathname === "/api/v1/staff") {
+        params.set("resource", "staff");
+        params.set("filmId", url.searchParams.get("filmId") || "");
+      } else {
+        return null;
+      }
+      return `${EXTERNAL_API_URL}?${params.toString()}`;
+    }
+
+    return null;
+  }
+
+  window.fetch = function proxiedFetch(input, init) {
+    const rewrittenUrl = rewriteExternalUrl(input);
+    if (rewrittenUrl) {
+      return nativeFetch(rewrittenUrl, init);
+    }
+    return nativeFetch(input, init);
+  };
+
+  window.__pupsikExternalProxyInstalled = true;
+})();
 
 let kinopoiskApiKey = "";
 let selectedKinopoiskApi = "API 1";
@@ -95,18 +150,6 @@ function normalizeKpApiValue(value) {
   }
   return "API 1";
 }
-
-function getSelectedKinopoiskApiKey(env) {
-  const selectedApi = normalizeKpApiValue(env?.KINOPOISK_API_SELECTED);
-  if (selectedApi === "API 2") {
-    return env?.KINOPOISK_API_KEY2 || env?.KINOPOISK_API_KEY || "";
-  }
-  if (selectedApi === "API 3") {
-    return env?.KINOPOISK_API_KEY3 || env?.KINOPOISK_API_KEY || "";
-  }
-  return env?.KINOPOISK_API_KEY || env?.KINOPOISK_API_KEY2 || env?.KINOPOISK_API_KEY3 || "";
-}
-
 
 function applySelectedKinopoiskApi(value) {
   selectedKinopoiskApi = normalizeKpApiValue(value);
@@ -1220,10 +1263,13 @@ async function verifyAdminAccess() {
   if (!envResponse.ok) return false;
 
   const env = await envResponse.json();
+  const kpOptions = Array.isArray(env.KINOPOISK_API_OPTIONS)
+    ? env.KINOPOISK_API_OPTIONS
+    : [];
   kinopoiskApiKeys = {
-    "API 1": env.KINOPOISK_API_KEY || "",
-    "API 2": env.KINOPOISK_API_KEY2 || "",
-    "API 3": env.KINOPOISK_API_KEY3 || "",
+    "API 1": kpOptions.includes("API 1") ? "server-proxy:API 1" : "",
+    "API 2": kpOptions.includes("API 2") ? "server-proxy:API 2" : "",
+    "API 3": kpOptions.includes("API 3") ? "server-proxy:API 3" : "",
   };
   applySelectedKinopoiskApi(env.KINOPOISK_API_SELECTED);
   return Boolean(env.isAdmin);

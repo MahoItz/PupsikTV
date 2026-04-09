@@ -7,6 +7,55 @@ const MAX_PLAYER_HISTORY = 15;
 const ADMIN_PLAYER_HISTORY_CACHE_KEY = "adminPlayerHistoryCache";
 const ADMIN_PLAYER_HISTORY_TTL_MS = 60 * 1000;
 
+(function installExternalApiFetchProxy() {
+  if (
+    typeof window === "undefined" ||
+    typeof window.fetch !== "function" ||
+    window.__pupsikExternalProxyInstalled
+  ) {
+    return;
+  }
+
+  const nativeFetch = window.fetch.bind(window);
+
+  function rewriteExternalUrl(input) {
+    let url;
+    try {
+      url =
+        input instanceof Request
+          ? new URL(input.url, window.location.origin)
+          : new URL(String(input), window.location.origin);
+    } catch {
+      return null;
+    }
+
+    if (url.hostname.toLowerCase() !== "kinopoiskapiunofficial.tech") {
+      return null;
+    }
+
+    const params = new URLSearchParams({ provider: "kinopoisk" });
+    if (url.pathname === "/api/v2.1/films/search-by-keyword") {
+      params.set("resource", "search");
+      params.set("keyword", url.searchParams.get("keyword") || "");
+      params.set("page", url.searchParams.get("page") || "1");
+    } else {
+      return null;
+    }
+
+    return `/api/external?${params.toString()}`;
+  }
+
+  window.fetch = function proxiedFetch(input, init) {
+    const rewrittenUrl = rewriteExternalUrl(input);
+    if (rewrittenUrl) {
+      return nativeFetch(rewrittenUrl, init);
+    }
+    return nativeFetch(input, init);
+  };
+
+  window.__pupsikExternalProxyInstalled = true;
+})();
+
 let kinopoiskApiKey = "";
 let searchResults = [];
 let selectedMovie = null;
@@ -110,7 +159,7 @@ async function loadHistory() {
     const cache = readHistoryCache();
     const cachedEtag = cache?.etag || "";
 
-    const response = await fetch("/api/admin-player-history", {
+    const response = await fetch("/api/admin?action=player-history", {
       headers: {
         ...getAdminAuthHeaders(),
         ...(cachedEtag ? { "If-None-Match": cachedEtag } : {}),
@@ -140,7 +189,7 @@ async function saveHistoryItem(movie) {
   updateHistoryState(upsertHistoryItem(currentHistory, item), { shouldRender: true });
 
   try {
-    const response = await fetch("/api/admin-player-history", {
+    const response = await fetch("/api/admin?action=player-history", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -170,7 +219,7 @@ async function deleteHistoryItem(kpId) {
   );
 
   try {
-    const response = await fetch(`/api/admin-player-history?kp_id=${encodeURIComponent(kpId)}`, {
+    const response = await fetch(`/api/admin?action=player-history&kp_id=${encodeURIComponent(kpId)}`, {
       method: "DELETE",
       headers: getAdminAuthHeaders(),
     });
@@ -381,7 +430,9 @@ async function verifyAdminAccess() {
   if (!envRes.ok) return false;
   const env = await envRes.json();
   kinopoiskApiKey =
-    env.KINOPOISK_API_KEY || env.KINOPOISK_API_KEY2 || env.KINOPOISK_API_KEY3 || "";
+    Array.isArray(env.KINOPOISK_API_OPTIONS) && env.KINOPOISK_API_OPTIONS.length
+      ? "server-proxy"
+      : "";
   return Boolean(env.isAdmin && kinopoiskApiKey);
 }
 

@@ -1,3 +1,4 @@
+const { createHash } = require('node:crypto');
 const {
   extractBearerToken,
   issueAdminToken,
@@ -27,6 +28,9 @@ const SETTINGS_COLUMNS = new Set([
   'lose_volume',
   'spin_volume',
 ]);
+const ADMIN_PLAYER_HISTORY_TABLE = 'admin_player_history';
+const MAX_PLAYER_HISTORY = 15;
+const HISTORY_CACHE_CONTROL = 'private, max-age=30, must-revalidate';
 const TABLE_COLUMNS = {
   movies: new Set([
     'title',
@@ -133,6 +137,8 @@ const ALLOWED_ACTIONS = [
   'media-admin',
   'media-items',
   'game-posters',
+  'kp-api-selection',
+  'player-history',
 ];
 
 function parseBody(req) {
@@ -214,6 +220,40 @@ function verifyAdminRequest(req) {
   }
 
   return { ok: true, payload: verification.payload };
+}
+
+function createHistoryEtag(rows) {
+  const payload = (Array.isArray(rows) ? rows : [])
+    .map((row) => `${row?.kp_id || ''}:${row?.created_at || ''}`)
+    .join('|');
+
+  const hash = createHash('sha1').update(payload).digest('hex');
+  return `"${hash}"`;
+}
+
+function normalizeEtag(value) {
+  if (typeof value !== 'string') return '';
+  return value.trim();
+}
+
+function parseYear(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const year = Number.parseInt(value, 10);
+  if (!Number.isFinite(year)) return null;
+  return year;
+}
+
+function normalizeHistoryRowPayload(payload) {
+  const kpId = Number.parseInt(payload?.kp_id, 10);
+  if (!Number.isFinite(kpId)) return null;
+
+  return {
+    kp_id: kpId,
+    title: String(payload?.title || 'Без названия').slice(0, 500),
+    year: parseYear(payload?.year),
+    poster: typeof payload?.poster === 'string' ? payload.poster : null,
+    created_at: new Date().toISOString(),
+  };
 }
 
 async function loadSelectedKinopoiskApi() {
@@ -731,19 +771,13 @@ async function handleEnv(req, res) {
 
   if (isAdmin) {
     env.KINOPOISK_API_SELECTED = await loadSelectedKinopoiskApi();
+    env.KINOPOISK_API_OPTIONS = [
+      process.env.KINOPOISK_API_KEY ? 'API 1' : null,
+      process.env.KINOPOISK_API_KEY2 ? 'API 2' : null,
+      process.env.KINOPOISK_API_KEY3 ? 'API 3' : null,
+    ].filter(Boolean);
+    env.RAWG_ENABLED = Boolean(process.env.RAWG_API_KEY);
 
-    if (process.env.KINOPOISK_API_KEY) {
-      env.KINOPOISK_API_KEY = process.env.KINOPOISK_API_KEY;
-    }
-    if (process.env.KINOPOISK_API_KEY2) {
-      env.KINOPOISK_API_KEY2 = process.env.KINOPOISK_API_KEY2;
-    }
-    if (process.env.KINOPOISK_API_KEY3) {
-      env.KINOPOISK_API_KEY3 = process.env.KINOPOISK_API_KEY3;
-    }
-    if (process.env.RAWG_API_KEY) {
-      env.RAWG_API_KEY = process.env.RAWG_API_KEY;
-    }
     if (process.env.TWITCH_CLIENT_ID) {
       env.TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
     }
@@ -855,6 +889,45 @@ async function handleSettings(req, res) {
     return res.status(500).json({
       error: error?.message || 'Failed to persist settings',
     });
+  }
+}
+
+async function handleKpApiSelection(req, res) {
+  const method = (req.method || '').toUpperCase();
+  if (method !== 'PATCH') {
+    res.setHeader('Allow', ['PATCH']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res.status(access.status).json({
+      error: access.error,
+      expired: access.expired || false,
+    });
+  }
+
+  let payload;
+  try {
+    payload = parseBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  const kpApi =
+    payload?.kp_api === 'API 2' || payload?.kp_api === 'API 3'
+      ? payload.kp_api
+      : 'API 1';
+
+  try {
+    const supabase = createSupabaseServerClient();
+    const result = await upsertSettingsRow(supabase, { kp_api: kpApi });
+    return res.status(200).json({ ok: true, kp_api: kpApi, id: result.id });
+  } catch (error) {
+    console.error('Failed to update Kinopoisk API selection', error);
+    return res
+      .status(500)
+      .json({ error: 'Failed to update Kinopoisk API selection' });
   }
 }
 
@@ -1092,6 +1165,145 @@ async function handleGamePosters(req, res) {
   }
 }
 
+async function getPlayerHistory(supabase, req, res) {
+  const { data, error } = await supabase
+    .from(ADMIN_PLAYER_HISTORY_TABLE)
+    .select('created_at, kp_id, title, year, poster')
+    .order('created_at', { ascending: false })
+    .limit(MAX_PLAYER_HISTORY);
+
+  if (error) {
+    console.error('Failed to load admin player history', error);
+    return res.status(500).json({ error: 'Failed to load history' });
+  }
+
+  const items = data || [];
+  const etag = createHistoryEtag(items);
+  const requestEtag = normalizeEtag(req.headers['if-none-match']);
+
+  res.setHeader('Cache-Control', HISTORY_CACHE_CONTROL);
+  res.setHeader('ETag', etag);
+
+  if (requestEtag && requestEtag === etag) {
+    return res.status(304).end();
+  }
+
+  return res.status(200).json({ items });
+}
+
+async function savePlayerHistoryItem(supabase, req, res) {
+  let payload;
+  try {
+    payload = parseBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  const normalized = normalizeHistoryRowPayload(payload || {});
+  if (!normalized) {
+    return res.status(400).json({ error: 'Invalid kp_id' });
+  }
+
+  const { error: deleteError } = await supabase
+    .from(ADMIN_PLAYER_HISTORY_TABLE)
+    .delete()
+    .eq('kp_id', normalized.kp_id);
+  if (deleteError) {
+    console.error('Failed to dedupe admin player history', deleteError);
+    return res.status(500).json({ error: 'Failed to save history' });
+  }
+
+  const { error: insertError } = await supabase
+    .from(ADMIN_PLAYER_HISTORY_TABLE)
+    .insert(normalized);
+  if (insertError) {
+    console.error('Failed to insert admin player history', insertError);
+    return res.status(500).json({ error: 'Failed to save history' });
+  }
+
+  const { data: tailRows, error: tailError } = await supabase
+    .from(ADMIN_PLAYER_HISTORY_TABLE)
+    .select('created_at')
+    .order('created_at', { ascending: false })
+    .range(MAX_PLAYER_HISTORY, MAX_PLAYER_HISTORY + 1000);
+  if (tailError) {
+    console.error('Failed to trim admin player history', tailError);
+    return res.status(500).json({ error: 'Failed to save history' });
+  }
+
+  if (Array.isArray(tailRows) && tailRows.length) {
+    const cutoffCreatedAt = tailRows[0].created_at;
+    const { error: trimError } = await supabase
+      .from(ADMIN_PLAYER_HISTORY_TABLE)
+      .delete()
+      .lte('created_at', cutoffCreatedAt);
+    if (trimError) {
+      console.error('Failed to delete old admin player history rows', trimError);
+      return res.status(500).json({ error: 'Failed to save history' });
+    }
+  }
+
+  return getPlayerHistory(supabase, req, res);
+}
+
+async function deletePlayerHistoryItem(supabase, req, res) {
+  const payload = (() => {
+    try {
+      return parseBody(req);
+    } catch {
+      return undefined;
+    }
+  })();
+
+  const rawId = req.query?.kp_id ?? payload?.kp_id;
+  const kpId = Number.parseInt(rawId, 10);
+  if (!Number.isFinite(kpId)) {
+    return res.status(400).json({ error: 'Invalid kp_id' });
+  }
+
+  const { error } = await supabase
+    .from(ADMIN_PLAYER_HISTORY_TABLE)
+    .delete()
+    .eq('kp_id', kpId);
+  if (error) {
+    console.error('Failed to delete admin player history row', error);
+    return res.status(500).json({ error: 'Failed to delete history item' });
+  }
+
+  return getPlayerHistory(supabase, req, res);
+}
+
+async function handlePlayerHistory(req, res) {
+  const method = (req.method || '').toUpperCase();
+  if (!['GET', 'POST', 'DELETE'].includes(method)) {
+    res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
+  }
+
+  let supabase;
+  try {
+    supabase = createSupabaseServerClient();
+  } catch (error) {
+    console.error('Supabase configuration error', error);
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
+  if (method === 'GET') {
+    return getPlayerHistory(supabase, req, res);
+  }
+  if (method === 'DELETE') {
+    return deletePlayerHistoryItem(supabase, req, res);
+  }
+  return savePlayerHistoryItem(supabase, req, res);
+}
+
 module.exports = async function handler(req, res) {
   const action = String(req.query?.action || '')
     .trim()
@@ -1113,6 +1325,9 @@ module.exports = async function handler(req, res) {
   if (action === 'settings') {
     return handleSettings(req, res);
   }
+  if (action === 'kp-api-selection') {
+    return handleKpApiSelection(req, res);
+  }
   if (action === 'users') {
     return handleUsers(req, res);
   }
@@ -1121,6 +1336,9 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'media-items') {
     return handleMediaItems(req, res);
+  }
+  if (action === 'player-history') {
+    return handlePlayerHistory(req, res);
   }
 
   return handleGamePosters(req, res);

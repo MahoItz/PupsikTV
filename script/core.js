@@ -1,6 +1,8 @@
 ﻿// Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const API_BASE_PATH = "/api";
+const EXTERNAL_API_URL = "/api/external";
+const API_PROXY_PLACEHOLDER = "server-proxy";
 
 function buildApiPath(path) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -14,6 +16,78 @@ function buildAbsoluteApiUrl(path) {
   }
   return apiPath;
 }
+
+(function installExternalApiFetchProxy() {
+  if (
+    typeof window === "undefined" ||
+    typeof window.fetch !== "function" ||
+    window.__pupsikExternalProxyInstalled
+  ) {
+    return;
+  }
+
+  const nativeFetch = window.fetch.bind(window);
+
+  function rewriteExternalUrl(input) {
+    let url;
+    try {
+      url =
+        input instanceof Request
+          ? new URL(input.url, window.location.origin)
+          : new URL(String(input), window.location.origin);
+    } catch {
+      return null;
+    }
+
+    const host = url.hostname.toLowerCase();
+    if (host === "kinopoiskapiunofficial.tech") {
+      const params = new URLSearchParams({ provider: "kinopoisk" });
+      if (url.pathname === "/api/v2.1/films/search-by-keyword") {
+        params.set("resource", "search");
+        params.set("keyword", url.searchParams.get("keyword") || "");
+        params.set("page", url.searchParams.get("page") || "1");
+      } else if (url.pathname.startsWith("/api/v2.2/films/")) {
+        params.set("resource", "film");
+        params.set("id", url.pathname.split("/").pop() || "");
+      } else if (url.pathname === "/api/v1/staff") {
+        params.set("resource", "staff");
+        params.set("filmId", url.searchParams.get("filmId") || "");
+      } else if (url.pathname.startsWith("/api/v1/api_keys/")) {
+        params.set("resource", "quota");
+      } else {
+        return null;
+      }
+      return `${EXTERNAL_API_URL}?${params.toString()}`;
+    }
+
+    if (host === "api.rawg.io") {
+      const params = new URLSearchParams({ provider: "rawg" });
+      if (url.pathname === "/api/games") {
+        params.set("resource", "search");
+        params.set("search", url.searchParams.get("search") || "");
+        params.set("page_size", url.searchParams.get("page_size") || "5");
+      } else if (url.pathname.startsWith("/api/games/")) {
+        params.set("resource", "game");
+        params.set("id", url.pathname.split("/").pop() || "");
+      } else {
+        return null;
+      }
+      return `${EXTERNAL_API_URL}?${params.toString()}`;
+    }
+
+    return null;
+  }
+
+  window.fetch = function proxiedFetch(input, init) {
+    const rewrittenUrl = rewriteExternalUrl(input);
+    if (rewrittenUrl) {
+      return nativeFetch(rewrittenUrl, init);
+    }
+    return nativeFetch(input, init);
+  };
+
+  window.__pupsikExternalProxyInstalled = true;
+})();
 
 const GAME_POSTER_BUCKET = "game-posters";
 const PLACEHOLDER_POSTER_HOST = "images/placeholder-poster.webp";
@@ -1297,20 +1371,22 @@ async function loadEnv(options = {}) {
     } else {
       SUPABASE_PUBLIC_KEY = key;
     }
-    if (env.KINOPOISK_API_KEY) {
-      kpApiPrimaryKey = env.KINOPOISK_API_KEY;
-      localStorage.setItem("KINOPOISK_API_KEY", env.KINOPOISK_API_KEY);
-    }
-    if (env.KINOPOISK_API_KEY2) {
-      kpApiSecondaryKey = env.KINOPOISK_API_KEY2;
-      localStorage.setItem("KINOPOISK_API_KEY2", env.KINOPOISK_API_KEY2);
-    }
-    if (env.KINOPOISK_API_KEY3) {
-      kpApiTertiaryKey = env.KINOPOISK_API_KEY3;
-      localStorage.setItem("KINOPOISK_API_KEY3", env.KINOPOISK_API_KEY3);
-    }
+    const kpOptions = Array.isArray(env.KINOPOISK_API_OPTIONS)
+      ? env.KINOPOISK_API_OPTIONS
+      : [];
+    kpApiPrimaryKey = kpOptions.includes("API 1") ? "server-proxy:API 1" : "";
+    kpApiSecondaryKey = kpOptions.includes("API 2")
+      ? "server-proxy:API 2"
+      : "";
+    kpApiTertiaryKey = kpOptions.includes("API 3")
+      ? "server-proxy:API 3"
+      : "";
+    localStorage.removeItem("KINOPOISK_API_KEY");
+    localStorage.removeItem("KINOPOISK_API_KEY2");
+    localStorage.removeItem("KINOPOISK_API_KEY3");
     applyKpApiSelection(selectedKpApiValue);
-    if (env.RAWG_API_KEY) RAWG_API_KEY = env.RAWG_API_KEY;
+    RAWG_API_KEY = env.RAWG_ENABLED ? API_PROXY_PLACEHOLDER : undefined;
+    localStorage.removeItem("RAWG_API_KEY");
     if (typeof env.TWITCH_CLIENT_ID === "string") {
       const trimmedClientId = env.TWITCH_CLIENT_ID.trim();
       TWITCH_CLIENT_ID = trimmedClientId ? trimmedClientId : null;
