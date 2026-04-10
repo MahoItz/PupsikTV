@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(wc -l \"F:\\\\HTML2\\\\PupsikTV/script\"/*.js)",
+      "Bash(find \"F:\\\\HTML2\\\\PupsikTV/style\" -name \"*.css\" -exec wc -l {} \\\\;)",
+      "Bash(awk '{sum+=$1} END {print \"Total CSS lines:\", sum}')",
+      "Bash(find:*)"
+    ]
+  }
+}
