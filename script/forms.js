@@ -98,6 +98,7 @@ function mapInsertedMovieOrder(data, orderData) {
     country: orderData.country,
     actors: orderData.actors,
     director: orderData.director,
+    watchSource: normalizeWatchSource(data.watch_source || orderData.watchSource),
   };
 }
 
@@ -122,6 +123,7 @@ async function saveMovieOrder(orderData) {
     director: orderData?.director || "",
     orderBy: String(orderData?.orderBy || "").trim(),
     orderType: orderData?.orderType || "",
+    watchSource: normalizeWatchSource(orderData?.watchSource),
     length: orderData?.length || null,
     kinopoiskId: orderData?.kinopoiskId || null,
     imdbId: orderData?.imdbId || null,
@@ -171,6 +173,7 @@ async function saveMovieOrder(orderData) {
         country: normalizedOrder.country,
         actors: normalizeActorsForStorage(normalizedOrder.actors),
         director: normalizedOrder.director,
+        watch_source: normalizedOrder.watchSource,
         },
       }),
     });
@@ -209,6 +212,9 @@ document
     e.preventDefault();
 
     const rating = getRatingValue("ratingInput");
+    const watchSource = normalizeWatchSource(
+      document.getElementById("movieWatchSource")?.value
+    );
     if (!isRatingValid(rating)) {
       alert("Неверная оценка");
       document.getElementById("ratingInput").reportValidity();
@@ -271,6 +277,7 @@ document
           director: (staff?.directors || []).join(", "),
           orderBy: "",
           orderType: "",
+          watchSource,
         };
       } else {
         movieData = {
@@ -289,6 +296,7 @@ document
           director: "",
           orderBy: "",
           orderType: "",
+          watchSource,
         };
       }
     } else {
@@ -320,6 +328,7 @@ document
         director: "",
         orderBy: "",
         orderType: "",
+        watchSource,
       };
     }
 
@@ -391,6 +400,7 @@ document
           country: movieData.country,
           actors: normalizeActorsForStorage(movieData.actors),
           director: movieData.director,
+          watch_source: movieData.watchSource,
           },
         }),
       });
@@ -422,6 +432,7 @@ document
         country: movieData.country,
         actors: movieData.actors,
         director: movieData.director,
+        watchSource: normalizeWatchSource(data.watch_source || movieData.watchSource),
       });
       localStorage.setItem("moviesCache", JSON.stringify(allMovies));
 
@@ -447,6 +458,9 @@ document
 
     const orderBy = document.getElementById("watchOrderBy").value;
     const orderType = document.getElementById("watchOrderType").value;
+    const watchSource = normalizeWatchSource(
+      document.getElementById("watchSource")?.value
+    );
 
     let orderData;
     let filmLength = null;
@@ -498,6 +512,7 @@ document
           director: (staff?.directors || []).join(", "),
           orderBy: orderBy,
           orderType: orderType,
+          watchSource,
           length: filmLength,
         };
       } else {
@@ -516,6 +531,7 @@ document
           director: "",
           orderBy: orderBy,
           orderType: orderType,
+          watchSource,
           length: filmLength,
         };
       }
@@ -546,6 +562,7 @@ document
         director: "",
         orderBy: orderBy,
         orderType: orderType,
+        watchSource,
         length: filmLength,
       };
     }
@@ -996,6 +1013,7 @@ async function submitRating() {
       director: source.director || "",
       orderBy: source.orderBy || "",
       orderType: source.orderType || "",
+      watchSource: normalizeWatchSource(source.watchSource),
       studios: source.studios || null,
     };
     const duplicateWatchedMovie = allMovies.some(
@@ -1054,6 +1072,7 @@ async function submitRating() {
           actors: normalizeActorsForStorage(watchedMovie.actors),
           director: watchedMovie.director,
           studios: watchedMovie.studios,
+          watch_source: watchedMovie.watchSource,
           },
         }),
       });
@@ -1091,6 +1110,7 @@ async function submitRating() {
         actors: watchedMovie.actors,
         director: watchedMovie.director,
         studios: data.studios ?? watchedMovie.studios,
+        watchSource: normalizeWatchSource(data.watch_source || watchedMovie.watchSource),
       };
 
       allMovies.unshift(newMovie);

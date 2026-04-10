@@ -26,12 +26,20 @@ function toggleSortOrder() {
 // Модальные окна
 function openAddMovieModal() {
   const modal = document.getElementById("addMovieModal");
+  const watchSourceSelect = document.getElementById("movieWatchSource");
+  if (watchSourceSelect && !watchSourceSelect.value) {
+    watchSourceSelect.value = "stream";
+  }
   if (modal) {
     modal.style.display = "block";
   }
 }
 
 function openAddToWatchlistModal() {
+  const watchSourceSelect = document.getElementById("watchSource");
+  if (watchSourceSelect && !watchSourceSelect.value) {
+    watchSourceSelect.value = "stream";
+  }
   document.getElementById("addWatchlistModal").style.display = "block";
 }
 
@@ -1117,6 +1125,14 @@ const detailsEditConfigs = {
         type: "select",
         selectSourceId: "editMovieOrderType",
       },
+      {
+        valueId: "movieDetailsWatchSource",
+        key: "watchSource",
+        localKey: "watchSource",
+        dbKey: "watch_source",
+        type: "select",
+        selectSourceId: "movieWatchSource",
+      },
     ],
   },
   "gameDetails-about": {
@@ -1190,6 +1206,14 @@ const detailsEditConfigs = {
         dbKey: "order_type",
         type: "select",
         selectSourceId: "editOrderType",
+      },
+      {
+        valueId: "orderDetailsWatchSource",
+        key: "watchSource",
+        localKey: "watchSource",
+        dbKey: "watch_source",
+        type: "select",
+        selectSourceId: "watchSource",
       },
     ],
   },
@@ -1271,6 +1295,9 @@ function getDetailsDateInputValue(value) {
 }
 
 function formatDetailsDisplayValue(field, value) {
+  if (field?.dbKey === "watch_source" || field?.key === "watchSource") {
+    return formatWatchSourceLabel(value);
+  }
   if (field?.type === "date") {
     return value ? formatDate(value) : "";
   }
@@ -1649,6 +1676,8 @@ async function saveDetailsEdit(key) {
       if (updates[field.key] !== undefined) {
         if (field.key === "orderType" || field.key === "orderBy") {
           record[field.localKey] = updates[field.key] || "";
+        } else if (field.key === "watchSource") {
+          record[field.localKey] = normalizeWatchSource(updates[field.key]);
         } else {
           record[field.localKey] = updates[field.key];
         }
@@ -1733,6 +1762,7 @@ function openMovieDetailsModal(id) {
   const orderByValue =
     movie.orderBy && movie.orderBy !== "null" ? movie.orderBy : "";
   const orderTypeValue = movie.orderType || "";
+  const watchSourceValue = formatWatchSourceLabel(movie.watchSource);
 
   const titleEl = document.getElementById("movieDetailsTitle");
   if (titleEl) titleEl.textContent = title;
@@ -1767,6 +1797,7 @@ function openMovieDetailsModal(id) {
   );
   setMovieDetailsText("movieDetailsOrderBy", orderByValue);
   setMovieDetailsText("movieDetailsOrderType", orderTypeValue);
+  setMovieDetailsText("movieDetailsWatchSource", watchSourceValue);
   setMovieDetailsText("movieDetailsPupsikRating", movie.rating);
   setMovieDetailsText("movieDetailsKpRating", movie.kpRating ?? "-");
   setMovieDetailsText("movieDetailsUserRating", movie.userRating ?? "-");
@@ -1787,6 +1818,7 @@ function openMovieDetailsModal(id) {
   });
   setMetaLabel("movieDetailsOrderBy", "Кто заказал");
   setMetaLabel("movieDetailsOrderType", "Способ заказа");
+  setMetaLabel("movieDetailsWatchSource", "Просмотр в");
   setMetaLabel("movieDetailsDate", "Дата добавления");
   // setSectionTitleByValueId("movieDetailsPupsikRating", "Оценки");
 
@@ -1800,6 +1832,7 @@ function openMovieDetailsModal(id) {
       orderBy: "movieDetailsOrderBy",
       orderType: "movieDetailsOrderType",
       date: "movieDetailsDate",
+      extra: ["movieDetailsWatchSource"],
     },
     actorsSectionId: "movieDetailsActorsSection",
   });
@@ -2187,6 +2220,7 @@ function renderOrderDetailsModal(order) {
   const orderByValue =
     order.orderBy && order.orderBy !== "null" ? order.orderBy : "";
   const orderTypeValue = order.orderType || "";
+  const watchSourceValue = formatWatchSourceLabel(order.watchSource);
 
   const titleEl = document.getElementById("orderDetailsTitle");
   if (titleEl) titleEl.textContent = title;
@@ -2229,6 +2263,7 @@ function renderOrderDetailsModal(order) {
   );
   setMovieDetailsText("orderDetailsOrderBy", orderByValue);
   setMovieDetailsText("orderDetailsOrderType", orderTypeValue);
+  setMovieDetailsText("orderDetailsWatchSource", watchSourceValue);
   setMovieDetailsText("orderDetailsKpRating", order.kpRating ?? "-");
   setMovieDetailsText("orderDetailsDescription", order.description, "—");
   setMovieDetailsText("orderDetailsCountry", order.country, "—");
@@ -2247,6 +2282,7 @@ function renderOrderDetailsModal(order) {
   });
   setMetaLabel("orderDetailsOrderBy", "Кто заказал");
   setMetaLabel("orderDetailsOrderType", "Способ заказа");
+  setMetaLabel("orderDetailsWatchSource", "Просмотр в");
   setMetaLabel("orderDetailsDate", "Дата добавления");
   setMetaLabel("orderDetailsPlanDate", "Запланировано");
   setMetaLabel("orderDetailsLength", "Длительность");
@@ -2262,7 +2298,7 @@ function renderOrderDetailsModal(order) {
       orderBy: "orderDetailsOrderBy",
       orderType: "orderDetailsOrderType",
       date: "orderDetailsDate",
-      extra: ["orderDetailsPlanDate", "orderDetailsLength"],
+      extra: ["orderDetailsPlanDate", "orderDetailsLength", "orderDetailsWatchSource"],
     },
     actorsSectionId: "orderDetailsActorsSection",
   });

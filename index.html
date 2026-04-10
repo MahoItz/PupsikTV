@@ -474,6 +474,13 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label for="movieWatchSource">Где смотрим:</label>
+                    <select id="movieWatchSource">
+                        <option value="stream" selected>Стрим</option>
+                        <option value="discord">Дискорд</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Добавить фильм</button>
             </form>
         </div>
@@ -563,6 +570,13 @@
                     </select>
                 </div>
 
+                <div class="form-group">
+                    <label for="watchSource">Где смотрим:</label>
+                    <select id="watchSource">
+                        <option value="stream" selected>Стрим</option>
+                        <option value="discord">Дискорд</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Добавить в список</button>
             </form>
         </div>
@@ -1315,6 +1329,10 @@
                             <span class="movie-details-meta-label">Способ заказа</span>
                             <span id="movieDetailsOrderType" class="movie-details-meta-value"></span>
                         </div>
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Просмотр в</span>
+                            <span id="movieDetailsWatchSource" class="movie-details-meta-value"></span>
+                        </div>
                         <details id="movieDetailsActorsSection" class="movie-details-actors">
                             <summary class="movie-details-actors-summary">Главные роли</summary>
                             <ul id="movieDetailsActorsList" class="movie-details-actors-list"></ul>
@@ -1562,6 +1580,10 @@
                         <div class="movie-details-meta-item">
                             <span class="movie-details-meta-label">Способ заказа</span>
                             <span id="orderDetailsOrderType" class="movie-details-meta-value"></span>
+                        </div>
+                        <div class="movie-details-meta-item">
+                            <span class="movie-details-meta-label">Просмотр в</span>
+                            <span id="orderDetailsWatchSource" class="movie-details-meta-value"></span>
                         </div>
                         <details id="orderDetailsActorsSection" class="movie-details-actors">
                             <summary class="movie-details-actors-summary">Главные роли</summary>

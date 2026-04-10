@@ -141,6 +141,7 @@ function computeMoviesSignature(list) {
     const descriptionHash = stringHash(movie?.description ?? "");
     const countryHash = stringHash(movie?.country ?? "");
     const directorHash = stringHash(movie?.director ?? "");
+    const watchSourceHash = stringHash(movie?.watchSource ?? "");
     const actorsHash = stringHash(
       Array.isArray(movie?.actors) ? movie.actors.join(",") : movie?.actors ?? ""
     );
@@ -159,6 +160,7 @@ function computeMoviesSignature(list) {
     hash = (hash * 31 + descriptionHash) >>> 0;
     hash = (hash * 31 + countryHash) >>> 0;
     hash = (hash * 31 + directorHash) >>> 0;
+    hash = (hash * 31 + watchSourceHash) >>> 0;
     hash = (hash * 31 + actorsHash) >>> 0;
     hash = (hash * 31 + studiosHash) >>> 0;
   }
@@ -311,7 +313,7 @@ async function loadMoviesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("movies")
       .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, kp_id, imdb_id, studios"
+        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, kp_id, imdb_id, studios, watch_source"
       )
       .order("id", { ascending: false });
 
@@ -346,6 +348,7 @@ async function loadMoviesFromSupabase() {
         actors: normalizeActorsValue(item.actors),
         director: item.director || "",
         studios: item.studios || null,
+        watchSource: normalizeWatchSource(item.watch_source),
       };
     });
 
@@ -382,7 +385,7 @@ async function loadWatchlistFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Movie_Orders")
       .select(
-        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, kp_id, imdb_id, studios"
+        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, kp_id, imdb_id, studios, watch_source"
       )
       .order("id", { ascending: true });
 
@@ -422,6 +425,7 @@ async function loadWatchlistFromSupabase() {
         actors: normalizeActorsValue(item.actors),
         director: item.director || "",
         studios: item.studios || null,
+        watchSource: normalizeWatchSource(item.watch_source),
       };
     });
   } catch (err) {

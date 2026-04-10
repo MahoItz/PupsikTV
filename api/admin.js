@@ -52,6 +52,7 @@ const TABLE_COLUMNS = {
     'actors',
     'director',
     'studios',
+    'watch_source',
   ]),
   Movie_Orders: new Set([
     'order_title',
@@ -72,6 +73,7 @@ const TABLE_COLUMNS = {
     'studios',
     'plan_date',
     'parents_guide',
+    'watch_source',
   ]),
   Game_Orders: new Set([
     'game_title',

@@ -163,6 +163,17 @@ function normalizeGameMode(value) {
   return "";
 }
 
+function normalizeWatchSource(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
+  return normalized === "discord" ? "discord" : "stream";
+}
+
+function formatWatchSourceLabel(value) {
+  return normalizeWatchSource(value) === "discord" ? "Дискорд" : "Стрим";
+}
+
 async function uploadGamePosterToStorage({
   poster,
   file,
