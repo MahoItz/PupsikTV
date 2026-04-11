@@ -315,6 +315,7 @@ let adminTokenExpiresAt = localStorage.getItem("adminTokenExpiresAt") || null;
 let isAdmin = false;
 let adminElements = [];
 const SETTINGS_API_URL = "/api/admin?action=settings";
+const CHECK_AI_MODELS_API_URL = "/api/admin?action=check-ai-models";
 // Kinopoisk (unofficial API)
 
 function updateAdminSession(token, expiresAt) {
@@ -648,27 +649,66 @@ async function checkAiModelsStatus() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
   if (label) label.textContent = "Проверка моделей...";
 
-  aiModelOptions.forEach((modelInfo) => {
-    aiModelStatuses[modelInfo.ai_model] = {
-      status: "unavailable",
-      http_status: 410,
-      provider: "Disabled",
-      raw: "Model status check endpoint was removed",
-    };
-  });
-  renderAiModelOptions(aiModelOptions, selectedAiModelValue);
+  try {
+    const response = await fetch(CHECK_AI_MODELS_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAdminAuthHeaders(),
+      },
+      body: JSON.stringify({
+        models: aiModelOptions.map((modelInfo) => modelInfo.ai_model),
+      }),
+    });
 
-  // Persist to Supabase after all checks are done
-  await persistAiModelStatuses();
+    let result = null;
+    try {
+      result = await response.json();
+    } catch {
+      result = null;
+    }
 
-  btn.disabled = false;
-  btn.innerHTML = originalHtml;
+    if (response.status === 401) {
+      clearAdminSession();
+    }
 
-  if (label) {
-    label.textContent = "Проверка моделей отключена";
-    setTimeout(() => {
-      label.textContent = "Проверка моделей отключена";
-    }, 5000);
+    if (!response.ok) {
+      throw new Error(
+        result?.error || `Failed to check models: ${response.status}`
+      );
+    }
+
+    aiModelStatuses = result?.statuses && typeof result.statuses === "object"
+      ? result.statuses
+      : {};
+
+    renderAiModelOptions(aiModelOptions, selectedAiModelValue);
+    await persistAiModelStatuses();
+
+    const summary = Object.values(aiModelStatuses).reduce(
+      (acc, statusInfo) => {
+        if (statusInfo?.status === "active") acc.active += 1;
+        else if (statusInfo?.status === "rate_limited") acc.rateLimited += 1;
+        else acc.unavailable += 1;
+        return acc;
+      },
+      { active: 0, rateLimited: 0, unavailable: 0 }
+    );
+
+    if (label) {
+      label.textContent = `Проверено: ${summary.active} доступно, ${summary.rateLimited} с лимитом, ${summary.unavailable} недоступно`;
+      setTimeout(() => {
+        label.textContent = "Проверка завершена";
+      }, 5000);
+    }
+  } catch (error) {
+    console.error("Failed to check AI models", error);
+    if (label) {
+      label.textContent = `Ошибка проверки: ${error.message || error}`;
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
   }
 }
 

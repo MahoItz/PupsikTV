@@ -11,6 +11,10 @@ const {
 
 const GAME_POSTER_BUCKET = 'game-posters';
 const PLACEHOLDER_POSTER_HOST = 'images/placeholder-poster.webp';
+const OPENROUTER_CHAT_COMPLETIONS_URL =
+  'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_MODEL_CHECK_PROMPT =
+  'Reply with exactly "ok" and nothing else.';
 const ALLOWED_CONTENT_TYPES = new Set([
   'image/jpeg',
   'image/png',
@@ -141,6 +145,7 @@ const ALLOWED_ACTIONS = [
   'media-items',
   'game-posters',
   'kp-api-selection',
+  'check-ai-models',
   'player-history',
 ];
 
@@ -204,6 +209,36 @@ function pickAllowedChanges(table, changes) {
   }
 
   return sanitized;
+}
+
+function normalizeAiModels(payload) {
+  if (!Array.isArray(payload)) return [];
+
+  return [
+    ...new Set(
+      payload
+        .map((item) => String(item || '').trim())
+        .filter(Boolean)
+        .slice(0, 50)
+    ),
+  ];
+}
+
+function extractOpenRouterError(rawText) {
+  if (!rawText) return 'Empty response';
+
+  try {
+    const parsed = JSON.parse(rawText);
+    const message =
+      parsed?.error?.message ||
+      parsed?.message ||
+      parsed?.detail ||
+      parsed?.error ||
+      rawText;
+    return String(message).slice(0, 300);
+  } catch {
+    return String(rawText).slice(0, 300);
+  }
 }
 
 function verifyAdminRequest(req) {
@@ -325,7 +360,9 @@ async function findUserRow(supabase, userName) {
 }
 
 async function mutateUsersTable(supabase, payload) {
-  const action = String(payload?.action || '').trim().toLowerCase();
+  const action = String(payload?.action || '')
+    .trim()
+    .toLowerCase();
   const userName = normalizeUserName(payload?.userName);
   if (!userName) {
     return { status: 400, body: { error: 'Invalid userName' } };
@@ -492,11 +529,12 @@ async function promoteMovieOrder(supabase, payload) {
     };
   }
 
-  const { data: pendingRatingsData, error: pendingRatingsError } = await supabase
-    .from('ratings')
-    .select('id, rating')
-    .eq('movie_id', orderId)
-    .eq('category', 'MovieOrder');
+  const { data: pendingRatingsData, error: pendingRatingsError } =
+    await supabase
+      .from('ratings')
+      .select('id, rating')
+      .eq('movie_id', orderId)
+      .eq('category', 'MovieOrder');
   if (pendingRatingsError) throw pendingRatingsError;
 
   const pendingRatings = Array.isArray(pendingRatingsData)
@@ -583,7 +621,12 @@ async function updateKinopoiskMetadata(supabase, payload) {
   const kinopoiskId = parseId(payload?.kinopoiskId);
   const imdbId = normalizeImdbId(payload?.imdbId);
 
-  if (!table || !ALLOWED_METADATA_TABLES.has(table) || !itemId || !kinopoiskId) {
+  if (
+    !table ||
+    !ALLOWED_METADATA_TABLES.has(table) ||
+    !itemId ||
+    !kinopoiskId
+  ) {
     return { status: 400, body: { error: 'Invalid metadata payload' } };
   }
 
@@ -880,7 +923,9 @@ async function handleSettings(req, res) {
 
   const changes = pickAllowedSettings(payload);
   if (!Object.keys(changes).length) {
-    return res.status(400).json({ error: 'No allowed settings fields provided' });
+    return res
+      .status(400)
+      .json({ error: 'No allowed settings fields provided' });
   }
 
   try {
@@ -893,6 +938,102 @@ async function handleSettings(req, res) {
       error: error?.message || 'Failed to persist settings',
     });
   }
+}
+
+async function checkOpenRouterModel(model, apiKey) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const response = await fetch(OPENROUTER_CHAT_COMPLETIONS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://pupsik-tv.vercel.app',
+        'X-Title': 'PupsikTV AI Model Status Check',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'user',
+            content: OPENROUTER_MODEL_CHECK_PROMPT,
+          },
+        ],
+        temperature: 0,
+        max_tokens: 5,
+      }),
+      signal: controller.signal,
+    });
+
+    const rawText = await response.text().catch(() => '');
+    const normalizedRaw = response.ok
+      ? 'Model responded successfully'
+      : extractOpenRouterError(rawText);
+
+    return {
+      status: response.ok
+        ? 'active'
+        : response.status === 429
+          ? 'rate_limited'
+          : 'unavailable',
+      http_status: response.status,
+      provider: 'OpenRouter',
+      raw: normalizedRaw,
+    };
+  } catch (error) {
+    const isAbort = error?.name === 'AbortError';
+    return {
+      status: 'unavailable',
+      http_status: isAbort ? 504 : 500,
+      provider: 'OpenRouter',
+      raw: isAbort
+        ? 'OpenRouter request timed out'
+        : String(error?.message || error || 'Unknown error').slice(0, 300),
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function handleCheckAiModels(req, res) {
+  const method = (req.method || '').toUpperCase();
+  if (method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
+  }
+
+  let payload;
+  try {
+    payload = parseBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+
+  const models = normalizeAiModels(payload?.models);
+  if (!models.length) {
+    return res.status(400).json({ error: 'No models provided' });
+  }
+
+  const apiKey = process.env.OPENROUTER_API;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Missing OPENROUTER_API' });
+  }
+
+  const statuses = {};
+  for (const model of models) {
+    statuses[model] = await checkOpenRouterModel(model, apiKey);
+  }
+
+  return res.status(200).json({ ok: true, statuses });
 }
 
 async function handleKpApiSelection(req, res) {
@@ -998,7 +1139,9 @@ async function handleMediaAdmin(req, res) {
   }
 
   try {
-    const action = String(payload?.action || '').trim().toLowerCase();
+    const action = String(payload?.action || '')
+      .trim()
+      .toLowerCase();
     let result;
 
     if (action === 'update_kinopoisk_metadata') {
@@ -1049,7 +1192,9 @@ async function handleMediaItems(req, res) {
   }
 
   try {
-    const action = String(payload?.action || '').trim().toLowerCase();
+    const action = String(payload?.action || '')
+      .trim()
+      .toLowerCase();
     let result;
 
     if (action === 'create_item') {
@@ -1241,7 +1386,10 @@ async function savePlayerHistoryItem(supabase, req, res) {
       .delete()
       .lte('created_at', cutoffCreatedAt);
     if (trimError) {
-      console.error('Failed to delete old admin player history rows', trimError);
+      console.error(
+        'Failed to delete old admin player history rows',
+        trimError
+      );
       return res.status(500).json({ error: 'Failed to save history' });
     }
   }
@@ -1330,6 +1478,9 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'kp-api-selection') {
     return handleKpApiSelection(req, res);
+  }
+  if (action === 'check-ai-models') {
+    return handleCheckAiModels(req, res);
   }
   if (action === 'users') {
     return handleUsers(req, res);
