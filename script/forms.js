@@ -796,7 +796,11 @@ document
         platforms: data.platforms || "",
         developers: data.developers || "",
         publishers: data.publishers || "",
-        rawgId: data.rawg_id || null
+        rawgId: data.rawg_id || null,
+        streamsCompleted: Math.min(
+          3,
+          Math.max(0, Number.parseInt(data.streams_completed, 10) || 0)
+        ),
       };
       gameOrders.push(newGameOrder);
       renderGames();

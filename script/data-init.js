@@ -452,7 +452,7 @@ async function loadGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Game_Orders")
       .select(
-        "id, created_at, game_title, game_order_type, game_order_by, game_mode, game_genres, game_poster, game_year, game_plan_date, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
+        "id, created_at, game_title, game_order_type, game_order_by, game_mode, game_genres, game_poster, game_year, game_plan_date, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id, streams_completed"
       )
       .order("id", { ascending: true });
 
@@ -481,6 +481,10 @@ async function loadGamesFromSupabase() {
       developers: item.developers || "",
       publishers: item.publishers || "",
       rawgId: item.rawg_id || null,
+      streamsCompleted: Math.min(
+        3,
+        Math.max(0, Number.parseInt(item.streams_completed, 10) || 0)
+      ),
     }));
 
   } catch (err) {

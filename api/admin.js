@@ -93,6 +93,7 @@ const TABLE_COLUMNS = {
     'publishers',
     'rawg_id',
     'game_plan_date',
+    'streams_completed',
   ]),
   games: new Set([
     'title',

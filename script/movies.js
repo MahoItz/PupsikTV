@@ -1134,6 +1134,119 @@ function toggleOrderActionsMenu(menu, button) {
   document.addEventListener("click", handleOrderMenuOutsideClick);
 }
 
+const GAME_ORDER_STREAM_TARGET = 3;
+
+function normalizeGameOrderStreams(value) {
+  return Math.min(
+    GAME_ORDER_STREAM_TARGET,
+    Math.max(0, Number.parseInt(value, 10) || 0)
+  );
+}
+
+async function updateGameOrderStreams(gameId, nextValue) {
+  const game = gameOrders.find((item) => item.id === gameId);
+  if (!game) return;
+
+  const normalizedValue = normalizeGameOrderStreams(nextValue);
+  const previousValue = normalizeGameOrderStreams(game.streamsCompleted);
+  if (normalizedValue === previousValue) return;
+
+  game.streamsCompleted = normalizedValue;
+  renderGames();
+
+  try {
+    const token = localStorage.getItem("adminToken") || "";
+    const response = await fetch("/api/admin?action=media-items", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        action: "update_item",
+        table: "Game_Orders",
+        id: gameId,
+        changes: { streams_completed: normalizedValue },
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(
+        payload?.error || `Game order streams update failed: ${response.status}`
+      );
+    }
+
+    game.streamsCompleted = normalizeGameOrderStreams(
+      payload?.row?.streams_completed
+    );
+    renderGames();
+  } catch (err) {
+    console.error("Error updating game order streams", err);
+    game.streamsCompleted = previousValue;
+    renderGames();
+    alert(
+      "Не удалось сохранить количество проведённых стримов по игре. Попробуйте ещё раз."
+    );
+  }
+}
+
+function createGameOrderStreamControls(game, showAdminControls) {
+  const streamsCompleted = normalizeGameOrderStreams(game.streamsCompleted);
+  const progressRow = document.createElement("div");
+  progressRow.className = "game-order-streams";
+
+  if (showAdminControls) {
+    const minusBtn = document.createElement("button");
+    minusBtn.type = "button";
+    minusBtn.className =
+      "btn btn-icon game-order-streams__step game-order-streams__step--minus";
+    minusBtn.textContent = "−";
+    minusBtn.title = "Уменьшить число проведённых стримов";
+    minusBtn.setAttribute("aria-label", "Уменьшить число проведённых стримов");
+    minusBtn.disabled = streamsCompleted <= 0;
+    minusBtn.addEventListener("click", () =>
+      updateGameOrderStreams(game.id, streamsCompleted - 1)
+    );
+    progressRow.appendChild(minusBtn);
+  }
+
+  const progress = document.createElement("div");
+  progress.className = "game-order-streams__bar";
+  progress.setAttribute("role", "progressbar");
+  progress.setAttribute("aria-label", "Количество проведённых стримов по игре");
+  progress.setAttribute("aria-valuemin", "0");
+  progress.setAttribute("aria-valuemax", String(GAME_ORDER_STREAM_TARGET));
+  progress.setAttribute("aria-valuenow", String(streamsCompleted));
+
+  for (let index = 0; index < GAME_ORDER_STREAM_TARGET; index += 1) {
+    const segment = document.createElement("span");
+    segment.className = "game-order-streams__segment";
+    if (index < streamsCompleted) {
+      segment.classList.add("is-filled");
+    }
+    progress.appendChild(segment);
+  }
+
+  progressRow.appendChild(progress);
+
+  if (showAdminControls) {
+    const plusBtn = document.createElement("button");
+    plusBtn.type = "button";
+    plusBtn.className =
+      "btn btn-icon game-order-streams__step game-order-streams__step--plus";
+    plusBtn.textContent = "+";
+    plusBtn.title = "Увеличить число проведённых стримов";
+    plusBtn.setAttribute("aria-label", "Увеличить число проведённых стримов");
+    plusBtn.disabled = streamsCompleted >= GAME_ORDER_STREAM_TARGET;
+    plusBtn.addEventListener("click", () =>
+      updateGameOrderStreams(game.id, streamsCompleted + 1)
+    );
+    progressRow.appendChild(plusBtn);
+  }
+
+  return progressRow;
+}
+
 function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const wrapper = document.createElement("div");
   wrapper.className = "order-wrapper";
@@ -1829,6 +1942,9 @@ function createGameCard(game, showActions = isAdmin) {
   info.appendChild(footer);
   card.appendChild(info);
   wrapper.appendChild(card);
+
+  const streamsRow = createGameOrderStreamControls(game, showActions);
+  wrapper.appendChild(streamsRow);
 
   if (showActions) {
     const actions = document.createElement("div");
