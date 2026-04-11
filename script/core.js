@@ -1180,8 +1180,10 @@ let selectedWatchlistOrderTypes = new Set();
 // Список заказанных фильмов
 let watchlist = [];
 let watchlistPage = 1;
-const watchlistPerPage = 6;
+const watchlistPerPage = 5;
 let gameOrders = [];
+let gameOrdersPage = 1;
+const gameOrdersPerPage = 4;
 let allPlayedGames = [];
 let playedGames = [];
 // Maps for diffing played game cards

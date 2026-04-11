@@ -2036,6 +2036,8 @@ function renderGames() {
     return;
   }
   container.innerHTML = "";
+  const paginationEl = document.getElementById("gameOrdersPagination");
+  const paginationTopEl = document.getElementById("gameOrdersPaginationTop");
   const countEl = document.getElementById("gameOrdersCount");
   const sortedGameOrders = getSortedGameOrders();
   const totalGameOrders = sortedGameOrders.length;
@@ -2043,10 +2045,103 @@ function renderGames() {
     countEl.textContent = String(totalGameOrders);
   }
   if (totalGameOrders === 0) {
+    if (paginationTopEl) paginationTopEl.innerHTML = "";
+    if (paginationEl) paginationEl.innerHTML = "";
     renderEmptyState(container, "Заказанных игр пока нет");
     return;
   }
-  sortedGameOrders.forEach((g) => container.appendChild(createGameCard(g)));
+  const totalPages = Math.ceil(totalGameOrders / gameOrdersPerPage);
+  if (gameOrdersPage > totalPages) gameOrdersPage = totalPages;
+  if (gameOrdersPage < 1) gameOrdersPage = 1;
+
+  const start = (gameOrdersPage - 1) * gameOrdersPerPage;
+  const pageItems = sortedGameOrders.slice(start, start + gameOrdersPerPage);
+
+  pageItems.forEach((g) => container.appendChild(createGameCard(g)));
+  renderGameOrdersPagination(totalPages);
+}
+
+function renderGameOrdersPagination(totalPages) {
+  const container = document.getElementById("gameOrdersPagination");
+  const containerTop = document.getElementById("gameOrdersPaginationTop");
+  if (!container && !containerTop) return;
+  if (container) container.innerHTML = "";
+  if (containerTop) containerTop.innerHTML = "";
+  if (totalPages <= 1) return;
+
+  const handlePageChange = (page) => {
+    const targetPage = page;
+    const shouldScroll = targetPage !== gameOrdersPage;
+    gameOrdersPage = targetPage;
+    renderGames();
+    if (shouldScroll) {
+      const gamesSection = document.getElementById("gamesSection");
+      if (gamesSection && typeof gamesSection.scrollIntoView === "function") {
+        gamesSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
+
+  const appendButton = (target, label, page, opts = {}) => {
+    if (!target) return;
+    const btn = document.createElement("button");
+    btn.textContent = label;
+    btn.className = opts.class || "page-btn";
+    btn.disabled = opts.disabled || false;
+    if (opts.active) btn.classList.add("active");
+    if (page) {
+      btn.onclick = () => handlePageChange(page);
+    }
+    target.appendChild(btn);
+  };
+
+  const addBtn = (label, page, opts = {}) => {
+    appendButton(container, label, page, opts);
+    appendButton(containerTop, label, page, opts);
+  };
+
+  const addEllipsis = () => {
+    if (container) {
+      const span = document.createElement("span");
+      span.textContent = "...";
+      span.className = "ellipsis";
+      container.appendChild(span);
+    }
+    if (containerTop) {
+      const span = document.createElement("span");
+      span.textContent = "...";
+      span.className = "ellipsis";
+      containerTop.appendChild(span);
+    }
+  };
+
+  addBtn("«", gameOrdersPage - 1, { disabled: gameOrdersPage === 1 });
+  addBtn("1", 1, { active: gameOrdersPage === 1 });
+
+  let start = Math.max(2, gameOrdersPage - 1);
+  let end = Math.min(totalPages - 1, gameOrdersPage + 1);
+
+  if (start > 2) {
+    addEllipsis();
+  }
+
+  for (let i = start; i <= end; i += 1) {
+    addBtn(String(i), i, { active: i === gameOrdersPage });
+  }
+
+  if (end < totalPages - 1) {
+    addEllipsis();
+  }
+
+  if (totalPages > 1) {
+    addBtn(String(totalPages), totalPages, {
+      active: gameOrdersPage === totalPages,
+    });
+  }
+
+  addBtn("»", gameOrdersPage + 1, {
+    disabled: gameOrdersPage === totalPages,
+  });
 }
 
 function getSortedGameOrders() {
