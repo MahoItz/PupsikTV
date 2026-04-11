@@ -1217,6 +1217,22 @@ function createGameOrderStreamControls(game, showAdminControls) {
   progress.setAttribute("aria-valuemin", "0");
   progress.setAttribute("aria-valuemax", String(GAME_ORDER_STREAM_TARGET));
   progress.setAttribute("aria-valuenow", String(streamsCompleted));
+  progress.addEventListener("mouseenter", (event) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.textContent = "Количество проведённых стримов";
+    ratingTooltip.style.display = "block";
+    ratingTooltip.style.left = event.pageX + 10 + "px";
+    ratingTooltip.style.top = event.pageY + 10 + "px";
+  });
+  progress.addEventListener("mousemove", (event) => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.left = event.pageX + 10 + "px";
+    ratingTooltip.style.top = event.pageY + 10 + "px";
+  });
+  progress.addEventListener("mouseleave", () => {
+    if (!ratingTooltip) return;
+    ratingTooltip.style.display = "none";
+  });
 
   for (let index = 0; index < GAME_ORDER_STREAM_TARGET; index += 1) {
     const segment = document.createElement("span");
