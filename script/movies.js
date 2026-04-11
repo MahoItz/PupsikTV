@@ -828,7 +828,7 @@ function deriveKinopoiskIdFromOrder(order) {
 
 const ORDER_PLAYER_API_URL = "https://fbphdplay.top/api/players?kinopoisk=";
 const ORDER_PLAYER_DEFAULT_TYPE = "Alloha";
-const ORDER_PLAYER_EXTERNAL_BASE_URL = "https://flcksbr.xyz/film/";
+const ORDER_PLAYER_EXTERNAL_BASE_URL = "https://fbfree.site/film/";
 
 function normalizeOrderPlayerProviders(payload) {
   if (!payload) return [];

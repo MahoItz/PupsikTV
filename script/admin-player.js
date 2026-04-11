@@ -2,7 +2,7 @@ const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 const ORDER_PLAYER_API_URL = "https://fbphdplay.top/api/players?kinopoisk=";
 const ORDER_PLAYER_DEFAULT_TYPE = "Alloha";
-const ORDER_PLAYER_EXTERNAL_BASE_URL = "https://flcksbr.xyz/film/";
+const ORDER_PLAYER_EXTERNAL_BASE_URL = "https://fbfree.site/film/";
 const MAX_PLAYER_HISTORY = 15;
 const ADMIN_PLAYER_HISTORY_CACHE_KEY = "adminPlayerHistoryCache";
 const ADMIN_PLAYER_HISTORY_TTL_MS = 60 * 1000;
