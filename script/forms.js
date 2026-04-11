@@ -2,6 +2,7 @@
 // form submit guards
 let isSubmittingWatchlistOrder = false;
 let isSubmittingGameOrder = false;
+let isSubmittingMovieAdd = false;
 
 function toggleSubmitLoading(button, isLoading, label) {
   if (!button) return;
@@ -211,6 +212,9 @@ document
   .addEventListener("submit", async function (e) {
     e.preventDefault();
 
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (isSubmittingMovieAdd) return;
+
     const rating = getRatingValue("ratingInput");
     const watchSource = normalizeWatchSource(
       document.getElementById("movieWatchSource")?.value
@@ -360,6 +364,9 @@ document
       movieData.imdbId
     );
 
+    isSubmittingMovieAdd = true;
+    toggleSubmitLoading(submitBtn, true, "Добавляем фильм...");
+
     const shouldClearRouletteWinner =
       Boolean(rouletteLastWinner) &&
       (!rouletteAutofillActive ||
@@ -441,6 +448,9 @@ document
       }
     } catch (err) {
       console.error("Error adding movie to Supabase", err);
+    } finally {
+      isSubmittingMovieAdd = false;
+      toggleSubmitLoading(submitBtn, false);
     }
 
     currentPage = 1;

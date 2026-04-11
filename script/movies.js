@@ -1904,13 +1904,17 @@ function renderGames() {
     return;
   }
   container.innerHTML = "";
-  if (gameOrders.length === 0) {
+  const countEl = document.getElementById("gameOrdersCount");
+  const sortedGameOrders = getSortedGameOrders();
+  const totalGameOrders = sortedGameOrders.length;
+  if (countEl) {
+    countEl.textContent = String(totalGameOrders);
+  }
+  if (totalGameOrders === 0) {
     renderEmptyState(container, "Заказанных игр пока нет");
     return;
   }
-  getSortedGameOrders().forEach((g) =>
-    container.appendChild(createGameCard(g))
-  );
+  sortedGameOrders.forEach((g) => container.appendChild(createGameCard(g)));
 }
 
 function getSortedGameOrders() {
