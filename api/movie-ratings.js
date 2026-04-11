@@ -1,7 +1,5 @@
 const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
-const RATINGS_TABLE = 'ratings';
-
 function parseBody(req) {
   if (!req.body) return {};
   if (typeof req.body === 'string') {
@@ -45,62 +43,6 @@ function normalizeTargetType(value) {
   return 'movie';
 }
 
-function getCategory(targetType) {
-  if (targetType === 'order') return 'MovieOrder';
-  if (targetType === 'game') return 'Games';
-  return 'Movie';
-}
-
-async function recalculateAggregate(supabase, targetType, targetId) {
-  const category = getCategory(targetType);
-  const { data, error } = await supabase
-    .from(RATINGS_TABLE)
-    .select('rating')
-    .eq('movie_id', targetId)
-    .eq('category', category);
-
-  if (error) throw error;
-
-  const rows = Array.isArray(data) ? data : [];
-  const ratingSum = rows.reduce(
-    (sum, row) => sum + Number(row?.rating || 0),
-    0
-  );
-  const ratingCount = rows.length;
-
-  if (targetType === 'game') {
-    const { data: updated, error: updateError } = await supabase
-      .from('games')
-      .update({
-        game_rating_sum: ratingSum,
-        game_rating_count: ratingCount,
-      })
-      .eq('id', targetId)
-      .select('id, game_rating_sum, game_rating_count')
-      .single();
-
-    if (updateError) throw updateError;
-    return { game: updated };
-  }
-
-  if (targetType === 'movie') {
-    const { data: updated, error: updateError } = await supabase
-      .from('movies')
-      .update({
-        rating_sum: ratingSum,
-        rating_count: ratingCount,
-      })
-      .eq('id', targetId)
-      .select('id, rating_sum, rating_count')
-      .single();
-
-    if (updateError) throw updateError;
-    return { movie: updated };
-  }
-
-  return null;
-}
-
 async function handler(req, res) {
   const method = (req.method || '').toUpperCase();
   if (method !== 'POST') {
@@ -120,7 +62,6 @@ async function handler(req, res) {
   const userId = normalizeUserId(payload?.user_id);
   const title = normalizeTitle(payload?.title);
   const targetType = normalizeTargetType(payload?.target_type);
-  const category = getCategory(targetType);
 
   if (!targetId || rating === null || !userId) {
     return res.status(400).json({ error: 'Invalid payload' });
@@ -137,45 +78,17 @@ async function handler(req, res) {
   }
 
   try {
-    const { data: existingRating, error: existingError } = await supabase
-      .from(RATINGS_TABLE)
-      .select('id')
-      .eq('movie_id', targetId)
-      .eq('category', category)
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (existingError) throw existingError;
-
-    if (existingRating?.id) {
-      const { error: updateError } = await supabase
-        .from(RATINGS_TABLE)
-        .update({
-          rating,
-          title,
-        })
-        .eq('id', existingRating.id);
-
-      if (updateError) throw updateError;
-    } else {
-      const { error: insertError } = await supabase.from(RATINGS_TABLE).insert({
-        movie_id: targetId,
-        rating,
-        source: 'user',
-        category,
-        title,
-        user_id: userId,
-      });
-
-      if (insertError) throw insertError;
-    }
-
-    const aggregate = await recalculateAggregate(supabase, targetType, targetId);
-    return res.status(200).json({
-      ok: true,
-      updatedExisting: Boolean(existingRating?.id),
-      ...(aggregate || {}),
+    const { data, error } = await supabase.rpc('submit_movie_rating', {
+      p_target_id: targetId,
+      p_target_type: targetType,
+      p_rating: rating,
+      p_user_id: userId,
+      p_title: title,
     });
+
+    if (error) throw error;
+
+    return res.status(200).json(data || { ok: true });
   } catch (error) {
     console.error('Failed to submit rating', error);
     return res.status(500).json({

@@ -4,10 +4,8 @@ const {
 } = require('../lib/admin-session.js');
 const {
   createSupabaseServerClient,
-  getSupabaseUrl,
 } = require('../lib/supabase-config.js');
 
-const SUPABASE_URL = getSupabaseUrl();
 const STORAGE_BUCKET = 'game-posters';
 const ALLOWED_METHODS = ['POST'];
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;

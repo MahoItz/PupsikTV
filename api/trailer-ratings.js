@@ -1,8 +1,5 @@
 const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
-const WATCHLIST_TABLE = 'trailer_watchlist';
-const RATINGS_TABLE = 'trailer_ratings';
-
 function parseBody(req) {
   if (!req.body) return {};
   if (typeof req.body === 'string') {
@@ -28,35 +25,6 @@ function normalizeUserId(value) {
     .trim()
     .slice(0, 255);
   return userId || null;
-}
-
-async function recalculateTrailerRatings(supabase, trailerId) {
-  const { data, error } = await supabase
-    .from(RATINGS_TABLE)
-    .select('rating')
-    .eq('trailer_id', trailerId);
-
-  if (error) throw error;
-
-  const rows = Array.isArray(data) ? data : [];
-  const ratingSum = rows.reduce(
-    (sum, row) => sum + Number(row?.rating || 0),
-    0
-  );
-  const ratingCount = rows.length;
-
-  const { data: updated, error: updateError } = await supabase
-    .from(WATCHLIST_TABLE)
-    .update({
-      viewer_rating_sum: ratingSum,
-      viewer_rating_count: ratingCount,
-    })
-    .eq('id', trailerId)
-    .select('id, viewer_rating_sum, viewer_rating_count')
-    .single();
-
-  if (updateError) throw updateError;
-  return updated;
 }
 
 async function handler(req, res) {
@@ -90,42 +58,20 @@ async function handler(req, res) {
   }
 
   try {
-    const { data: existingRating, error: existingError } = await supabase
-      .from(RATINGS_TABLE)
-      .select('id')
-      .eq('trailer_id', trailerId)
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (existingError) throw existingError;
-
-    if (existingRating?.id) {
-      const { error: updateError } = await supabase
-        .from(RATINGS_TABLE)
-        .update({ rating })
-        .eq('id', existingRating.id);
-
-      if (updateError) throw updateError;
-    } else {
-      const { error: insertError } = await supabase.from(RATINGS_TABLE).insert({
-        trailer_id: trailerId,
-        rating,
-        user_id: userId,
-        source: 'user',
-      });
-
-      if (insertError) throw insertError;
-    }
-
-    const updated = await recalculateTrailerRatings(supabase, trailerId);
-    return res.status(200).json({
-      ok: true,
-      trailer: updated,
-      updatedExisting: Boolean(existingRating?.id),
+    const { data, error } = await supabase.rpc('submit_trailer_rating', {
+      p_trailer_id: trailerId,
+      p_rating: rating,
+      p_user_id: userId,
     });
+
+    if (error) throw error;
+
+    return res.status(200).json(data || { ok: true });
   } catch (error) {
     console.error('Failed to submit trailer rating', error);
-    return res.status(500).json({ error: 'Failed to submit trailer rating' });
+    return res.status(500).json({
+      error: error?.message || 'Failed to submit trailer rating',
+    });
   }
 }
 
