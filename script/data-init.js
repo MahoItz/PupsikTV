@@ -693,13 +693,24 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const storedToken = adminToken;
   if (storedToken) {
-    const verification = await verifyAdminTokenRequest(storedToken);
+    let activeToken = storedToken;
+    let activeExpiresAt = null;
+    const verification = await verifyAdminTokenRequest(activeToken);
     if (verification.ok) {
+      activeExpiresAt = verification.expiresAt;
+      if (isAdminTokenExpiringSoon(verification.expiresAt)) {
+        const refreshed = await refreshAdminTokenRequest(activeToken);
+        if (refreshed.ok && refreshed.token) {
+          activeToken = refreshed.token;
+          activeExpiresAt = refreshed.expiresAt;
+          updateAdminSession(activeToken, activeExpiresAt);
+        }
+      }
       try {
-        const env = await loadEnv({ token: storedToken });
+        const env = await loadEnv({ token: activeToken });
         if (env && env.isAdmin) {
           isAdmin = true;
-          updateAdminSession(storedToken, verification.expiresAt);
+          updateAdminSession(activeToken, activeExpiresAt);
           showAdminControls(true);
           TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
           applyKpApiSelection(selectedKpApiValue);

@@ -896,7 +896,35 @@ function handleVerifyAdmin(req, res) {
     }
   }
 
-  res.setHeader('Allow', ['GET', 'POST']);
+  if (method === 'PUT') {
+    try {
+      const token = extractBearerToken(req.headers.authorization);
+      if (!token) {
+        return res.status(401).json({ ok: false, error: 'Missing token' });
+      }
+
+      const result = verifyAdminToken(token);
+      if (!result.valid) {
+        return res.status(401).json({
+          ok: false,
+          error: result.error || 'Invalid token',
+          expired: Boolean(result.expired),
+        });
+      }
+
+      const { token: refreshedToken, payload } = issueAdminToken();
+      return res.status(200).json({
+        ok: true,
+        token: refreshedToken,
+        expiresAt: getTokenExpiresAt(payload),
+      });
+    } catch (err) {
+      console.error('Admin token refresh error', err);
+      return res.status(500).json({ ok: false, error: 'Server error' });
+    }
+  }
+
+  res.setHeader('Allow', ['GET', 'POST', 'PUT']);
   return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
 }
 

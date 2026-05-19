@@ -15,6 +15,7 @@ KINOPOISK_API_KEY=<optional, used for admin search>
 RAWG_API_KEY=<optional, used for admin search>
 EDIT_PASSWORD=<admin password>
 ADMIN_SESSION_SECRET=<required for admin token signing>
+ADMIN_SESSION_TTL_MS=<optional, admin session TTL in milliseconds, default 604800000 (7 days)>
 ```
 
 ## Running locally

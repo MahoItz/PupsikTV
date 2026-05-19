@@ -1532,6 +1532,36 @@ async function verifyAdminTokenRequest(token) {
   }
 }
 
+async function refreshAdminTokenRequest(token) {
+  if (!token) {
+    return { ok: false };
+  }
+  try {
+    const res = await fetch("/api/admin?action=verify-admin", {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      return { ok: false, expired: res.status === 401 };
+    }
+    const data = await res.json();
+    const refreshedToken = typeof data.token === "string" ? data.token : null;
+    const expiresAt =
+      typeof data.expiresAt === "string" ? data.expiresAt : null;
+    return { ok: !!data.ok && !!refreshedToken, token: refreshedToken, expiresAt };
+  } catch (err) {
+    console.error("Failed to refresh admin token", err);
+    return { ok: false };
+  }
+}
+
+function isAdminTokenExpiringSoon(expiresAt, thresholdMs = 1000 * 60 * 60 * 24) {
+  if (!expiresAt || typeof expiresAt !== "string") return true;
+  const expiresAtMs = Date.parse(expiresAt);
+  if (!Number.isFinite(expiresAtMs)) return true;
+  return expiresAtMs - Date.now() <= thresholdMs;
+}
+
 const ROULETTE_ORDER_TYPE = "Рулетка";
 const ORDER_TYPE_FILTER_OPTIONS = [
   "Донат",
