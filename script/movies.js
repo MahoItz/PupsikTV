@@ -1586,6 +1586,7 @@ function renderWatchlist() {
     renderEmptyState(container, "Заказанных фильмов пока нет");
     if (paginationEl) paginationEl.innerHTML = "";
     if (paginationTopEl) paginationTopEl.innerHTML = "";
+    renderWatchlistOverviewIfOpen();
     return;
   }
 
@@ -1601,6 +1602,173 @@ function renderWatchlist() {
   });
 
   renderWatchlistPagination(totalPages);
+  renderWatchlistOverviewIfOpen();
+}
+
+function getWatchlistOverviewFilters() {
+  return {
+    query: (document.getElementById("watchlistOverviewSearch")?.value || "")
+      .trim()
+      .toLocaleLowerCase(),
+    orderType: document.getElementById("watchlistOverviewTypeFilter")?.value || "",
+    schedule: document.getElementById("watchlistOverviewScheduleFilter")?.value || "",
+  };
+}
+
+function getWatchlistOverviewItems() {
+  const { query, orderType, schedule } = getWatchlistOverviewFilters();
+
+  return watchlist
+    .filter((item) => {
+      if (orderType && item.orderType !== orderType) return false;
+      if (schedule === "scheduled" && !item.planDate) return false;
+      if (schedule === "unscheduled" && item.planDate) return false;
+      if (!query) return true;
+
+      const searchableText = [
+        item.title,
+        item.originalTitle,
+        item.genres,
+        item.orderBy,
+        item.year,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase();
+      return searchableText.includes(query);
+    })
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const aHasPlan = Boolean(a.item.planDate);
+      const bHasPlan = Boolean(b.item.planDate);
+      if (aHasPlan !== bHasPlan) return aHasPlan ? -1 : 1;
+      if (aHasPlan && bHasPlan) {
+        const aDate = new Date(a.item.planDate).getTime();
+        const bDate = new Date(b.item.planDate).getTime();
+        if (aDate !== bDate) return aDate - bDate;
+      }
+      return a.index - b.index;
+    })
+    .map(({ item }) => item);
+}
+
+function renderWatchlistOverview() {
+  const grid = document.getElementById("watchlistOverviewGrid");
+  const count = document.getElementById("watchlistOverviewCount");
+  if (!grid || !count) return;
+
+  const items = getWatchlistOverviewItems();
+  count.textContent = `Найдено: ${items.length} из ${watchlist.length}`;
+  grid.innerHTML = "";
+
+  if (items.length === 0) {
+    renderEmptyState(grid, "Фильмы по заданным фильтрам не найдены");
+    return;
+  }
+
+  items.forEach((item) => {
+    grid.appendChild(createWatchlistOverviewCard(item));
+  });
+}
+
+function openWatchlistOverviewDetails(order) {
+  closeModal("watchlistOverviewModal");
+
+  if (!order?.__virtual && order?.id !== undefined && order?.id !== null) {
+    openOrderDetailsModal(order.id);
+    return;
+  }
+
+  if (typeof openOrderDetailsModalFromData === "function") {
+    openOrderDetailsModalFromData(order);
+  }
+}
+
+function createWatchlistOverviewCard(order) {
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "watchlist-overview-card";
+  card.setAttribute("aria-label", `Открыть информацию о фильме ${order.title || ""}`);
+  card.addEventListener("click", () => openWatchlistOverviewDetails(order));
+
+  const poster = document.createElement("img");
+  poster.className = "watchlist-overview-card__poster";
+  poster.src = order.poster || KP_FALLBACK_POSTER_PLACEHOLDER;
+  poster.alt = "";
+  poster.loading = "lazy";
+  poster.onerror = () => {
+    poster.onerror = null;
+    poster.src = KP_FALLBACK_POSTER_PLACEHOLDER;
+  };
+
+  const content = document.createElement("span");
+  content.className = "watchlist-overview-card__content";
+
+  const title = document.createElement("span");
+  title.className = "watchlist-overview-card__title";
+  title.textContent = order.title || "Без названия";
+
+  const duration = document.createElement("span");
+  duration.className = "watchlist-overview-card__meta";
+  duration.textContent = order.length
+    ? `Продолжительность: ${order.length} мин`
+    : "Продолжительность не указана";
+
+  const orderedBy = document.createElement("span");
+  orderedBy.className = "watchlist-overview-card__meta";
+  const orderBy = order.orderBy && order.orderBy !== "null" ? order.orderBy : "не указан";
+  orderedBy.textContent = `Заказал: ${orderBy}`;
+
+  const schedule = document.createElement("span");
+  schedule.className = "watchlist-overview-card__schedule";
+  schedule.textContent = order.planDate
+    ? `Запланировано: ${formatDateTime(order.planDate)}`
+    : "Не запланирован";
+
+  content.append(title, duration, orderedBy, schedule);
+  card.append(poster, content);
+  return card;
+}
+
+function renderWatchlistOverviewIfOpen() {
+  const modal = document.getElementById("watchlistOverviewModal");
+  if (modal?.style.display === "block") {
+    renderWatchlistOverview();
+  }
+}
+
+function openWatchlistOverviewModal() {
+  const modal = document.getElementById("watchlistOverviewModal");
+  const search = document.getElementById("watchlistOverviewSearch");
+  const typeFilter = document.getElementById("watchlistOverviewTypeFilter");
+  const scheduleFilter = document.getElementById(
+    "watchlistOverviewScheduleFilter"
+  );
+  const resetButton = document.getElementById("watchlistOverviewReset");
+  if (!modal || !search || !typeFilter || !scheduleFilter || !resetButton) return;
+
+  if (!modal.dataset.initialized) {
+    const update = () => renderWatchlistOverview();
+    search.addEventListener("input", update);
+    typeFilter.addEventListener("change", update);
+    scheduleFilter.addEventListener("change", update);
+    resetButton.addEventListener("click", () => {
+      search.value = "";
+      typeFilter.value = "";
+      scheduleFilter.value = "";
+      renderWatchlistOverview();
+      search.focus();
+    });
+    modal.dataset.initialized = "true";
+  }
+
+  search.value = "";
+  typeFilter.value = "";
+  scheduleFilter.value = "";
+  modal.style.display = "block";
+  modal.scrollTop = 0;
+  renderWatchlistOverview();
+  search.focus();
 }
 
 function renderWatchlistPagination(totalPages) {

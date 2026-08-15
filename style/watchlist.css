@@ -37,6 +37,41 @@
     margin-left: auto;
 }
 
+.watchlist-overview-trigger-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 40px;
+}
+
+.watchlist-overview-trigger-row .pagination {
+    flex: 1;
+}
+
+.watchlist-overview-trigger {
+    width: 46px;
+    height: 40px;
+    flex: 0 0 46px;
+    padding: 0;
+    border: 1px solid rgba(0, 212, 255, 0.35);
+    border-radius: 8px;
+    background: rgba(0, 212, 255, 0.12);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 1.35rem;
+    line-height: 1;
+    transition: var(--transition);
+}
+
+.watchlist-overview-trigger:hover,
+.watchlist-overview-trigger:focus-visible {
+    border-color: var(--secondary-color);
+    background: rgba(0, 212, 255, 0.22);
+    box-shadow: 0 0 18px rgba(0, 212, 255, 0.2);
+    outline: none;
+}
+
 .watchlist-header .btn-icon {
     margin-left: 0;
     width: 42px;

@@ -326,7 +326,12 @@
                                     title="Скопировать список запланированных фильмов">📋</button>
                             </div>
                         </div>
-                        <div id="watchlistPaginationTop" class="pagination"></div>
+                        <div class="watchlist-overview-trigger-row">
+                            <div id="watchlistPaginationTop" class="pagination"></div>
+                            <button id="watchlistOverviewOpen" class="watchlist-overview-trigger" type="button"
+                                onclick="openWatchlistOverviewModal()" aria-label="Открыть полный список заказанных фильмов"
+                                title="Открыть полный список">▦</button>
+                        </div>
                         <div id="watchlistContainer">
                             <div class="section-loader section-loader--compact" role="status" aria-live="polite">
                                 <div class="section-loader__spinner">
@@ -1738,6 +1743,47 @@
                 <ul id="orderPlayerTimingsList" class="fortune-timings__list"></ul>
                 <div class="fortune-timings__source">Источник таймингов: Reyohoho</div>
             </section>
+        </div>
+    </div>
+    <div id="watchlistOverviewModal" class="modal" role="dialog" aria-modal="true"
+        aria-labelledby="watchlistOverviewTitle">
+        <div class="modal-content watchlist-overview-modal">
+            <span class="close" onclick="closeModal('watchlistOverviewModal')" role="button" tabindex="0"
+                aria-label="Закрыть">&times;</span>
+            <div class="watchlist-overview-modal__header">
+                <div>
+                    <h2 id="watchlistOverviewTitle">Все заказанные фильмы</h2>
+                    <p id="watchlistOverviewCount" class="watchlist-overview-modal__count" aria-live="polite"></p>
+                </div>
+            </div>
+            <div class="watchlist-overview-filters">
+                <label class="watchlist-overview-search" for="watchlistOverviewSearch">
+                    <span class="sr-only">Поиск фильмов</span>
+                    <input id="watchlistOverviewSearch" type="search" placeholder="Поиск по названию, жанру или заказчику"
+                        autocomplete="off">
+                </label>
+                <label class="watchlist-overview-filter" for="watchlistOverviewTypeFilter">
+                    <span>Тип заказа</span>
+                    <select id="watchlistOverviewTypeFilter">
+                        <option value="">Все</option>
+                        <option value="Донат">Донат</option>
+                        <option value="Баллы канала">Баллы канала</option>
+                        <option value="Рулетка">Рулетка</option>
+                        <option value="Шары">Шары</option>
+                        <option value="Аукцион">Аукцион</option>
+                    </select>
+                </label>
+                <label class="watchlist-overview-filter" for="watchlistOverviewScheduleFilter">
+                    <span>Расписание</span>
+                    <select id="watchlistOverviewScheduleFilter">
+                        <option value="">Все</option>
+                        <option value="scheduled">Запланированные</option>
+                        <option value="unscheduled">Без расписания</option>
+                    </select>
+                </label>
+                <button id="watchlistOverviewReset" class="btn btn-secondary" type="button">Сбросить</button>
+            </div>
+            <div id="watchlistOverviewGrid" class="watchlist-overview-grid"></div>
         </div>
     </div>
     <div id="gameOrderDetailsModal" class="modal">
