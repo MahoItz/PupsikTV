@@ -29,7 +29,11 @@ function normalizeIgdbCoverUrl(url) {
   return normalized.startsWith('//') ? `https:${normalized}` : normalized;
 }
 
-function normalizeIgdbGame(game) {
+function toIgdbTimeMinutes(seconds) {
+  return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds / 60) : null;
+}
+
+function normalizeIgdbGame(game, timeToBeat = null) {
   const released = Number.isFinite(game?.first_release_date)
     ? new Date(game.first_release_date * 1000).toISOString().slice(0, 10)
     : null;
@@ -50,13 +54,31 @@ function normalizeIgdbGame(game) {
     // IGDB rating is 0–100; existing site storage/display expects 0–5.
     rating: Number.isFinite(game?.rating) ? Math.round((game.rating / 20) * 10) / 10 : null,
     metacritic: null,
-    playtime: null,
+    // The existing playtime field is shown on cards in hours; detailed IGDB values are stored in minutes.
+    playtime: Number.isFinite(timeToBeat?.normally)
+      ? Math.round(timeToBeat.normally / 3600)
+      : null,
+    playtimeHastily: toIgdbTimeMinutes(timeToBeat?.hastily),
+    playtimeNormally: toIgdbTimeMinutes(timeToBeat?.normally),
+    playtimeCompletely: toIgdbTimeMinutes(timeToBeat?.completely),
+    playtimeCount: Number.isSafeInteger(timeToBeat?.count) ? timeToBeat.count : null,
     platforms: Array.isArray(game?.platforms)
       ? game.platforms.filter((platform) => platform?.name).map((platform) => ({ platform: { name: platform.name } }))
       : [],
     developers: companyNames('developer').map((name) => ({ name })),
     publishers: companyNames('publisher').map((name) => ({ name })),
   };
+}
+
+async function fetchIgdbGameTimeToBeat(fetchImpl, clientId, token, gameId) {
+  const response = await fetchImpl('https://api.igdb.com/v4/game_time_to_beats', {
+    method: 'POST',
+    headers: { 'Client-ID': clientId, Authorization: `Bearer ${token}`, Accept: 'application/json' },
+    body: `fields game,hastily,normally,completely,count; where game = ${gameId}; limit 1;`,
+  });
+  if (!response.ok) return null;
+  const payload = await response.json().catch(() => []);
+  return Array.isArray(payload) ? payload[0] || null : null;
 }
 
 async function getIgdbAccessToken(fetchImpl) {
@@ -514,15 +536,26 @@ async function handleIgdb(req, res) {
 
   try {
     const token = await getIgdbAccessToken(fetchImpl);
+    const clientId = process.env.TWITCH_IGDB_CLIENT_ID;
     const response = await fetchImpl('https://api.igdb.com/v4/games', {
       method: 'POST',
-      headers: { 'Client-ID': process.env.TWITCH_IGDB_CLIENT_ID, Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      headers: { 'Client-ID': clientId, Authorization: `Bearer ${token}`, Accept: 'application/json' },
       body: query,
     });
     const payload = await response.json().catch(() => null);
     if (!response.ok) return res.status(response.status).json({ error: payload?.message || 'IGDB request failed.' });
 
-    const games = Array.isArray(payload) ? payload.map(normalizeIgdbGame) : [];
+    let timeToBeat = null;
+    if (resource === 'game' && Array.isArray(payload) && payload[0]?.id) {
+      try {
+        timeToBeat = await fetchIgdbGameTimeToBeat(fetchImpl, clientId, token, payload[0].id);
+      } catch (error) {
+        console.warn('[igdb] Failed to fetch game time to beat', error);
+      }
+    }
+    const games = Array.isArray(payload)
+      ? payload.map((game) => normalizeIgdbGame(game, game.id === payload[0]?.id ? timeToBeat : null))
+      : [];
     res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).json(resource === 'search' ? { results: games } : games[0] || null);
   } catch (error) {

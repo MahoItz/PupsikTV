@@ -452,7 +452,7 @@ async function loadGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("Game_Orders")
       .select(
-        "id, created_at, game_title, game_order_type, game_order_by, game_mode, game_genres, game_poster, game_year, game_plan_date, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id, streams_completed"
+        "id, created_at, game_title, game_order_type, game_order_by, game_mode, game_genres, game_poster, game_year, game_plan_date, description, rawg_rating, metacritic, released, playtime, playtime_hastily, playtime_normally, playtime_completely, playtime_count, platforms, developers, publishers, rawg_id, streams_completed"
       )
       .order("id", { ascending: true });
 
@@ -477,6 +477,10 @@ async function loadGamesFromSupabase() {
       metacritic: item.metacritic || null,
       released: item.released || null,
       playtime: item.playtime || null,
+      playtimeHastily: item.playtime_hastily ?? null,
+      playtimeNormally: item.playtime_normally ?? null,
+      playtimeCompletely: item.playtime_completely ?? null,
+      playtimeCount: item.playtime_count ?? null,
       platforms: item.platforms || "",
       developers: item.developers || "",
       publishers: item.publishers || "",
@@ -510,7 +514,7 @@ async function loadPlayedGamesFromSupabase() {
     const { data, error } = await supabaseClient
       .from("games")
       .select(
-        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type, game_mode, game_rating_sum, game_rating_count, description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
+        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type, game_mode, game_rating_sum, game_rating_count, description, rawg_rating, metacritic, released, playtime, playtime_hastily, playtime_normally, playtime_completely, playtime_count, platforms, developers, publishers, rawg_id"
       )
       .order("id", { ascending: false });
 
@@ -536,6 +540,10 @@ async function loadPlayedGamesFromSupabase() {
         metacritic: item.metacritic ?? null,
         released: item.released ?? null,
         playtime: item.playtime ?? null,
+        playtimeHastily: item.playtime_hastily ?? null,
+        playtimeNormally: item.playtime_normally ?? null,
+        playtimeCompletely: item.playtime_completely ?? null,
+        playtimeCount: item.playtime_count ?? null,
         platforms: item.platforms || "",
         developers: item.developers || "",
         publishers: item.publishers || "",

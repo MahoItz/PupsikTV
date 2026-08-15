@@ -414,6 +414,18 @@
     width: 100%;
 }
 
+.game-playtime-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.game-playtime-breakdown__count {
+    color: #a0a0a0;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
 .game-order-streams {
     display: flex;
     align-items: center;

@@ -1960,10 +1960,7 @@ function renderGameDetailsModal(game, modal) {
   setMovieDetailsText("gameDetailsYear", game.year);
   setMovieDetailsText("gameDetailsGenre", genreValue);
   setMovieDetailsText("gameDetailsReleased", game.released, "—");
-  setMovieDetailsText(
-    "gameDetailsPlaytime",
-    game.playtime ? `${game.playtime} ч.` : "—"
-  );
+  renderGamePlaytimeDetails("gameDetailsPlaytime", game);
   setMovieDetailsText("gameDetailsMetacritic", game.metacritic, "—");
   setMovieDetailsText("gameDetailsRawgRating", game.rawgRating, "—");
   setMovieDetailsText("gameDetailsPlatforms", game.platforms, "—");
@@ -2029,6 +2026,47 @@ function renderGameDetailsModal(game, modal) {
   alignDetailsPoster(modal);
 }
 
+function formatGameTimeMinutes(minutes) {
+  const value = Number(minutes);
+  if (!Number.isFinite(value) || value <= 0) return "—";
+  const hours = Math.floor(value / 60);
+  const remainder = Math.round(value % 60);
+  if (!hours) return `${remainder} мин.`;
+  return remainder ? `${hours} ч. ${remainder} мин.` : `${hours} ч.`;
+}
+
+function renderGamePlaytimeDetails(elementId, game) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+
+  const timings = [
+    ["Сюжет", game.playtimeHastily],
+    ["Обычное", game.playtimeNormally],
+    ["На 100%", game.playtimeCompletely],
+  ].filter(([, value]) => Number(value) > 0);
+
+  if (!timings.length) {
+    element.textContent = game.playtime ? `${game.playtime} ч.` : "—";
+    return;
+  }
+
+  element.textContent = "";
+  const group = document.createElement("span");
+  group.className = "game-playtime-breakdown";
+  timings.forEach(([label, value]) => {
+    const row = document.createElement("span");
+    row.textContent = `${label}: ${formatGameTimeMinutes(value)}`;
+    group.appendChild(row);
+  });
+  if (Number(game.playtimeCount) > 0) {
+    const count = document.createElement("span");
+    count.className = "game-playtime-breakdown__count";
+    count.textContent = `На основе ${game.playtimeCount} записей`;
+    group.appendChild(count);
+  }
+  element.appendChild(group);
+}
+
 async function fetchPlayedGameDetailsFromRawg(game) {
   if (!RAWG_API_KEY) {
     console.warn("RAWG_API_KEY отсутствует. Нельзя загрузить детали игры.");
@@ -2065,7 +2103,7 @@ async function fetchPlayedGameDetailsFromDb(game) {
   const { data, error } = await supabaseClient
     .from("games")
     .select(
-      "description, rawg_rating, metacritic, released, playtime, platforms, developers, publishers, rawg_id"
+      "description, rawg_rating, metacritic, released, playtime, playtime_hastily, playtime_normally, playtime_completely, playtime_count, platforms, developers, publishers, rawg_id"
     )
     .eq("id", game.id)
     .single();
@@ -2084,6 +2122,10 @@ function applyGameDetails(game, details) {
     metacritic: details.metacritic ?? game.metacritic,
     released: details.released ?? game.released,
     playtime: details.playtime ?? game.playtime,
+    playtimeHastily: details.playtime_hastily ?? game.playtimeHastily,
+    playtimeNormally: details.playtime_normally ?? game.playtimeNormally,
+    playtimeCompletely: details.playtime_completely ?? game.playtimeCompletely,
+    playtimeCount: details.playtime_count ?? game.playtimeCount,
     platforms: details.platforms ?? game.platforms,
     developers: details.developers ?? game.developers,
     publishers: details.publishers ?? game.publishers,
@@ -2452,10 +2494,7 @@ function openGameOrderDetailsModal(id) {
   setMovieDetailsText("gameOrderDetailsMetacritic", game.metacritic, "—");
   setMovieDetailsText("gameOrderDetailsRawgRating", game.rating, "—");
   setMovieDetailsText("gameOrderDetailsReleased", game.released, "—");
-  setMovieDetailsText(
-    "gameOrderDetailsPlaytime",
-    game.playtime ? `${game.playtime} ч.` : "—"
-  );
+  renderGamePlaytimeDetails("gameOrderDetailsPlaytime", game);
   setMovieDetailsText("gameOrderDetailsPlatforms", game.platforms, "—");
   setMovieDetailsText("gameOrderDetailsDevelopers", game.developers, "—");
   setMovieDetailsText("gameOrderDetailsPublishers", game.publishers, "—");

@@ -1868,7 +1868,7 @@ function createGameCard(game, showActions = isAdmin) {
 
   const playtime = document.createElement("span");
   playtime.className = "order-game-playtime";
-  playtime.textContent = `Время прохождения: ${game.playtime ? `${game.playtime} ч` : "—"}`;
+  playtime.textContent = `Обычное прохождение: ${game.playtime ? `${game.playtime} ч` : "—"}`;
   extraInfo.appendChild(playtime);
 
   info.appendChild(extraInfo);
