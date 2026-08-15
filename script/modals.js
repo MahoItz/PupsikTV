@@ -2043,9 +2043,10 @@ function renderGamePlaytimeDetails(elementId, game) {
     ["Сюжет", game.playtimeHastily],
     ["Обычное", game.playtimeNormally],
     ["На 100%", game.playtimeCompletely],
-  ].filter(([, value]) => Number(value) > 0);
+  ];
+  const hasDetailedTimes = timings.some(([, value]) => Number(value) > 0);
 
-  if (!timings.length) {
+  if (!hasDetailedTimes) {
     element.textContent = game.playtime ? `${game.playtime} ч.` : "—";
     return;
   }

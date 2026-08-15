@@ -832,7 +832,8 @@ function setKpApiStatus(message) {
 }
 
 async function refreshKpQuota() {
-  if (!KINOPOISK_API_KEY) {
+  const adminToken = localStorage.getItem("adminToken") || "";
+  if (!KINOPOISK_API_KEY || !adminToken) {
     if (kpQuotaInfo) kpQuotaInfo.style.display = "none";
     return;
   }
