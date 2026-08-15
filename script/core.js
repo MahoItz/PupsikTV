@@ -393,9 +393,21 @@ async function handleKinopoiskErrorResponse(response) {
   return false;
 }
 
-// RAWG
+// IGDB requests use a server proxy so Twitch credentials never reach the browser.
+// Kept for legacy modal code while old RAWG-backed records remain in the database.
 let RAWG_API_KEY;
 const RAWG_SEARCH_URL = "https://api.rawg.io/api/games";
+function buildIgdbUrl(resource, params = {}) {
+  const query = new URLSearchParams({ provider: "igdb", resource });
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) query.set(key, String(value));
+  });
+  return `${EXTERNAL_API_URL}?${query.toString()}`;
+}
+function getAdminAuthorizationHeaders() {
+  const token = localStorage.getItem("adminToken") || "";
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 let rawgResults = [];
 let selectedRAWGGame = null;
 let steamGridPoster = null;
@@ -1455,8 +1467,9 @@ async function loadEnv(options = {}) {
     localStorage.removeItem("KINOPOISK_API_KEY2");
     localStorage.removeItem("KINOPOISK_API_KEY3");
     applyKpApiSelection(selectedKpApiValue);
-    RAWG_API_KEY = env.RAWG_ENABLED ? API_PROXY_PLACEHOLDER : undefined;
+    const igdbEnabled = Boolean(env.IGDB_ENABLED);
     localStorage.removeItem("RAWG_API_KEY");
+    if (!igdbEnabled) console.warn("IGDB is not configured on the server.");
     if (typeof env.TWITCH_CLIENT_ID === "string") {
       const trimmedClientId = env.TWITCH_CLIENT_ID.trim();
       TWITCH_CLIENT_ID = trimmedClientId ? trimmedClientId : null;

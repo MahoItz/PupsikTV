@@ -17,7 +17,75 @@ const ALLOWED_PROVIDERS = [
   'tmdb',
   'kinopoisk',
   'rawg',
+  'igdb',
 ];
+
+let igdbAccessToken = null;
+let igdbAccessTokenExpiresAt = 0;
+
+function normalizeIgdbCoverUrl(url) {
+  if (typeof url !== 'string' || !url.trim()) return null;
+  const normalized = url.trim().replace(/^http:/, 'https:');
+  return normalized.startsWith('//') ? `https:${normalized}` : normalized;
+}
+
+function normalizeIgdbGame(game) {
+  const released = Number.isFinite(game?.first_release_date)
+    ? new Date(game.first_release_date * 1000).toISOString().slice(0, 10)
+    : null;
+  const companies = Array.isArray(game?.involved_companies) ? game.involved_companies : [];
+  const companyNames = (field) => companies
+    .filter((company) => company?.[field] && company?.company?.name)
+    .map((company) => company.company.name);
+
+  return {
+    id: game?.id ?? null,
+    name: game?.name || '',
+    released,
+    genres: Array.isArray(game?.genres)
+      ? game.genres.filter((genre) => genre?.name).map((genre) => ({ name: genre.name }))
+      : [],
+    background_image: normalizeIgdbCoverUrl(game?.cover?.url),
+    description_raw: game?.summary || '',
+    // IGDB rating is 0–100; existing site storage/display expects 0–5.
+    rating: Number.isFinite(game?.rating) ? Math.round((game.rating / 20) * 10) / 10 : null,
+    metacritic: null,
+    playtime: null,
+    platforms: Array.isArray(game?.platforms)
+      ? game.platforms.filter((platform) => platform?.name).map((platform) => ({ platform: { name: platform.name } }))
+      : [],
+    developers: companyNames('developer').map((name) => ({ name })),
+    publishers: companyNames('publisher').map((name) => ({ name })),
+  };
+}
+
+async function getIgdbAccessToken(fetchImpl) {
+  if (igdbAccessToken && Date.now() < igdbAccessTokenExpiresAt) return igdbAccessToken;
+
+  const clientId = process.env.TWITCH_IGDB_CLIENT_ID;
+  const clientSecret = process.env.TWITCH_IGDB_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    const error = new Error('IGDB is not configured. Set TWITCH_IGDB_CLIENT_ID and TWITCH_IGDB_CLIENT_SECRET.');
+    error.status = 500;
+    throw error;
+  }
+
+  const response = await fetchImpl('https://id.twitch.tv/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, grant_type: 'client_credentials' }).toString(),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.access_token) {
+    const error = new Error(payload.message || 'Failed to authenticate with IGDB.');
+    error.status = response.status || 502;
+    throw error;
+  }
+
+  igdbAccessToken = payload.access_token;
+  igdbAccessTokenExpiresAt = Date.now() + Math.max(60, Number(payload.expires_in) - 60) * 1000;
+  return igdbAccessToken;
+}
 
 function isAllowedHost(hostname) {
   return ALLOWED_HOST_SUFFIXES.some(
@@ -417,6 +485,52 @@ async function handleRawg(req, res) {
   }
 }
 
+async function handleIgdb(req, res) {
+  const access = verifyAdminRequest(req);
+  if (!access.ok) {
+    return res.status(access.status).json({ error: access.error, expired: access.expired || false });
+  }
+
+  const { fetch: fetchImpl, error: fetchError } = resolveFetch();
+  if (fetchError) return res.status(500).json({ error: fetchError });
+
+  const resource = String(req.query?.resource || '').trim().toLowerCase();
+  const pageSize = Math.min(10, Math.max(1, Number.parseInt(String(req.query?.page_size || '5'), 10) || 5));
+  const fields = 'id,name,summary,first_release_date,genres.name,cover.url,rating,platforms.name,involved_companies.company.name,involved_companies.developer,involved_companies.publisher';
+  let query;
+
+  if (resource === 'search') {
+    const search = String(req.query?.search || '').trim();
+    if (!search) return res.status(400).json({ error: 'Missing search' });
+    const escapedSearch = search.replace(/[\\"]/g, '\\$&');
+    query = `search "${escapedSearch}"; fields ${fields}; limit ${pageSize};`;
+  } else if (resource === 'game') {
+    const id = Number.parseInt(String(req.query?.id || ''), 10);
+    if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ error: 'Invalid game id' });
+    query = `fields ${fields}; where id = ${id}; limit 1;`;
+  } else {
+    return res.status(400).json({ error: 'Unknown IGDB resource' });
+  }
+
+  try {
+    const token = await getIgdbAccessToken(fetchImpl);
+    const response = await fetchImpl('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: { 'Client-ID': process.env.TWITCH_IGDB_CLIENT_ID, Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      body: query,
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) return res.status(response.status).json({ error: payload?.message || 'IGDB request failed.' });
+
+    const games = Array.isArray(payload) ? payload.map(normalizeIgdbGame) : [];
+    res.setHeader('Cache-Control', 'private, no-store');
+    return res.status(200).json(resource === 'search' ? { results: games } : games[0] || null);
+  } catch (error) {
+    console.error('[igdb] Proxy error', error);
+    return res.status(error.status || 500).json({ error: error.message || 'Failed to fetch IGDB data.' });
+  }
+}
+
 module.exports = async function handler(req, res) {
   const provider = String(req.query?.provider || '')
     .trim()
@@ -443,6 +557,10 @@ module.exports = async function handler(req, res) {
 
   if (provider === 'rawg') {
     return handleRawg(req, res);
+  }
+
+  if (provider === 'igdb') {
+    return handleIgdb(req, res);
   }
 
   return handleTmdb(req, res);

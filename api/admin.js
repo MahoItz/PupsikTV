@@ -822,7 +822,9 @@ async function handleEnv(req, res) {
       process.env.KINOPOISK_API_KEY2 ? 'API 2' : null,
       process.env.KINOPOISK_API_KEY3 ? 'API 3' : null,
     ].filter(Boolean);
-    env.RAWG_ENABLED = Boolean(process.env.RAWG_API_KEY);
+    env.IGDB_ENABLED = Boolean(
+      process.env.TWITCH_IGDB_CLIENT_ID && process.env.TWITCH_IGDB_CLIENT_SECRET
+    );
 
     if (process.env.TWITCH_CLIENT_ID) {
       env.TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;

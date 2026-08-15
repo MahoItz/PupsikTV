@@ -642,7 +642,9 @@ document
         let fullGameDetails = null;
         if (g.id) {
             try {
-                const detailsRes = await fetch(`https://api.rawg.io/api/games/${g.id}?key=${RAWG_API_KEY}`);
+                const detailsRes = await fetch(buildIgdbUrl("game", { id: g.id }), {
+                    headers: getAdminAuthorizationHeaders(),
+                });
                  if (detailsRes.ok) {
                      fullGameDetails = await detailsRes.json();
                  }

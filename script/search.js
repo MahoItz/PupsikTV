@@ -211,9 +211,8 @@ const debouncedWatchlistKPSearch = createAutocompleteFetcher({
 
 const debouncedRAWGSearch = createAutocompleteFetcher({
   source: (query) => ({
-    url: `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
-      query
-    )}&page_size=5`,
+    url: buildIgdbUrl("search", { search: query, page_size: 5 }),
+    options: { headers: getAdminAuthorizationHeaders() },
     mapResults: (data) => data.results || [],
     formatItem: (g) => {
       const year = g.released ? g.released.split("-")[0] : "";
@@ -234,9 +233,8 @@ const debouncedRAWGSearch = createAutocompleteFetcher({
 
 const debouncedPlayedRAWGSearch = createAutocompleteFetcher({
   source: (query) => ({
-    url: `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
-      query
-    )}&page_size=5`,
+    url: buildIgdbUrl("search", { search: query, page_size: 5 }),
+    options: { headers: getAdminAuthorizationHeaders() },
     mapResults: (data) => data.results || [],
     formatItem: (g) => {
       const year = g.released ? g.released.split("-")[0] : "";
@@ -912,10 +910,10 @@ async function handleGameSearch() {
   }
 
   try {
-    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
-      title
-    )}&page_size=5`;
-    const res = await fetch(url);
+    const res = await fetch(buildIgdbUrl("search", { search: title, page_size: 5 }), {
+      headers: getAdminAuthorizationHeaders(),
+    });
+    if (!res.ok) throw new Error(`IGDB search failed: ${res.status}`);
     const data = await res.json();
     rawgResults = data.results || [];
     const container = document.getElementById("gameAutoResultsContainer");
@@ -944,7 +942,7 @@ async function handleGameSearch() {
       alert("Ничего не найдено");
     }
   } catch (err) {
-    console.error("RAWG search error", err);
+    console.error("IGDB search error", err);
   }
   if (loader) loader.style.display = "none";
   if (btn) btn.disabled = false;
@@ -1009,10 +1007,10 @@ async function handlePlayedGameSearch() {
   }
 
   try {
-    const url = `${RAWG_SEARCH_URL}?key=${RAWG_API_KEY}&search=${encodeURIComponent(
-      title
-    )}&page_size=5`;
-    const res = await fetch(url);
+    const res = await fetch(buildIgdbUrl("search", { search: title, page_size: 5 }), {
+      headers: getAdminAuthorizationHeaders(),
+    });
+    if (!res.ok) throw new Error(`IGDB search failed: ${res.status}`);
     const data = await res.json();
     rawgResults = data.results || [];
     const container = document.getElementById("playedGameAutoResultsContainer");
@@ -1040,7 +1038,7 @@ async function handlePlayedGameSearch() {
       alert("Ничего не найдено");
     }
   } catch (err) {
-    console.error("RAWG search error", err);
+    console.error("IGDB search error", err);
   }
   if (loader) loader.style.display = "none";
   if (btn) btn.disabled = false;
