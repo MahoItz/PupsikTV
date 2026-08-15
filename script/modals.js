@@ -1146,8 +1146,19 @@ const detailsEditConfigs = {
       folder: "played",
     },
     fields: [
+      { valueId: "gameDetailsTitle", key: "title", localKey: "title", dbKey: "title", type: "text" },
       { valueId: "gameDetailsYear", key: "year", localKey: "year", dbKey: "year", type: "number" },
       { valueId: "gameDetailsGenre", key: "genres", localKey: "genres", dbKey: "genres", type: "text" },
+      { valueId: "gameDetailsReleased", key: "released", localKey: "released", dbKey: "released", type: "date" },
+      { valueId: "gameDetailsPlaytimeHastily", key: "playtimeHastily", localKey: "playtimeHastily", dbKey: "playtime_hastily", type: "number" },
+      { valueId: "gameDetailsPlaytimeNormally", key: "playtimeNormally", localKey: "playtimeNormally", dbKey: "playtime_normally", type: "number" },
+      { valueId: "gameDetailsPlaytimeCompletely", key: "playtimeCompletely", localKey: "playtimeCompletely", dbKey: "playtime_completely", type: "number" },
+      { valueId: "gameDetailsPlaytimeCount", key: "playtimeCount", localKey: "playtimeCount", dbKey: "playtime_count", type: "number" },
+      { valueId: "gameDetailsPlatforms", key: "platforms", localKey: "platforms", dbKey: "platforms", type: "text" },
+      { valueId: "gameDetailsDevelopers", key: "developers", localKey: "developers", dbKey: "developers", type: "text" },
+      { valueId: "gameDetailsPublishers", key: "publishers", localKey: "publishers", dbKey: "publishers", type: "text" },
+      { valueId: "gameDetailsMetacritic", key: "metacritic", localKey: "metacritic", dbKey: "metacritic", type: "number" },
+      { valueId: "gameDetailsRawgRating", key: "rawgRating", localKey: "rawgRating", dbKey: "rawg_rating", type: "rating" },
       { valueId: "gameDetailsPupsikRating", key: "rating", localKey: "rating", dbKey: "rating_numeric", type: "rating" },
     ],
   },
@@ -1228,8 +1239,19 @@ const detailsEditConfigs = {
       folder: "orders",
     },
     fields: [
+      { valueId: "gameOrderDetailsTitle", key: "title", localKey: "title", dbKey: "game_title", type: "text" },
       { valueId: "gameOrderDetailsYear", key: "year", localKey: "year", dbKey: "game_year", type: "number" },
       { valueId: "gameOrderDetailsGenre", key: "genres", localKey: "genres", dbKey: "game_genres", type: "text" },
+      { valueId: "gameOrderDetailsReleased", key: "released", localKey: "released", dbKey: "released", type: "date" },
+      { valueId: "gameOrderDetailsPlaytimeHastily", key: "playtimeHastily", localKey: "playtimeHastily", dbKey: "playtime_hastily", type: "number" },
+      { valueId: "gameOrderDetailsPlaytimeNormally", key: "playtimeNormally", localKey: "playtimeNormally", dbKey: "playtime_normally", type: "number" },
+      { valueId: "gameOrderDetailsPlaytimeCompletely", key: "playtimeCompletely", localKey: "playtimeCompletely", dbKey: "playtime_completely", type: "number" },
+      { valueId: "gameOrderDetailsPlaytimeCount", key: "playtimeCount", localKey: "playtimeCount", dbKey: "playtime_count", type: "number" },
+      { valueId: "gameOrderDetailsPlatforms", key: "platforms", localKey: "platforms", dbKey: "platforms", type: "text" },
+      { valueId: "gameOrderDetailsDevelopers", key: "developers", localKey: "developers", dbKey: "developers", type: "text" },
+      { valueId: "gameOrderDetailsPublishers", key: "publishers", localKey: "publishers", dbKey: "publishers", type: "text" },
+      { valueId: "gameOrderDetailsMetacritic", key: "metacritic", localKey: "metacritic", dbKey: "metacritic", type: "number" },
+      { valueId: "gameOrderDetailsRawgRating", key: "rating", localKey: "rating", dbKey: "rawg_rating", type: "rating" },
     ],
   },
   "gameOrderDetails-order": {
@@ -1531,6 +1553,7 @@ function enterDetailsEdit(key) {
   config.fields.forEach((field) => {
     const span = document.getElementById(field.valueId);
     if (!span || span.dataset.editing === "true") return;
+    span.closest("[hidden]")?.removeAttribute("hidden");
     span.dataset.editing = "true";
     span.dataset.originalText = span.textContent ?? "";
     const input = createDetailsInput(field, record);
@@ -1615,6 +1638,18 @@ async function saveDetailsEdit(key) {
     }
   });
 
+  if (updates.playtimeNormally !== undefined) {
+    const minutes = Number(updates.playtimeNormally);
+    const hours = Number.isFinite(minutes) && minutes > 0
+      ? Math.round(minutes / 60)
+      : null;
+    updates.playtime = hours;
+    payload.playtime = hours;
+    if (String(record.playtime ?? "") !== String(hours ?? "")) {
+      hasChanges = true;
+    }
+  }
+
   if (config.posterEditor) {
     const state = detailsPosterEditState.get(key);
     const currentPoster = record[config.posterEditor.localKey] || "";
@@ -1683,6 +1718,9 @@ async function saveDetailsEdit(key) {
         }
       }
     });
+    if (updates.playtime !== undefined) {
+      record.playtime = updates.playtime;
+    }
 
     if (config.posterEditor && updates[config.posterEditor.localKey] !== undefined) {
       record[config.posterEditor.localKey] = updates[config.posterEditor.localKey];
@@ -1714,6 +1752,11 @@ async function saveDetailsEdit(key) {
     }
 
     exitDetailsEdit(key, { restore: false });
+    if (key === "gameDetails-about") {
+      renderGameDetailsModal(record, modal);
+    } else if (key === "gameOrderDetails-about") {
+      openGameOrderDetailsModal(record.id);
+    }
   } catch (err) {
     console.error("Failed to save details edit", err);
     alert("Не удалось сохранить изменения. Попробуйте ещё раз.");
