@@ -2058,11 +2058,15 @@ function renderGamePlaytimeDetails(prefix, game) {
     formatGameTimeMinutes(game.playtimeCompletely),
     "—"
   );
-  setMovieDetailsText(
-    `${prefix}PlaytimeCount`,
-    Number(game.playtimeCount) > 0 ? game.playtimeCount : "—",
-    "—"
-  );
+  const countElement = document.getElementById(`${prefix}PlaytimeCount`);
+  const countRow = countElement?.closest(".game-playtime-count");
+  const count = Number(game.playtimeCount);
+  if (countElement) {
+    countElement.textContent = count > 0
+      ? `Время прохождения на основе ${count} прохождений.`
+      : "";
+  }
+  if (countRow) countRow.hidden = !(count > 0);
 }
 
 async function fetchPlayedGameDetailsFromRawg(game) {
