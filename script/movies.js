@@ -942,6 +942,9 @@ async function openOrderOnReyohoho(order) {
   if (modal) {
     modal.style.display = "block";
   }
+  if (typeof syncOrderPlayerTimings === "function") {
+    syncOrderPlayerTimings(order);
+  }
   setOrderPlayerLoading(true, "Загрузка плеера…");
   applyOrderPlayerUrl("");
   if (externalLink) {

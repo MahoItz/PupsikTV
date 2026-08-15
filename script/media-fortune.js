@@ -210,6 +210,10 @@ const orderTimings = document.getElementById("orderTimings");
 const orderTimingsStatus = document.getElementById("orderTimingsStatus");
 const orderTimingsList = document.getElementById("orderTimingsList");
 const orderTimingsAuthor = document.getElementById("orderTimingsAuthor");
+const orderPlayerTimingsStatus = document.getElementById(
+  "orderPlayerTimingsStatus"
+);
+const orderPlayerTimingsList = document.getElementById("orderPlayerTimingsList");
 const fortuneTimingsLoads = new Map();
 const fortuneStudioLoads = new Map();
 const orderParentGuidePrefetches = new Map();
@@ -220,6 +224,7 @@ let orderCurrentParentGuideData = null;
 let orderTimingsRequestId = 0;
 let activeOrderDetailsId = null;
 let activeOrderDetailsOverride = null;
+let activeOrderPlayerId = null;
 
 function updateMusicMenuCollapsedLimit() {
   if (!musicMenu) {
@@ -2980,6 +2985,42 @@ function setOrderTimingsError(message) {
   setOrderTimingsStatus(message);
 }
 
+function syncOrderPlayerTimings(order) {
+  if (!orderPlayerTimingsStatus || !orderPlayerTimingsList) {
+    return;
+  }
+
+  activeOrderPlayerId = order?.id ?? null;
+
+  if (!order) {
+    orderPlayerTimingsStatus.textContent = "Выберите фильм, чтобы увидеть тайминги";
+    orderPlayerTimingsList.innerHTML = "";
+    return;
+  }
+
+  const handledTimings = showOrderTimingsFromMetadata(order);
+  if (!handledTimings) {
+    if (order.kinopoiskId) {
+      fetchOrderTimingsForOrder(order);
+    } else {
+      setOrderTimingsError("Для выбранного фильма нет ID Кинопоиска.");
+    }
+  }
+
+  orderPlayerTimingsStatus.textContent = orderTimingsStatus?.textContent || "";
+  orderPlayerTimingsList.innerHTML = orderTimingsList?.innerHTML || "";
+}
+
+function clearOrderPlayerTimings() {
+  activeOrderPlayerId = null;
+  if (orderPlayerTimingsStatus) {
+    orderPlayerTimingsStatus.textContent = "";
+  }
+  if (orderPlayerTimingsList) {
+    orderPlayerTimingsList.innerHTML = "";
+  }
+}
+
 function showOrderTimingsFromMetadata(order) {
   if (!order) {
     return false;
@@ -3078,6 +3119,9 @@ async function fetchOrderTimingsForOrder(order) {
     if (activeOrderDetailsId === order.id) {
       showOrderTimingsFromMetadata(order);
     }
+    if (activeOrderPlayerId === order.id) {
+      syncOrderPlayerTimings(order);
+    }
   } catch (err) {
     console.error("Failed to load timings for order", err);
     if (requestId !== orderTimingsRequestId) {
@@ -3089,6 +3133,9 @@ async function fetchOrderTimingsForOrder(order) {
     });
     if (activeOrderDetailsId === order.id) {
       showOrderTimingsFromMetadata(order);
+    }
+    if (activeOrderPlayerId === order.id) {
+      syncOrderPlayerTimings(order);
     }
   }
 }

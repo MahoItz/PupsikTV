@@ -436,6 +436,82 @@ body.order-player-fullscreen #orderPlayerModal .modal-content {
     background: #000;
 }
 
+.order-player-timings {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(18, 24, 38, 0.95), rgba(10, 12, 22, 0.95));
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+}
+
+.order-player-timings .fortune-timings__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.order-player-timings .fortune-timings__status {
+    color: var(--text-secondary);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.order-player-timings .fortune-timings__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 0;
+    list-style: none;
+}
+
+.order-player-timings .fortune-timings__item,
+.order-player-timings .fortune-timings__empty {
+    padding: 14px 12px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.order-player-timings .fortune-timings__item {
+    position: relative;
+}
+
+.order-player-timings .fortune-timings__item-author {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.order-player-timings .fortune-timings__raw {
+    color: var(--text-primary);
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.order-player-timings .fortune-timings__empty {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.order-player-timings .fortune-timings__source {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-style: italic;
+    text-align: right;
+}
+
 .order-player-loader {
     position: absolute;
     inset: 0;

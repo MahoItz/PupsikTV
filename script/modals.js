@@ -3077,6 +3077,9 @@ function closeModal(modalId, shouldReset = false) {
       frame.src = "about:blank";
     }
     document.body.classList.remove("order-player-fullscreen");
+    if (typeof clearOrderPlayerTimings === "function") {
+      clearOrderPlayerTimings();
+    }
   }
   if (modalId === "gameOrderDetailsModal") {
     if (typeof clearActiveGameOrderDetailsId === "function") {
