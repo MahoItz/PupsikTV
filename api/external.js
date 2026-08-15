@@ -74,7 +74,7 @@ async function fetchIgdbGameTimeToBeat(fetchImpl, clientId, token, gameId) {
   const response = await fetchImpl('https://api.igdb.com/v4/game_time_to_beats', {
     method: 'POST',
     headers: { 'Client-ID': clientId, Authorization: `Bearer ${token}`, Accept: 'application/json' },
-    body: `fields game,hastily,normally,completely,count; where game = ${gameId}; limit 1;`,
+    body: `fields game_id,hastily,normally,completely,count; where game_id = ${gameId}; limit 1;`,
   });
   if (!response.ok) return null;
   const payload = await response.json().catch(() => []);
