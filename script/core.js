@@ -1469,7 +1469,9 @@ async function loadEnv(options = {}) {
     applyKpApiSelection(selectedKpApiValue);
     const igdbEnabled = Boolean(env.IGDB_ENABLED);
     localStorage.removeItem("RAWG_API_KEY");
-    if (!igdbEnabled) console.warn("IGDB is not configured on the server.");
+    if (env.isAdmin && !igdbEnabled) {
+      console.warn("IGDB is not configured on the server.");
+    }
     if (typeof env.TWITCH_CLIENT_ID === "string") {
       const trimmedClientId = env.TWITCH_CLIENT_ID.trim();
       TWITCH_CLIENT_ID = trimmedClientId ? trimmedClientId : null;
