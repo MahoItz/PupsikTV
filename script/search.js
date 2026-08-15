@@ -253,6 +253,21 @@ const debouncedPlayedRAWGSearch = createAutocompleteFetcher({
   },
 });
 
+async function hydrateSelectedIgdbGame(game) {
+  if (!game?.id) return game;
+  try {
+    const response = await fetch(buildIgdbUrl("game", { id: game.id }), {
+      headers: getAdminAuthorizationHeaders(),
+    });
+    if (!response.ok) throw new Error(`IGDB details failed: ${response.status}`);
+    const details = await response.json();
+    return details ? { ...game, ...details } : game;
+  } catch (error) {
+    console.error("IGDB details error", error);
+    return game;
+  }
+}
+
 async function handleKPSearch() {
   const btn = document.getElementById("autoSearchBtn");
   const loader = document.getElementById("autoSearchLoading");
@@ -929,7 +944,7 @@ async function handleGameSearch() {
     });
     if (rawgResults.length > 0) {
       container.style.display = "block";
-      selectedRAWGGame = rawgResults[0];
+      selectedRAWGGame = await hydrateSelectedIgdbGame(rawgResults[0]);
       await fetchSteamGridPosters(selectedRAWGGame.name);
       showRAWGPreview();
     } else {
@@ -981,6 +996,8 @@ function showRAWGPreview() {
       "https://via.placeholder.com/300x400?text=Нет+постера",
     orderBy: document.getElementById("gameOrderBy").value || "",
     orderType: document.getElementById("gameOrderType").value || "",
+    released: selectedRAWGGame.released || null,
+    playtime: selectedRAWGGame.playtime || null,
     dateAdded: new Date().toISOString().split("T")[0],
   };
   const card = createGameCard(game, false);
@@ -1026,7 +1043,7 @@ async function handlePlayedGameSearch() {
     });
     if (rawgResults.length > 0) {
       container.style.display = "block";
-      selectedRAWGGame = rawgResults[0];
+      selectedRAWGGame = await hydrateSelectedIgdbGame(rawgResults[0]);
       await fetchSteamGridPosters(selectedRAWGGame.name);
       showPlayedGamePreview();
     } else {
@@ -1078,6 +1095,8 @@ function showPlayedGamePreview() {
     rating: getCurrentRating("playedGameRatingStars"),
     orderBy: document.getElementById("playedGameOrderBy").value || "",
     orderType: document.getElementById("playedGameOrderType").value || "",
+    released: selectedRAWGGame.released || null,
+    playtime: selectedRAWGGame.playtime || null,
     dateAdded: new Date().toISOString().split("T")[0],
   };
   const card = createPlayedGameCard(game, false, false);

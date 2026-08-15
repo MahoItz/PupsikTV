@@ -1960,7 +1960,7 @@ function renderGameDetailsModal(game, modal) {
   setMovieDetailsText("gameDetailsYear", game.year);
   setMovieDetailsText("gameDetailsGenre", genreValue);
   setMovieDetailsText("gameDetailsReleased", game.released, "—");
-  renderGamePlaytimeDetails("gameDetailsPlaytime", game);
+  renderGamePlaytimeDetails("gameDetails", game);
   setMovieDetailsText("gameDetailsMetacritic", game.metacritic, "—");
   setMovieDetailsText("gameDetailsRawgRating", game.rawgRating, "—");
   setMovieDetailsText("gameDetailsPlatforms", game.platforms, "—");
@@ -2035,37 +2035,34 @@ function formatGameTimeMinutes(minutes) {
   return remainder ? `${hours} ч. ${remainder} мин.` : `${hours} ч.`;
 }
 
-function renderGamePlaytimeDetails(elementId, game) {
-  const element = document.getElementById(elementId);
-  if (!element) return;
+function renderGamePlaytimeDetails(prefix, game) {
+  const hasDetailedTimes = [
+    game.playtimeHastily,
+    game.playtimeNormally,
+    game.playtimeCompletely,
+  ].some((value) => Number(value) > 0);
+  const fallbackNormally = hasDetailedTimes ? null : game.playtime * 60;
 
-  const timings = [
-    ["Сюжет", game.playtimeHastily],
-    ["Обычное", game.playtimeNormally],
-    ["На 100%", game.playtimeCompletely],
-  ];
-  const hasDetailedTimes = timings.some(([, value]) => Number(value) > 0);
-
-  if (!hasDetailedTimes) {
-    element.textContent = game.playtime ? `${game.playtime} ч.` : "—";
-    return;
-  }
-
-  element.textContent = "";
-  const group = document.createElement("span");
-  group.className = "game-playtime-breakdown";
-  timings.forEach(([label, value]) => {
-    const row = document.createElement("span");
-    row.textContent = `${label}: ${formatGameTimeMinutes(value)}`;
-    group.appendChild(row);
-  });
-  if (Number(game.playtimeCount) > 0) {
-    const count = document.createElement("span");
-    count.className = "game-playtime-breakdown__count";
-    count.textContent = `На основе ${game.playtimeCount} записей`;
-    group.appendChild(count);
-  }
-  element.appendChild(group);
+  setMovieDetailsText(
+    `${prefix}PlaytimeHastily`,
+    formatGameTimeMinutes(game.playtimeHastily),
+    "—"
+  );
+  setMovieDetailsText(
+    `${prefix}PlaytimeNormally`,
+    formatGameTimeMinutes(game.playtimeNormally ?? fallbackNormally),
+    "—"
+  );
+  setMovieDetailsText(
+    `${prefix}PlaytimeCompletely`,
+    formatGameTimeMinutes(game.playtimeCompletely),
+    "—"
+  );
+  setMovieDetailsText(
+    `${prefix}PlaytimeCount`,
+    Number(game.playtimeCount) > 0 ? game.playtimeCount : "—",
+    "—"
+  );
 }
 
 async function fetchPlayedGameDetailsFromRawg(game) {
@@ -2495,7 +2492,7 @@ function openGameOrderDetailsModal(id) {
   setMovieDetailsText("gameOrderDetailsMetacritic", game.metacritic, "—");
   setMovieDetailsText("gameOrderDetailsRawgRating", game.rating, "—");
   setMovieDetailsText("gameOrderDetailsReleased", game.released, "—");
-  renderGamePlaytimeDetails("gameOrderDetailsPlaytime", game);
+  renderGamePlaytimeDetails("gameOrderDetails", game);
   setMovieDetailsText("gameOrderDetailsPlatforms", game.platforms, "—");
   setMovieDetailsText("gameOrderDetailsDevelopers", game.developers, "—");
   setMovieDetailsText("gameOrderDetailsPublishers", game.publishers, "—");

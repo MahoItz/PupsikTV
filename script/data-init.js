@@ -992,6 +992,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
       if (selectedRAWGGame) {
         gameTitleInput.value = selectedRAWGGame.name || "";
+        selectedRAWGGame = await hydrateSelectedIgdbGame(selectedRAWGGame);
         await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showRAWGPreview();
@@ -1036,6 +1037,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
       if (selectedRAWGGame) {
         playedTitleInput.value = selectedRAWGGame.name || "";
+        selectedRAWGGame = await hydrateSelectedIgdbGame(selectedRAWGGame);
         await fetchSteamGridPosters(selectedRAWGGame.name);
       }
       showPlayedGamePreview();
