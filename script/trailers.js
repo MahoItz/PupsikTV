@@ -442,11 +442,6 @@ function renderBoostyStreamCard(item) {
   const body = document.createElement("div");
   body.className = "trailer-saved-stream-card__body";
 
-  const title = document.createElement("div");
-  title.className = "trailer-saved-stream-card__title";
-  title.textContent = item.title;
-  body.appendChild(title);
-
   if (item.meta) {
     const meta = document.createElement("div");
     meta.className = "trailer-saved-stream-card__meta";
@@ -457,6 +452,11 @@ function renderBoostyStreamCard(item) {
     meta.appendChild(text);
     body.appendChild(meta);
   }
+
+  const title = document.createElement("div");
+  title.className = "trailer-saved-stream-card__title";
+  title.textContent = item.title;
+  body.appendChild(title);
 
   if (hasAdminAccess && item?.id) {
     const removeButton = document.createElement("button");
