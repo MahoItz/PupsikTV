@@ -2,9 +2,7 @@ const {
   extractBearerToken,
   verifyAdminToken,
 } = require('../lib/admin-session.js');
-const {
-  createSupabaseServerClient,
-} = require('../lib/supabase-config.js');
+const { createSupabaseServerClient } = require('../lib/supabase-config.js');
 
 const STORAGE_BUCKET = 'game-posters';
 const ALLOWED_METHODS = ['POST'];
@@ -45,12 +43,14 @@ function parseBody(req) {
 }
 
 function sanitizeFileStem(value) {
-  return String(value || 'boosty-review')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60) || 'boosty-review';
+  return (
+    String(value || 'boosty-review')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'boosty-review'
+  );
 }
 
 function getExtension(contentType, fileName) {
@@ -61,7 +61,9 @@ function getExtension(contentType, fileName) {
   if (normalizedType === 'image/gif') return 'gif';
   if (normalizedType === 'image/avif') return 'avif';
 
-  const rawName = String(fileName || '').trim().toLowerCase();
+  const rawName = String(fileName || '')
+    .trim()
+    .toLowerCase();
   const ext = rawName.includes('.') ? rawName.split('.').pop() : '';
   return ext || 'jpg';
 }

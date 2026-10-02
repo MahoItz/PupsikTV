@@ -149,7 +149,7 @@ async function saveMovieOrder(orderData) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-items", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -379,7 +379,7 @@ document
 
     try {
       const token = localStorage.getItem("adminToken") || "";
-      const response = await fetch("/api/admin?action=media-items", {
+      const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -755,7 +755,7 @@ document
           : null;
 
       const token = localStorage.getItem("adminToken") || "";
-      const response = await fetch("/api/admin?action=media-items", {
+      const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -975,7 +975,7 @@ document
       });
 
       const token = localStorage.getItem("adminToken") || "";
-      const response = await fetch("/api/admin?action=media-items", {
+      const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1128,7 +1128,7 @@ async function submitRating() {
         watchedMovie.imdbId
       );
       const token = localStorage.getItem("adminToken") || "";
-      const response = await fetch("/api/admin?action=media-items", {
+      const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1261,7 +1261,7 @@ async function submitGameRating() {
     };
     try {
       const token = localStorage.getItem("adminToken") || "";
-      const response = await fetch("/api/admin?action=media-items", {
+      const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1376,7 +1376,7 @@ async function submitUserMovieRating() {
   }
 
   try {
-    const response = await fetch("/api/movie-ratings", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/movie-ratings"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1442,7 +1442,7 @@ async function submitUserGameRating() {
   const newSum = currentSum + rating;
   const newCount = currentCount + 1;
   try {
-    const response = await fetch("/api/movie-ratings", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/movie-ratings"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1518,7 +1518,7 @@ async function submitUserMovieRating() {
   setUserRateStatus("userRateStatus", "Сохраняем оценку...");
 
   try {
-    const response = await fetch("/api/movie-ratings", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/movie-ratings"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1588,7 +1588,7 @@ async function submitUserGameRating() {
   setUserRateStatus("userRateGameStatus", "Сохраняем оценку...");
 
   try {
-    const response = await fetch("/api/movie-ratings", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/movie-ratings"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1666,7 +1666,7 @@ document
 
     try {
       const token = localStorage.getItem("adminToken") || "";
-      const response = await fetch("/api/admin?action=media-items", {
+      const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1757,7 +1757,7 @@ document
     try {
       const column = isGamePlan ? "game_plan_date" : "plan_date";
       const token = localStorage.getItem("adminToken") || "";
-      const response = await fetch("/api/admin?action=media-items", {
+      const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1842,7 +1842,7 @@ document
       }
 
       const token = localStorage.getItem("adminToken") || "";
-      const response = await fetch("/api/admin?action=media-items", {
+      const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -12,7 +12,7 @@ window.TRAILER_BOOSTY_CONTENT = {
     {
       title: "Паук-Нуар - разбор",
       href: "https://boosty.to/papsik/posts/your-post-id",
-      image: "/images/placeholder-poster.webp",
+      image: "images/placeholder-poster.webp",
       meta: "2.3 дня"
     }
     */

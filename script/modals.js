@@ -701,7 +701,7 @@ async function saveStudiosToDb(id, studiosData, tableName = "movies") {
   try {
     const studiosJson = JSON.stringify(studiosData);
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-items", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1689,7 +1689,7 @@ async function saveDetailsEdit(key) {
     }
 
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-items", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2235,7 +2235,7 @@ async function prefetchPlayedGameDetails(game) {
       };
 
       const token = localStorage.getItem("adminToken") || "";
-      const response = await fetch("/api/admin?action=media-items", {
+      const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -2617,7 +2617,7 @@ async function performDeleteMovie(id) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-admin", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-admin"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2660,7 +2660,7 @@ async function performDeleteOrder(id) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-admin", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-admin"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2701,7 +2701,7 @@ async function performDeleteGameOrder(id) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-admin", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-admin"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

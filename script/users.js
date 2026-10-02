@@ -1,5 +1,5 @@
 const USER_LIST_LIMIT = 30;
-const USERS_API_URL = "/api/admin?action=users";
+const USERS_API_URL = window.Pupsik.apiUrl("/api/admin?action=users");
 let usersList = [];
 let usersLoaded = false;
 let usersLoadingPromise = null;

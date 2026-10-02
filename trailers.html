@@ -6,24 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pupsik TV - Трейлеры</title>
   <link rel="icon" href="images/Pupsik_TV_Icon.webp">
-  <link rel="stylesheet" href="/style/base.css">
-  <link rel="stylesheet" href="/style/loaders.css">
-  <link rel="stylesheet" href="/style/buttons.css">
-  <link rel="stylesheet" href="/style/controls.css">
-  <link rel="stylesheet" href="/style/forms.css">
-  <link rel="stylesheet" href="/style/autocomplete.css">
-  <link rel="stylesheet" href="/style/modals.css">
-  <link rel="stylesheet" href="/style/movies.css">
-  <link rel="stylesheet" href="/style/rating-modals.css">
-  <link rel="stylesheet" href="/style/ratings.css">
-  <link rel="stylesheet" href="/style/admin-player.css">
-  <link rel="stylesheet" href="/style/trailers.css">
+  <link rel="stylesheet" href="style/base.css">
+  <link rel="stylesheet" href="style/loaders.css">
+  <link rel="stylesheet" href="style/buttons.css">
+  <link rel="stylesheet" href="style/controls.css">
+  <link rel="stylesheet" href="style/forms.css">
+  <link rel="stylesheet" href="style/autocomplete.css">
+  <link rel="stylesheet" href="style/modals.css">
+  <link rel="stylesheet" href="style/movies.css">
+  <link rel="stylesheet" href="style/rating-modals.css">
+  <link rel="stylesheet" href="style/ratings.css">
+  <link rel="stylesheet" href="style/admin-player.css">
+  <link rel="stylesheet" href="style/trailers.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="script/site-config.js"></script>
 </head>
 
 <body>
   <div class="admin-player-page trailer-page">
-    <a class="admin-player-page__back" href="/" aria-label="Назад на главную">
+    <a class="admin-player-page__back" href="./" aria-label="Назад на главную">
       <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
       <span>На главную</span>
     </a>
@@ -70,7 +71,7 @@
             <div id="trailerTitleResults" class="autocomplete-list"></div>
           </div>
           <div id="trailerSelectedMovieCard" class="trailer-selected-movie" hidden>
-            <img id="trailerSelectedMoviePoster" class="trailer-selected-movie__poster" src="/images/placeholder-poster.webp" alt="Выбранный фильм">
+            <img id="trailerSelectedMoviePoster" class="trailer-selected-movie__poster" src="images/placeholder-poster.webp" alt="Выбранный фильм">
             <div class="trailer-selected-movie__body">
               <p id="trailerSelectedMovieTitle" class="trailer-selected-movie__title"></p>
               <p id="trailerSelectedMovieMeta" class="trailer-selected-movie__meta"></p>
@@ -119,7 +120,7 @@
           <article class="trailer-boosty-card">
             <div class="trailer-boosty-card__brand" aria-hidden="true">
               <span class="trailer-boosty-card__brand-icon">
-                <img src="/images/Boosty_Icon_Color.svg" alt="" loading="lazy">
+                <img src="images/Boosty_Icon_Color.svg" alt="" loading="lazy">
               </span>
               <span class="trailer-boosty-card__brand-text">boosty</span>
             </div>
@@ -256,7 +257,7 @@
         <div class="trailer-list-section__header">
           <h2>Информация о фильме</h2>
           <a id="trailerKinopoiskLink" class="trailer-kinopoisk-button" href="#" target="_blank" rel="noopener noreferrer" hidden>
-            <img src="/images/kinopoisk-icon-main.svg" alt="Kinopoisk">
+            <img src="images/kinopoisk-icon-main.svg" alt="Kinopoisk">
             <span>Открыть на Кинопоиске</span>
           </a>
         </div>
@@ -276,7 +277,7 @@
         <div id="trailerInfoContent" class="trailer-info__content" hidden>
           <div class="trailer-info__hero">
             <div class="trailer-info__poster-wrap">
-              <img id="trailerPoster" class="trailer-info__poster" src="/images/placeholder-poster.webp" alt="Постер фильма">
+              <img id="trailerPoster" class="trailer-info__poster" src="images/placeholder-poster.webp" alt="Постер фильма">
               <input id="trailerInfoPosterInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" hidden>
             </div>
             <div class="trailer-info__headline">
@@ -367,7 +368,7 @@
     <section id="trailersAccessDenied" class="admin-player-denied trailer-panel" hidden>
       <h2>Только для админа</h2>
       <p>Страница доступна после входа в админ-режим на главной странице.</p>
-      <a href="/" class="btn btn-secondary">Вернуться на главную</a>
+      <a href="./" class="btn btn-secondary">Вернуться на главную</a>
     </section>
   </div>
 
@@ -379,7 +380,7 @@
         <h2>Оценка зрителей</h2>
       </div>
       <div class="rate-poster">
-        <img id="trailerUserRatePoster" class="movie-poster" src="/images/placeholder-poster.webp" alt="Постер трейлера">
+        <img id="trailerUserRatePoster" class="movie-poster" src="images/placeholder-poster.webp" alt="Постер трейлера">
         <p id="trailerUserRateTitle"></p>
       </div>
       <div class="trailer-rating-panel__score trailer-user-rate-modal__score">
@@ -478,9 +479,9 @@
     <p class="site-footer__text">Дата создания сайта: <span class="site-footer__date">6 июля 2025</span></p>
   </footer>
 
-  <script src="/script/trailer-boosty-content.js" defer></script>
-  <script src="/script/toast.js" defer></script>
-  <script src="/script/trailers.js" defer></script>
+  <script src="script/trailer-boosty-content.js" defer></script>
+  <script src="script/toast.js" defer></script>
+  <script src="script/trailers.js" defer></script>
 </body>
 
 </html>

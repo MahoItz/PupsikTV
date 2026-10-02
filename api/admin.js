@@ -878,6 +878,11 @@ function handleVerifyAdmin(req, res) {
   }
 
   if (method === 'POST') {
+    if (!process.env.EDIT_PASSWORD) {
+      return res
+        .status(500)
+        .json({ ok: false, error: 'Admin password is not configured' });
+    }
     let password;
     try {
       password =

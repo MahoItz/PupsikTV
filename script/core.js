@@ -1,7 +1,7 @@
 ﻿// Supabase
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-const API_BASE_PATH = "/api";
-const EXTERNAL_API_URL = "/api/external";
+const API_BASE_PATH = window.Pupsik.apiBase;
+const EXTERNAL_API_URL = window.Pupsik.apiUrl("/api/external");
 const API_PROXY_PLACEHOLDER = "server-proxy";
 
 function buildApiPath(path) {
@@ -12,7 +12,7 @@ function buildApiPath(path) {
 function buildAbsoluteApiUrl(path) {
   const apiPath = buildApiPath(path);
   if (typeof window !== "undefined" && window.location?.origin) {
-    return `${window.location.origin}${apiPath}`;
+    return new URL(apiPath, document.baseURI).href;
   }
   return apiPath;
 }
@@ -33,8 +33,8 @@ function buildAbsoluteApiUrl(path) {
     try {
       url =
         input instanceof Request
-          ? new URL(input.url, window.location.origin)
-          : new URL(String(input), window.location.origin);
+          ? new URL(input.url, document.baseURI)
+          : new URL(String(input), document.baseURI);
     } catch {
       return null;
     }
@@ -135,7 +135,7 @@ function getGamePosterStoragePath(posterUrl) {
 
 function isPosterProxyUrl(url) {
   if (!url || typeof url !== "string") return false;
-  return url.includes("/api/external?provider=poster-proxy&url=");
+  return url.includes(window.Pupsik.apiUrl("/api/external?provider=poster-proxy&url="));
 }
 
 function proxyPosterUrl(url) {
@@ -204,7 +204,7 @@ async function uploadGamePosterToStorage({
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=game-posters", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=game-posters"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -233,7 +233,7 @@ async function deleteGamePosterFromStorage(posterUrl) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=game-posters", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=game-posters"), {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -314,8 +314,8 @@ let adminToken = localStorage.getItem("adminToken") || null;
 let adminTokenExpiresAt = localStorage.getItem("adminTokenExpiresAt") || null;
 let isAdmin = false;
 let adminElements = [];
-const SETTINGS_API_URL = "/api/admin?action=settings";
-const CHECK_AI_MODELS_API_URL = "/api/admin?action=check-ai-models";
+const SETTINGS_API_URL = window.Pupsik.apiUrl("/api/admin?action=settings");
+const CHECK_AI_MODELS_API_URL = window.Pupsik.apiUrl("/api/admin?action=check-ai-models");
 // Kinopoisk (unofficial API)
 
 function updateAdminSession(token, expiresAt) {
@@ -361,7 +361,7 @@ let KINOPOISK_API_KEY;
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 const KINOPOISK_FILM_URL = "https://kinopoiskapiunofficial.tech/api/v2.2/films";
-const KINOPOISK_ACTORS_API_URL = "/api/kinopoisk-actors";
+const KINOPOISK_ACTORS_API_URL = window.Pupsik.apiUrl("/api/kinopoisk-actors");
 let kpResults = [];
 let selectedKPMovie = null;
 
@@ -1396,7 +1396,7 @@ async function loadEnv(options = {}) {
   }
 
   try {
-    const res = await fetch("/api/admin?action=env", { headers });
+    const res = await fetch(window.Pupsik.apiUrl("/api/admin?action=env"), { headers });
     if (res.status === 401 && token && !opts._retriedWithoutToken) {
       clearAdminSession();
       return loadEnv({
@@ -1508,7 +1508,7 @@ async function verifyAdminPassword(password) {
     return { ok: false };
   }
   try {
-    const res = await fetch("/api/admin?action=verify-admin", {
+    const res = await fetch(window.Pupsik.apiUrl("/api/admin?action=verify-admin"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
@@ -1532,7 +1532,7 @@ async function verifyAdminTokenRequest(token) {
     return { ok: false };
   }
   try {
-    const res = await fetch("/api/admin?action=verify-admin", {
+    const res = await fetch(window.Pupsik.apiUrl("/api/admin?action=verify-admin"), {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
@@ -1553,7 +1553,7 @@ async function refreshAdminTokenRequest(token) {
     return { ok: false };
   }
   try {
-    const res = await fetch("/api/admin?action=verify-admin", {
+    const res = await fetch(window.Pupsik.apiUrl("/api/admin?action=verify-admin"), {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -3540,7 +3540,7 @@ async function fetchSteamGridPostersForTitle(title) {
   }
   try {
     const res = await fetch(
-      `/api/external?provider=steamgriddb&search=${encodeURIComponent(title)}`
+      window.Pupsik.apiUrl(`/api/external?provider=steamgriddb&search=${encodeURIComponent(title)}`)
     );
     if (!res.ok) {
       return {

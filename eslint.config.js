@@ -6,6 +6,7 @@ module.exports = [
   {
     ignores: [
       'node_modules/**',
+      'dist/**',
       '.git/**',
       '.venv/**',
       '.vercel/**',
@@ -25,6 +26,15 @@ module.exports = [
       globals: {
         ...globals.node,
       },
+    },
+  },
+  {
+    files: ['scripts/**/*.mjs', 'tests/**/*.mjs'],
+    ...js.configs.recommended,
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.node },
     },
   },
   {

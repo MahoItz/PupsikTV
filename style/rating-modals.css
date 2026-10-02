@@ -235,8 +235,8 @@
     color: transparent;
     text-shadow: none;
     background-color: rgba(255, 235, 59, 0.3);
-    -webkit-mask: url('/images/Rat_rate.webp') center/contain no-repeat;
-    mask: url('/images/Rat_rate.webp') center/contain no-repeat;
+    -webkit-mask: url('../images/Rat_rate.webp') center/contain no-repeat;
+    mask: url('../images/Rat_rate.webp') center/contain no-repeat;
     justify-self: center;
     transform: none;
 }
@@ -253,27 +253,27 @@
 .modal-rating-stars .rating-star.rating-label[data-rating="0"]:hover,
 .modal-rating-stars .rating-star.rating-label[data-rating="0"].hovered {
     background-color: #ff8a6b;
-    -webkit-mask-image: url('/images/Rat_Worst.webp');
-    mask-image: url('/images/Rat_Worst.webp');
+    -webkit-mask-image: url('../images/Rat_Worst.webp');
+    mask-image: url('../images/Rat_Worst.webp');
 }
 
 .modal-rating-stars:not(.is-hover-previewing) .rating-star.rating-label[data-rating="0"].active {
     background-color: #ff6b57;
-    -webkit-mask-image: url('/images/Rat_Worst.webp');
-    mask-image: url('/images/Rat_Worst.webp');
+    -webkit-mask-image: url('../images/Rat_Worst.webp');
+    mask-image: url('../images/Rat_Worst.webp');
 }
 
 .modal-rating-stars .rating-star.rating-label[data-rating="11"]:hover,
 .modal-rating-stars .rating-star.rating-label[data-rating="11"].hovered {
     background-color: #00e74f;
-    -webkit-mask-image: url('/images/Rat_Best.webp');
-    mask-image: url('/images/Rat_Best.webp');
+    -webkit-mask-image: url('../images/Rat_Best.webp');
+    mask-image: url('../images/Rat_Best.webp');
 }
 
 .modal-rating-stars:not(.is-hover-previewing) .rating-star.rating-label[data-rating="11"].active {
     background-color: #00e74f;
-    -webkit-mask-image: url('/images/Rat_Best.webp');
-    mask-image: url('/images/Rat_Best.webp');
+    -webkit-mask-image: url('../images/Rat_Best.webp');
+    mask-image: url('../images/Rat_Best.webp');
 }
 
 #rateMovieTitle,

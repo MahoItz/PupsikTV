@@ -133,7 +133,7 @@ function createKpFallbackCard(film) {
   const ratingRow = document.createElement("div");
   ratingRow.className = "kp-fallback-kp-rating";
   const kpImg = document.createElement("img");
-  kpImg.src = "/images/kinopoisk-icon-main.svg";
+  kpImg.src = "images/kinopoisk-icon-main.svg";
   kpImg.alt = "KP Rate";
   const ratingText = document.createElement("span");
   ratingText.textContent = film?.rating ? String(film.rating) : "-";
@@ -714,7 +714,7 @@ function createMovieCard(
     const ratingItem2 = document.createElement("div");
     ratingItem2.className = "rating-item kp-rating-item";
     const icon2 = document.createElement("img");
-    icon2.src = "/images/kinopoisk-icon-main.svg";
+    icon2.src = "images/kinopoisk-icon-main.svg";
     icon2.alt = "KP Rate";
     const span2 = document.createElement("span");
     span2.textContent = movie.kpRating ?? "-";
@@ -1159,7 +1159,7 @@ async function updateGameOrderStreams(gameId, nextValue) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-items", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1446,7 +1446,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   const kpRating = document.createElement("span");
   kpRating.className = "order-kp-rating";
   const kpImg = document.createElement("img");
-  kpImg.src = "/images/kinopoisk-icon-main.svg";
+  kpImg.src = "images/kinopoisk-icon-main.svg";
   kpImg.alt = "KP Rate";
   kpRating.appendChild(kpImg);
   kpRating.appendChild(document.createTextNode(` ${order.kpRating ?? "-"}`));
@@ -1880,7 +1880,7 @@ async function clearPlanDate(orderId) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-items", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1915,7 +1915,7 @@ async function clearGamePlanDate(gameId) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-items", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2715,7 +2715,7 @@ async function deletePlayedGame(id) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-admin", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-admin"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

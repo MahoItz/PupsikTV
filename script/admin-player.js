@@ -23,8 +23,8 @@ const ADMIN_PLAYER_HISTORY_TTL_MS = 60 * 1000;
     try {
       url =
         input instanceof Request
-          ? new URL(input.url, window.location.origin)
-          : new URL(String(input), window.location.origin);
+          ? new URL(input.url, document.baseURI)
+          : new URL(String(input), document.baseURI);
     } catch {
       return null;
     }
@@ -42,7 +42,7 @@ const ADMIN_PLAYER_HISTORY_TTL_MS = 60 * 1000;
       return null;
     }
 
-    return `/api/external?${params.toString()}`;
+    return window.Pupsik.apiUrl(`/api/external?${params.toString()}`);
   }
 
   window.fetch = function proxiedFetch(input, init) {
@@ -159,7 +159,7 @@ async function loadHistory() {
     const cache = readHistoryCache();
     const cachedEtag = cache?.etag || "";
 
-    const response = await fetch("/api/admin?action=player-history", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=player-history"), {
       headers: {
         ...getAdminAuthHeaders(),
         ...(cachedEtag ? { "If-None-Match": cachedEtag } : {}),
@@ -189,7 +189,7 @@ async function saveHistoryItem(movie) {
   updateHistoryState(upsertHistoryItem(currentHistory, item), { shouldRender: true });
 
   try {
-    const response = await fetch("/api/admin?action=player-history", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=player-history"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -219,7 +219,7 @@ async function deleteHistoryItem(kpId) {
   );
 
   try {
-    const response = await fetch(`/api/admin?action=player-history&kp_id=${encodeURIComponent(kpId)}`, {
+    const response = await fetch(window.Pupsik.apiUrl(`/api/admin?action=player-history&kp_id=${encodeURIComponent(kpId)}`), {
       method: "DELETE",
       headers: getAdminAuthHeaders(),
     });
@@ -419,12 +419,12 @@ async function verifyAdminAccess() {
   const token = localStorage.getItem("adminToken") || "";
   if (!token) return false;
 
-  const verifyRes = await fetch("/api/admin?action=verify-admin", {
+  const verifyRes = await fetch(window.Pupsik.apiUrl("/api/admin?action=verify-admin"), {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!verifyRes.ok) return false;
 
-  const envRes = await fetch("/api/admin?action=env", {
+  const envRes = await fetch(window.Pupsik.apiUrl("/api/admin?action=env"), {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!envRes.ok) return false;

@@ -787,7 +787,7 @@ function createFortuneSuggestionSearchLink(
   href,
   ariaLabel,
   extraClass,
-  iconSrc = "/images/kinopoisk-icon-main.svg"
+  iconSrc = "images/kinopoisk-icon-main.svg"
 ) {
   const link = document.createElement("a");
   link.href = href;
@@ -1197,7 +1197,7 @@ async function mutateFortuneSuggestion(item, afterDelete) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-admin", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-admin"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1927,7 +1927,7 @@ async function persistOrderParentGuide(orderId, guide) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-items", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1959,7 +1959,7 @@ async function persistOrderGameDescription(gameOrderId, descriptionData) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-items", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1991,7 +1991,7 @@ async function persistPlayedGameDescription(gameId, descriptionData) {
 
   try {
     const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch("/api/admin?action=media-items", {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2023,7 +2023,7 @@ async function translateGameDescription(text, modelValue) {
     return "";
   }
 
-  const response = await fetch("/api/translate-description", {
+  const response = await fetch(window.Pupsik.apiUrl("/api/translate-description"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -4765,7 +4765,7 @@ function initFortuneWheel() {
       href,
       ariaLabel,
       extraClass,
-      iconSrc = "/images/kinopoisk-icon-main.svg"
+      iconSrc = "images/kinopoisk-icon-main.svg"
     ) => {
       const link = document.createElement("a");
       link.href = href;

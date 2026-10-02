@@ -1,0 +1,6 @@
+project_id = "PupsikTV"
+
+[functions.pupsik-api]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/pupsik-api/index.ts"

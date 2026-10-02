@@ -15,10 +15,14 @@ yarn-error.log*
 # local .next or build outputs
 .next/
 dist/
+supabase/functions/pupsik-api/generated/
+supabase/.temp/
 
 # OS-specific
 .DS_Store
 Thumbs.db
 
 .cursorrules
+.vercel
+
 .vercel

@@ -8,9 +8,12 @@
     "lint": "npm run lint:eslint && npm run lint:style && npm run format:check",
     "lint:eslint": "eslint .",
     "lint:style": "stylelint \"style/**/*.css\"",
-    "format:check": "prettier --check \"*.json\" \"*.md\" \"eslint.config.js\" \".prettierrc.json\" \".stylelintrc.json\" \".github/**/*.{yml,yaml}\" \"api/**/*.js\" \"lib/**/*.js\"",
-    "format:write": "prettier --write \"*.json\" \"*.md\" \"eslint.config.js\" \".prettierrc.json\" \".stylelintrc.json\" \".github/**/*.{yml,yaml}\" \"api/**/*.js\" \"lib/**/*.js\"",
-    "test": "npm run lint"
+    "format:check": "prettier --check \"*.json\" \"*.md\" \"eslint.config.js\" \".prettierrc.json\" \".stylelintrc.json\" \".github/**/*.{yml,yaml}\" \"api/**/*.js\" \"lib/**/*.js\" \"scripts/**/*.mjs\" \"tests/**/*.mjs\"",
+    "format:write": "prettier --write \"*.json\" \"*.md\" \"eslint.config.js\" \".prettierrc.json\" \".stylelintrc.json\" \".github/**/*.{yml,yaml}\" \"api/**/*.js\" \"lib/**/*.js\" \"scripts/**/*.mjs\" \"tests/**/*.mjs\"",
+    "test": "npm run lint",
+    "build:edge": "node scripts/build-edge.mjs",
+    "build:pages": "node scripts/build-pages.mjs",
+    "test:migration": "node --test tests/migration.test.mjs"
   },
   "repository": {
     "type": "git",

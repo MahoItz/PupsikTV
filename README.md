@@ -2,9 +2,14 @@
 
 This repository contains the source code for the PupsikTV website. The project is a static site that relies on a few serverless API routes contained in the `api` directory.
 
+The production target is GitHub Pages with a Supabase Edge Function for the API.
+See [the deployment guide](DEPLOYMENT.md) for step-by-step setup, secrets and checks.
+The existing `api/` handlers remain the source of truth; `npm run build:edge`
+generates Deno-compatible modules before publishing `pupsik-api`.
+
 ## Setup
 
-1. Install Node.js (version 16 or newer).
+1. Install Node.js (version 22 or newer).
 2. Clone this repository.
 3. Create a `.env` file in the project root and provide the required environment variables:
 
@@ -27,4 +32,7 @@ Serve the project with any static file server. One simple option is to use [`ser
 npx serve
 ```
 
-Open the printed URL in your browser to view the site. The serverless API routes under `api/` will read the environment variables from your `.env` file when deployed to a platform such as Vercel.
+Open the printed URL in your browser to view the site. The browser calls the
+Supabase API configured in `script/site-config.js`; a static server does not run
+the handlers under `api/`. See [the deployment guide](DEPLOYMENT.md) to run or
+publish the generated Edge Function and configure its server-side secrets.

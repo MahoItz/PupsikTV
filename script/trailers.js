@@ -1,13 +1,13 @@
-const TRAILER_API_URL = "/api/trailer-watchlist";
-const TRAILER_RATINGS_API_URL = "/api/trailer-ratings";
-const BOOSTY_REVIEWS_API_URL = "/api/boosty-reviews";
-const BOOSTY_PREVIEW_API_URL = "/api/preview";
-const BOOSTY_REVIEW_IMAGE_API_URL = "/api/boosty-review-image";
-const EXTERNAL_API_URL = "/api/external";
-const KP_API_SELECTION_URL = "/api/admin?action=kp-api-selection";
-const VERIFY_ADMIN_URL = "/api/admin?action=verify-admin";
-const ENV_URL = "/api/admin?action=env";
-const KINOPOISK_ACTORS_API_URL = "/api/kinopoisk-actors";
+const TRAILER_API_URL = window.Pupsik.apiUrl("/api/trailer-watchlist");
+const TRAILER_RATINGS_API_URL = window.Pupsik.apiUrl("/api/trailer-ratings");
+const BOOSTY_REVIEWS_API_URL = window.Pupsik.apiUrl("/api/boosty-reviews");
+const BOOSTY_PREVIEW_API_URL = window.Pupsik.apiUrl("/api/preview");
+const BOOSTY_REVIEW_IMAGE_API_URL = window.Pupsik.apiUrl("/api/boosty-review-image");
+const EXTERNAL_API_URL = window.Pupsik.apiUrl("/api/external");
+const KP_API_SELECTION_URL = window.Pupsik.apiUrl("/api/admin?action=kp-api-selection");
+const VERIFY_ADMIN_URL = window.Pupsik.apiUrl("/api/admin?action=verify-admin");
+const ENV_URL = window.Pupsik.apiUrl("/api/admin?action=env");
+const KINOPOISK_ACTORS_API_URL = window.Pupsik.apiUrl("/api/kinopoisk-actors");
 const KINOPOISK_SEARCH_URL =
   "https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword";
 const KINOPOISK_FILM_URL =
@@ -16,7 +16,7 @@ const KINOPOISK_STAFF_URL =
   "https://kinopoiskapiunofficial.tech/api/v1/staff";
 const YOUTUBE_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
 const TRAILER_PLAYER_FALLBACK_HIDE_DELAY_MS = 1200;
-const POSTER_PLACEHOLDER = "/images/placeholder-poster.webp";
+const POSTER_PLACEHOLDER = "images/placeholder-poster.webp";
 const DEFAULT_TRAILER_BOOSTY_CONTENT = {
   profileUrl: "https://boosty.to/papsik",
   title: "Полные разборы трейлеров",
@@ -45,8 +45,8 @@ const DEFAULT_TRAILER_BOOSTY_CONTENT = {
     try {
       url =
         input instanceof Request
-          ? new URL(input.url, window.location.origin)
-          : new URL(String(input), window.location.origin);
+          ? new URL(input.url, document.baseURI)
+          : new URL(String(input), document.baseURI);
     } catch {
       return null;
     }
@@ -409,7 +409,7 @@ function toDisplayImageUrl(url) {
   if (!value) return "";
 
   try {
-    const parsed = new URL(value, window.location.origin);
+    const parsed = new URL(value, document.baseURI);
     if (parsed.hostname === "images.boosty.to") {
       return `${EXTERNAL_API_URL}?provider=poster-proxy&url=${encodeURIComponent(parsed.toString())}`;
     }
@@ -665,7 +665,7 @@ async function uploadBoostyReviewImage(file, title) {
 
 async function uploadTrailerInfoPoster(file, title) {
   const dataUrl = await readFileAsDataUrl(file);
-  const response = await fetch("/api/admin?action=game-posters", {
+  const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=game-posters"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -2345,7 +2345,7 @@ function renderTrailerItem(item) {
   kpLink.target = "_blank";
   kpLink.rel = "noopener noreferrer";
   kpLink.setAttribute("aria-label", "Открыть фильм на Кинопоиске");
-  kpLink.innerHTML = '<img src="/images/kinopoisk-icon-main.svg" alt="Kinopoisk">';
+  kpLink.innerHTML = '<img src="images/kinopoisk-icon-main.svg" alt="Kinopoisk">';
   kpLink.addEventListener("click", (event) => {
     event.stopPropagation();
   });
@@ -2566,7 +2566,7 @@ function renderWatchedTrailerCard(item) {
   const streamerItem = document.createElement("div");
   streamerItem.className = "rating-item";
   streamerItem.innerHTML = `
-    <img src="/images/Pupsik_TV_Icon.webp" alt="Pupsik Rate">
+    <img src="images/Pupsik_TV_Icon.webp" alt="Pupsik Rate">
     <span>${item.streamer_rating ?? "-"}</span>
   `;
 

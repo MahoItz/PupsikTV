@@ -1,6 +1,6 @@
 (function () {
   const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-  const API_BASE_PATH = "/api";
+  const API_BASE_PATH = window.Pupsik.apiBase;
   const MOVIE_RATING_MAX = 11;
   const LEADERBOARD_LIMIT = 10;
   const ENV_TIMEOUT_MS = 12000;

@@ -83,7 +83,8 @@ function extractMetaContent(html, propertyName) {
 
 function getPreviewImageUrl(html, pageUrl) {
   const rawValue =
-    extractMetaContent(html, 'og:image') || extractMetaContent(html, 'twitter:image');
+    extractMetaContent(html, 'og:image') ||
+    extractMetaContent(html, 'twitter:image');
 
   if (!rawValue) {
     return '';
@@ -166,7 +167,9 @@ module.exports = async function handler(req, res) {
   } catch (error) {
     const isAbortError = error?.name === 'AbortError';
     return res.status(isAbortError ? 504 : 500).json({
-      error: isAbortError ? 'Preview request timed out' : 'Failed to fetch preview',
+      error: isAbortError
+        ? 'Preview request timed out'
+        : 'Failed to fetch preview',
     });
   } finally {
     if (timeoutId) {

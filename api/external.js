@@ -30,29 +30,38 @@ function normalizeIgdbCoverUrl(url) {
 }
 
 function toIgdbTimeMinutes(seconds) {
-  return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds / 60) : null;
+  return Number.isFinite(seconds) && seconds > 0
+    ? Math.round(seconds / 60)
+    : null;
 }
 
 function normalizeIgdbGame(game, timeToBeat = null) {
   const released = Number.isFinite(game?.first_release_date)
     ? new Date(game.first_release_date * 1000).toISOString().slice(0, 10)
     : null;
-  const companies = Array.isArray(game?.involved_companies) ? game.involved_companies : [];
-  const companyNames = (field) => companies
-    .filter((company) => company?.[field] && company?.company?.name)
-    .map((company) => company.company.name);
+  const companies = Array.isArray(game?.involved_companies)
+    ? game.involved_companies
+    : [];
+  const companyNames = (field) =>
+    companies
+      .filter((company) => company?.[field] && company?.company?.name)
+      .map((company) => company.company.name);
 
   return {
     id: game?.id ?? null,
     name: game?.name || '',
     released,
     genres: Array.isArray(game?.genres)
-      ? game.genres.filter((genre) => genre?.name).map((genre) => ({ name: genre.name }))
+      ? game.genres
+          .filter((genre) => genre?.name)
+          .map((genre) => ({ name: genre.name }))
       : [],
     background_image: normalizeIgdbCoverUrl(game?.cover?.url),
     description_raw: game?.summary || '',
     // IGDB rating is 0–100; existing site storage/display expects 0–5.
-    rating: Number.isFinite(game?.rating) ? Math.round((game.rating / 20) * 10) / 10 : null,
+    rating: Number.isFinite(game?.rating)
+      ? Math.round((game.rating / 20) * 10) / 10
+      : null,
     metacritic: null,
     // The existing playtime field is shown on cards in hours; detailed IGDB values are stored in minutes.
     playtime: Number.isFinite(timeToBeat?.normally)
@@ -61,9 +70,13 @@ function normalizeIgdbGame(game, timeToBeat = null) {
     playtimeHastily: toIgdbTimeMinutes(timeToBeat?.hastily),
     playtimeNormally: toIgdbTimeMinutes(timeToBeat?.normally),
     playtimeCompletely: toIgdbTimeMinutes(timeToBeat?.completely),
-    playtimeCount: Number.isSafeInteger(timeToBeat?.count) ? timeToBeat.count : null,
+    playtimeCount: Number.isSafeInteger(timeToBeat?.count)
+      ? timeToBeat.count
+      : null,
     platforms: Array.isArray(game?.platforms)
-      ? game.platforms.filter((platform) => platform?.name).map((platform) => ({ platform: { name: platform.name } }))
+      ? game.platforms
+          .filter((platform) => platform?.name)
+          .map((platform) => ({ platform: { name: platform.name } }))
       : [],
     developers: companyNames('developer').map((name) => ({ name })),
     publishers: companyNames('publisher').map((name) => ({ name })),
@@ -71,23 +84,33 @@ function normalizeIgdbGame(game, timeToBeat = null) {
 }
 
 async function fetchIgdbGameTimeToBeat(fetchImpl, clientId, token, gameId) {
-  const response = await fetchImpl('https://api.igdb.com/v4/game_time_to_beats', {
-    method: 'POST',
-    headers: { 'Client-ID': clientId, Authorization: `Bearer ${token}`, Accept: 'application/json' },
-    body: `fields game_id,hastily,normally,completely,count; where game_id = ${gameId}; limit 1;`,
-  });
+  const response = await fetchImpl(
+    'https://api.igdb.com/v4/game_time_to_beats',
+    {
+      method: 'POST',
+      headers: {
+        'Client-ID': clientId,
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
+      body: `fields game_id,hastily,normally,completely,count; where game_id = ${gameId}; limit 1;`,
+    }
+  );
   if (!response.ok) return null;
   const payload = await response.json().catch(() => []);
   return Array.isArray(payload) ? payload[0] || null : null;
 }
 
 async function getIgdbAccessToken(fetchImpl) {
-  if (igdbAccessToken && Date.now() < igdbAccessTokenExpiresAt) return igdbAccessToken;
+  if (igdbAccessToken && Date.now() < igdbAccessTokenExpiresAt)
+    return igdbAccessToken;
 
   const clientId = process.env.TWITCH_IGDB_CLIENT_ID;
   const clientSecret = process.env.TWITCH_IGDB_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
-    const error = new Error('IGDB is not configured. Set TWITCH_IGDB_CLIENT_ID and TWITCH_IGDB_CLIENT_SECRET.');
+    const error = new Error(
+      'IGDB is not configured. Set TWITCH_IGDB_CLIENT_ID and TWITCH_IGDB_CLIENT_SECRET.'
+    );
     error.status = 500;
     throw error;
   }
@@ -95,17 +118,24 @@ async function getIgdbAccessToken(fetchImpl) {
   const response = await fetchImpl('https://id.twitch.tv/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, grant_type: 'client_credentials' }).toString(),
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'client_credentials',
+    }).toString(),
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload.access_token) {
-    const error = new Error(payload.message || 'Failed to authenticate with IGDB.');
+    const error = new Error(
+      payload.message || 'Failed to authenticate with IGDB.'
+    );
     error.status = response.status || 502;
     throw error;
   }
 
   igdbAccessToken = payload.access_token;
-  igdbAccessTokenExpiresAt = Date.now() + Math.max(60, Number(payload.expires_in) - 60) * 1000;
+  igdbAccessTokenExpiresAt =
+    Date.now() + Math.max(60, Number(payload.expires_in) - 60) * 1000;
   return igdbAccessToken;
 }
 
@@ -390,7 +420,9 @@ async function handleKinopoisk(req, res) {
   const apiKey = await getSelectedKinopoiskApiKey();
 
   if (!apiKey) {
-    return res.status(500).json({ error: 'Kinopoisk API key is not configured.' });
+    return res
+      .status(500)
+      .json({ error: 'Kinopoisk API key is not configured.' });
   }
 
   let url;
@@ -510,15 +542,23 @@ async function handleRawg(req, res) {
 async function handleIgdb(req, res) {
   const access = verifyAdminRequest(req);
   if (!access.ok) {
-    return res.status(access.status).json({ error: access.error, expired: access.expired || false });
+    return res
+      .status(access.status)
+      .json({ error: access.error, expired: access.expired || false });
   }
 
   const { fetch: fetchImpl, error: fetchError } = resolveFetch();
   if (fetchError) return res.status(500).json({ error: fetchError });
 
-  const resource = String(req.query?.resource || '').trim().toLowerCase();
-  const pageSize = Math.min(10, Math.max(1, Number.parseInt(String(req.query?.page_size || '5'), 10) || 5));
-  const fields = 'id,name,summary,first_release_date,genres.name,cover.url,rating,platforms.name,involved_companies.company.name,involved_companies.developer,involved_companies.publisher';
+  const resource = String(req.query?.resource || '')
+    .trim()
+    .toLowerCase();
+  const pageSize = Math.min(
+    10,
+    Math.max(1, Number.parseInt(String(req.query?.page_size || '5'), 10) || 5)
+  );
+  const fields =
+    'id,name,summary,first_release_date,genres.name,cover.url,rating,platforms.name,involved_companies.company.name,involved_companies.developer,involved_companies.publisher';
   let query;
 
   if (resource === 'search') {
@@ -528,7 +568,8 @@ async function handleIgdb(req, res) {
     query = `search "${escapedSearch}"; fields ${fields}; limit ${pageSize};`;
   } else if (resource === 'game') {
     const id = Number.parseInt(String(req.query?.id || ''), 10);
-    if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ error: 'Invalid game id' });
+    if (!Number.isSafeInteger(id) || id <= 0)
+      return res.status(400).json({ error: 'Invalid game id' });
     query = `fields ${fields}; where id = ${id}; limit 1;`;
   } else {
     return res.status(400).json({ error: 'Unknown IGDB resource' });
@@ -539,28 +580,49 @@ async function handleIgdb(req, res) {
     const clientId = process.env.TWITCH_IGDB_CLIENT_ID;
     const response = await fetchImpl('https://api.igdb.com/v4/games', {
       method: 'POST',
-      headers: { 'Client-ID': clientId, Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      headers: {
+        'Client-ID': clientId,
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+      },
       body: query,
     });
     const payload = await response.json().catch(() => null);
-    if (!response.ok) return res.status(response.status).json({ error: payload?.message || 'IGDB request failed.' });
+    if (!response.ok)
+      return res
+        .status(response.status)
+        .json({ error: payload?.message || 'IGDB request failed.' });
 
     let timeToBeat = null;
     if (resource === 'game' && Array.isArray(payload) && payload[0]?.id) {
       try {
-        timeToBeat = await fetchIgdbGameTimeToBeat(fetchImpl, clientId, token, payload[0].id);
+        timeToBeat = await fetchIgdbGameTimeToBeat(
+          fetchImpl,
+          clientId,
+          token,
+          payload[0].id
+        );
       } catch (error) {
         console.warn('[igdb] Failed to fetch game time to beat', error);
       }
     }
     const games = Array.isArray(payload)
-      ? payload.map((game) => normalizeIgdbGame(game, game.id === payload[0]?.id ? timeToBeat : null))
+      ? payload.map((game) =>
+          normalizeIgdbGame(
+            game,
+            game.id === payload[0]?.id ? timeToBeat : null
+          )
+        )
       : [];
     res.setHeader('Cache-Control', 'private, no-store');
-    return res.status(200).json(resource === 'search' ? { results: games } : games[0] || null);
+    return res
+      .status(200)
+      .json(resource === 'search' ? { results: games } : games[0] || null);
   } catch (error) {
     console.error('[igdb] Proxy error', error);
-    return res.status(error.status || 500).json({ error: error.message || 'Failed to fetch IGDB data.' });
+    return res
+      .status(error.status || 500)
+      .json({ error: error.message || 'Failed to fetch IGDB data.' });
   }
 }
 

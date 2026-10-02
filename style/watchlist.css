@@ -472,16 +472,13 @@
     color: #a0a0a0;
     font-size: 12px;
     font-weight: 400;
+    min-width: 0;
 }
 
 .game-playtime-count {
     border-bottom: 0 !important;
     padding-top: 4px !important;
     padding-bottom: 8px !important;
-}
-
-.game-playtime-count .movie-details-meta-value {
-    min-width: 0;
 }
 
 .game-order-streams {
