@@ -12,7 +12,7 @@ export function createRouter(handlers) {
       Vary: "Origin",
       "Access-Control-Allow-Methods": methods,
       "Access-Control-Allow-Headers":
-        "Content-Type, Authorization, apikey, x-admin-password, If-None-Match",
+        "Content-Type, Authorization, apikey, X-API-KEY, x-admin-password, If-None-Match",
       "Access-Control-Expose-Headers": "ETag, Allow",
       "Cache-Control": "no-store",
     });

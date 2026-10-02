@@ -84,15 +84,21 @@ Deno.test("missing admin password cannot authenticate an empty login request", a
 Deno.test("CORS preflight, blocked origin, health and unknown route", async () => {
   const router = createRouter({});
   const preflight = await router(
-    new Request(`${base}/admin`, {
+    new Request(`${base}/external?provider=kinopoisk&resource=quota`, {
       method: "OPTIONS",
       headers: {
         Origin: origin,
-        "Access-Control-Request-Headers": "authorization,content-type",
+        "Access-Control-Request-Headers":
+          "authorization,content-type,x-api-key",
       },
     }),
   );
   assert(preflight.status === 204);
+  const allowedHeaders = preflight.headers.get("Access-Control-Allow-Headers")!
+    .toLowerCase().split(",").map((header) => header.trim());
+  for (const header of ["authorization", "content-type", "x-api-key"]) {
+    assert(allowedHeaders.includes(header), `Preflight must allow ${header}`);
+  }
   assert(preflight.headers.get("Access-Control-Allow-Origin") === origin);
   assert(
     preflight.headers.get("Access-Control-Allow-Headers")?.includes(
