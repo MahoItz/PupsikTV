@@ -112,7 +112,6 @@ let hasAdminAccess = false;
 let watchedTrailersSearchQuery = "";
 let watchedTrailersType = "all";
 let watchedTrailersSort = "newest";
-let watchedTrailersGrouped = true;
 let pendingTrailerDeleteId = null;
 let isDeletingTrailer = false;
 let trailerDeleteReturnFocus = null;
@@ -2253,6 +2252,7 @@ function normalizeTrailerSearchText(value) {
 }
 
 function searchWatchedTrailers(query) {
+  if (String(query) !== document.getElementById("watchedTrailersSearchInput").value) return;
   watchedTrailersSearchQuery = String(query || "");
   renderTrailerLists();
 }
@@ -2333,6 +2333,21 @@ function groupWatchedTrailers(list) {
     if (b === "unknown") return -1;
     return watchedTrailersSort === "oldest" ? a.localeCompare(b) : b.localeCompare(a);
   });
+}
+
+function formatTrailerViewingDay(day) {
+  return day === "unknown" ? "Дата просмотра не указана" : new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Moscow" }).format(new Date(day + "T12:00:00Z"));
+}
+
+function updateTrailerViewingDates() {
+  const select = document.getElementById("watchedTrailersDate");
+  if (!select) return;
+  const selected = select.value;
+  const groups = groupWatchedTrailers(trailers.filter(item => item.status === "watched"));
+  select.replaceChildren(new Option("Перейти к дате", ""));
+  groups.forEach(([day, items]) => select.add(new Option(`${formatTrailerViewingDay(day)} · ${items.length}`, day)));
+  select.disabled = groups.length === 0;
+  select.value = groups.some(([day]) => day === selected) ? selected : "";
 }
 
 function applyTrailerList(nextList) {
@@ -2717,16 +2732,18 @@ function renderWatchedTrailersGrid(watchedList) {
   const watched = Array.isArray(watchedList) ? watchedList : [];
   grid.innerHTML = "";
   grid.hidden = false;
-  grid.classList.toggle("is-grouped", watchedTrailersGrouped);
-  if (watchedTrailersGrouped) {
+  grid.classList.add("is-grouped");
+  {
     const groups = groupWatchedTrailers(watched);
     groups.forEach(([day, items]) => {
       const section = document.createElement("section");
       section.className = "trailer-watch-day";
+      section.id = "trailer-watch-day-" + day;
       const heading = document.createElement("h3");
       heading.className = "trailer-watch-day__heading";
+      heading.tabIndex = -1;
       const date = document.createElement("span");
-      date.textContent = day === "unknown" ? "Дата просмотра не указана" : new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Moscow" }).format(new Date(day + "T12:00:00Z"));
+      date.textContent = formatTrailerViewingDay(day);
       const count = document.createElement("span");
       count.className = "trailer-count-chip";
       count.textContent = String(items.length);
@@ -2738,9 +2755,8 @@ function renderWatchedTrailersGrid(watchedList) {
       section.append(heading, cards);
       grid.appendChild(section);
     });
-  } else {
-    sortWatchedTrailers(watched).forEach(item => grid.appendChild(renderWatchedTrailerCard(item)));
   }
+  updateTrailerViewingDates();
 
   if (empty) {
     empty.hidden = watched.length > 0;
@@ -3809,9 +3825,22 @@ function setupListEvents() {
     watchedTrailersSort = event.target.value;
     renderTrailerLists();
   });
-  document.getElementById("watchedTrailersGroup")?.addEventListener("change", event => {
-    watchedTrailersGrouped = event.target.checked;
-    renderTrailerLists();
+  document.getElementById("watchedTrailersDate")?.addEventListener("change", event => {
+    const day = event.target.value;
+    if (!day) return;
+    let section = document.getElementById("trailer-watch-day-" + day);
+    if (!section) {
+      watchedTrailersSearchQuery = "";
+      watchedTrailersType = "all";
+      document.getElementById("watchedTrailersSearchInput").value = "";
+      document.querySelectorAll("[data-watched-type]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.watchedType === "all")));
+      renderTrailerLists();
+      section = document.getElementById("trailer-watch-day-" + day);
+    }
+    if (!section) return;
+    section.querySelector("h3").focus({ preventScroll: true });
+    section.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
+    event.target.value = "";
   });
   const plannedModal = document.getElementById("plannedTrailersModal");
   const plannedModalClose = document.getElementById("plannedTrailersModalClose");

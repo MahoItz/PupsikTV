@@ -2213,8 +2213,7 @@
   outline-color: var(--secondary-color);
 }
 
-.trailer-watched-sort,
-.trailer-watched-group-toggle {
+.trailer-watched-sort {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2232,11 +2231,17 @@
   color: var(--text-primary);
 }
 
-.trailer-watched-group-toggle {
-  min-height: 48px;
-  box-sizing: border-box;
-  border: 1px solid rgba(0, 212, 255, 0.18);
-  background: rgba(2, 18, 38, 0.4);
+.trailer-watched-date-select {
+  max-width: 280px;
+}
+
+.trailer-watch-day {
+  scroll-margin-top: 24px;
+}
+
+.trailer-watch-day__heading:focus {
+  outline: none;
+  border-bottom-color: rgba(0, 212, 255, 0.6);
 }
 
 .trailer-watched-grid.is-grouped {
