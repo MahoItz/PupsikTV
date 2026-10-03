@@ -2359,6 +2359,9 @@ function renderTrailerItem(item) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "trailer-item";
+  if (item.status !== "watched") {
+    button.classList.add(item.media_type === "game" ? "trailer-item--game" : "trailer-item--film");
+  }
   if (Number(item.id) === Number(selectedTrailerId)) {
     button.classList.add("is-active");
   }

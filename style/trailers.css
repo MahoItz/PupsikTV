@@ -867,6 +867,14 @@
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.trailer-item--film {
+  background: linear-gradient(135deg, rgba(5, 17, 32, 0.92), rgba(12, 29, 47, 0.88));
+}
+
+.trailer-item--game {
+  background: linear-gradient(135deg, rgba(15, 13, 32, 0.92), rgba(28, 23, 47, 0.88));
+}
+
 .trailer-item:hover,
 .trailer-item:focus-visible,
 .trailer-item.is-active {
