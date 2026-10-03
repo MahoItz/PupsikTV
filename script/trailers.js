@@ -110,6 +110,9 @@ let isSwitchingKinopoiskApi = false;
 let kinopoiskQuotaDialogOpen = false;
 let hasAdminAccess = false;
 let watchedTrailersSearchQuery = "";
+let watchedTrailersType = "all";
+let watchedTrailersSort = "newest";
+let watchedTrailersGrouped = true;
 let trailerReleaseDateTrailerId = null;
 let trailerReleaseCalendarYear = null;
 let trailerReleaseCalendarMonth = null;
@@ -2254,7 +2257,7 @@ function searchWatchedTrailers(query) {
 const debouncedSearchWatchedTrailers = debounce(searchWatchedTrailers, 300);
 
 function getFilteredWatchedTrailers(list) {
-  const watched = Array.isArray(list) ? list : [];
+  const watched = (Array.isArray(list) ? list : []).filter(item => watchedTrailersType === "all" || (item.media_type || "film") === watchedTrailersType);
   const normalizedQuery = normalizeTrailerSearchText(watchedTrailersSearchQuery);
 
   if (!normalizedQuery) {
@@ -2273,6 +2276,59 @@ function getFilteredWatchedTrailers(list) {
       (queryDigits && year.includes(queryDigits));
 
     return titleMatch || yearMatch;
+  });
+}
+
+function getTrailerWatchedTime(item) {
+  // An edit must not move an old trailer to a different viewing day.
+  const time = Date.parse(item?.watched_at || "");
+  return Number.isFinite(time) ? time : null;
+}
+
+function sortWatchedTrailers(list) {
+  const rating = (item) => {
+    if (watchedTrailersSort === "viewers") {
+      const count = Number(item.viewer_rating_count);
+      const sum = Number(item.viewer_rating_sum);
+      return count > 0 && Number.isFinite(sum) ? sum / count : null;
+    }
+    const value = item.streamer_rating;
+    return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value)) ? Number(value) : null;
+  };
+  return [...list].sort((a, b) => {
+    if (watchedTrailersSort === "title") {
+      const result = String(a.title || "").localeCompare(String(b.title || ""), "ru", { numeric: true, sensitivity: "base" });
+      if (result) return result;
+    } else if (watchedTrailersSort === "streamer" || watchedTrailersSort === "viewers") {
+      const aRating = rating(a);
+      const bRating = rating(b);
+      if (aRating === null && bRating !== null) return 1;
+      if (bRating === null && aRating !== null) return -1;
+      if (aRating !== bRating) return bRating - aRating;
+    }
+    const aTime = getTrailerWatchedTime(a);
+    const bTime = getTrailerWatchedTime(b);
+    if (aTime === null && bTime !== null) return 1;
+    if (bTime === null && aTime !== null) return -1;
+    const direction = watchedTrailersSort === "oldest" ? 1 : -1;
+    return direction * ((aTime || 0) - (bTime || 0)) || Number(b.id) - Number(a.id);
+  });
+}
+
+function groupWatchedTrailers(list) {
+  const groups = new Map();
+  const formatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Moscow", year: "numeric", month: "2-digit", day: "2-digit" });
+  list.forEach(item => {
+    const time = getTrailerWatchedTime(item);
+    const parts = time === null ? null : Object.fromEntries(formatter.formatToParts(new Date(time)).map(part => [part.type, part.value]));
+    const day = parts ? `${parts.year}-${parts.month}-${parts.day}` : "unknown";
+    if (!groups.has(day)) groups.set(day, []);
+    groups.get(day).push(item);
+  });
+  return [...groups.entries()].sort(([a], [b]) => {
+    if (a === "unknown") return 1;
+    if (b === "unknown") return -1;
+    return watchedTrailersSort === "oldest" ? a.localeCompare(b) : b.localeCompare(a);
   });
 }
 
@@ -2347,7 +2403,7 @@ function renderTrailerItem(item) {
   kpLink.target = "_blank";
   kpLink.rel = "noopener noreferrer";
   kpLink.setAttribute("aria-label", item.media_type === "game" ? "Открыть игру в IGDB" : "Открыть фильм на Кинопоиске");
-  if (item.media_type === "game") kpLink.textContent = "IGDB";
+  if (item.media_type === "game") kpLink.innerHTML = '<img src="images/IGDB_logo.svg.webp" alt="IGDB">';
   else kpLink.innerHTML = '<img src="images/kinopoisk-icon-main.svg" alt="Kinopoisk">';
   kpLink.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -2639,11 +2695,34 @@ function renderWatchedTrailersGrid(watchedList) {
   const watched = Array.isArray(watchedList) ? watchedList : [];
   grid.innerHTML = "";
   grid.hidden = false;
-  watched.forEach((item) => grid.appendChild(renderWatchedTrailerCard(item)));
+  grid.classList.toggle("is-grouped", watchedTrailersGrouped);
+  if (watchedTrailersGrouped) {
+    const groups = groupWatchedTrailers(watched);
+    groups.forEach(([day, items]) => {
+      const section = document.createElement("section");
+      section.className = "trailer-watch-day";
+      const heading = document.createElement("h3");
+      heading.className = "trailer-watch-day__heading";
+      const date = document.createElement("span");
+      date.textContent = day === "unknown" ? "Дата просмотра не указана" : new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Moscow" }).format(new Date(day + "T12:00:00Z"));
+      const count = document.createElement("span");
+      count.className = "trailer-count-chip";
+      count.textContent = String(items.length);
+      count.setAttribute("aria-label", "Трейлеров: " + items.length);
+      heading.append(date, count);
+      const cards = document.createElement("div");
+      cards.className = "trailer-watched-grid";
+      sortWatchedTrailers(items).forEach(item => cards.appendChild(renderWatchedTrailerCard(item)));
+      section.append(heading, cards);
+      grid.appendChild(section);
+    });
+  } else {
+    sortWatchedTrailers(watched).forEach(item => grid.appendChild(renderWatchedTrailerCard(item)));
+  }
 
   if (empty) {
     empty.hidden = watched.length > 0;
-    empty.textContent = normalizeTrailerSearchText(watchedTrailersSearchQuery)
+    empty.textContent = normalizeTrailerSearchText(watchedTrailersSearchQuery) || watchedTrailersType !== "all"
       ? "Ничего не найдено."
       : "Оценённых трейлеров ещё нет.";
   }
@@ -3696,6 +3775,20 @@ async function loadKinopoiskInfoCached(trailer) {
 }
 
 function setupListEvents() {
+  document.getElementById("watchedTrailersSearchInput")?.addEventListener("input", event => debouncedSearchWatchedTrailers(event.target.value));
+  document.querySelectorAll("[data-watched-type]").forEach(button => button.addEventListener("click", () => {
+    watchedTrailersType = button.dataset.watchedType;
+    document.querySelectorAll("[data-watched-type]").forEach(option => option.setAttribute("aria-pressed", String(option.dataset.watchedType === watchedTrailersType)));
+    renderTrailerLists();
+  }));
+  document.getElementById("watchedTrailersSort")?.addEventListener("change", event => {
+    watchedTrailersSort = event.target.value;
+    renderTrailerLists();
+  });
+  document.getElementById("watchedTrailersGroup")?.addEventListener("change", event => {
+    watchedTrailersGrouped = event.target.checked;
+    renderTrailerLists();
+  });
   const plannedModal = document.getElementById("plannedTrailersModal");
   const plannedModalClose = document.getElementById("plannedTrailersModalClose");
   const openPlannedModalButton = document.getElementById("openPlannedTrailersModal");
@@ -4445,7 +4538,10 @@ function configureTrailerInfoType(trailer) {
   actors.previousElementSibling.textContent = isGame ? "Разработчик и издатель" : "Актёры";
   document.getElementById("trailerInfoEditCountry").closest("label").hidden = isGame;
   const link = document.getElementById("trailerKinopoiskLink");
-  link.querySelector("img").hidden = isGame;
+  const logo = link.querySelector("img");
+  logo.hidden = false;
+  logo.src = isGame ? "images/IGDB_logo.svg.webp" : "images/kinopoisk-icon-main.svg";
+  logo.alt = isGame ? "IGDB" : "Kinopoisk";
   link.querySelector("span").textContent = isGame ? "Открыть в IGDB" : "Открыть на Кинопоиске";
 }
 

@@ -347,15 +347,36 @@
           <h2>Просмотренные</h2>
           <span id="watchedCount" class="trailer-count-chip trailer-count-chip--watched">0</span>
         </div>
+        <div class="trailer-watched-toolbar" role="group" aria-label="Поиск и фильтры просмотренных трейлеров">
         <div class="search-controls search-with-count trailer-watched-search">
           <input
             id="watchedTrailersSearchInput"
             type="text"
             class="search-input"
             placeholder="Поиск трейлеров..."
-            onkeyup="debouncedSearchWatchedTrailers(this.value)"
+            aria-label="Поиск просмотренных трейлеров"
           >
-          <span class="search-count">Всего: <span id="watchedTrailersCount">0</span></span>
+          <span class="search-count">Показано: <span id="watchedTrailersCount">0</span></span>
+        </div>
+        <div class="trailer-watched-controls">
+          <div class="trailer-media-switch" role="group" aria-label="Тип просмотренных трейлеров">
+            <button type="button" data-watched-type="all" aria-pressed="true">Все</button>
+            <button type="button" data-watched-type="film" aria-pressed="false">Фильмы</button>
+            <button type="button" data-watched-type="game" aria-pressed="false">Игры</button>
+          </div>
+          <div class="sort-controls trailer-watched-sort">
+            <div class="sort-merge">
+            <select id="watchedTrailersSort" aria-label="Сортировка просмотренных трейлеров">
+              <option value="newest">Сначала новые</option>
+              <option value="oldest">Сначала старые</option>
+              <option value="streamer">Оценка Pupsik_ow ↓</option>
+              <option value="viewers">Оценка зрителей ↓</option>
+              <option value="title">Название А–Я</option>
+            </select>
+            </div>
+          </div>
+          <label class="order-type-filter-option trailer-watched-group-toggle"><input id="watchedTrailersGroup" type="checkbox" checked> По дням просмотра</label>
+        </div>
         </div>
         <div id="watchedTrailersLoading" class="section-loader section-loader--compact trailer-section-loader">
           <div class="section-loader__spinner" aria-hidden="true">
