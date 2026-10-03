@@ -140,6 +140,15 @@
 
 #trailerTitleResultsContainer .autocomplete-list {
   max-height: 240px;
+  background: #09101c;
+}
+
+#trailerTitleResultsContainer .autocomplete-option {
+  background: #09101c;
+}
+
+#trailerTitleResultsContainer .autocomplete-option:hover {
+  background: #3a221e;
 }
 
 .trailer-selected-movie {
