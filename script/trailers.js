@@ -113,6 +113,9 @@ let watchedTrailersSearchQuery = "";
 let watchedTrailersType = "all";
 let watchedTrailersSort = "newest";
 let watchedTrailersGrouped = true;
+let pendingTrailerDeleteId = null;
+let isDeletingTrailer = false;
+let trailerDeleteReturnFocus = null;
 let trailerReleaseDateTrailerId = null;
 let trailerReleaseCalendarYear = null;
 let trailerReleaseCalendarMonth = null;
@@ -2422,6 +2425,22 @@ function renderTrailerItem(item) {
     actions.append(kpLink);
   }
   button.append(poster, body, actions);
+  if (hasAdminAccess && item.status !== "watched") {
+    const shell = document.createElement("div");
+    shell.className = "trailer-item-shell";
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "trailer-item-remove";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", "Удалить трейлер: " + item.title);
+    remove.title = "Удалить трейлер";
+    remove.addEventListener("click", event => {
+      event.stopPropagation();
+      openTrailerDeleteModal(item.id);
+    });
+    shell.append(button, remove);
+    return shell;
+  }
   return button;
 }
 
@@ -3779,6 +3798,7 @@ async function loadKinopoiskInfoCached(trailer) {
 }
 
 function setupListEvents() {
+  setupTrailerDeleteModal();
   document.getElementById("watchedTrailersSearchInput")?.addEventListener("input", event => debouncedSearchWatchedTrailers(event.target.value));
   document.querySelectorAll("[data-watched-type]").forEach(button => button.addEventListener("click", () => {
     watchedTrailersType = button.dataset.watchedType;
@@ -4291,22 +4311,11 @@ function setupFormEvents() {
     }
   });
 
-  deleteButton?.addEventListener("click", async () => {
+  deleteButton?.addEventListener("click", () => {
     const trailer = getSelectedTrailer();
     if (!trailer) return;
 
-    setStatusText("trailerActionStatus", "Удаляю трейлер...");
-    try {
-      await removeTrailer(trailer.id);
-      setStatusText("trailerActionStatus", "Трейлер удалён.");
-    } catch (error) {
-      console.error("Failed to delete trailer", error);
-      setStatusText(
-        "trailerActionStatus",
-        error?.message || "Не удалось удалить трейлер.",
-        true
-      );
-    }
+    openTrailerDeleteModal(trailer.id);
   });
 
   setupRatingStars("trailerRatingStars");
@@ -4544,6 +4553,69 @@ function configureTrailerInfoType(trailer) {
   document.getElementById("trailerInfoEditCountry").closest("label").hidden = isGame;
   const link = document.getElementById("trailerKinopoiskLink");
   link.querySelector("span").textContent = isGame ? "Открыть в IGDB" : "Открыть на Кинопоиске";
+}
+
+function openTrailerDeleteModal(id) {
+  if (!hasAdminAccess || isDeletingTrailer) return;
+  const trailer = trailers.find(item => Number(item.id) === Number(id));
+  if (!trailer) return;
+  pendingTrailerDeleteId = trailer.id;
+  trailerDeleteReturnFocus = document.activeElement;
+  document.getElementById("trailerDeleteModalText").textContent = `Удалить «${trailer.title}» из списка? Это действие нельзя отменить.`;
+  setStatusText("trailerDeleteStatus", "");
+  document.getElementById("trailerDeleteModal").style.display = "block";
+  document.getElementById("trailerDeleteCancel").focus();
+}
+
+function closeTrailerDeleteModal() {
+  if (isDeletingTrailer) return;
+  document.getElementById("trailerDeleteModal").style.display = "none";
+  pendingTrailerDeleteId = null;
+  if (trailerDeleteReturnFocus?.isConnected) trailerDeleteReturnFocus.focus();
+  else document.getElementById("trailerTitleInput")?.focus();
+}
+
+function setupTrailerDeleteModal() {
+  const modal = document.getElementById("trailerDeleteModal");
+  const confirm = document.getElementById("trailerDeleteConfirm");
+  const cancel = document.getElementById("trailerDeleteCancel");
+  const close = document.getElementById("trailerDeleteModalClose");
+  cancel.addEventListener("click", closeTrailerDeleteModal);
+  close.addEventListener("click", closeTrailerDeleteModal);
+  modal.addEventListener("click", event => { if (event.target === modal) closeTrailerDeleteModal(); });
+  modal.addEventListener("keydown", event => {
+    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); closeTrailerDeleteModal(); }
+    if (event.key === "Tab") {
+      const controls = [close, confirm, cancel].filter(button => !button.disabled);
+      if (!controls.length) { event.preventDefault(); return; }
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  confirm.addEventListener("click", async () => {
+    if (!hasAdminAccess || !pendingTrailerDeleteId || isDeletingTrailer) return;
+    isDeletingTrailer = true;
+    [confirm, cancel, close].forEach(button => { button.disabled = true; });
+    confirm.setAttribute("aria-busy", "true");
+    modal.tabIndex = -1;
+    modal.focus();
+    setStatusText("trailerDeleteStatus", "Удаляю трейлер...");
+    let success = false;
+    try {
+      await removeTrailer(pendingTrailerDeleteId);
+      success = true;
+    } catch (error) {
+      setStatusText("trailerDeleteStatus", error.message || "Не удалось удалить трейлер.", true);
+    } finally {
+      isDeletingTrailer = false;
+      [confirm, cancel, close].forEach(button => { button.disabled = false; });
+      confirm.setAttribute("aria-busy", "false");
+      if (success) closeTrailerDeleteModal();
+      else cancel.focus();
+    }
+  });
 }
 
 function renderStoredGameInfo(trailer) {

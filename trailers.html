@@ -486,6 +486,19 @@
     </div>
   </div>
 
+  <div id="trailerDeleteModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="trailerDeleteModalTitle">
+    <div class="modal-content trailer-boosty-delete-modal">
+      <button id="trailerDeleteModalClose" class="close" type="button" aria-label="Закрыть">&times;</button>
+      <h2 id="trailerDeleteModalTitle">Удалить трейлер?</h2>
+      <p id="trailerDeleteModalText" class="modal-subtitle"></p>
+      <div class="trailer-boosty-delete-modal__actions">
+        <button id="trailerDeleteConfirm" class="btn btn-secondary trailer-delete-button" type="button">Удалить</button>
+        <button id="trailerDeleteCancel" class="btn btn-secondary" type="button">Отмена</button>
+      </div>
+      <p id="trailerDeleteStatus" class="trailer-form__status" aria-live="polite"></p>
+    </div>
+  </div>
+
   <div id="boostyDeleteModal" class="modal">
     <div class="modal-content trailer-boosty-delete-modal">
       <span id="boostyDeleteModalClose" class="close" role="button" tabindex="0" aria-label="Закрыть">&times;</span>
