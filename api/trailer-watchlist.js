@@ -11,7 +11,7 @@ const PG_UNDEFINED_TABLE = '42P01';
 const PG_UNDEFINED_COLUMN = '42703';
 const PG_INSUFFICIENT_PRIVILEGE = '42501';
 const SELECT_FIELDS =
-  'id, title, youtube_url, youtube_video_id, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, kinopoisk_data, kinopoisk_cached_at, watched_at, created_at, updated_at';
+  'id, title, youtube_url, youtube_video_id, media_type, igdb_id, game_data, game_cached_at, kinopoisk_id, year, poster, status, streamer_rating, viewer_rating_sum, viewer_rating_count, kinopoisk_data, kinopoisk_cached_at, watched_at, created_at, updated_at';
 
 function verifyAdminRequest(req) {
   const token = extractBearerToken(req.headers.authorization);
@@ -103,6 +103,23 @@ function isPermissionError(error) {
 }
 
 function normalizeCreatePayload(payload) {
+  const mediaType = payload?.media_type ?? 'film';
+  if (!['film', 'game'].includes(mediaType)) return null;
+  const igdbId = payload?.igdb_id == null ? null : Number(payload.igdb_id);
+  if (igdbId !== null && (!Number.isSafeInteger(igdbId) || igdbId <= 0))
+    return null;
+  if (
+    mediaType === 'film' &&
+    (igdbId !== null || payload?.game_data || payload?.game_cached_at)
+  )
+    return null;
+  if (
+    mediaType === 'game' &&
+    (payload?.kinopoisk_id ||
+      payload?.kinopoisk_data ||
+      payload?.kinopoisk_cached_at)
+  )
+    return null;
   const title = normalizeString(payload?.title, 300);
   const youtubeUrl = normalizeString(payload?.youtube_url, 1000);
   const videoId = normalizeString(payload?.youtube_video_id, 32);
@@ -112,6 +129,10 @@ function normalizeCreatePayload(payload) {
   }
 
   return {
+    media_type: mediaType,
+    igdb_id: igdbId,
+    game_data: normalizeJsonObject(payload?.game_data),
+    game_cached_at: parseIsoDate(payload?.game_cached_at),
     title,
     youtube_url: youtubeUrl,
     youtube_video_id: videoId,
@@ -130,6 +151,16 @@ function normalizeCreatePayload(payload) {
 
 function normalizePatchPayload(payload) {
   const changes = {};
+  // Catalog identity is assigned on creation; PATCH edits metadata only.
+  if (
+    Object.prototype.hasOwnProperty.call(payload, 'media_type') ||
+    Object.prototype.hasOwnProperty.call(payload, 'igdb_id')
+  )
+    return null;
+  if (Object.prototype.hasOwnProperty.call(payload, 'game_data'))
+    changes.game_data = normalizeJsonObject(payload.game_data);
+  if (Object.prototype.hasOwnProperty.call(payload, 'game_cached_at'))
+    changes.game_cached_at = parseIsoDate(payload.game_cached_at);
 
   if (Object.prototype.hasOwnProperty.call(payload, 'title')) {
     const title = normalizeString(payload.title, 300);

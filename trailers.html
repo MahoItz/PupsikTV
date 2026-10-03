@@ -63,8 +63,12 @@
         </div>
 
         <form id="trailerAddForm" class="trailer-form" hidden>
+          <div class="trailer-media-switch" role="group" aria-label="Тип трейлера">
+            <button type="button" data-trailer-media-type="film" aria-pressed="true">Фильмы</button>
+            <button type="button" data-trailer-media-type="game" aria-pressed="false">Игры</button>
+          </div>
           <label class="trailer-form__field" for="trailerTitleInput">
-            <span>Название фильма</span>
+            <span id="trailerTitleLabel">Название фильма</span>
             <input id="trailerTitleInput" class="search-input" type="text" maxlength="300" placeholder="Например, 28 лет спустя" required>
           </label>
           <div id="trailerTitleResultsContainer" class="fortune-autocomplete" style="display:none;">
@@ -348,7 +352,7 @@
             id="watchedTrailersSearchInput"
             type="text"
             class="search-input"
-            placeholder="Поиск фильмов..."
+            placeholder="Поиск трейлеров..."
             onkeyup="debouncedSearchWatchedTrailers(this.value)"
           >
           <span class="search-count">Всего: <span id="watchedTrailersCount">0</span></span>

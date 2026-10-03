@@ -50,6 +50,7 @@ function normalizeIgdbGame(game, timeToBeat = null) {
   return {
     id: game?.id ?? null,
     name: game?.name || '',
+    url: game?.url || null,
     released,
     genres: Array.isArray(game?.genres)
       ? game.genres
@@ -558,7 +559,7 @@ async function handleIgdb(req, res) {
     Math.max(1, Number.parseInt(String(req.query?.page_size || '5'), 10) || 5)
   );
   const fields =
-    'id,name,summary,first_release_date,genres.name,cover.url,rating,platforms.name,involved_companies.company.name,involved_companies.developer,involved_companies.publisher';
+    'id,name,url,summary,first_release_date,genres.name,cover.url,rating,platforms.name,involved_companies.company.name,involved_companies.developer,involved_companies.publisher';
   let query;
 
   if (resource === 'search') {

@@ -2078,3 +2078,8 @@
     grid-template-columns: 1fr;
   }
 }
+
+.trailer-media-switch { display: flex; gap: 6px; }
+.trailer-media-switch button { flex: 1; padding: 8px 12px; border: 1px solid #555; border-radius: 8px; background: transparent; color: inherit; cursor: pointer; }
+.trailer-media-switch button[aria-pressed="true"] { background: #7042a8; border-color: #9566c9; }
+.trailer-media-switch button:focus-visible { outline: 2px solid #bb98ed; outline-offset: 2px; }

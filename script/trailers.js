@@ -84,6 +84,7 @@ const DEFAULT_TRAILER_BOOSTY_CONTENT = {
   window.__pupsikExternalProxyInstalled = true;
 })();
 
+let trailerMediaType = "film";
 let kinopoiskApiKey = "";
 let selectedKinopoiskApi = "API 1";
 let kinopoiskApiKeys = {
@@ -1604,7 +1605,7 @@ function openTrailerReleaseDateModal(trailerId) {
     return;
   }
 
-  const kinopoiskData = parseTrailerKinopoiskData(trailer.kinopoisk_data) || {};
+  const kinopoiskData = parseTrailerKinopoiskData(trailer.media_type === "game" ? trailer.game_data : trailer.kinopoisk_data) || {};
   const initialValue = formatDateLocal(kinopoiskData.releaseDate || "");
   const baseDate = initialValue ? new Date(initialValue) : new Date();
 
@@ -1647,16 +1648,17 @@ async function saveTrailerReleaseDate() {
   setStatusText("trailerReleaseDateStatus", "Сохраняю дату релиза...");
 
   try {
-    const kinopoiskData = parseTrailerKinopoiskData(trailer.kinopoisk_data) || {};
+    const kinopoiskData = parseTrailerKinopoiskData(trailer.media_type === "game" ? trailer.game_data : trailer.kinopoisk_data) || {};
     const updatedTrailer = await patchTrailer(trailer.id, {
-      kinopoisk_data: {
+      [trailer.media_type === "game" ? "game_data" : "kinopoisk_data"]: {
         ...kinopoiskData,
         releaseDate: normalizedDate.toISOString(),
       },
-      kinopoisk_cached_at: new Date().toISOString(),
+      [trailer.media_type === "game" ? "game_cached_at" : "kinopoisk_cached_at"]: new Date().toISOString(),
     });
 
-    renderStoredKinopoiskInfo(parseTrailerKinopoiskData(updatedTrailer?.kinopoisk_data) || {});
+    if (updatedTrailer?.media_type === "game") renderStoredGameInfo(updatedTrailer);
+    else renderStoredKinopoiskInfo(parseTrailerKinopoiskData(updatedTrailer?.kinopoisk_data) || {});
     closeTrailerReleaseDateModal();
   } catch (error) {
     console.error("Failed to save trailer release date", error);
@@ -1714,7 +1716,7 @@ function resetTrailerInfoPosterSelection() {
 }
 
 function getTrailerInfoDraft(trailer = getSelectedTrailer()) {
-  const kinopoiskData = parseTrailerKinopoiskData(trailer?.kinopoisk_data) || {};
+  const kinopoiskData = parseTrailerKinopoiskData(trailer?.media_type === "game" ? trailer.game_data : trailer?.kinopoisk_data) || {};
   const countries = Array.isArray(kinopoiskData.countries)
     ? kinopoiskData.countries.filter(Boolean)
     : [];
@@ -1837,7 +1839,7 @@ async function saveTrailerInfoEdits() {
     .filter(Boolean);
 
   if (!title) {
-    setStatusText("trailerInfoEditStatus", "Введите название фильма.", true);
+    setStatusText("trailerInfoEditStatus", "Введите название.", true);
     titleInput.focus();
     return;
   }
@@ -1857,7 +1859,7 @@ async function saveTrailerInfoEdits() {
   setStatusText("trailerInfoEditStatus", "Сохраняю изменения...");
 
   try {
-    const kinopoiskData = parseTrailerKinopoiskData(trailer.kinopoisk_data) || {};
+    const kinopoiskData = parseTrailerKinopoiskData(trailer.media_type === "game" ? trailer.game_data : trailer.kinopoisk_data) || {};
     const poster =
       trailerInfoManualPosterFile instanceof File
         ? await uploadTrailerInfoPoster(trailerInfoManualPosterFile, title)
@@ -1867,7 +1869,7 @@ async function saveTrailerInfoEdits() {
       title,
       year,
       poster,
-      kinopoisk_data: {
+      [trailer.media_type === "game" ? "game_data" : "kinopoisk_data"]: {
         ...kinopoiskData,
         title,
         year,
@@ -1875,7 +1877,7 @@ async function saveTrailerInfoEdits() {
         countries,
         posterUrl: poster || String(kinopoiskData.posterUrl || "").trim() || null,
       },
-      kinopoisk_cached_at: new Date().toISOString(),
+      [trailer.media_type === "game" ? "game_cached_at" : "kinopoisk_cached_at"]: new Date().toISOString(),
     });
 
     setTrailerInfoEditMode(false);
@@ -2325,7 +2327,7 @@ function renderTrailerItem(item) {
 
   const meta = document.createElement("p");
   meta.className = "trailer-item__meta";
-  meta.textContent = item.year ? String(item.year) : "Год не указан";
+  meta.textContent = `${item.media_type === "game" ? "Игра" : "Фильм"} · ${item.year || "Год не указан"}`;
 
   const rating = document.createElement("p");
   rating.className = "trailer-item__rating";
@@ -2341,11 +2343,12 @@ function renderTrailerItem(item) {
 
   const kpLink = document.createElement("a");
   kpLink.className = "trailer-item__kp-link";
-  kpLink.href = buildKinopoiskFilmUrl(item.kinopoisk_id, item.title);
+  kpLink.href = item.media_type === "game" ? buildGameCatalogUrl(item) : buildKinopoiskFilmUrl(item.kinopoisk_id, item.title);
   kpLink.target = "_blank";
   kpLink.rel = "noopener noreferrer";
-  kpLink.setAttribute("aria-label", "Открыть фильм на Кинопоиске");
-  kpLink.innerHTML = '<img src="images/kinopoisk-icon-main.svg" alt="Kinopoisk">';
+  kpLink.setAttribute("aria-label", item.media_type === "game" ? "Открыть игру в IGDB" : "Открыть фильм на Кинопоиске");
+  if (item.media_type === "game") kpLink.textContent = "IGDB";
+  else kpLink.innerHTML = '<img src="images/kinopoisk-icon-main.svg" alt="Kinopoisk">';
   kpLink.addEventListener("click", (event) => {
     event.stopPropagation();
   });
@@ -2558,7 +2561,7 @@ function renderWatchedTrailerCard(item) {
 
   const year = document.createElement("div");
   year.className = "movie-year";
-  year.textContent = item.year ? String(item.year) : "Год не указан";
+  year.textContent = `${item.media_type === "game" ? "Игра" : "Фильм"} · ${item.year || "Год не указан"}`;
 
   const ratingDiv = document.createElement("div");
   ratingDiv.className = "movie-rating";
@@ -2929,7 +2932,10 @@ function renderSelectedTrailer() {
   setStatusText("trailerActionStatus", "");
   syncSelectedTrailerViewerRatingUi();
   bindSelectedTrailerRateButton();
-  loadKinopoiskInfoCached(trailer);
+  ++kinopoiskRequestId;
+  configureTrailerInfoType(trailer);
+  if (trailer.media_type === "game") renderStoredGameInfo(trailer);
+  else loadKinopoiskInfoCached(trailer);
 }
 
 async function fetchTrailers() {
@@ -3213,10 +3219,31 @@ function applyTrailerTitleSelection(movie) {
   clearTrailerTitleSearch();
   selectedTrailerSearchMovie = movie;
   renderSelectedTrailerMovieCard(movie);
-  setStatusText("trailerFormStatus", "Фильм выбран из Кинопоиска.");
+  ++trailerTitleRequestId;
+  setStatusText("trailerFormStatus", trailerMediaType === "game" ? "Игра выбрана из IGDB." : "Фильм выбран из Кинопоиска.");
 }
 
 async function runTrailerTitleSearch(query) {
+  if (String(query).trim() !== document.getElementById("trailerTitleInput").value.trim() || selectedTrailerSearchMovie) return;
+  if (trailerMediaType === "game") {
+    const requestId = ++trailerTitleRequestId;
+    if (!String(query).trim()) { clearTrailerTitleSearch(); return; }
+    try {
+      const params = new URLSearchParams({ provider: "igdb", resource: "search", search: query, page_size: "8" });
+      const response = await fetch(window.Pupsik.apiUrl("/api/external") + "?" + params, { headers: getAdminAuthHeaders() });
+      const data = await response.json();
+      if (requestId !== trailerTitleRequestId) return;
+      if (!response.ok) throw new Error(data.error || "Не удалось найти игру.");
+      trailerTitleSearchResults = (data.results || []).map(game => ({ ...game, nameEn: game.name, year: game.released ? Number(game.released.slice(0, 4)) : null, posterUrl: game.background_image }));
+      renderTrailerTitleResults();
+      setStatusText("trailerFormStatus", trailerTitleSearchResults.length ? "" : "Игра не найдена. Можно добавить название вручную.");
+    } catch (error) {
+      if (requestId !== trailerTitleRequestId) return;
+      clearTrailerTitleSearch();
+      setStatusText("trailerFormStatus", error.message, true);
+    }
+    return;
+  }
   const trimmedQuery = String(query || "").trim();
   const requestId = ++trailerTitleRequestId;
 
@@ -3549,7 +3576,7 @@ async function applyKinopoiskSelection(trailer, filmId, searchResults) {
         year: normalizedYear,
         poster: normalizedPoster,
         kinopoisk_data: kinopoiskData,
-        kinopoisk_cached_at: new Date().toISOString(),
+        [trailer.media_type === "game" ? "game_cached_at" : "kinopoisk_cached_at"]: new Date().toISOString(),
       });
     }
   } catch (error) {
@@ -3735,6 +3762,21 @@ function setupListEvents() {
 }
 
 function setupFormEvents() {
+  try { trailerMediaType = localStorage.getItem("trailerMediaType") === "game" ? "game" : "film"; } catch { /* Storage is optional. */ }
+  updateTrailerMediaTypeUi();
+  document.querySelectorAll("[data-trailer-media-type]").forEach(button => button.addEventListener("click", () => {
+    if (isCreatingTrailer) return;
+    trailerMediaType = button.dataset.trailerMediaType;
+    try { localStorage.setItem("trailerMediaType", trailerMediaType); } catch { /* Storage is optional. */ }
+    ++trailerTitleRequestId;
+    clearSelectedTrailerMovie();
+    clearTrailerTitleSearch();
+    const input = document.getElementById("trailerTitleInput");
+    input.value = "";
+    updateTrailerMediaTypeUi();
+    setStatusText("trailerFormStatus", "");
+    input.focus();
+  }));
   const form = document.getElementById("trailerAddForm");
   const adminTabs = document.getElementById("trailerAdminTabs");
   const titleInput = document.getElementById("trailerTitleInput");
@@ -3900,6 +3942,8 @@ function setupFormEvents() {
     if (selectedTitle && nextValue !== selectedTitle) {
       clearSelectedTrailerMovie();
     }
+    ++trailerTitleRequestId;
+    clearTrailerTitleSearch();
     debouncedTrailerTitleSearch(nextValue);
   });
 
@@ -3949,7 +3993,7 @@ function setupFormEvents() {
     const videoId = parseYouTubeVideoId(youtubeUrl);
 
     if (!title) {
-      setStatusText("trailerFormStatus", "Укажите название фильма.", true);
+      setStatusText("trailerFormStatus", "Укажите название.", true);
       return;
     }
     if (!videoId) {
@@ -3971,7 +4015,11 @@ function setupFormEvents() {
         title: selectedTrailerSearchMovie?.nameRu || selectedTrailerSearchMovie?.nameEn || title,
         youtube_url: youtubeUrl,
         youtube_video_id: videoId,
-        kinopoisk_id: selectedTrailerSearchMovie?.filmId || null,
+        media_type: trailerMediaType,
+        igdb_id: trailerMediaType === "game" ? selectedTrailerSearchMovie?.id || null : null,
+        game_data: trailerMediaType === "game" ? buildTrailerGameCache(selectedTrailerSearchMovie, title) : null,
+        game_cached_at: trailerMediaType === "game" ? new Date().toISOString() : null,
+        kinopoisk_id: trailerMediaType === "film" ? selectedTrailerSearchMovie?.filmId || null : null,
         year: selectedTrailerSearchMovie?.year || null,
         poster:
           buildKinopoiskPosterUrl(selectedTrailerSearchMovie?.filmId) ||
@@ -4358,3 +4406,68 @@ async function initPage() {
 }
 
 document.addEventListener("DOMContentLoaded", initPage);
+
+function updateTrailerMediaTypeUi() {
+  const isGame = trailerMediaType === "game";
+  document.querySelectorAll("[data-trailer-media-type]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.trailerMediaType === trailerMediaType)));
+  document.getElementById("trailerTitleLabel").textContent = isGame ? "Название игры" : "Название фильма";
+  document.getElementById("trailerTitleInput").placeholder = isGame ? "Например, Grand Theft Auto VI" : "Например, 28 лет спустя";
+  document.getElementById("trailerSelectedMovieClear").setAttribute("aria-label", "Сбросить выбор");
+}
+
+function buildTrailerGameCache(game, title) {
+  return {
+    webUrl: game?.url || null,
+    title: game?.name || title, year: game?.year || null,
+    description: game?.description_raw || "", posterUrl: game?.background_image || "",
+    releaseDate: game?.released || null,
+    genres: (game?.genres || []).map(g => g.name).filter(Boolean),
+    platforms: (game?.platforms || []).map(p => p.platform?.name).filter(Boolean),
+    developers: (game?.developers || []).map(d => d.name).filter(Boolean),
+    publishers: (game?.publishers || []).map(p => p.name).filter(Boolean),
+  };
+}
+
+function buildGameCatalogUrl(trailer) {
+  const info = parseTrailerKinopoiskData(trailer.game_data);
+  if (info?.webUrl) {
+    try {
+      const url = new URL(info.webUrl);
+      if (url.protocol === "https:" && url.hostname === "www.igdb.com") return url.href;
+    } catch { /* Fall back to catalog search. */ }
+  }
+  return "https://www.igdb.com/search?" + new URLSearchParams({ q: trailer.title || "" });
+}
+
+function configureTrailerInfoType(trailer) {
+  const isGame = trailer.media_type === "game";
+  const actors = document.getElementById("trailerInfoActors");
+  actors.previousElementSibling.textContent = isGame ? "Разработчик и издатель" : "Актёры";
+  document.getElementById("trailerInfoEditCountry").closest("label").hidden = isGame;
+  const link = document.getElementById("trailerKinopoiskLink");
+  link.querySelector("img").hidden = isGame;
+  link.querySelector("span").textContent = isGame ? "Открыть в IGDB" : "Открыть на Кинопоиске";
+}
+
+function renderStoredGameInfo(trailer) {
+  const info = parseTrailerKinopoiskData(trailer.game_data) || {};
+  renderKinopoiskMatches([]);
+  document.getElementById("trailerInfoTitle").textContent = trailer.title || info.title || "Без названия";
+  document.getElementById("trailerInfoMeta").textContent = ["Игра", trailer.year || info.year, ...(info.platforms || [])].filter(Boolean).join(" · ");
+  const badges = document.getElementById("trailerInfoBadges");
+  badges.replaceChildren();
+  (info.genres || []).forEach(genre => { const badge = document.createElement("span"); badge.textContent = genre; badges.appendChild(badge); });
+  document.getElementById("trailerInfoDescription").textContent = info.description || "Описание не найдено.";
+  document.getElementById("trailerInfoActors").textContent = [info.developers?.length ? "Разработчик: " + info.developers.join(", ") : "", info.publishers?.length ? "Издатель: " + info.publishers.join(", ") : ""].filter(Boolean).join(". ") || "Нет данных";
+  const release = document.getElementById("trailerInfoRelease");
+  renderTrailerReleaseValue(release, info.releaseDate || "");
+  if (!info.releaseDate && !hasAdminAccess) release.textContent = "Дата релиза не объявлена";
+  const poster = document.getElementById("trailerPoster");
+  poster.src = trailer.poster || info.posterUrl || POSTER_PLACEHOLDER;
+  poster.alt = "Обложка: " + (trailer.title || "Игра");
+  poster.onerror = () => { poster.onerror = null; poster.src = POSTER_PLACEHOLDER; };
+  const link = document.getElementById("trailerKinopoiskLink");
+  link.href = buildGameCatalogUrl(trailer);
+  link.hidden = false;
+  toggleInfoVisibility(true);
+}
