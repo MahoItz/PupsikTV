@@ -958,6 +958,7 @@
 .trailer-item__kp-link img[alt="IGDB"] {
   width: 30px;
   height: 30px;
+  filter: brightness(0) invert(1);
 }
 
 .trailer-item__kp-link:hover,
@@ -1473,7 +1474,11 @@
 .trailer-kinopoisk-button {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.25;
+  min-height: 40px;
+  box-sizing: border-box;
   padding: 10px 14px;
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(8, 22, 44, 0.92), rgba(20, 10, 38, 0.88));
@@ -1487,15 +1492,10 @@
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.trailer-kinopoisk-button img {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-}
-
-.trailer-kinopoisk-button img[alt="IGDB"] {
-  width: 36px;
-  height: 30px;
+.trailer-kinopoisk-button span {
+  display: block;
+  margin: 0;
+  text-align: center;
 }
 
 .trailer-kinopoisk-button:hover,

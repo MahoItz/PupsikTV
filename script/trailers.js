@@ -2934,6 +2934,7 @@ function renderSelectedTrailer() {
 
   if (!trailer) {
     if (title) title.textContent = "Выберите трейлер из списка";
+    document.getElementById("trailerInfoHeading").textContent = "Информация о трейлере";
     if (frame) frame.src = "about:blank";
     clearTrailerPlayerLoadHideTimer();
     setTrailerPlayerPlaceholder({
@@ -4537,14 +4538,11 @@ function buildGameCatalogUrl(trailer) {
 
 function configureTrailerInfoType(trailer) {
   const isGame = trailer.media_type === "game";
+  document.getElementById("trailerInfoHeading").textContent = isGame ? "Информация об игре" : "Информация о фильме";
   const actors = document.getElementById("trailerInfoActors");
   actors.previousElementSibling.textContent = isGame ? "Разработчик и издатель" : "Актёры";
   document.getElementById("trailerInfoEditCountry").closest("label").hidden = isGame;
   const link = document.getElementById("trailerKinopoiskLink");
-  const logo = link.querySelector("img");
-  logo.hidden = false;
-  logo.src = isGame ? "images/IGDB_logo.svg.webp" : "images/kinopoisk-icon-main.svg";
-  logo.alt = isGame ? "IGDB" : "Kinopoisk";
   link.querySelector("span").textContent = isGame ? "Открыть в IGDB" : "Открыть на Кинопоиске";
 }
 
