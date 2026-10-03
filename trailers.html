@@ -62,35 +62,7 @@
           <p class="section-loader__text">Загружаю список трейлеров...</p>
         </div>
 
-        <form id="trailerAddForm" class="trailer-form" hidden>
-          <div class="trailer-media-switch" role="group" aria-label="Тип трейлера">
-            <button type="button" data-trailer-media-type="film" aria-pressed="true">Фильмы</button>
-            <button type="button" data-trailer-media-type="game" aria-pressed="false">Игры</button>
-          </div>
-          <label class="trailer-form__field" for="trailerTitleInput">
-            <span id="trailerTitleLabel">Название фильма</span>
-            <input id="trailerTitleInput" class="search-input" type="text" maxlength="300" placeholder="Например, 28 лет спустя" required>
-          </label>
-          <div id="trailerTitleResultsContainer" class="fortune-autocomplete" style="display:none;">
-            <div id="trailerTitleResults" class="autocomplete-list"></div>
-          </div>
-          <div id="trailerSelectedMovieCard" class="trailer-selected-movie" hidden>
-            <img id="trailerSelectedMoviePoster" class="trailer-selected-movie__poster" src="images/placeholder-poster.webp" alt="Выбранный фильм">
-            <div class="trailer-selected-movie__body">
-              <p id="trailerSelectedMovieTitle" class="trailer-selected-movie__title"></p>
-              <p id="trailerSelectedMovieMeta" class="trailer-selected-movie__meta"></p>
-            </div>
-            <button id="trailerSelectedMovieClear" class="trailer-selected-movie__clear" type="button" aria-label="Сбросить выбранный фильм">&times;</button>
-          </div>
-          <label class="trailer-form__field" for="trailerUrlInput">
-            <span>Ссылка на YouTube</span>
-            <input id="trailerUrlInput" class="search-input" type="url" maxlength="1000" placeholder="https://www.youtube..." required>
-          </label>
-          <button id="trailerAddButton" class="btn btn-primary trailer-form__submit" type="submit">
-            <span>Добавить трейлер</span>
-          </button>
-          <p id="trailerFormStatus" class="trailer-form__status" aria-live="polite"></p>
-        </form>
+        <button id="openAddTrailerModal" class="admin-action-button" type="button" aria-haspopup="dialog" hidden>Добавить трейлер</button>
 
         <section class="trailer-list-section trailer-list-section--planned">
           <div class="trailer-list-section__header">
@@ -477,6 +449,42 @@
         <button type="submit" id="trailerReleaseDateSubmit" class="btn btn-primary" style="width:100%;">Сохранить</button>
       </form>
       <p id="trailerReleaseDateStatus" class="trailer-form__status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div id="addTrailerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addTrailerModalTitle" hidden>
+    <div class="modal-content trailer-add-modal">
+      <button id="closeAddTrailerModal" class="close" type="button" aria-label="Закрыть">&times;</button>
+      <h2 id="addTrailerModalTitle">Добавить трейлер</h2>
+        <form id="trailerAddForm" class="trailer-form" hidden>
+          <div class="trailer-media-switch" role="group" aria-label="Тип трейлера">
+            <button type="button" data-trailer-media-type="film" aria-pressed="true">Фильмы</button>
+            <button type="button" data-trailer-media-type="game" aria-pressed="false">Игры</button>
+          </div>
+          <label class="trailer-form__field" for="trailerTitleInput">
+            <span id="trailerTitleLabel">Название фильма</span>
+            <input id="trailerTitleInput" class="search-input" type="text" maxlength="300" placeholder="Например, 28 лет спустя" required>
+          </label>
+          <div id="trailerTitleResultsContainer" class="fortune-autocomplete" style="display:none;">
+            <div id="trailerTitleResults" class="autocomplete-list"></div>
+          </div>
+          <div id="trailerSelectedMovieCard" class="trailer-selected-movie" hidden>
+            <img id="trailerSelectedMoviePoster" class="trailer-selected-movie__poster" src="images/placeholder-poster.webp" alt="Выбранный фильм">
+            <div class="trailer-selected-movie__body">
+              <p id="trailerSelectedMovieTitle" class="trailer-selected-movie__title"></p>
+              <p id="trailerSelectedMovieMeta" class="trailer-selected-movie__meta"></p>
+            </div>
+            <button id="trailerSelectedMovieClear" class="trailer-selected-movie__clear" type="button" aria-label="Сбросить выбранный фильм">&times;</button>
+          </div>
+          <label class="trailer-form__field" for="trailerUrlInput">
+            <span>Ссылка на YouTube</span>
+            <input id="trailerUrlInput" class="search-input" type="url" maxlength="1000" placeholder="https://www.youtube..." required>
+          </label>
+          <button id="trailerAddButton" class="btn btn-primary trailer-form__submit" type="submit">
+            <span>Добавить трейлер</span>
+          </button>
+          <p id="trailerFormStatus" class="trailer-form__status" aria-live="polite"></p>
+        </form>
     </div>
   </div>
 

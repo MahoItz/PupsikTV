@@ -2311,3 +2311,12 @@
     min-width: 0;
   }
 }
+
+.trailer-add-modal .close {
+  background: transparent;
+  border: 0;
+}
+
+.trailer-add-modal .trailer-form {
+  text-align: left;
+}

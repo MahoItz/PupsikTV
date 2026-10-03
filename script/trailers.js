@@ -837,10 +837,11 @@ function openBoostyDeleteModal(id, title) {
 function setTrailerSidebarMode(mode) {
   const nextMode = mode === "boosty" ? "boosty" : "trailers";
   trailerSidebarMode = nextMode;
+  if (nextMode !== "trailers") closeAddTrailerModal();
 
   const trailersTab = document.getElementById("trailerAdminTabTrailers");
   const boostyTab = document.getElementById("trailerAdminTabBoosty");
-  const form = document.getElementById("trailerAddForm");
+  const form = document.getElementById("openAddTrailerModal");
   const plannedSection = document.querySelector(".trailer-list-section--planned");
   const boostySection = document.getElementById("trailerBoostySection");
   const boostyReviewForm = document.getElementById("boostyReviewForm");
@@ -1234,9 +1235,10 @@ function renderTrailerActors(container, actorNames, filmId) {
 }
 
 function updateTrailerAdminUi() {
+  if (!hasAdminAccess) closeAddTrailerModal();
   const page = document.querySelector(".trailer-page");
   const tabs = document.getElementById("trailerAdminTabs");
-  const form = document.getElementById("trailerAddForm");
+  const form = document.getElementById("openAddTrailerModal");
   const boostySection = document.getElementById("trailerBoostySection");
   const addBoostyReviewButton = document.getElementById("openBoostyReviewFormButton");
   const boostyReviewForm = document.getElementById("boostyReviewForm");
@@ -2788,7 +2790,7 @@ function setTrailerListsLoading(isLoading) {
 
 function setTrailerSidebarLoading(isLoading) {
   const sidebarLoading = document.getElementById("trailerSidebarLoading");
-  const form = document.getElementById("trailerAddForm");
+  const form = document.getElementById("openAddTrailerModal");
   const plannedSection = document.querySelector(".trailer-list-section--planned");
   const boostySection = document.getElementById("trailerBoostySection");
 
@@ -3907,7 +3909,54 @@ function setupListEvents() {
     });
 }
 
+function closeAddTrailerModal() {
+  const modal = document.getElementById("addTrailerModal");
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  modal.style.display = "none";
+  document.body.style.overflow = modal.dataset.previousOverflow || "";
+  setTrailerTitleResultsVisible(false);
+  document.getElementById("openAddTrailerModal")?.focus();
+}
+
+function setupAddTrailerModal() {
+  const modal = document.getElementById("addTrailerModal");
+  const form = document.getElementById("trailerAddForm");
+  document.getElementById("openAddTrailerModal")?.addEventListener("click", () => {
+    if (!hasAdminAccess || trailerSidebarMode !== "trailers" || !modal || !form) return;
+    modal.dataset.previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    form.hidden = false;
+    modal.hidden = false;
+    modal.style.display = "block";
+    document.getElementById("trailerTitleInput")?.focus();
+  });
+  document.getElementById("closeAddTrailerModal")?.addEventListener("click", closeAddTrailerModal);
+  modal?.addEventListener("click", event => {
+    if (event.target === modal) closeAddTrailerModal();
+  });
+  modal?.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeAddTrailerModal();
+    }
+    if (event.key !== "Tab") return;
+    const controls = [...modal.querySelectorAll('button, input, [tabindex="0"]')]
+      .filter(control => !control.disabled && control.getClientRects().length);
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  });
+}
+
 function setupFormEvents() {
+  setupAddTrailerModal();
   try { trailerMediaType = localStorage.getItem("trailerMediaType") === "game" ? "game" : "film"; } catch { /* Storage is optional. */ }
   updateTrailerMediaTypeUi();
   document.querySelectorAll("[data-trailer-media-type]").forEach(button => button.addEventListener("click", () => {
@@ -4177,6 +4226,7 @@ function setupFormEvents() {
       clearSelectedTrailerMovie();
       clearTrailerTitleSearch();
       setStatusText("trailerFormStatus", "Трейлер добавлен.");
+      closeAddTrailerModal();
     } catch (error) {
       console.error("Failed to add trailer", error);
       setStatusText(
