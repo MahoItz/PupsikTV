@@ -1,5 +1,6 @@
 /* Основные контейнеры */
 .container {
+    width: 100%;
     max-width: var(--layout-max-width);
     margin: 0 auto;
     padding: var(--container-side-padding);
@@ -115,6 +116,148 @@ header img {
 
 .rats-video.is-active {
     opacity: 0.2;
+}
+
+#headerLogo {
+    isolation: isolate;
+    padding: 0 20px 10px;
+    background: radial-gradient(ellipse at 50% 20%, #33205c, #19162e 75%);
+    border: 1px solid rgba(177, 91, 242, 0.35);
+    border-radius: 28px;
+    box-shadow: 0 0 28px rgba(149, 58, 210, 0.2), inset 0 0 32px rgba(111, 58, 173, 0.12);
+}
+
+#headerLogo::before {
+    display: none;
+}
+
+#headerLogo::after {
+    z-index: 0;
+}
+
+#headerLogo .header-scenery {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.header-scenery::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 -18%;
+    background: url('../images/header_bg.webp') center / 100% 100% no-repeat;
+    opacity: 0.35;
+}
+
+#headerLogo .header-rats {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+#headerLogo .rats-video {
+    max-height: none;
+    object-fit: contain;
+}
+
+#headerLogo .rats-video.is-active {
+    opacity: 0.35;
+}
+
+#headerLogo .header-mouse {
+    z-index: 2;
+    width: clamp(180px, 20vw, 270px);
+    max-width: 80%;
+    margin: -70px auto 0;
+}
+
+#headerLogo h1 {
+    position: relative;
+    z-index: 2;
+    margin: -50px auto 0;
+    width: min(440px, 35vw);
+    max-width: 100%;
+    font-size: 0;
+    line-height: 0;
+    background: none;
+    text-shadow: none;
+    animation: none;
+}
+
+#headerLogo .header-wordmark {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    filter: drop-shadow(0 0 14px rgba(154, 80, 232, 0.3));
+    cursor: default;
+    animation: none;
+}
+
+#headerLogo .social-links {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    z-index: 3;
+    margin: 0;
+    gap: 8px;
+}
+
+#headerLogo .social-link {
+    width: 32px;
+    height: 32px;
+    background: rgba(72, 43, 110, 0.45);
+    border-color: rgba(172, 111, 237, 0.35);
+}
+
+#headerLogo .social-link i {
+    font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+    .container:has(#headerLogo) {
+        padding-top: 100px;
+    }
+
+    #headerLogo {
+        padding: 0 12px 10px;
+        border-radius: 24px;
+    }
+
+    #headerLogo h1 {
+        width: min(320px, 86%);
+        margin-top: -38px;
+    }
+}
+
+@media (max-width: 600px) {
+    #headerLogo .social-links {
+        top: 10px;
+        right: 10px;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    #headerLogo .social-link {
+        width: 28px;
+        height: 28px;
+    }
+
+    #headerLogo .social-link i {
+        font-size: 0.85rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #headerLogo .header-mouse,
+    #headerLogo::after {
+        animation: none;
+    }
 }
 
 /* Social links */
@@ -242,13 +385,14 @@ header img {
 /* Основная сетка */
 .main-content {
     display: grid;
-    grid-template-columns: 1fr 470px;
+    grid-template-columns: minmax(0, 1fr) 470px;
     gap: 30px;
     align-items: start;
 }
 
 /* Левая панель */
 .left-panel {
+    min-width: 0;
     background: var(--card-bg);
     backdrop-filter: blur(20px);
     border-radius: var(--border-radius);

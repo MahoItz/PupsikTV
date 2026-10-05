@@ -1,57 +1,67 @@
-// Play header video on load and then at random intervals
-window.addEventListener("load", () => {
-  const headerVideos = document.querySelectorAll(".rats-video");
+// Keep one rat video active and schedule another after it finishes.
+function initHeaderRats() {
+  const headerVideos = Array.from(document.querySelectorAll(".rats-video"));
   if (headerVideos.length === 0) return;
+  let timerId;
+  let playbackId = 0;
 
-  // Function to get random delay within a range (in milliseconds)
-  function getRandomDelay() {
-    const min = 5;
-    const max = 40;
-    return (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
+  function scheduleNextPlay() {
+    clearTimeout(timerId);
+    const delay = (Math.floor(Math.random() * 36) + 5) * 1000;
+    timerId = setTimeout(() => { void playVideo(); }, delay);
   }
 
-  // Function to get a random video element from the list
-  function getRandomVideo() {
-    const randomIndex = Math.floor(Math.random() * headerVideos.length);
-    return headerVideos[randomIndex];
+  function stopVideo(video) {
+    video.pause();
+    video.classList.remove("is-active");
+    if (video.readyState > 0) video.currentTime = 0;
   }
 
-  function stopVideo(videoElement) {
-    videoElement.pause();
-    videoElement.currentTime = 0;
-    videoElement.classList.remove("is-active");
+  async function playVideo(index = Math.floor(Math.random() * headerVideos.length)) {
+    if (!Number.isInteger(index) || index < 0 || index >= headerVideos.length) {
+      throw new RangeError("Rat video index must be between 0 and 3");
+    }
+    clearTimeout(timerId);
+    const currentPlayback = ++playbackId;
+    headerVideos.forEach(stopVideo);
+    const video = headerVideos[index];
+    video.classList.add("is-active");
+    try {
+      await video.play();
+      return video;
+    } catch (error) {
+      if (currentPlayback === playbackId) {
+        stopVideo(video);
+        console.warn("Header rat video could not play:", video.getAttribute("src"), error);
+        scheduleNextPlay();
+      }
+      return null;
+    }
   }
 
-  function activateVideo(videoElement) {
-    headerVideos.forEach((item) => {
-      stopVideo(item);
-    });
-    videoElement.classList.add("is-active");
-    videoElement.currentTime = 0;
-    videoElement.play().catch(() => {});
-  }
-
-  // Function to schedule next play for a random video
-  function scheduleNextPlay(videoElement) {
-    setTimeout(() => {
-      activateVideo(videoElement);
-    }, getRandomDelay());
-  }
-
-  // Start playing a random video on page load
-  const firstVideo = getRandomVideo();
-  activateVideo(firstVideo);
-
-  // Add event listener to all videos to schedule the next random video
   headerVideos.forEach((video) => {
     video.addEventListener("ended", () => {
-      video.pause();
-      video.currentTime = 0;
-      const nextVideo = getRandomVideo();
-      scheduleNextPlay(nextVideo);
+      if (!video.classList.contains("is-active")) return;
+      stopVideo(video);
+      scheduleNextPlay();
+    });
+    video.addEventListener("error", () => {
+      if (!video.classList.contains("is-active")) return;
+      stopVideo(video);
+      scheduleNextPlay();
     });
   });
-});
+
+  window.Pupsik = window.Pupsik || {};
+  window.Pupsik.playHeaderRats = playVideo;
+  void playVideo();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initHeaderRats, { once: true });
+} else {
+  initHeaderRats();
+}
 
 const musicMenu = document.getElementById("musicMenu");
 const musicMenuButton = document.getElementById("musicMenuButton");

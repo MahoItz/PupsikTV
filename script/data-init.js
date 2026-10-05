@@ -814,7 +814,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadGamesFromSupabase(),
     loadPlayedGamesFromSupabase(),
   ]);
-  const headerImg = document.querySelector("#headerLogo img");
+  const headerImg = document.querySelector("#headerLogo .header-mouse");
   if (headerImg)
     headerImg.addEventListener("click", () => {
       document.getElementById("adminModal").style.display = "block";
