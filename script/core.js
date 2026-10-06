@@ -584,6 +584,41 @@ function setAiModelStatus(message) {
   }
 }
 
+function getAiModelStatusTooltip(statusInfo) {
+  const statuses = {
+    active: "Доступна — модель ответила на проверочный запрос.",
+    rate_limited: "Временно ограничена — достигнут лимит запросов. Попробуйте позже или выберите другую модель.",
+    unavailable: "Недоступна — проверочный запрос завершился ошибкой.",
+  };
+  const httpDescriptions = {
+    400: "Некорректный запрос. Модель может не поддерживать переданные параметры.",
+    401: "Ошибка авторизации. Проверьте API-ключ OpenRouter.",
+    402: "Недостаточно средств или кредитов. Проверьте баланс OpenRouter.",
+    403: "Доступ запрещён. Проверьте права доступа и ограничения сервиса.",
+    404: "Модель или адрес запроса не найдены. Проверьте идентификатор модели.",
+    408: "Время ожидания запроса истекло. Попробуйте позже.",
+    422: "Сервис не смог обработать параметры запроса.",
+    429: "Превышен лимит запросов. Подождите и повторите проверку или выберите другую модель.",
+    500: "Внутренняя ошибка сервиса или сбой соединения при проверке. Попробуйте позже.",
+    502: "Сервис получил некорректный ответ от поставщика модели. Попробуйте позже.",
+    503: "Сервис временно недоступен или перегружен. Попробуйте позже.",
+    504: "Модель не ответила вовремя. Повторите проверку или выберите другую модель.",
+  };
+  const code = Number(statusInfo.http_status);
+  const lines = [`Статус: ${statuses[statusInfo.status] || "Неизвестен — повторите проверку модели."}`];
+  if (Number.isInteger(code) && code >= 100 && code <= 599) {
+    const explanation = httpDescriptions[code] ||
+      (code >= 200 && code < 300 ? "Запрос выполнен успешно." :
+        code >= 500 ? "Ошибка на стороне сервиса. Попробуйте позже." :
+          code >= 400 ? "Сервис отклонил запрос." : "Получен ответ сервиса.");
+    lines.push(`Код ответа ${code}: ${explanation}`);
+  } else {
+    lines.push("Код ответа отсутствует — повторите проверку модели.");
+  }
+  if (statusInfo.provider) lines.push(`Сервис: ${statusInfo.provider}`);
+  return lines.join("\n");
+}
+
 function renderAiModelOptions(options = [], selectedValue = null) {
   if (!aiModelSelect) {
     aiModelSelect = document.getElementById("aiModelSelect");
@@ -624,7 +659,7 @@ function renderAiModelOptions(options = [], selectedValue = null) {
       else if (statusInfo.status === "rate_limited") indicator = "🟠 ";
       else indicator = "🔴 ";
 
-      tooltip = `Status: ${statusInfo.status}\nHTTP: ${statusInfo.http_status}\nProvider: ${statusInfo.provider}\nRaw: ${statusInfo.raw}`;
+      tooltip = getAiModelStatusTooltip(statusInfo);
     }
 
     el.textContent = `${indicator}${option.ai_model_name}`;
