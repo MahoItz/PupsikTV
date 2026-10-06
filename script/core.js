@@ -320,25 +320,13 @@ const CHECK_AI_MODELS_API_URL = window.Pupsik.apiUrl("/api/admin?action=check-ai
 
 function updateAdminSession(token, expiresAt) {
   adminToken = token || null;
-  if (adminToken) {
-    localStorage.setItem("adminToken", adminToken);
-    if (expiresAt) {
-      adminTokenExpiresAt = expiresAt;
-      localStorage.setItem("adminTokenExpiresAt", expiresAt);
-    } else {
-      adminTokenExpiresAt = null;
-      localStorage.removeItem("adminTokenExpiresAt");
-    }
-  } else {
-    adminTokenExpiresAt = null;
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminTokenExpiresAt");
-  }
+  adminTokenExpiresAt = expiresAt || null;
+  window.PupsikAdminSession.set(adminToken, adminTokenExpiresAt);
 }
 
 function clearAdminSession() {
-  updateAdminSession(null, null);
   isAdmin = false;
+  updateAdminSession(null, null);
   localStorage.removeItem("KINOPOISK_API_KEY");
   localStorage.removeItem("KINOPOISK_API_KEY2");
   localStorage.removeItem("KINOPOISK_API_KEY3");
@@ -1464,7 +1452,7 @@ async function loadEnv(options = {}) {
   try {
     const res = await fetch(window.Pupsik.apiUrl("/api/admin?action=env"), { headers });
     if (res.status === 401 && token && !opts._retriedWithoutToken) {
-      clearAdminSession();
+      if (window.PupsikAdminSession.getToken() === token) clearAdminSession();
       return loadEnv({
         ...opts,
         token: null,
@@ -1602,7 +1590,7 @@ async function verifyAdminTokenRequest(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
-      return { ok: false, expired: res.status === 401 };
+      return { ok: false, invalid: res.status === 401 };
     }
     const data = await res.json();
     const expiresAt =
@@ -1614,35 +1602,61 @@ async function verifyAdminTokenRequest(token) {
   }
 }
 
-async function refreshAdminTokenRequest(token) {
-  if (!token) {
-    return { ok: false };
-  }
-  try {
-    const res = await fetch(window.Pupsik.apiUrl("/api/admin?action=verify-admin"), {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      return { ok: false, expired: res.status === 401 };
+let adminRestorePending = null;
+let adminRestoreRetryAt = 0;
+let adminRestoreTimer;
+
+async function restoreAdminSession() {
+  if (adminRestorePending) return adminRestorePending;
+  adminRestorePending = (async () => {
+    await window.PupsikAdminSession.refresh();
+    const token = window.PupsikAdminSession.getToken();
+    adminToken = token;
+    if (!token) return;
+    const verification = await verifyAdminTokenRequest(token);
+    if (window.PupsikAdminSession.getToken() !== token) return;
+    if (!verification.ok) {
+      if (verification.invalid) clearAdminSession();
+      return;
     }
-    const data = await res.json();
-    const refreshedToken = typeof data.token === "string" ? data.token : null;
-    const expiresAt =
-      typeof data.expiresAt === "string" ? data.expiresAt : null;
-    return { ok: !!data.ok && !!refreshedToken, token: refreshedToken, expiresAt };
-  } catch (err) {
-    console.error("Failed to refresh admin token", err);
-    return { ok: false };
-  }
+    try {
+      const env = await loadEnv({ token });
+      if (window.PupsikAdminSession.getToken() !== token) return;
+      if (env && env.isAdmin) {
+        isAdmin = true;
+        updateAdminSession(token, verification.expiresAt);
+        showAdminControls(true);
+        TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
+        applyKpApiSelection(selectedKpApiValue);
+      }
+    } catch (error) {
+      console.warn("Admin session settings will be retried", error);
+    }
+  })().finally(() => {
+    adminRestorePending = null;
+    adminRestoreRetryAt = Date.now() + 5 * 60000;
+    clearTimeout(adminRestoreTimer);
+    if (adminToken && !isAdmin) {
+      adminRestoreTimer = setTimeout(retryAdminSessionRestore, 5 * 60000);
+    }
+  });
+  return adminRestorePending;
 }
 
-function isAdminTokenExpiringSoon(expiresAt, thresholdMs = 1000 * 60 * 60 * 24) {
-  if (!expiresAt || typeof expiresAt !== "string") return true;
-  const expiresAtMs = Date.parse(expiresAt);
-  if (!Number.isFinite(expiresAtMs)) return true;
-  return expiresAtMs - Date.now() <= thresholdMs;
+window.addEventListener("admin-session-change", () => {
+  adminToken = window.PupsikAdminSession.getToken();
+  adminTokenExpiresAt = localStorage.getItem("adminTokenExpiresAt");
+  if (!adminToken && isAdmin) clearAdminSession();
+});
+
+function retryAdminSessionRestore() {
+  if (document.visibilityState !== "hidden" && adminToken && !isAdmin &&
+      Date.now() >= adminRestoreRetryAt && adminElements.length) {
+    void restoreAdminSession();
+  }
 }
+document.addEventListener("visibilitychange", retryAdminSessionRestore);
+window.addEventListener("online", retryAdminSessionRestore);
 
 const ROULETTE_ORDER_TYPE = "Рулетка";
 const ORDER_TYPE_FILTER_OPTIONS = [

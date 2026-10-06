@@ -712,40 +712,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   applyKpApiSelection(selectedKpApiValue);
 
-  const storedToken = adminToken;
-  if (storedToken) {
-    let activeToken = storedToken;
-    let activeExpiresAt = null;
-    const verification = await verifyAdminTokenRequest(activeToken);
-    if (verification.ok) {
-      activeExpiresAt = verification.expiresAt;
-      if (isAdminTokenExpiringSoon(verification.expiresAt)) {
-        const refreshed = await refreshAdminTokenRequest(activeToken);
-        if (refreshed.ok && refreshed.token) {
-          activeToken = refreshed.token;
-          activeExpiresAt = refreshed.expiresAt;
-          updateAdminSession(activeToken, activeExpiresAt);
-        }
-      }
-      try {
-        const env = await loadEnv({ token: activeToken });
-        if (env && env.isAdmin) {
-          isAdmin = true;
-          updateAdminSession(activeToken, activeExpiresAt);
-          showAdminControls(true);
-          TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
-          applyKpApiSelection(selectedKpApiValue);
-        } else {
-          clearAdminSession();
-        }
-      } catch (err) {
-        console.error("Failed to refresh admin environment", err);
-        clearAdminSession();
-      }
-    } else {
-      clearAdminSession();
-    }
-  }
+  await restoreAdminSession();
 
   recalculateMovieUserRatings();
   recalculateGameUserRatings();
@@ -843,6 +810,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const result = await verifyAdminPassword(pw);
         if (result.ok && result.token) {
           const token = result.token;
+          updateAdminSession(token, result.expiresAt);
           try {
             const env = await loadEnv({ token });
             if (env && env.isAdmin) {
@@ -854,7 +822,6 @@ document.addEventListener("DOMContentLoaded", async function () {
               await loadSettingsFromSupabase();
               closeModal("adminModal");
             } else {
-              clearAdminSession();
               alert(
                 "Не удалось подтвердить сессию администратора. Попробуйте ещё раз."
               );

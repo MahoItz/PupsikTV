@@ -41,7 +41,7 @@ export async function issueAdminToken() {
     Deno.env.get("ADMIN_SESSION_TTL_MS") || "",
     10,
   );
-  const ttl = Number.isFinite(rawTtl) && rawTtl > 0 ? rawTtl : 604800000;
+  const ttl = Number.isFinite(rawTtl) && rawTtl > 0 ? rawTtl : 2592000000;
   const now = Date.now();
   const payload = {
     iat: now,

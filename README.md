@@ -21,8 +21,16 @@ TWITCH_IGDB_CLIENT_ID=<Twitch Client ID, used for admin game search>
 TWITCH_IGDB_CLIENT_SECRET=<Twitch Client Secret, used only by server API>
 EDIT_PASSWORD=<admin password>
 ADMIN_SESSION_SECRET=<required for admin token signing>
-ADMIN_SESSION_TTL_MS=<optional, admin session TTL in milliseconds, default 604800000 (7 days)>
+ADMIN_SESSION_TTL_MS=<optional, admin session TTL in milliseconds, default 2592000000 (30 days)>
 ```
+
+Admin tokens last 30 days by default and renew during active use near expiry.
+Temporary network/server errors preserve the saved session; renewal retries after
+five minutes and pauses while the page is hidden. Tabs share renewed tokens.
+If Supabase already has ADMIN_SESSION_TTL_MS set, remove it to use the new default
+or set it to 2592000000. Keep ADMIN_SESSION_SECRET stable across deployments.
+Existing tokens retain their original expiry until successfully renewed;
+already expired tokens require signing in again.
 
 ## Running locally
 

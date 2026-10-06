@@ -850,6 +850,7 @@ function getTokenExpiresAt(payload) {
 }
 
 function handleVerifyAdmin(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
   const method = (req.method || '').toUpperCase();
 
   if (method === 'GET') {

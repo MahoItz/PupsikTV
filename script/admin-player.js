@@ -416,6 +416,7 @@ function populateSelect(select, items, getLabel) {
 }
 
 async function verifyAdminAccess() {
+  await window.PupsikAdminSession.refresh();
   const token = localStorage.getItem("adminToken") || "";
   if (!token) return false;
 
