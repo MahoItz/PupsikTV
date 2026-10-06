@@ -618,7 +618,14 @@
       const env = await loadEnv();
       const client = window.supabase.createClient(
         SUPABASE_URL,
-        env.SUPABASE_PUBLIC_KEY
+        env.SUPABASE_PUBLIC_KEY,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+          },
+        }
       );
       const data = await loadStatsData(client);
       const stats = computeStats(data);

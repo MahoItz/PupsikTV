@@ -1503,7 +1503,14 @@ async function loadEnv(options = {}) {
     }
     if (!supabaseClient || currentSupabaseKey !== key) {
       SUPABASE_PUBLIC_KEY = key;
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, key);
+      // Admin sessions use our API, not Supabase Auth.
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, key, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
+      });
       currentSupabaseKey = key;
     } else {
       SUPABASE_PUBLIC_KEY = key;

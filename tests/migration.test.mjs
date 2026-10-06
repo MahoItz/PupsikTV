@@ -104,6 +104,19 @@ test('Kinopoisk interception preserves provider paths and targets Supabase', asy
 test('Pages artifact contains client files and excludes server source', () => {
   assert.ok(existsSync(resolve(root, 'dist/pages/index.html')));
   assert.ok(existsSync(resolve(root, 'dist/pages/script/site-config.js')));
+  for (const name of ['index.html', 'stats.html']) {
+    const html = read(`dist/pages/${name}`);
+    assert.doesNotMatch(html, /https:\/\/[^"\s]+supabase-js/);
+    const sdkPath = html.match(/src="(script\/vendor\/supabase-[^"]+\.js)"/);
+    assert.ok(sdkPath, `${name}: local Supabase library`);
+    assert.ok(existsSync(resolve(root, 'dist/pages', sdkPath[1])));
+    assert.ok(
+      html.indexOf(sdkPath[0]) <
+        html.indexOf(
+          `src="script/${name === 'index.html' ? 'core' : 'stats'}.js"`
+        )
+    );
+  }
   for (const name of [
     'api',
     'lib',
