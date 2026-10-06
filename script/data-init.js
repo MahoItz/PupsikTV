@@ -637,7 +637,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   settingsToggleButton = document.getElementById("settingsToggleButton");
   settingsPanelCloseButton = document.getElementById("settingsPanelCloseButton");
   aiModelSelect = document.getElementById("aiModelSelect");
-  aiModelStatus = document.getElementById("aiModelStatus");
+  aiModelStatus = document.getElementById("aiModelStatusLabel");
   kpApiSelect = document.getElementById("kpApiSelect");
   kpApiStatus = document.getElementById("kpApiStatus");
   refreshKpQuotaBtn = document.getElementById("refreshKpQuotaBtn");
@@ -665,6 +665,19 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (aiModelSelect) {
     aiModelSelect.addEventListener("change", handleAiModelChange);
   }
+  document.getElementById("addAiModelForm")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const ai_model_name = document.getElementById("aiModelNameInput").value.trim();
+    const ai_model = document.getElementById("aiModelInput").value.trim();
+    if (!ai_model_name || !ai_model) {
+      setAiModelStatus("Заполните название и идентификатор модели.");
+      return;
+    }
+    void manageAiModel("POST", { ai_model_name, ai_model });
+  });
+  document.getElementById("deleteAiModelBtn")?.addEventListener("click", () => {
+    if (aiModelSelect.value) void manageAiModel("DELETE", { ai_model: aiModelSelect.value });
+  });
   if (kpApiSelect) {
     kpApiSelect.addEventListener("change", handleKpApiChange);
   }

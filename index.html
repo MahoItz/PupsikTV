@@ -2204,8 +2204,16 @@
                             <i class="fa-solid fa-rotate" aria-hidden="true"></i>
                         </button>
                     </div>
-                    <p id="aiModelStatusLabel" class="settings-panel__status-text"></p>
+                    <button id="deleteAiModelBtn" class="btn btn-secondary btn-small" type="button" disabled>Удалить выбранную модель</button>
+                    <p id="aiModelStatusLabel" class="settings-panel__status-text" role="status" aria-live="polite"></p>
                 </div>
+                <form id="addAiModelForm" class="settings-panel__field">
+                    <label for="aiModelNameInput" class="settings-panel__label">Название (ai_model_name)</label>
+                    <input id="aiModelNameInput" name="ai_model_name" class="settings-panel__select" type="text" maxlength="255" placeholder="Название модели" required>
+                    <label for="aiModelInput" class="settings-panel__label">Идентификатор (ai_model)</label>
+                    <input id="aiModelInput" name="ai_model" class="settings-panel__select" type="text" maxlength="255" placeholder="provider/model-name" required>
+                    <button class="btn btn-secondary btn-small" type="submit">Добавить модель</button>
+                </form>
             </div>
             <div class="settings-panel__section admin-only">
                 <div class="settings-panel__section-header">

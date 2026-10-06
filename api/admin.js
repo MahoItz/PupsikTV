@@ -154,6 +154,7 @@ const ALLOWED_ACTIONS = [
   'game-posters',
   'kp-api-selection',
   'check-ai-models',
+  'ai-models',
   'player-history',
 ];
 
@@ -943,6 +944,97 @@ function handleVerifyAdmin(req, res) {
   return res.status(405).json({ ok: false, error: 'Method Not Allowed' });
 }
 
+async function handleAiModels(req, res) {
+  const method = (req.method || '').toUpperCase();
+  if (!['POST', 'DELETE'].includes(method)) {
+    res.setHeader('Allow', ['POST', 'DELETE']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+  const access = verifyAdminRequest(req);
+  if (!access.ok)
+    return res.status(access.status).json({ error: access.error });
+  let payload;
+  try {
+    payload = parseBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+  const model =
+    typeof payload.ai_model === 'string' ? payload.ai_model.trim() : '';
+  const name =
+    typeof payload.ai_model_name === 'string'
+      ? payload.ai_model_name.trim()
+      : '';
+  if (
+    !model ||
+    model.length > 255 ||
+    (method === 'POST' && (!name || name.length > 255))
+  ) {
+    return res
+      .status(400)
+      .json({ error: 'Заполните ai_model_name и ai_model (до 255 символов).' });
+  }
+  try {
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .order('id', { ascending: true });
+    if (error) throw error;
+    const rows = data || [];
+    const models = rows.filter((row) => row.ai_model && row.ai_model_name);
+    const existing = models.find((row) => row.ai_model === model);
+    if (method === 'POST') {
+      if (existing)
+        return res
+          .status(409)
+          .json({ error: 'Модель с таким ai_model уже добавлена.' });
+      const { error: insertError } = await supabase
+        .from('settings')
+        .insert({ ai_model: model, ai_model_name: name });
+      if (insertError) throw insertError;
+      models.push({ ai_model: model, ai_model_name: name });
+    } else {
+      if (!existing)
+        return res.status(404).json({ error: 'Модель не найдена.' });
+      // Model rows can also contain site settings: only clear model columns.
+      const { error: updateError } = await supabase
+        .from('settings')
+        .update({ ai_model: null, ai_model_name: null })
+        .eq('ai_model', model);
+      if (updateError) throw updateError;
+    }
+    const remaining =
+      method === 'DELETE'
+        ? models.filter((row) => row.ai_model !== model)
+        : models;
+    const current = rows.find(
+      (row) => row.selected_ai_model
+    )?.selected_ai_model;
+    const selected =
+      remaining.find((row) => row.ai_model === current) || remaining[0] || null;
+    const statuses = {
+      ...(rows.find((row) => row.ai_model_statuses)?.ai_model_statuses || {}),
+    };
+    if (method === 'DELETE') delete statuses[model];
+    await upsertSettingsRow(supabase, {
+      selected_ai_model: selected?.ai_model || null,
+      selected_ai_model_name: selected?.ai_model_name || null,
+      ai_model_statuses: statuses,
+    });
+    return res.status(200).json({
+      ok: true,
+      models: remaining,
+      selected_ai_model: selected?.ai_model || null,
+      statuses,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: error?.message || 'Не удалось сохранить модели.' });
+  }
+}
+
 async function handleSettings(req, res) {
   const method = (req.method || '').toUpperCase();
   if (method !== 'PATCH') {
@@ -1518,6 +1610,9 @@ module.exports = async function handler(req, res) {
   }
   if (action === 'settings') {
     return handleSettings(req, res);
+  }
+  if (action === 'ai-models') {
+    return handleAiModels(req, res);
   }
   if (action === 'kp-api-selection') {
     return handleKpApiSelection(req, res);

@@ -577,7 +577,7 @@ function initTopLeftActionsMenu() {
 
 function setAiModelStatus(message) {
   if (!aiModelStatus) {
-    aiModelStatus = document.getElementById("aiModelStatus");
+    aiModelStatus = document.getElementById("aiModelStatusLabel");
   }
   if (aiModelStatus) {
     aiModelStatus.textContent = message;
@@ -595,6 +595,8 @@ function renderAiModelOptions(options = [], selectedValue = null) {
     : [];
 
   aiModelOptions = validOptions;
+  const deleteButton = document.getElementById("deleteAiModelBtn");
+  if (deleteButton) deleteButton.disabled = !validOptions.length;
 
   aiModelSelect.innerHTML = "";
 
@@ -604,7 +606,8 @@ function renderAiModelOptions(options = [], selectedValue = null) {
     placeholder.textContent = "Модели не найдены";
     aiModelSelect.appendChild(placeholder);
     aiModelSelect.disabled = true;
-    setAiModelStatus("Не удалось загрузить модели OpenRouter.");
+    selectedAiModelValue = null;
+    setAiModelStatus("Добавьте модель для перевода.");
     return;
   }
 
@@ -647,6 +650,34 @@ function renderAiModelOptions(options = [], selectedValue = null) {
     setAiModelStatus(
       `Текущая модель: ${selectedOption.ai_model_name || selectedOption.ai_model}`
     );
+  }
+}
+
+async function manageAiModel(method, payload) {
+  const form = document.getElementById("addAiModelForm");
+  const controls = [aiModelSelect, document.getElementById("deleteAiModelBtn"), document.getElementById("checkAiModelsBtn"), ...form.querySelectorAll("input, button")].filter(Boolean);
+  const previousDisabled = controls.map((control) => control.disabled);
+  controls.forEach((control) => { control.disabled = true; });
+  setAiModelStatus("Сохраняем список моделей...");
+  try {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=ai-models"), {
+      method,
+      headers: { "Content-Type": "application/json", ...getAdminAuthHeaders() },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (response.status === 401) clearAdminSession();
+    if (!response.ok) throw new Error(result.error || "Не удалось сохранить модели.");
+    aiModelStatuses = result.statuses || {};
+    selectedAiModelValue = result.selected_ai_model;
+    renderAiModelOptions(result.models, result.selected_ai_model);
+    if (method === "POST") form.reset();
+  } catch (error) {
+    setAiModelStatus(error.message || "Не удалось сохранить модели.");
+  } finally {
+    controls.forEach((control, index) => { control.disabled = previousDisabled[index]; });
+    aiModelSelect.disabled = !aiModelOptions.length;
+    document.getElementById("deleteAiModelBtn").disabled = !aiModelOptions.length;
   }
 }
 
