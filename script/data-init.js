@@ -133,6 +133,20 @@ function computeMoviesSignature(list) {
 
   for (let i = 0; i < list.length; i += 1) {
     const movie = list[i];
+    // Include catalog metadata so edits also refresh the displayed data and cache.
+    const metadataHash = stringHash(
+      JSON.stringify([
+        movie?.title,
+        movie?.originalTitle,
+        movie?.poster,
+        movie?.year,
+        movie?.genre,
+        movie?.kpRating,
+        movie?.dateAdded,
+        movie?.kinopoiskId,
+        movie?.imdbId,
+      ])
+    );
     const rating = Number(movie?.rating ?? 0);
     const ratingSum = Number(movie?.ratingSum ?? 0);
     const ratingCount = Number(movie?.ratingCount ?? 0);
@@ -152,6 +166,7 @@ function computeMoviesSignature(list) {
     );
 
     hash = (hash * 31 + Number(movie?.id ?? 0)) >>> 0;
+    hash = (hash * 31 + metadataHash) >>> 0;
     hash = (hash * 31 + Math.round(rating * 10)) >>> 0;
     hash = (hash * 31 + ratingSum) >>> 0;
     hash = (hash * 31 + ratingCount) >>> 0;
