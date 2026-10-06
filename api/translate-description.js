@@ -43,7 +43,7 @@ async function handler(req, res) {
     },
     {
       role: 'user',
-      content: text,
+      content: `Translate the following game description into Russian. Return only the Russian translation, preserving paragraphs. Keep proper names where appropriate.\n\n${text}`,
     },
   ];
 
@@ -79,7 +79,14 @@ async function handler(req, res) {
     }
 
     const completion = await response.json();
-    const content = completion?.choices?.[0]?.message?.content || '';
+    const choice = completion?.choices?.[0];
+    if (choice?.finish_reason === 'length') {
+      res.status(502).json({
+        error: 'Модель не завершила перевод: достигнут лимит длины ответа.',
+      });
+      return;
+    }
+    const content = choice?.message?.content || '';
 
     let translated = content;
     if (
@@ -94,11 +101,34 @@ async function handler(req, res) {
     ) {
       translated = content.text;
     } else if (typeof content !== 'string') {
-      translated = String(content);
+      translated = '';
     }
 
     translated = (translated || '').trim();
-    res.status(200).json({ translated: translated || text });
+    const letters = translated.match(/\p{L}/gu) || [];
+    const russianLetters = translated.match(/[а-яё]/giu) || [];
+    if (
+      !translated ||
+      !letters.length ||
+      russianLetters.length / letters.length < 0.3
+    ) {
+      res.status(502).json({
+        error:
+          'Модель не вернула перевод на русский язык. Повторите попытку или выберите другую модель.',
+      });
+      return;
+    }
+    if (
+      translated.replace(/\s+/g, ' ').toLowerCase() ===
+        text.replace(/\s+/g, ' ').toLowerCase() &&
+      !/[а-яё]/iu.test(text)
+    ) {
+      res
+        .status(502)
+        .json({ error: 'Модель вернула исходный текст вместо перевода.' });
+      return;
+    }
+    res.status(200).json({ translated });
   } catch (err) {
     console.error('[translate-description] error', err);
     res.status(500).json({ error: 'Server error' });

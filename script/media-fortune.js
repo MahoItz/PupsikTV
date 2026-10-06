@@ -2028,6 +2028,13 @@ async function persistPlayedGameDescription(gameId, descriptionData) {
 
 const orderGameDescriptionPrefetches = new Map();
 
+function isRussianGameDescriptionTranslation(text) {
+  if (typeof text !== "string" || !text.trim()) return false;
+  const letters = text.match(/\p{L}/gu) || [];
+  const russianLetters = text.match(/[а-яё]/giu) || [];
+  return letters.length > 0 && russianLetters.length / letters.length >= 0.3;
+}
+
 async function translateGameDescription(text, modelValue) {
   if (!text || typeof text !== "string" || !text.trim()) {
     return "";
@@ -2044,18 +2051,22 @@ async function translateGameDescription(text, modelValue) {
     }),
   });
 
+  const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(`Game description translation failed: ${response.status}`);
+    throw new Error(payload.error || `Ошибка перевода: код ответа ${response.status}`);
   }
-
-  const payload = await response.json();
-  return payload?.translated || "";
+  if (!isRussianGameDescriptionTranslation(payload.translated)) {
+    throw new Error("Модель не вернула перевод на русский язык.");
+  }
+  return payload.translated.trim();
 }
 
 async function translateGameDescriptionWithFallback(text, primaryModel) {
+  let lastError;
   try {
     return await translateGameDescription(text, primaryModel);
   } catch (err) {
+    lastError = err;
     console.warn(
       `[translateGameDescription] Primary model [${primaryModel}] failed:`,
       err
@@ -2063,7 +2074,7 @@ async function translateGameDescriptionWithFallback(text, primaryModel) {
   }
 
   if (typeof aiModelOptions === "undefined" || !aiModelOptions.length) {
-    throw new Error("No fallback models available");
+    throw lastError;
   }
 
   const activeFallbackModels = aiModelOptions
@@ -2086,11 +2097,12 @@ async function translateGameDescriptionWithFallback(text, primaryModel) {
       }
       return result;
     } catch (err) {
+      lastError = err;
       console.warn(`[translateGameDescription] Fallback [${fallbackModel}] failed:`, err);
     }
   }
 
-  throw new Error("All translation models failed (including fallback)");
+  throw new Error(`Не удалось перевести описание. ${lastError?.message || "Попробуйте другую модель."}`);
 }
 
 async function prefetchOrderGameDescriptionForOrder(gameOrder, options = {}) {
@@ -2109,8 +2121,7 @@ async function prefetchOrderGameDescriptionForOrder(gameOrder, options = {}) {
   const hasTranslated =
     desc &&
     typeof desc === "object" &&
-    typeof desc.translated === "string" &&
-    desc.translated.trim();
+    isRussianGameDescriptionTranslation(desc.translated);
 
   if (!force && hasTranslated) {
     return desc;
@@ -2132,6 +2143,7 @@ async function prefetchOrderGameDescriptionForOrder(gameOrder, options = {}) {
       console.warn(
         "[prefetchOrderGameDescription] No translation model configured"
       );
+      setGameOrderDescriptionStatus("Модель перевода не настроена.", { gameOrderId: gameOrder.id });
       syncGameOrderTranslateButton(gameOrder);
       return desc;
     }
@@ -2177,7 +2189,7 @@ async function prefetchOrderGameDescriptionForOrder(gameOrder, options = {}) {
       return descriptionData;
     } catch (err) {
       console.error("Failed to translate game description for order", err);
-      setGameOrderDescriptionStatus("", { gameOrderId: gameOrder.id });
+      setGameOrderDescriptionStatus(err.message || "Не удалось перевести описание.", { gameOrderId: gameOrder.id });
       syncGameOrderTranslateButton(gameOrder);
       return desc;
     }
@@ -2209,8 +2221,7 @@ async function prefetchPlayedGameDescriptionForGame(game, options = {}) {
   const hasTranslated =
     desc &&
     typeof desc === "object" &&
-    typeof desc.translated === "string" &&
-    desc.translated.trim();
+    isRussianGameDescriptionTranslation(desc.translated);
 
   if (!force && hasTranslated) {
     return desc;
@@ -2290,7 +2301,7 @@ async function prefetchPlayedGameDescriptionForGame(game, options = {}) {
       return descriptionData;
     } catch (err) {
       console.error("Failed to translate game description", err);
-      setGameDetailsDescriptionStatus("Ошибка перевода", { gameId: game.id });
+      setGameDetailsDescriptionStatus(err.message || "Ошибка перевода", { gameId: game.id });
       syncGameDetailsTranslateButton(game);
       return desc;
     }
