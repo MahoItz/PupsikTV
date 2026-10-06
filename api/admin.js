@@ -538,61 +538,12 @@ async function promoteMovieOrder(supabase, payload) {
     };
   }
 
-  const { data: pendingRatingsData, error: pendingRatingsError } =
-    await supabase
-      .from('ratings')
-      .select('id, rating')
-      .eq('movie_id', orderId)
-      .eq('category', 'MovieOrder');
-  if (pendingRatingsError) throw pendingRatingsError;
-
-  const pendingRatings = Array.isArray(pendingRatingsData)
-    ? pendingRatingsData
-    : [];
-  const pendingRatingSum = pendingRatings.reduce(
-    (sum, row) => sum + Number(row?.rating ?? 0),
-    0
-  );
-  const pendingRatingCount = pendingRatings.length;
-
-  movieChanges.rating_sum = pendingRatingSum;
-  movieChanges.rating_count = pendingRatingCount;
-
-  const { data: insertedMovie, error: insertError } = await supabase
-    .from('movies')
-    .insert(movieChanges)
-    .select()
-    .single();
-  if (insertError) throw insertError;
-
-  if (pendingRatingCount > 0) {
-    const { error: moveRatingsError } = await supabase
-      .from('ratings')
-      .update({
-        movie_id: insertedMovie.id,
-        category: 'Movie',
-        title: movieChanges.title || null,
-      })
-      .eq('movie_id', orderId)
-      .eq('category', 'MovieOrder');
-    if (moveRatingsError) throw moveRatingsError;
-  }
-
-  const { error: deleteOrderError } = await supabase
-    .from('Movie_Orders')
-    .delete()
-    .eq('id', orderId);
-  if (deleteOrderError) throw deleteOrderError;
-
-  return {
-    status: 200,
-    body: {
-      ok: true,
-      row: insertedMovie,
-      pendingRatingSum,
-      pendingRatingCount,
-    },
-  };
+  const { data, error } = await supabase.rpc('promote_movie_order', {
+    p_order_id: orderId,
+    p_changes: movieChanges,
+  });
+  if (error) throw error;
+  return { status: 200, body: data };
 }
 
 async function promoteGameOrder(supabase, payload) {
@@ -605,23 +556,12 @@ async function promoteGameOrder(supabase, payload) {
     };
   }
 
-  const { data: insertedGame, error: insertError } = await supabase
-    .from('games')
-    .insert(gameChanges)
-    .select()
-    .single();
-  if (insertError) throw insertError;
-
-  const { error: deleteOrderError } = await supabase
-    .from('Game_Orders')
-    .delete()
-    .eq('id', orderId);
-  if (deleteOrderError) throw deleteOrderError;
-
-  return {
-    status: 200,
-    body: { ok: true, row: insertedGame },
-  };
+  const { data, error } = await supabase.rpc('promote_game_order', {
+    p_order_id: orderId,
+    p_changes: gameChanges,
+  });
+  if (error) throw error;
+  return { status: 200, body: data };
 }
 
 async function updateKinopoiskMetadata(supabase, payload) {
