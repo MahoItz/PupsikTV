@@ -5,7 +5,10 @@
   async function updateNavigation() {
     const currentRevision = ++revision;
     const links = document.querySelectorAll('[data-admin-navigation]');
-    links.forEach((link) => { link.hidden = true; });
+    links.forEach((link) => {
+      link.hidden = true;
+      link.style.display = 'none';
+    });
     const token = localStorage.getItem('adminToken');
     if (!token) return;
 
@@ -17,7 +20,11 @@
       if (!response.ok) return;
       const data = await response.json();
       if (currentRevision !== revision || localStorage.getItem('adminToken') !== token) return;
-      links.forEach((link) => { link.hidden = !data.ok; });
+      links.forEach((link) => {
+        const isAdmin = data.ok === true;
+        link.hidden = !isAdmin;
+        if (isAdmin) link.style.removeProperty('display');
+      });
     } catch {
       // Leave the navigation hidden if verification is unavailable.
     }

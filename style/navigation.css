@@ -1,6 +1,6 @@
 /* Keep admin navigation hidden until the session is verified. */
 .top-left-actions a[data-admin-navigation][hidden] {
-    display: none;
+    display: none !important;
 }
 
 /* Shared top navigation */
