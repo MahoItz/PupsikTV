@@ -59,8 +59,12 @@ const ADMIN_PLAYER_HISTORY_TTL_MS = 60 * 1000;
 let kinopoiskApiKey = "";
 let selectedMovie = null;
 let currentHistory = [];
+let historyLoading = false;
+let historyLoaded = false;
+let historyRequest = null;
+let historyNeedsRender = true;
 
-function readHistoryCache() {
+function readHistoryCache({ allowStale = false } = {}) {
   try {
     const raw = localStorage.getItem(ADMIN_PLAYER_HISTORY_CACHE_KEY);
     if (!raw) return null;
@@ -72,7 +76,7 @@ function readHistoryCache() {
 
     if (!timestamp || Number.isNaN(timestamp)) return null;
     if (!items.length) return null;
-    if (Date.now() - timestamp > ADMIN_PLAYER_HISTORY_TTL_MS) return null;
+    if (!allowStale && Date.now() - timestamp > ADMIN_PLAYER_HISTORY_TTL_MS) return null;
 
     return { items, etag };
   } catch (error) {
@@ -105,6 +109,7 @@ function updateHistoryState(list, options = {}) {
   const { shouldRender = false, etag = "" } = options;
   const safeList = writeHistoryCache(list, etag);
   currentHistory = safeList;
+  historyNeedsRender = true;
   if (shouldRender) renderHistory(safeList);
   return safeList;
 }
@@ -176,8 +181,34 @@ async function loadHistory() {
     return updateHistoryState(normalized, { shouldRender: true, etag });
   } catch (error) {
     console.error("Failed to load admin player history", error);
-    return currentHistory;
+    throw error;
   }
+}
+
+function ensureHistoryLoaded() {
+  if (historyLoaded) {
+    renderHistory(currentHistory);
+    return Promise.resolve(currentHistory);
+  }
+  if (historyRequest) return historyRequest;
+  const errorMessage = document.getElementById("adminPlayerHistoryError");
+  if (errorMessage) errorMessage.hidden = true;
+  setHistoryLoading(true);
+  historyRequest = loadHistory()
+    .then(history => {
+      historyLoaded = true;
+      renderHistory(history);
+      return history;
+    })
+    .catch(error => {
+      console.error("Failed to expand player history", error);
+      if (errorMessage) errorMessage.hidden = false;
+    })
+    .finally(() => {
+      historyRequest = null;
+      setHistoryLoading(false);
+    });
+  return historyRequest;
 }
 
 async function saveHistoryItem(movie) {
@@ -241,6 +272,8 @@ function setHistoryLoading(isLoading) {
   const historyList = document.getElementById("adminPlayerHistoryList");
   const emptyState = document.querySelector(".admin-player-history__empty");
   const active = Boolean(isLoading);
+  historyLoading = active;
+  updateWelcomeStatus();
 
   if (loader) {
     loader.hidden = !active;
@@ -266,9 +299,13 @@ function formatWatchedAt(isoDate) {
 }
 
 function renderHistory(list) {
+  renderRecentMovies(list);
+  if (!document.getElementById("adminPlayerHistory")?.open) return;
+  if (!historyNeedsRender) return;
   const historyList = document.getElementById("adminPlayerHistoryList");
   const emptyState = document.querySelector(".admin-player-history__empty");
   if (!historyList) return;
+  historyNeedsRender = false;
 
   const safeList = Array.isArray(list) ? list : [];
   historyList.innerHTML = "";
@@ -324,6 +361,77 @@ function renderHistory(list) {
   if (emptyState) {
     emptyState.hidden = safeList.length > 0;
   }
+}
+
+function updateWelcomeStatus() {
+  const status = document.getElementById("adminPlayerWelcomeStatus");
+  const movies = document.getElementById("adminPlayerRecentMovies");
+  const hint = document.getElementById("adminPlayerWelcomeHint");
+  if (!status || !movies || !hint) return;
+  const hasMovies = movies.children.length > 0;
+  status.hidden = hasMovies;
+  status.textContent = historyLoading
+    ? "Загружаем последние фильмы…"
+    : "Здесь появятся ваши последние фильмы. Начните с поиска по названию.";
+  hint.textContent = hasMovies
+    ? "Ещё один просмотр? Выберите один из последних фильмов."
+    : "Найдите фильм для своего следующего киновечера.";
+}
+
+function renderRecentMovies(list) {
+  const container = document.getElementById("adminPlayerRecentMovies");
+  if (!container || selectedMovie) return;
+  container.replaceChildren();
+  const seen = new Set();
+  const recent = (Array.isArray(list) ? list : []).filter(item => {
+    const id = Number(item?.kp_id);
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  }).slice(0, 4);
+  recent.forEach(item => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "admin-player-recent";
+    button.setAttribute("aria-label", `Смотреть: ${item.title || "Без названия"}${item.year ? ` (${item.year})` : ""}`);
+    const artwork = document.createElement("span");
+    artwork.className = "admin-player-recent__artwork";
+    const poster = document.createElement("img");
+    poster.src = item.poster || "images/placeholder-poster.webp";
+    poster.alt = "";
+    poster.loading = "lazy";
+    poster.addEventListener("error", () => {
+      poster.src = "images/placeholder-poster.webp";
+    }, { once: true });
+    const play = document.createElement("span");
+    play.className = "admin-player-recent__play";
+    play.setAttribute("aria-hidden", "true");
+    const icon = document.createElement("i");
+    icon.className = "fa-solid fa-play";
+    play.append(icon);
+    artwork.append(poster, play);
+    const title = document.createElement("span");
+    title.className = "admin-player-recent__title";
+    title.textContent = item.title || "Без названия";
+    const year = document.createElement("span");
+    year.className = "admin-player-recent__year";
+    year.textContent = item.year ? String(item.year) : "";
+    button.append(artwork, title, year);
+    button.addEventListener("click", () => {
+      openPlayerMovie(buildMovieFromHistoryItem(item)).catch(error => console.error("Failed to open recent movie", error));
+    });
+    container.append(button);
+  });
+  updateWelcomeStatus();
+}
+
+async function openPlayerMovie(movie) {
+  if (!movie?.filmId) return;
+  selectedMovie = movie;
+  const input = document.getElementById("adminPlayerSearchInput");
+  if (input) input.value = getMovieTitle(movie);
+  await loadPlayerForMovie(movie);
+  await saveHistoryItem(movie);
 }
 
 
@@ -434,6 +542,11 @@ function getMovieTitle(movie) {
 async function loadPlayerForMovie(movie) {
   const kpId = movie?.filmId;
   if (!kpId) return;
+  document.querySelector(".admin-player-embed")?.classList.remove("is-idle");
+  const welcome = document.getElementById("adminPlayerWelcome");
+  if (welcome) welcome.hidden = true;
+  const playerFrame = document.getElementById("adminPlayerFrame");
+  if (playerFrame) playerFrame.hidden = false;
 
   const sourceSelect = document.getElementById("adminPlayerSourceSelect");
   const translationSelect = document.getElementById("adminPlayerTranslationSelect");
@@ -551,11 +664,11 @@ function setupSearchEvents() {
       const data = await response.json();
       return (data.films || []).slice(0, 8);
     },
-    onSelect: async (movie) => {
-      selectedMovie = movie;
-      await loadPlayerForMovie(movie);
-      await saveHistoryItem(movie);
-    },
+    onSelect: openPlayerMovie,
+  });
+  document.getElementById("adminPlayerWelcomeSearch")?.addEventListener("click", () => {
+    input.focus();
+    input.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   const historyList = document.getElementById("adminPlayerHistoryList");
@@ -589,9 +702,7 @@ function setupSearchEvents() {
       selectedMovie = buildMovieFromHistoryItem(refreshedItem);
     }
 
-    input.value = getMovieTitle(selectedMovie);
-    await loadPlayerForMovie(selectedMovie);
-    await saveHistoryItem(selectedMovie);
+    await openPlayerMovie(selectedMovie);
   });
 
   historyList?.addEventListener("keydown", async (event) => {
@@ -617,26 +728,16 @@ async function initPage() {
 
     if (app) app.hidden = false;
 
-    const cachedHistory = readHistoryCache();
+    const cachedHistory = readHistoryCache({ allowStale: true });
     if (cachedHistory?.items?.length) {
-      updateHistoryState(cachedHistory.items, { shouldRender: true, etag: cachedHistory.etag || "" });
-      setHistoryLoaderMessage("Обновляем историю в фоне...");
-      setHistoryLoading(true);
-    } else {
-      setHistoryLoaderMessage("Загружаем историю просмотра...");
-      setHistoryLoading(true);
+      currentHistory = cachedHistory.items;
     }
+    renderRecentMovies(currentHistory);
 
     setupSearchEvents();
-
-    loadHistory()
-      .then((history) => {
-        if (!isSameHistoryList(history, currentHistory)) return;
-        updateHistoryState(currentHistory, { shouldRender: true });
-      })
-      .finally(() => {
-        setHistoryLoading(false);
-      });
+    document.getElementById("adminPlayerHistory")?.addEventListener("toggle", event => {
+      if (event.target.open) ensureHistoryLoaded();
+    });
   } catch (error) {
     console.error("Admin player init error", error);
   }

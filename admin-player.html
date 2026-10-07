@@ -55,7 +55,7 @@
           </div>
         </section>
 
-        <section class="order-player-modal admin-player-embed">
+        <section class="order-player-modal admin-player-embed is-idle">
           <div class="order-player-header">
             <div class="order-player-heading">
               <h2 id="adminPlayerTitle" class="order-player-title">Выберите фильм для просмотра</h2>
@@ -75,19 +75,29 @@
             </div>
           </div>
           <div class="order-player-frame-wrap">
+            <section id="adminPlayerWelcome" class="admin-player-welcome" aria-labelledby="adminPlayerWelcomeTitle">
+              <div class="admin-player-welcome__heading">
+                <span class="admin-player-welcome__eyebrow"><i class="fa-solid fa-film" aria-hidden="true"></i> Вечер хорошего кино</span>
+                <h2 id="adminPlayerWelcomeTitle">Что посмотрим?</h2>
+                <p id="adminPlayerWelcomeHint">Выберите фильм из недавних или найдите что-нибудь новое.</p>
+              </div>
+              <div id="adminPlayerRecentMovies" class="admin-player-welcome__movies" aria-label="Недавно открытые фильмы"></div>
+              <p id="adminPlayerWelcomeStatus" class="admin-player-welcome__status" role="status" aria-live="polite">Загружаем последние фильмы…</p>
+              <button id="adminPlayerWelcomeSearch" class="admin-player-welcome__search" type="button"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Найти другой фильм <i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
+            </section>
             <div id="adminPlayerLoader" class="order-player-loader" aria-hidden="true">
               <div class="order-player-spinner"></div>
               <div class="order-player-loader-text">Загружаю плеер…</div>
             </div>
-            <iframe id="adminPlayerFrame" class="order-player-frame" title="Плеер фильма" loading="lazy"
+            <iframe id="adminPlayerFrame" class="order-player-frame" title="Плеер фильма" loading="lazy" hidden
               allow="autoplay; fullscreen; picture-in-picture"></iframe>
           </div>
         </section>
       </div>
 
-      <section class="admin-player-history">
-        <div class="admin-player-history__header">
-          <h2 class="admin-player-history__title">История просмотра</h2>
+      <details id="adminPlayerHistory" class="admin-player-history">
+        <summary class="admin-player-history__header">
+          <span class="admin-player-history__title"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> История просмотра</span>
           <div id="adminPlayerHistoryLoader" class="section-loader section-loader--compact admin-player-history__loader" role="status" aria-live="polite" aria-hidden="true">
             <div class="section-loader__spinner" aria-hidden="true">
               <span class="section-loader__ring"></span>
@@ -95,10 +105,12 @@
             </div>
             <p class="section-loader__text">Загружаем историю просмотра...</p>
           </div>
-        </div>
+          <i class="fa-solid fa-chevron-down admin-player-history__chevron" aria-hidden="true"></i>
+        </summary>
         <div id="adminPlayerHistoryList" class="admin-player-history__list"></div>
         <p class="admin-player-history__empty" hidden>Пока ничего не смотрели</p>
-      </section>
+        <p id="adminPlayerHistoryError" class="admin-player-history__empty" role="status" hidden>Не удалось загрузить историю. Сверните и раскройте её, чтобы повторить.</p>
+      </details>
     </main>
 
   </div>
