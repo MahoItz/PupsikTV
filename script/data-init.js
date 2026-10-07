@@ -1,5 +1,182 @@
 ﻿// ---------- File upload helpers ----------
 
+const CATALOG_PAGE_SIZE = 200;
+const catalogDetailFields = {
+  movies: {
+    table: "movies",
+    fields: {
+      description: "description",
+      country: "country",
+      actors: "actors",
+      director: "director",
+      studios: "studios",
+    },
+  },
+  watchlist: {
+    table: "Movie_Orders",
+    fields: {
+      description: "description",
+      country: "country",
+      actors: "actors",
+      director: "director",
+      studios: "studios",
+      parents_guide: "parentGuide",
+    },
+  },
+  gameOrders: {
+    table: "Game_Orders",
+    fields: {
+      description: "description",
+      platforms: "platforms",
+      developers: "developers",
+      publishers: "publishers",
+    },
+  },
+  playedGames: {
+    table: "games",
+    fields: {
+      description: "description",
+      platforms: "platforms",
+      developers: "developers",
+      publishers: "publishers",
+    },
+  },
+};
+const catalogDetailRequests = new Map();
+
+function getCatalogItems(catalog) {
+  if (catalog === "movies") return allMovies;
+  if (catalog === "watchlist") return watchlist;
+  if (catalog === "gameOrders") return gameOrders;
+  if (catalog === "playedGames") return allPlayedGames;
+  return [];
+}
+
+async function fetchCatalogRows(catalog, columns, ascending) {
+  const config = catalogDetailFields[catalog];
+  const summaryColumns = columns
+    .split(",")
+    .map((column) => column.trim())
+    .filter((column) => !Object.hasOwn(config.fields, column))
+    .join(", ");
+  const rows = [];
+  const seenIds = new Set();
+  let total = null;
+  while (true) {
+    const offset = rows.length;
+    const { data, error, count } = await supabaseClient
+      .from(config.table)
+      .select(summaryColumns, offset === 0 ? { count: "exact" } : undefined)
+      .order("id", { ascending })
+      .range(offset, offset + CATALOG_PAGE_SIZE - 1);
+    if (error) throw error;
+    if (!Array.isArray(data)) throw new Error("Invalid catalog response");
+    if (offset === 0 && Number.isInteger(count) && count >= 0) total = count;
+    for (const row of data) {
+      if (seenIds.has(row.id))
+        throw new Error("Catalog changed during pagination; retry required");
+      seenIds.add(row.id);
+    }
+    rows.push(...data);
+    if (total !== null && rows.length >= total) break;
+    if (data.length === 0) {
+      if (total !== null && rows.length < total) {
+        throw new Error(
+          "Catalog changed or pagination stopped before all rows arrived",
+        );
+      }
+      break;
+    }
+    // Without a count, only an empty page proves completion (the server may
+    // enforce a row limit smaller than our requested page size).
+  }
+  return { data: rows, error: null };
+}
+
+function preserveCatalogDetails(catalog, items) {
+  const previous = new Map(
+    getCatalogItems(catalog).map((item) => [item.id, item]),
+  );
+  const fields = Object.values(catalogDetailFields[catalog].fields);
+  for (const item of items) {
+    const cached = previous.get(item.id);
+    for (const field of fields) {
+      if (cached && Object.hasOwn(cached, field)) item[field] = cached[field];
+    }
+    if (catalog === "watchlist") {
+      item.parentGuideStatus = item.parentGuide ? "ready" : null;
+    }
+    item._detailsLoaded = false;
+  }
+  return items;
+}
+
+function persistCatalogCache(catalog) {
+  const key =
+    catalog === "movies"
+      ? "moviesCache"
+      : catalog === "playedGames"
+        ? "gamesCache"
+        : null;
+  if (!key) return;
+  try {
+    localStorage.setItem(key, JSON.stringify(getCatalogItems(catalog)));
+  } catch (error) {
+    console.warn("Unable to save catalog cache", error);
+  }
+}
+
+function ensureCatalogItemDetails(catalog, id) {
+  const item = getCatalogItems(catalog).find(
+    (entry) => String(entry.id) === String(id),
+  );
+  if (!item || item._detailsLoaded !== false) return Promise.resolve(item);
+  const key = `${catalog}:${id}`;
+  if (catalogDetailRequests.has(key)) return catalogDetailRequests.get(key);
+  const config = catalogDetailFields[catalog];
+  const request = Promise.resolve()
+    .then(async () => {
+      if (!supabaseClient) throw new Error("Catalog API unavailable");
+      const { data, error } = await supabaseClient
+        .from(config.table)
+        .select(Object.keys(config.fields).join(", "))
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throw new Error("Invalid catalog item response");
+      }
+      const current = getCatalogItems(catalog).find(
+        (entry) => String(entry.id) === String(id),
+      );
+      if (!current) return null;
+      const details = {};
+      for (const [column, field] of Object.entries(config.fields)) {
+        let value = data[column] ?? null;
+        if (field === "actors") value = normalizeActorsValue(value);
+        if (field === "parentGuide" && typeof value === "string") {
+          try {
+            value = JSON.parse(value);
+          } catch {
+            value = null;
+          }
+        }
+        details[field] = value;
+      }
+      Object.assign(current, details);
+      if (catalog === "watchlist") {
+        current.parentGuideStatus = current.parentGuide ? "ready" : null;
+        current.parentGuideError = null;
+      }
+      current._detailsLoaded = true;
+      persistCatalogCache(catalog);
+      return current;
+    })
+    .finally(() => catalogDetailRequests.delete(key));
+  catalogDetailRequests.set(key, request);
+  return request;
+}
+
 function recalculateMovieUserRatings(targetMovies = allMovies) {
   if (!Array.isArray(targetMovies)) return;
 
@@ -246,12 +423,11 @@ async function loadMoviesFromSupabase() {
     message: hasExistingContent ? "Обновляем фильмы..." : "Загружаем фильмы...",
   });
   try {
-    const { data, error } = await supabaseClient
-      .from("movies")
-      .select(
-        "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, kp_id, imdb_id, studios, watch_source"
-      )
-      .order("id", { ascending: false });
+    const { data, error } = await fetchCatalogRows(
+      "movies",
+      "id, title, original_title, genres, poster, year, rating_numeric, rating_OMDB, rating_sum, rating_count, date, order_by, order_type, description, country, actors, director, kp_id, imdb_id, studios, watch_source",
+      false,
+    );
 
     if (error) throw error;
 
@@ -288,14 +464,15 @@ async function loadMoviesFromSupabase() {
       };
     });
 
+    preserveCatalogDetails("movies", newMovies);
     const currentSignature = computeMoviesSignature(allMovies);
     const freshSignature = computeMoviesSignature(newMovies);
 
+    allMovies = newMovies;
+    totalMovies = allMovies.length;
     if (currentSignature !== freshSignature) {
-      allMovies = newMovies;
-      totalMovies = allMovies.length;
       recalculateMovieUserRatings(allMovies);
-      localStorage.setItem("moviesCache", JSON.stringify(newMovies));
+      persistCatalogCache("movies");
     }
     return true;
   } catch (err) {
@@ -320,16 +497,15 @@ async function loadWatchlistFromSupabase() {
     compact: true,
   });
   try {
-    const { data, error } = await supabaseClient
-      .from("Movie_Orders")
-      .select(
-        "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, kp_id, imdb_id, studios, watch_source"
-      )
-      .order("id", { ascending: true });
+    const { data, error } = await fetchCatalogRows(
+      "watchlist",
+      "id, created_at, plan_date, order_title, order_origin_title, order_type, order_by, kinopoisk_rate, order_genres, order_poster, order_year, order_length, parents_guide, description, country, actors, director, kp_id, imdb_id, studios, watch_source",
+      true,
+    );
 
     if (error) throw error;
 
-    watchlist = data.map((item) => {
+    const newWatchlist = data.map((item) => {
       let parentGuide = item.parents_guide ?? null;
       if (typeof parentGuide === "string") {
         try {
@@ -366,6 +542,7 @@ async function loadWatchlistFromSupabase() {
         watchSource: normalizeWatchSource(item.watch_source),
       };
     });
+    watchlist = preserveCatalogDetails("watchlist", newWatchlist);
     return true;
   } catch (err) {
     console.error("Error loading watchlist from Supabase", err);
@@ -389,16 +566,15 @@ async function loadGamesFromSupabase() {
     compact: true,
   });
   try {
-    const { data, error } = await supabaseClient
-      .from("Game_Orders")
-      .select(
-        "id, created_at, game_title, game_order_type, game_order_by, game_mode, game_genres, game_poster, game_year, game_plan_date, description, rawg_rating, metacritic, released, playtime, playtime_hastily, playtime_normally, playtime_completely, playtime_count, platforms, developers, publishers, rawg_id, streams_completed"
-      )
-      .order("id", { ascending: true });
+    const { data, error } = await fetchCatalogRows(
+      "gameOrders",
+      "id, created_at, game_title, game_order_type, game_order_by, game_mode, game_genres, game_poster, game_year, game_plan_date, description, rawg_rating, metacritic, released, playtime, playtime_hastily, playtime_normally, playtime_completely, playtime_count, platforms, developers, publishers, rawg_id, streams_completed",
+      true,
+    );
 
     if (error) throw error;
 
-    gameOrders = data.map((item) => ({
+    const newGameOrders = data.map((item) => ({
       id: item.id,
       title: item.game_title,
       genres: item.game_genres,
@@ -431,6 +607,7 @@ async function loadGamesFromSupabase() {
       ),
     }));
 
+    gameOrders = preserveCatalogDetails("gameOrders", newGameOrders);
     return true;
   } catch (err) {
     console.error("Error loading game orders from Supabase", err);
@@ -453,12 +630,11 @@ async function loadPlayedGamesFromSupabase() {
       : "Загружаем пройденные игры...",
   });
   try {
-    const { data, error } = await supabaseClient
-      .from("games")
-      .select(
-        "id, title, genres, poster, year, rating_numeric, date, order_by, order_type, game_mode, game_rating_sum, game_rating_count, description, rawg_rating, metacritic, released, playtime, playtime_hastily, playtime_normally, playtime_completely, playtime_count, platforms, developers, publishers, rawg_id"
-      )
-      .order("id", { ascending: false });
+    const { data, error } = await fetchCatalogRows(
+      "playedGames",
+      "id, title, genres, poster, year, rating_numeric, date, order_by, order_type, game_mode, game_rating_sum, game_rating_count, description, rawg_rating, metacritic, released, playtime, playtime_hastily, playtime_normally, playtime_completely, playtime_count, platforms, developers, publishers, rawg_id",
+      false,
+    );
 
     if (error) throw error;
 
@@ -498,14 +674,15 @@ async function loadPlayedGamesFromSupabase() {
             : null,
       };
     });
-    const currentSignature = computeGamesSignature(allPlayedGames);
-    const freshSignature = computeGamesSignature(newPlayedGames);
+    preserveCatalogDetails("playedGames", newPlayedGames);
+    const currentSignature = JSON.stringify(allPlayedGames);
+    const freshSignature = JSON.stringify(newPlayedGames);
 
+    allPlayedGames = newPlayedGames;
+    totalGamesPlayed = allPlayedGames.length;
     if (currentSignature !== freshSignature) {
-      allPlayedGames = newPlayedGames;
-      totalGamesPlayed = allPlayedGames.length;
       recalculateGameUserRatings(allPlayedGames);
-      localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
+      persistCatalogCache("playedGames");
     }
     return true;
   } catch (err) {

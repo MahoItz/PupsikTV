@@ -33,7 +33,17 @@ function setup({
       events.push(`api:${table}`);
       return {
         select: () => ({
-          order: () => new Promise((resolve) => refreshes.push(resolve)),
+          order: () => ({
+            range: () =>
+              new Promise((resolve) => refreshes.push(resolve)).then(
+                (response) => ({
+                  count: Array.isArray(response.data)
+                    ? response.data.length
+                    : null,
+                  ...response,
+                })
+              ),
+          }),
         }),
       };
     },

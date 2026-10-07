@@ -646,6 +646,9 @@ if (fortuneWinnerSaveBtn) {
         fortuneWinnerMovie.kinopoiskId ||
         null;
 
+      if (fortuneWinnerMovie.match?.id) {
+        fortuneWinnerMovie.match = await ensureCatalogItemDetails('movies', fortuneWinnerMovie.match.id);
+      }
       const orderData = buildFortuneWinnerOrderData(orderBy);
       if (!orderData) {
         throw new Error('Fortune winner order data is incomplete');

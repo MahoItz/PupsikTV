@@ -25,7 +25,11 @@ function createContext(row) {
     document: { addEventListener() {}, getElementById: () => null },
     supabaseClient: {
       from: () => ({
-        select: () => ({ order: async () => ({ data: [row], error: null }) }),
+        select: () => ({
+          order: () => ({
+            range: async () => ({ data: [row], count: 1, error: null }),
+          }),
+        }),
       }),
     },
     localStorage: { setItem: (...args) => writes.push(args) },

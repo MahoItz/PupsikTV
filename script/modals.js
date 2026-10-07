@@ -762,7 +762,7 @@ function handleMovieDetailsStudios(movie, modal) {
     
     movieStudiosRequestId++;
     const currentRequestId = movieStudiosRequestId;
-    loadStudios(movie, section, currentRequestId, "movies");
+    if (movie._detailsLoaded !== false) loadStudios(movie, section, currentRequestId, "movies");
   }
 }
 
@@ -785,7 +785,7 @@ function handleOrderDetailsStudios(order, modal) {
 
     movieStudiosRequestId++;
     const currentRequestId = movieStudiosRequestId;
-    loadStudios(order, section, currentRequestId, "Movie_Orders");
+    if (order._detailsLoaded !== false) loadStudios(order, section, currentRequestId, "Movie_Orders");
   }
 }
 
@@ -1219,6 +1219,35 @@ function setDetailsModalContext(modal, type, id) {
   if (!modal) return;
   modal.dataset.recordType = type;
   modal.dataset.recordId = id;
+  modal._catalogDetailsVersion = (modal._catalogDetailsVersion || 0) + 1;
+  modal.removeAttribute("aria-busy");
+}
+
+function refreshCatalogModalDetails(catalog, item, modal, render) {
+  if (item._detailsLoaded !== false) return;
+  const version = modal._catalogDetailsVersion;
+  const isCurrent = () =>
+    modal._catalogDetailsVersion === version &&
+    modal.style.display !== "none" &&
+    String(modal.dataset.recordId) === String(item.id);
+  modal.setAttribute("aria-busy", "true");
+  void ensureCatalogItemDetails(catalog, item.id)
+    .then((updated) => {
+      if (updated && isCurrent()) render(updated);
+    })
+    .catch((error) => {
+      console.warn("Unable to load catalog item details", error);
+      if (isCurrent()) {
+        showToastNotification(
+          "Не удалось загрузить подробности. Откройте карточку повторно для новой попытки.",
+          "error",
+        );
+      }
+    })
+    .finally(() => {
+      if (modal._catalogDetailsVersion === version)
+        modal.removeAttribute("aria-busy");
+    });
 }
 
 function getRecordByType(type, id) {
@@ -1455,6 +1484,7 @@ function openMovieDetailsModal(id) {
 
   alignDetailsPoster(modal);
   modal.style.display = "block";
+  refreshCatalogModalDetails("movies", movie, modal, () => openMovieDetailsModal(id));
 }
 
 let activeGameDetailsId = null;
@@ -1776,8 +1806,9 @@ async function openGameDetailsModal(id) {
 
   renderGameDetailsModal(game, modal);
   modal.style.display = "block";
+  refreshCatalogModalDetails("playedGames", game, modal, (updated) => renderGameDetailsModal(updated, modal));
 
-  if (!hasGameDetailsPlatforms(game)) {
+  if (game._detailsLoaded === undefined && !hasGameDetailsPlatforms(game)) {
     setMovieDetailsText("gameDetailsDescription", "Загружаем...", "—");
     const updatedGame = await prefetchPlayedGameDetails(game);
     if (activeGameDetailsId === id) {
@@ -1951,7 +1982,7 @@ function renderOrderDetailsModal(order) {
     exitBtn.onclick = () => closeModal("orderDetailsModal");
   }
 
-  if (typeof updateOrderDetailsExtras === "function") {
+  if (order._detailsLoaded !== false && typeof updateOrderDetailsExtras === "function") {
     updateOrderDetailsExtras(order);
   }
 
@@ -1962,6 +1993,8 @@ function openOrderDetailsModal(id) {
   const order = watchlist.find((o) => o.id === id);
   if (!order) return;
   renderOrderDetailsModal(order);
+  const modal = document.getElementById("orderDetailsModal");
+  if (modal) refreshCatalogModalDetails("watchlist", order, modal, renderOrderDetailsModal);
 }
 
 function openOrderDetailsModalFromData(order) {
@@ -2059,6 +2092,7 @@ function openGameOrderDetailsModal(id) {
 
   alignDetailsPoster(modal);
   modal.style.display = "block";
+  refreshCatalogModalDetails("gameOrders", game, modal, () => openGameOrderDetailsModal(id));
 }
 
 // Normalize labels in case HTML encoding is off.

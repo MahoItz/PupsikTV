@@ -2554,7 +2554,15 @@ async function submitRating() {
   // Находим фильм в watchlist по id
   const itemIndex = watchlist.findIndex((item) => item.id === ratingMovieId);
   if (itemIndex !== -1) {
-    const source = watchlist[itemIndex];
+    let source;
+    try {
+      source = await ensureCatalogItemDetails('watchlist', ratingMovieId);
+    } catch (error) {
+      console.warn('Unable to load order before promotion', error);
+      showToastNotification('Не удалось загрузить подробности заказа. Повторите попытку.', 'error');
+      return;
+    }
+    if (!source || isSubmittingRating || source.id !== ratingMovieId) return;
     const watchedMovie = {
       title: source.title,
       originalTitle: source.originalTitle || '',
@@ -2615,7 +2623,7 @@ async function submitRating() {
           },
           body: JSON.stringify({
             action: 'promote_movie_order',
-            orderId: ratingMovieId,
+            orderId: source.id,
             movie: {
               title: watchedMovie.title,
               original_title: watchedMovie.originalTitle,
@@ -2682,7 +2690,8 @@ async function submitRating() {
 
       allMovies.unshift(newMovie);
       localStorage.setItem('moviesCache', JSON.stringify(allMovies));
-      watchlist.splice(itemIndex, 1);
+      const completedOrderIndex = watchlist.findIndex((item) => item.id === source.id);
+      if (completedOrderIndex !== -1) watchlist.splice(completedOrderIndex, 1);
       currentPage = 1;
       renderMovies();
       renderWatchlist();
@@ -2708,7 +2717,15 @@ async function submitGameRating() {
   }
   const idx = gameOrders.findIndex((g) => g.id === ratingGameId);
   if (idx !== -1) {
-    const source = gameOrders[idx];
+    let source;
+    try {
+      source = await ensureCatalogItemDetails('gameOrders', ratingGameId);
+    } catch (error) {
+      console.warn('Unable to load order before promotion', error);
+      showToastNotification('Не удалось загрузить подробности заказа. Повторите попытку.', 'error');
+      return;
+    }
+    if (!source || source.id !== ratingGameId) return;
     const descriptionValue = (() => {
       if (!source?.description) return null;
       if (typeof source.description === 'object') return source.description;
@@ -2755,7 +2772,7 @@ async function submitGameRating() {
           },
           body: JSON.stringify({
             action: 'promote_game_order',
-            orderId: ratingGameId,
+            orderId: source.id,
             game: {
               title: played.title,
               genres: played.genres,
@@ -2828,7 +2845,8 @@ async function submitGameRating() {
 
       allPlayedGames.unshift(newGame);
       localStorage.setItem('gamesCache', JSON.stringify(allPlayedGames));
-      gameOrders.splice(idx, 1);
+      const completedOrderIndex = gameOrders.findIndex((item) => item.id === source.id);
+      if (completedOrderIndex !== -1) gameOrders.splice(completedOrderIndex, 1);
       renderPlayedGames();
       renderGames();
       closeModal('rateGameModal', true);
@@ -4179,13 +4197,25 @@ function setDetailsValueText(valueId, value) {
   setMovieDetailsText(valueId, empty ? '' : value, '—');
 }
 
-function enterDetailsEdit(key) {
+async function enterDetailsEdit(key) {
   const config = detailsEditConfigs[key];
   if (!config) return;
   const modal = document.getElementById(config.modalId);
   if (!modal) return;
-  const record = getRecordByType(config.recordType, modal.dataset.recordId);
+  let record = getRecordByType(config.recordType, modal.dataset.recordId);
   if (!record) return;
+  const recordId = record.id;
+  const catalog = { movie: 'movies', playedGame: 'playedGames', order: 'watchlist', gameOrder: 'gameOrders' }[config.recordType];
+  if (record._detailsLoaded === false) {
+    try {
+      record = await ensureCatalogItemDetails(catalog, recordId);
+    } catch (error) {
+      console.warn('Unable to load details before editing', error);
+      showToastNotification('Не удалось загрузить подробности. Повторите попытку.', 'error');
+      return;
+    }
+    if (!record || modal.style.display === 'none' || String(modal.dataset.recordId) !== String(recordId)) return;
+  }
 
   config.fields.forEach((field) => {
     const span = document.getElementById(field.valueId);
