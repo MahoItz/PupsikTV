@@ -276,7 +276,7 @@ async function loadSettingsFromSupabase() {
       rouletteLastWinner = (pending ?? "").trim();
       await persistRouletteLastWinner(pending);
       syncRouletteAutofillState();
-      return;
+      return true;
     }
 
     rouletteLastWinner = "";
@@ -286,8 +286,10 @@ async function loadSettingsFromSupabase() {
     if (remoteValue) {
       persistRouletteLastWinner(null);
     }
+    return true;
   } catch (err) {
     console.error("Error loading settings from Supabase", err);
+    return false;
   }
 }
 
@@ -376,8 +378,10 @@ async function loadMoviesFromSupabase() {
       recalculateMovieUserRatings(allMovies);
       localStorage.setItem("moviesCache", JSON.stringify(newMovies));
     }
+    return true;
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
+    return false;
   } finally {
     moviesLoading = false;
     toggleSectionLoading(grid, false);
@@ -443,8 +447,10 @@ async function loadWatchlistFromSupabase() {
         watchSource: normalizeWatchSource(item.watch_source),
       };
     });
+    return true;
   } catch (err) {
     console.error("Error loading watchlist from Supabase", err);
+    return false;
   } finally {
     watchlistLoading = false;
     toggleSectionLoading(container, false);
@@ -506,8 +512,10 @@ async function loadGamesFromSupabase() {
       ),
     }));
 
+    return true;
   } catch (err) {
     console.error("Error loading game orders from Supabase", err);
+    return false;
   } finally {
     gameOrdersLoading = false;
     toggleSectionLoading(container, false);
@@ -580,8 +588,10 @@ async function loadPlayedGamesFromSupabase() {
       recalculateGameUserRatings(allPlayedGames);
       localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
     }
+    return true;
   } catch (err) {
     console.error("Error loading played games", err);
+    return false;
   } finally {
     playedGamesLoading = false;
     toggleSectionLoading(grid, false);
@@ -590,6 +600,88 @@ async function loadPlayedGamesFromSupabase() {
 }
 
 // Инициализация
+// Share in-flight requests and keep successful catalogs until the page reloads.
+const catalogLoadRequests = new Map();
+
+function ensureCatalogLoaded(catalog) {
+  if (catalogLoadRequests.has(catalog)) return catalogLoadRequests.get(catalog);
+  const loaders = {
+    movies: loadMoviesFromSupabase,
+    playedGames: loadPlayedGamesFromSupabase,
+    watchlist: loadWatchlistFromSupabase,
+    games: loadGamesFromSupabase,
+    settings: loadSettingsFromSupabase,
+  };
+  if (!supabaseClient || !loaders[catalog]) return Promise.resolve(false);
+  const request = Promise.resolve().then(async () => {
+    try {
+      const cacheKey = catalog === "movies" ? "moviesCache"
+        : catalog === "playedGames" ? "gamesCache" : null;
+      if (cacheKey) {
+        try {
+          const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+          if (Array.isArray(cached)) {
+            if (catalog === "movies") {
+              allMovies = cached;
+              totalMovies = cached.length;
+              recalculateMovieUserRatings();
+              renderMovies();
+            } else {
+              allPlayedGames = cached;
+              totalGamesPlayed = cached.length;
+              recalculateGameUserRatings();
+              renderPlayedGames();
+            }
+          }
+        } catch (error) {
+          console.warn("Unable to restore catalog cache", error);
+        }
+      }
+      const loaded = await loaders[catalog]();
+      if (!loaded) catalogLoadRequests.delete(catalog);
+      return loaded;
+    } catch (error) {
+      catalogLoadRequests.delete(catalog);
+      console.error("Unable to load catalog", error);
+      return false;
+    }
+  });
+  catalogLoadRequests.set(catalog, request);
+  return request;
+}
+
+function loadActiveCatalog() {
+  const catalog = window.innerWidth <= 768 && activeTab !== "movies"
+    ? activeTab : activeListTab === "games" ? "playedGames" : "movies";
+  return ensureCatalogLoaded(catalog);
+}
+
+function initVisibleCatalogLoading() {
+  void loadActiveCatalog();
+  // Desktop order columns have no tabs; fetch them when they enter the viewport.
+  if (typeof IntersectionObserver !== "function") {
+    if (window.innerWidth > 768) {
+      void ensureCatalogLoaded("watchlist");
+      void ensureCatalogLoaded("games");
+    }
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const catalog = entry.target.id === "watchlistSection" ? "watchlist" : "games";
+        void ensureCatalogLoaded(catalog).then((loaded) => {
+          if (loaded) observer.unobserve(entry.target);
+        });
+      }
+    }
+  });
+  for (const id of ["watchlistSection", "gamesSection"]) {
+    const section = document.getElementById(id);
+    if (section) observer.observe(section);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
   if (!supabaseClient) {
     showFatalErrorBanner(
@@ -602,12 +694,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   localStorage.removeItem("KINOPOISK_API_KEY2");
   localStorage.removeItem("KINOPOISK_API_KEY3");
   localStorage.removeItem("RAWG_API_KEY");
-  const cached = localStorage.getItem("moviesCache");
-  if (cached) {
-    allMovies = JSON.parse(cached);
-    totalMovies = allMovies.length;
-    recalculateMovieUserRatings();
-  }
   const ratedStored = localStorage.getItem("ratedMovies");
   if (ratedStored) {
     ratedMovies = JSON.parse(ratedStored);
@@ -616,13 +702,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   if (ratedGamesStored) {
     ratedGames = JSON.parse(ratedGamesStored);
   }
-  const gamesCached = localStorage.getItem("gamesCache");
-  if (gamesCached) {
-    allPlayedGames = JSON.parse(gamesCached);
-    totalGamesPlayed = allPlayedGames.length;
-    recalculateGameUserRatings(allPlayedGames);
-  }
-
   ratingTooltip = document.createElement("div");
   ratingTooltip.className = "rating-tooltip";
   document.body.appendChild(ratingTooltip);
@@ -725,7 +804,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   recalculateMovieUserRatings();
   recalculateGameUserRatings();
-  renderPlayedGames();
   setupRatingStars();
   initFileUpload();
 
@@ -796,13 +874,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     gameOrderBtn.replaceChildren(img);
   }
 
-  await Promise.all([
-    loadSettingsFromSupabase(),
-    loadMoviesFromSupabase(),
-    loadWatchlistFromSupabase(),
-    loadGamesFromSupabase(),
-    loadPlayedGamesFromSupabase(),
-  ]);
+  initVisibleCatalogLoading();
   const headerImg = document.querySelector("#headerLogo .header-mouse");
   if (headerImg)
     headerImg.addEventListener("click", () => {
@@ -828,7 +900,9 @@ document.addEventListener("DOMContentLoaded", async function () {
               showAdminControls();
               TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
               applyKpApiSelection(selectedKpApiValue);
-              await loadSettingsFromSupabase();
+              if (settingsPanel?.classList.contains("open")) {
+                await ensureCatalogLoaded("settings");
+              }
               closeModal("adminModal");
             } else {
               alert(

@@ -2094,6 +2094,8 @@ function showTab(tab) {
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
   updateTabVisibility();
+  updateListVisibility();
+  void loadActiveCatalog();
 }
 
 function updateTabVisibility() {
@@ -2142,6 +2144,7 @@ function showListTab(tab) {
   });
   updateListVisibility();
   requestAnimationFrame(updateListTabsIndicator);
+  void loadActiveCatalog();
 }
 
 function updateListVisibility() {
@@ -2154,5 +2157,7 @@ function updateListVisibility() {
 
 window.addEventListener("resize", () => {
   updateTabVisibility();
+  updateListVisibility();
+  void loadActiveCatalog();
   updateListTabsIndicator();
 });

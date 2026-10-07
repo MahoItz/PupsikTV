@@ -467,7 +467,9 @@ function toggleSettingsPanel(forceState) {
     );
   }
   if (nextState) {
-    refreshKpQuota();
+    void ensureCatalogLoaded("settings").then((loaded) => {
+      if (loaded && settingsPanel.classList.contains("open")) refreshKpQuota();
+    });
   }
 }
 

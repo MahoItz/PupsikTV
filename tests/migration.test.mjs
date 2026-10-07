@@ -67,6 +67,8 @@ test('public loaders start while the server configuration request is still pendi
     loseVolume: 1,
     rouletteSpinVolume: 1,
     activeListTab: 'movies',
+    activeTab: 'movies',
+    window: { innerWidth: 390 },
   };
   for (const name of [
     'hideAdminControls',
@@ -96,6 +98,7 @@ test('public loaders start while the server configuration request is still pendi
   ]) {
     context[name] = async () => {
       loaded.push(name);
+      return true;
     };
   }
   const result = await Promise.race([
@@ -103,7 +106,7 @@ test('public loaders start while the server configuration request is still pendi
     new Promise((resolve) => setTimeout(() => resolve('blocked'), 100)),
   ]);
   assert.equal(result, 'complete');
-  assert.equal(loaded.length, 5);
+  assert.deepEqual(loaded, ['loadMoviesFromSupabase']);
 });
 
 test('site configuration resolves APIs and assets below the project URL', () => {
