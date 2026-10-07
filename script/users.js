@@ -284,6 +284,6 @@ async function removeUserOrder({ userName, type }) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initUserPickers() {
   USER_PICKER_INPUTS.forEach(({ id, type }) => setupUserPickerField(id, type));
-});
+}

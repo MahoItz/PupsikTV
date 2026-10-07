@@ -177,11 +177,11 @@ test('restoring a session preserves credentials on failures and clears confirmed
         throw new Error('server down');
       },
     });
-    const core = read('script/core.js');
+    const core = read('script/admin.js');
     vm.runInContext(
       core.slice(
         core.indexOf('async function verifyAdminTokenRequest('),
-        core.indexOf('const ROULETTE_ORDER_TYPE')
+        core.indexOf('// Admin UI')
       ),
       b.context
     );

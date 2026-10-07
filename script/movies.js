@@ -1146,53 +1146,6 @@ function normalizeGameOrderStreams(value) {
   );
 }
 
-async function updateGameOrderStreams(gameId, nextValue) {
-  const game = gameOrders.find((item) => item.id === gameId);
-  if (!game) return;
-
-  const normalizedValue = normalizeGameOrderStreams(nextValue);
-  const previousValue = normalizeGameOrderStreams(game.streamsCompleted);
-  if (normalizedValue === previousValue) return;
-
-  game.streamsCompleted = normalizedValue;
-  renderGames();
-
-  try {
-    const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        action: "update_item",
-        table: "Game_Orders",
-        id: gameId,
-        changes: { streams_completed: normalizedValue },
-      }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(
-        payload?.error || `Game order streams update failed: ${response.status}`
-      );
-    }
-
-    game.streamsCompleted = normalizeGameOrderStreams(
-      payload?.row?.streams_completed
-    );
-    renderGames();
-  } catch (err) {
-    console.error("Error updating game order streams", err);
-    game.streamsCompleted = previousValue;
-    renderGames();
-    alert(
-      "Не удалось сохранить количество проведённых стримов по игре. Попробуйте ещё раз."
-    );
-  }
-}
-
 function createGameOrderStreamControls(game, showAdminControls) {
   const streamsCompleted = normalizeGameOrderStreams(game.streamsCompleted);
   const progressRow = document.createElement("div");
@@ -1868,76 +1821,6 @@ function getSortedWatchlist() {
       return a.index - b.index;
     })
     .map(({ item }) => item);
-}
-
-async function clearPlanDate(orderId) {
-  const order = watchlist.find((o) => o.id === orderId);
-  if (!order) return;
-
-  const previousPlan = order.planDate;
-  order.planDate = null;
-  renderWatchlist();
-
-  try {
-    const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        action: "update_item",
-        table: "Movie_Orders",
-        id: orderId,
-        changes: { plan_date: null },
-      }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload?.error || `Plan date clear failed: ${response.status}`);
-    }
-  } catch (err) {
-    console.error("Error clearing plan date", err);
-    order.planDate = previousPlan;
-    renderWatchlist();
-    alert("Не удалось удалить запланированное время. Попробуйте ещё раз.");
-  }
-}
-
-async function clearGamePlanDate(gameId) {
-  const game = gameOrders.find((g) => g.id === gameId);
-  if (!game) return;
-
-  const previousPlan = game.planDate;
-  game.planDate = null;
-  renderGames();
-
-  try {
-    const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-items"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        action: "update_item",
-        table: "Game_Orders",
-        id: gameId,
-        changes: { game_plan_date: null },
-      }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload?.error || `Game plan date clear failed: ${response.status}`);
-    }
-  } catch (err) {
-    console.error("Error clearing game plan date", err);
-    game.planDate = previousPlan;
-    renderGames();
-    alert("Не удалось удалить запланированное время. Попробуйте ещё раз.");
-  }
 }
 
 function appendGameTitleWithMode(container, titleText, gameMode, titleClass) {
@@ -2700,55 +2583,4 @@ function toggleGameSortOrder() {
     btn.replaceChildren(img);
   }
   renderPlayedGames();
-}
-
-async function deletePlayedGame(id) {
-  const idx = allPlayedGames.findIndex((g) => g.id === id);
-  if (idx === -1) {
-    return;
-  }
-
-  const [removedGame] = allPlayedGames.splice(idx, 1);
-  const hadUserRating = hasRatedGame(id);
-  const previousRatingValue = hadUserRating ? ratedGames[id] : null;
-  renderPlayedGames();
-
-  try {
-    const token = localStorage.getItem("adminToken") || "";
-    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=media-admin"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        action: "delete_item",
-        table: "games",
-        id,
-        posterUrl: removedGame?.poster || "",
-      }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload?.error || `Played game delete failed: ${response.status}`);
-    }
-
-    if (hadUserRating) {
-      delete ratedGames[id];
-      localStorage.setItem("ratedGames", JSON.stringify(ratedGames));
-    }
-    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
-  } catch (err) {
-    console.error("Error deleting game", err);
-    allPlayedGames.splice(idx, 0, removedGame);
-    if (hadUserRating && previousRatingValue !== null) {
-      ratedGames[id] = previousRatingValue;
-      localStorage.setItem("ratedGames", JSON.stringify(ratedGames));
-    }
-    localStorage.setItem("gamesCache", JSON.stringify(allPlayedGames));
-    renderPlayedGames();
-    alert(
-      "Не удалось удалить пройденную игру. Возможно, не хватает прав или запись уже удалена. Изменения отменены."
-    );
-  }
 }

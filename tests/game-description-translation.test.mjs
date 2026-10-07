@@ -8,7 +8,7 @@ const apiSource = readFileSync(
   'utf8'
 );
 const clientSource = readFileSync(
-  new URL('../script/media-fortune.js', import.meta.url),
+  new URL('../script/media-details.js', import.meta.url),
   'utf8'
 );
 

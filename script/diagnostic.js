@@ -486,4 +486,4 @@ function initDiagnosticManagerOnDemand() {
 }
 
 // Lazy init: diagnostics should not start in production path until explicitly requested.
-window.addEventListener('load', initDiagnosticManagerOnDemand);
+initDiagnosticManagerOnDemand();
