@@ -32,8 +32,8 @@ jobs:
           npm run build:pages
           npm run build:edge
 
-      - name: Check Pages migration
-        run: npm run test:migration
+      - name: Run all Node.js tests
+        run: npm run test:node
 
       - uses: denoland/setup-deno@v2
         with:

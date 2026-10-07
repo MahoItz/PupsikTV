@@ -50,3 +50,13 @@ Open the printed URL in your browser to view the site. The browser calls the
 Supabase API configured in `script/site-config.js`; a static server does not run
 the handlers under `api/`. See [the deployment guide](DEPLOYMENT.md) to run or
 publish the generated Edge Function and configure its server-side secrets.
+
+## Checks
+
+Run `npm test` to check ESLint, Stylelint and Prettier, build the Pages artifact,
+and run every `tests/*.test.mjs` Node.js test file. New test files matching this
+pattern are included automatically. To rerun only the Node.js tests after a build,
+use `npm run test:node`.
+
+The Quality Checks workflow runs the same linters and full Node.js test suite,
+builds Pages and the API, and checks and tests the Deno Edge Function.
