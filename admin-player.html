@@ -26,7 +26,7 @@
             <span>PupsikTV</span>
         </a>
         <div class="top-left-actions__menu">
-            <a href="admin-player.html" aria-current="page" class="admin-player-link">
+            <a href="admin-player.html" aria-current="page" class="admin-player-link" data-admin-navigation hidden>
                 <span class="top-left-actions__label">Плеер</span>
             </a>
             <a href="trailers.html" class="admin-player-link">
@@ -101,10 +101,6 @@
       </section>
     </main>
 
-    <section id="adminPlayerAccessDenied" class="admin-player-denied" hidden>
-      <h2>Только для админа</h2>
-      <p>Страница доступна после входа в админ-режим на главной странице.</p>
-    </section>
   </div>
   <footer class="site-footer">
     <p class="site-footer__text">Дата создания сайта: <span class="site-footer__date">6 июля 2025</span></p>
@@ -112,6 +108,7 @@
 
   <script src="script/admin-session.js" defer></script>
   <script src="script/admin-player.js" defer></script>
+  <script src="script/admin-navigation.js" defer></script>
 </body>
 
 </html>

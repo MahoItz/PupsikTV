@@ -681,17 +681,14 @@ function setupSearchEvents() {
 
 async function initPage() {
   const app = document.getElementById("adminPlayerApp");
-  const denied = document.getElementById("adminPlayerAccessDenied");
 
   try {
     const hasAccess = await verifyAdminAccess();
     if (!hasAccess) {
-      if (denied) denied.hidden = false;
       return;
     }
 
     if (app) app.hidden = false;
-    if (denied) denied.hidden = true;
 
     const cachedHistory = readHistoryCache();
     if (cachedHistory?.items?.length) {
@@ -715,7 +712,6 @@ async function initPage() {
       });
   } catch (error) {
     console.error("Admin player init error", error);
-    if (denied) denied.hidden = false;
   }
 }
 
