@@ -798,6 +798,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   ratingTooltip.className = "rating-tooltip";
   document.body.appendChild(ratingTooltip);
 
+  document.querySelectorAll("#headerLogo .social-link").forEach((link) => {
+    attachRatingTooltip(link, link.getAttribute("aria-label"));
+  });
+
   if (typeof initTopLeftActionsMenu === "function") {
     initTopLeftActionsMenu();
   }
