@@ -7,6 +7,105 @@ import vm from 'node:vm';
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 
+test('Supabase is ready before DOM startup without requesting server configuration', () => {
+  const calls = [];
+  const client = { from() {} };
+  const context = {
+    SUPABASE_URL: 'https://shwekurmzyzivtworjup.supabase.co',
+    window: {
+      Pupsik: { supabasePublicKey: 'public-key' },
+      supabase: {
+        createClient(...args) {
+          calls.push(args);
+          return client;
+        },
+      },
+    },
+  };
+  const source = read('script/core.js');
+  vm.runInNewContext(
+    source.slice(
+      source.indexOf('let SUPABASE_PUBLIC_KEY;'),
+      source.indexOf('let cachedGuestId')
+    ),
+    context
+  );
+  assert.equal(vm.runInNewContext('supabaseClient', context), client);
+  vm.runInNewContext('initializeSupabaseClient("public-key")', context);
+  assert.equal(
+    calls.length,
+    1,
+    'background settings reuse the existing client'
+  );
+});
+
+test('public loaders start while the server configuration request is still pending', async () => {
+  let startup;
+  const loaded = [];
+  const noop = () => {};
+  const context = {
+    console,
+    supabaseClient: {},
+    localStorage: { getItem: () => null, removeItem: noop },
+    document: {
+      addEventListener: (_event, handler) => {
+        startup = handler;
+      },
+      getElementById: () => null,
+      querySelectorAll: () => [],
+      createElement: () => ({}),
+      body: { appendChild: noop },
+    },
+    loadEnv: () => new Promise(() => {}),
+    restoreAdminSession: () => {
+      throw new Error('Must not run before env resolves');
+    },
+    allMovies: [],
+    allPlayedGames: [],
+    selectedKpApiValue: 'API 1',
+    victoryVolume: 1,
+    loseVolume: 1,
+    rouletteSpinVolume: 1,
+    activeListTab: 'movies',
+  };
+  for (const name of [
+    'hideAdminControls',
+    'applyKpApiSelection',
+    'applyVictoryVolume',
+    'applyLoseVolume',
+    'applyRouletteSpinVolume',
+    'renderPlayedGames',
+    'setupRatingStars',
+    'updateTabVisibility',
+    'updateListVisibility',
+    'showListTab',
+  ])
+    context[name] = noop;
+  const source = read('script/data-init.js');
+  // Execute the actual startup path through the first batch of data loads.
+  vm.runInNewContext(
+    source.slice(0, source.indexOf('  const headerImg =')) + '\n});',
+    context
+  );
+  for (const name of [
+    'loadSettingsFromSupabase',
+    'loadMoviesFromSupabase',
+    'loadWatchlistFromSupabase',
+    'loadGamesFromSupabase',
+    'loadPlayedGamesFromSupabase',
+  ]) {
+    context[name] = async () => {
+      loaded.push(name);
+    };
+  }
+  const result = await Promise.race([
+    startup().then(() => 'complete'),
+    new Promise((resolve) => setTimeout(() => resolve('blocked'), 100)),
+  ]);
+  assert.equal(result, 'complete');
+  assert.equal(loaded.length, 5);
+});
+
 test('site configuration resolves APIs and assets below the project URL', () => {
   const context = {
     window: {},

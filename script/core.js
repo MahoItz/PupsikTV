@@ -256,6 +256,26 @@ let SUPABASE_PUBLIC_KEY;
 let supabaseClient;
 let currentSupabaseKey = null;
 
+function initializeSupabaseClient(key) {
+  if (!key) throw new Error("Missing public Supabase key");
+  if (!supabaseClient || currentSupabaseKey !== key) {
+    // Admin sessions use our API, not Supabase Auth.
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
+    currentSupabaseKey = key;
+  }
+  SUPABASE_PUBLIC_KEY = key;
+  return supabaseClient;
+}
+
+// Make the client available before other scripts start their data loaders.
+initializeSupabaseClient(window.Pupsik.supabasePublicKey);
+
 let cachedGuestId = null;
 let isSubmittingUserRating = false;
 let settingsRowId = null;
@@ -1450,7 +1470,10 @@ async function loadEnv(options = {}) {
   }
 
   try {
-    const res = await fetch(window.Pupsik.apiUrl("/api/admin?action=env"), { headers });
+    const res = await fetch(window.Pupsik.apiUrl("/api/admin?action=env"), {
+      headers,
+      signal: AbortSignal.timeout(15000),
+    });
     if (res.status === 401 && token && !opts._retriedWithoutToken) {
       if (window.PupsikAdminSession.getToken() === token) clearAdminSession();
       return loadEnv({
@@ -1501,20 +1524,7 @@ async function loadEnv(options = {}) {
       error.status = 500;
       throw error;
     }
-    if (!supabaseClient || currentSupabaseKey !== key) {
-      SUPABASE_PUBLIC_KEY = key;
-      // Admin sessions use our API, not Supabase Auth.
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, key, {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false,
-        },
-      });
-      currentSupabaseKey = key;
-    } else {
-      SUPABASE_PUBLIC_KEY = key;
-    }
+    initializeSupabaseClient(key);
     const kpOptions = Array.isArray(env.KINOPOISK_API_OPTIONS)
       ? env.KINOPOISK_API_OPTIONS
       : [];

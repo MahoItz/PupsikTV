@@ -1,16 +1,9 @@
 (function () {
   const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
-  const API_BASE_PATH = window.Pupsik.apiBase;
   const MOVIE_RATING_MAX = 11;
   const LEADERBOARD_LIMIT = 10;
-  const ENV_TIMEOUT_MS = 12000;
   const DATA_TIMEOUT_MS = 20000;
   const ROULETTE_ORDER_TYPE = "Рулетка";
-
-  function buildApiPath(path) {
-    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-    return `${API_BASE_PATH}${normalizedPath}`;
-  }
 
   function showError(message) {
     const errorBox = document.getElementById("statsError");
@@ -84,29 +77,6 @@
       dateStyle: "long",
       timeStyle: "short",
     }).format(value);
-  }
-
-  async function loadEnv() {
-    const response = await withTimeout(
-      fetch(buildApiPath("/admin?action=env"), {
-        headers: {
-          Accept: "application/json",
-        },
-      }),
-      ENV_TIMEOUT_MS,
-      "ENV request"
-    );
-
-    if (!response.ok) {
-      throw new Error(`ENV request failed: ${response.status}`);
-    }
-
-    const payload = await response.json();
-    if (!payload?.SUPABASE_PUBLIC_KEY) {
-      throw new Error("SUPABASE_PUBLIC_KEY is missing in env response.");
-    }
-
-    return payload;
   }
 
   async function loadStatsData(client) {
@@ -615,10 +585,9 @@
         throw new Error("Supabase client library is unavailable.");
       }
 
-      const env = await loadEnv();
       const client = window.supabase.createClient(
         SUPABASE_URL,
-        env.SUPABASE_PUBLIC_KEY,
+        window.Pupsik.supabasePublicKey,
         {
           auth: {
             persistSession: false,

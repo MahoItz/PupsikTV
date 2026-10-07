@@ -3,6 +3,12 @@
 This repository contains the source code for the PupsikTV website. The project is a static site that relies on a few serverless API routes contained in the `api` directory.
 
 The production target is GitHub Pages with a Supabase Edge Function for the API.
+The browser initializes Supabase directly using the public anon key in
+`script/site-config.js`. Public lists and statistics do not wait for the Edge
+Function configuration or admin session checks. If the public key is rotated,
+update both `supabasePublicKey` in that file and the server's
+`SUPABASE_PUBLIC_KEY` secret, then publish Pages again. Never put a service-role
+or secret key in the client configuration.
 See [the deployment guide](DEPLOYMENT.md) for step-by-step setup, secrets and checks.
 The existing `api/` handlers remain the source of truth; `npm run build:edge`
 generates Deno-compatible modules before publishing `pupsik-api`.

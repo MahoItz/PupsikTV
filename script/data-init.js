@@ -591,25 +591,12 @@ async function loadPlayedGamesFromSupabase() {
 
 // Инициализация
 document.addEventListener("DOMContentLoaded", async function () {
-  let initialEnv;
-  try {
-    initialEnv = await loadEnv();
-  } catch (err) {
-    showFatalErrorBanner(
-      "Не удалось подключиться к базе данных. Попробуйте обновить страницу позже.",
-      err
-    );
-    return;
-  }
-
-  if (!initialEnv || !initialEnv.SUPABASE_PUBLIC_KEY) {
+  if (!supabaseClient) {
     showFatalErrorBanner(
       "От сервера не получены настройки Supabase. Попробуйте обновить страницу позже."
     );
     return;
   }
-
-  TMDB_ENABLED = Boolean(initialEnv.TMDB_ENABLED);
 
   localStorage.removeItem("KINOPOISK_API_KEY");
   localStorage.removeItem("KINOPOISK_API_KEY2");
@@ -727,7 +714,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   applyKpApiSelection(selectedKpApiValue);
 
-  await restoreAdminSession();
+  // Public data must not wait for the Edge Function or admin verification.
+  // Keep these sequential in the background so public settings cannot overwrite
+  // restored admin settings when the public request finishes late.
+  void loadEnv()
+    .then((env) => { TMDB_ENABLED = Boolean(env.TMDB_ENABLED); })
+    .catch((err) => console.warn("Server settings unavailable; public data can still load", err))
+    .then(() => restoreAdminSession())
+    .catch((err) => console.warn("Failed to restore admin session", err));
 
   recalculateMovieUserRatings();
   recalculateGameUserRatings();
