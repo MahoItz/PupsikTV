@@ -187,8 +187,9 @@
 }
 
 .admin-player-welcome__movies {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: start;
   gap: clamp(10px, 2vw, 20px);
   width: 100%;
@@ -200,6 +201,7 @@
 }
 
 .admin-player-recent {
+  flex: 0 0 calc((100% - 3 * clamp(10px, 2vw, 20px)) / 4);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -324,9 +326,12 @@
 
 @container (max-width: 560px) {
   .admin-player-welcome__movies {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: 360px;
     gap: 20px 14px;
+  }
+
+  .admin-player-recent {
+    flex-basis: calc((100% - 14px) / 2);
   }
 }
 
