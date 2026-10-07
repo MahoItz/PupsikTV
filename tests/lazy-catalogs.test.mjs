@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
+import { localCacheSource } from './helpers/local-cache-source.mjs';
 
 const source = readFileSync(
   new URL('../script/data-init.js', import.meta.url),
@@ -17,7 +18,7 @@ function setup(width = 390) {
     localStorage: { getItem: () => null },
     console,
   });
-  vm.runInContext(source, context);
+  vm.runInContext(localCacheSource + '\n' + source, context);
   return context;
 }
 

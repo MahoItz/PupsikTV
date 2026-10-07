@@ -3,6 +3,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
+import { localCacheSource } from './helpers/local-cache-source.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
@@ -86,7 +87,10 @@ test('public loaders start while the server configuration request is still pendi
   const source = read('script/data-init.js');
   // Execute the actual startup path through the first batch of data loads.
   vm.runInNewContext(
-    source.slice(0, source.indexOf('  const headerImg =')) + '\n});',
+    localCacheSource +
+      '\n' +
+      source.slice(0, source.indexOf('  const headerImg =')) +
+      '\n});',
     context
   );
   for (const name of [

@@ -1,4 +1,136 @@
 ﻿// Supabase
+function readLocalJson(key, fallback, validate) {
+  let raw;
+  try {
+    raw = localStorage.getItem(key);
+  } catch (error) {
+    console.warn("Unable to read local cache", key, error);
+    return fallback;
+  }
+  if (raw === null) return fallback;
+  try {
+    const value = JSON.parse(raw);
+    if (!validate(value)) throw new Error("Invalid local cache structure");
+    return value;
+  } catch (error) {
+    console.warn("Discarding invalid local cache", key, error);
+    try {
+      localStorage.removeItem(key);
+    } catch (storageError) {
+      console.warn("Unable to remove invalid local cache", key, storageError);
+    }
+    return fallback;
+  }
+}
+
+function isRatingCache(value) {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    Object.entries(value).every(
+      ([key, rating]) =>
+        key.length > 0 &&
+        (typeof rating === "number" ||
+          (typeof rating === "string" && rating.trim() !== "")) &&
+        Number.isFinite(Number(rating)) &&
+        Number(rating) >= 0 &&
+        Number(rating) <= 11,
+    )
+  );
+}
+
+function isCatalogCache(value) {
+  if (!Array.isArray(value)) return false;
+  const ids = new Set();
+  const textFields = [
+    "originalTitle",
+    "genre",
+    "genres",
+    "poster",
+    "dateAdded",
+    "orderBy",
+    "orderType",
+    "country",
+    "director",
+    "watchSource",
+    "gameMode",
+    "platforms",
+    "developers",
+    "publishers",
+    "released",
+  ];
+  const numericFields = [
+    "rating",
+    "kpRating",
+    "rawgRating",
+    "metacritic",
+    "ratingSum",
+    "ratingCount",
+    "userRating",
+    "playtime",
+    "playtimeHastily",
+    "playtimeNormally",
+    "playtimeCompletely",
+    "playtimeCount",
+  ];
+  return value.every((item) => {
+    if (
+      !item ||
+      typeof item !== "object" ||
+      Array.isArray(item) ||
+      !Number.isSafeInteger(item.id) ||
+      item.id <= 0 ||
+      ids.has(item.id) ||
+      typeof item.title !== "string"
+    )
+      return false;
+    ids.add(item.id);
+    if (
+      !textFields.every(
+        (key) => item[key] == null || typeof item[key] === "string",
+      )
+    )
+      return false;
+    if (
+      !numericFields.every(
+        (key) =>
+          item[key] == null ||
+          ((typeof item[key] === "number" || typeof item[key] === "string") &&
+            Number.isFinite(Number(item[key]))),
+      )
+    )
+      return false;
+    if (
+      item.year != null &&
+      typeof item.year !== "string" &&
+      typeof item.year !== "number"
+    )
+      return false;
+    if (
+      item.actors != null &&
+      (!Array.isArray(item.actors) ||
+        !item.actors.every((actor) => typeof actor === "string"))
+    )
+      return false;
+    if (item._detailsLoaded != null && typeof item._detailsLoaded !== "boolean")
+      return false;
+    if (item.description != null && typeof item.description !== "string") {
+      const description = item.description;
+      if (
+        typeof description !== "object" ||
+        Array.isArray(description) ||
+        !["original", "translated"].every(
+          (key) =>
+            description[key] == null || typeof description[key] === "string",
+        )
+      )
+        return false;
+    }
+    return true;
+  });
+}
+
 const SUPABASE_URL = "https://shwekurmzyzivtworjup.supabase.co";
 const API_BASE_PATH = window.Pupsik.apiBase;
 const EXTERNAL_API_URL = window.Pupsik.apiUrl("/api/external");
@@ -1152,8 +1284,8 @@ let isSubmittingRating = false;
 let userRatingMovieId = null;
 let userRatingGameId = null;
 let ratingTooltip;
-let ratedMovies = JSON.parse(localStorage.getItem("ratedMovies") || "{}");
-let ratedGames = JSON.parse(localStorage.getItem("ratedGames") || "{}");
+let ratedMovies = readLocalJson("ratedMovies", {}, isRatingCache);
+let ratedGames = readLocalJson("ratedGames", {}, isRatingCache);
 let editPosterData = null;
 let planDateOrderId = null;
 let planDateOrderType = "movie";

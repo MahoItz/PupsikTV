@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
+import { localCacheSource } from './helpers/local-cache-source.mjs';
 
 const source = readFileSync(
   new URL('../script/data-init.js', import.meta.url),
@@ -13,11 +14,13 @@ function setup({
   client = true,
   cache,
   storageError = false,
+  ratings = {},
 } = {}) {
   const events = [];
   const refreshes = [];
   const cacheReads = [];
   const loading = [];
+  const removed = [];
   let startup;
   let resolveEnv;
   const cacheKey = catalog === 'movies' ? 'moviesCache' : 'gamesCache';
@@ -65,13 +68,17 @@ function setup({
     selectedKpApiValue: 'API 1',
     localStorage: {
       getItem(key) {
+        if (key === 'ratedMovies' || key === 'ratedGames')
+          return ratings[key] ?? null;
         if (key !== 'moviesCache' && key !== 'gamesCache') return null;
         cacheReads.push(key);
         if (storageError) throw new Error('Storage unavailable');
         return key === cacheKey ? cached : null;
       },
       setItem() {},
-      removeItem() {},
+      removeItem(key) {
+        removed.push(key);
+      },
     },
     document: {
       addEventListener(_event, handler) {
@@ -115,13 +122,14 @@ function setup({
       }));
     };
   }
-  vm.runInContext(source, context);
+  vm.runInContext(localCacheSource + '\n' + source, context);
   return {
     context,
     events,
     refreshes,
     cacheReads,
     loading,
+    removed,
     startup: () => startup(),
     resolveEnv: () => resolveEnv({ TMDB_ENABLED: false }),
     supabaseClient,
@@ -203,6 +211,8 @@ test('retrying a failed refresh does not reread the cache or discard local edits
 for (const options of [
   { cache: '{invalid' },
   { cache: '{}' },
+  { cache: '[null]' },
+  { cache: '[{"id":1,"title":{}}]' },
   { storageError: true },
 ]) {
   test(`unusable cache does not stop API loading: ${JSON.stringify(options)}`, async () => {
@@ -212,5 +222,23 @@ for (const options of [
     refreshes[0]({ data: [{ id: 1, title: 'Fresh' }], error: null });
     assert.equal(await context.loadActiveCatalog(), true);
     assert.equal(context.allMovies[0].title, 'Fresh');
+  });
+}
+
+for (const ratings of [
+  { ratedMovies: '{invalid', ratedGames: '{invalid' },
+  { ratedMovies: 'null', ratedGames: '[]' },
+]) {
+  test(`invalid ratings do not stop startup or the catalog refresh: ${JSON.stringify(ratings)}`, async () => {
+    const { context, refreshes, startup, removed, events } = setup({ ratings });
+    await startup();
+    assert.equal(removed.includes('ratedMovies'), true);
+    assert.equal(removed.includes('ratedGames'), true);
+    assert.deepEqual(Object.keys(context.ratedMovies), []);
+    assert.deepEqual(Object.keys(context.ratedGames), []);
+    assert.equal(events.includes('render:Cached'), true);
+    assert.equal(refreshes.length, 1);
+    refreshes[0]({ data: [{ id: 1, title: 'Fresh' }], error: null });
+    assert.equal(await context.loadActiveCatalog(), true);
   });
 }

@@ -708,8 +708,8 @@ function restoreCatalogCache(catalog) {
   // Retrying a failed refresh must not replace edits with an older cached snapshot.
   restoredCatalogCaches.add(catalog);
   try {
-    const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
-    if (!Array.isArray(cached)) return;
+    const cached = readLocalJson(cacheKey, null, isCatalogCache);
+    if (cached === null) return;
     if (catalog === "movies") {
       allMovies = cached;
       totalMovies = cached.length;
@@ -792,14 +792,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   localStorage.removeItem("KINOPOISK_API_KEY2");
   localStorage.removeItem("KINOPOISK_API_KEY3");
   localStorage.removeItem("RAWG_API_KEY");
-  const ratedStored = localStorage.getItem("ratedMovies");
-  if (ratedStored) {
-    ratedMovies = JSON.parse(ratedStored);
-  }
-  const ratedGamesStored = localStorage.getItem("ratedGames");
-  if (ratedGamesStored) {
-    ratedGames = JSON.parse(ratedGamesStored);
-  }
+  ratedMovies = readLocalJson("ratedMovies", {}, isRatingCache);
+  ratedGames = readLocalJson("ratedGames", {}, isRatingCache);
   ratingTooltip = document.createElement("div");
   ratingTooltip.className = "rating-tooltip";
   document.body.appendChild(ratingTooltip);
