@@ -241,8 +241,8 @@ function normalizeActorsValue(value, limit = 15) {
 async function loadMoviesFromSupabase() {
   const grid = document.getElementById("moviesGrid");
   const hasExistingContent = containerHasRenderableContent(grid);
-  moviesLoading = true;
-  toggleSectionLoading(grid, true, {
+  moviesLoading = !hasExistingContent;
+  toggleSectionLoading(grid, moviesLoading, {
     message: hasExistingContent ? "Обновляем фильмы..." : "Загружаем фильмы...",
   });
   try {
@@ -446,8 +446,8 @@ async function loadGamesFromSupabase() {
 async function loadPlayedGamesFromSupabase() {
   const grid = document.getElementById("gamesGridPlayed");
   const hasExistingContent = containerHasRenderableContent(grid);
-  playedGamesLoading = true;
-  toggleSectionLoading(grid, true, {
+  playedGamesLoading = !hasExistingContent;
+  toggleSectionLoading(grid, playedGamesLoading, {
     message: hasExistingContent
       ? "Обновляем библиотеку игр..."
       : "Загружаем пройденные игры...",
@@ -521,8 +521,36 @@ async function loadPlayedGamesFromSupabase() {
 // Инициализация
 // Share in-flight requests and keep successful catalogs until the page reloads.
 const catalogLoadRequests = new Map();
+const restoredCatalogCaches = new Set();
+
+function restoreCatalogCache(catalog) {
+  const cacheKey = catalog === "movies" ? "moviesCache"
+    : catalog === "playedGames" ? "gamesCache" : null;
+  if (!cacheKey || restoredCatalogCaches.has(catalog)) return;
+  // Restore synchronously, once per tab, before any API/client availability check.
+  // Retrying a failed refresh must not replace edits with an older cached snapshot.
+  restoredCatalogCaches.add(catalog);
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+    if (!Array.isArray(cached)) return;
+    if (catalog === "movies") {
+      allMovies = cached;
+      totalMovies = cached.length;
+      recalculateMovieUserRatings();
+      renderMovies();
+    } else {
+      allPlayedGames = cached;
+      totalGamesPlayed = cached.length;
+      recalculateGameUserRatings();
+      renderPlayedGames();
+    }
+  } catch (error) {
+    console.warn("Unable to restore catalog cache", error);
+  }
+}
 
 function ensureCatalogLoaded(catalog) {
+  restoreCatalogCache(catalog);
   if (catalogLoadRequests.has(catalog)) return catalogLoadRequests.get(catalog);
   const loaders = {
     movies: loadMoviesFromSupabase,
@@ -534,28 +562,6 @@ function ensureCatalogLoaded(catalog) {
   if (!supabaseClient || !loaders[catalog]) return Promise.resolve(false);
   const request = Promise.resolve().then(async () => {
     try {
-      const cacheKey = catalog === "movies" ? "moviesCache"
-        : catalog === "playedGames" ? "gamesCache" : null;
-      if (cacheKey) {
-        try {
-          const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
-          if (Array.isArray(cached)) {
-            if (catalog === "movies") {
-              allMovies = cached;
-              totalMovies = cached.length;
-              recalculateMovieUserRatings();
-              renderMovies();
-            } else {
-              allPlayedGames = cached;
-              totalGamesPlayed = cached.length;
-              recalculateGameUserRatings();
-              renderPlayedGames();
-            }
-          }
-        } catch (error) {
-          console.warn("Unable to restore catalog cache", error);
-        }
-      }
       const loaded = await loaders[catalog]();
       if (!loaded) catalogLoadRequests.delete(catalog);
       return loaded;
@@ -569,10 +575,13 @@ function ensureCatalogLoaded(catalog) {
   return request;
 }
 
-function loadActiveCatalog() {
-  const catalog = window.innerWidth <= 768 && activeTab !== "movies"
+function getActiveCatalog() {
+  return window.innerWidth <= 768 && activeTab !== "movies"
     ? activeTab : activeListTab === "games" ? "playedGames" : "movies";
-  return ensureCatalogLoaded(catalog);
+}
+
+function loadActiveCatalog() {
+  return ensureCatalogLoaded(getActiveCatalog());
 }
 
 function initVisibleCatalogLoading() {
@@ -602,13 +611,6 @@ function initVisibleCatalogLoading() {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-  if (!supabaseClient) {
-    showFatalErrorBanner(
-      "От сервера не получены настройки Supabase. Попробуйте обновить страницу позже."
-    );
-    return;
-  }
-
   localStorage.removeItem("KINOPOISK_API_KEY");
   localStorage.removeItem("KINOPOISK_API_KEY2");
   localStorage.removeItem("KINOPOISK_API_KEY3");
@@ -638,11 +640,20 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   applyKpApiSelection(selectedKpApiValue);
 
+  updateTabVisibility();
+  updateListVisibility();
+  restoreCatalogCache(getActiveCatalog());
+
   // Public data must not wait for the Edge Function or admin verification.
   // Keep these sequential in the background so public settings cannot overwrite
   // restored admin settings when the public request finishes late.
+  const hadCatalogClient = Boolean(supabaseClient);
   void loadEnv()
-    .then((env) => { TMDB_ENABLED = Boolean(env.TMDB_ENABLED); })
+    .then((env) => {
+      TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
+      // Retry if the public client only became available through configuration.
+      if (!hadCatalogClient) void loadActiveCatalog();
+    })
     .catch((err) => console.warn("Server settings unavailable; public data can still load", err))
     .then(() => restoreAdminSession())
     .catch((err) => console.warn("Failed to restore admin session", err));
@@ -695,4 +706,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     headerImg.addEventListener("click", () => {
       document.getElementById("adminModal").style.display = "block";
     });
+  if (!supabaseClient) {
+    showFatalErrorBanner(
+      "От сервера не получены настройки Supabase. Попробуйте обновить страницу позже."
+    );
+  }
 });
