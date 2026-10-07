@@ -1,4 +1,5 @@
 .admin-player-page {
+  flex: 1 0 auto;
   width: min(1100px, calc(100% - 28px));
   margin: 20px auto 40px;
 }
