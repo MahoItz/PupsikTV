@@ -15,28 +15,7 @@
     margin-top: auto;
 }
 
-.stats-back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 16px;
-    border-radius: 999px;
-    border: 1px solid rgba(116, 222, 255, 0.24);
-    background: rgba(11, 18, 36, 0.72);
-    color: var(--text-primary);
-    text-decoration: none;
-    box-shadow: 0 12px 28px rgba(3, 8, 22, 0.25);
-    backdrop-filter: blur(12px);
-    transition: var(--transition);
-}
 
-.stats-back-link:hover,
-.stats-back-link:focus-visible {
-    border-color: rgba(116, 222, 255, 0.52);
-    transform: translateY(-1px);
-    box-shadow: 0 16px 32px rgba(3, 8, 22, 0.34), 0 0 24px rgba(0, 212, 255, 0.14);
-    outline: none;
-}
 
 .stats-hero,
 .stats-panel,

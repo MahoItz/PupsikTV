@@ -7,17 +7,32 @@
     <title>PupsikTV Stats</title>
     <link rel="icon" href="images/Pupsik_TV_Icon.webp">
     <link rel="stylesheet" href="style/base.css">
+    <link rel="stylesheet" href="style/navigation.css">
     <link rel="stylesheet" href="style/stats.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="script/site-config.js"></script>
 </head>
 
 <body class="stats-page">
-    <main class="stats-shell">
-        <a href="./" class="stats-back-link" aria-label="Вернуться на главную">
-            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-            <span>Назад</span>
+    <nav class="top-left-actions top-left-actions--bar top-left-actions--page" aria-label="Основная навигация">
+        <a href="./" class="top-left-actions__brand" aria-label="PupsikTV — главная страница">
+            <img src="images/Pupsik_TV_Icon.webp" alt="">
+            <span>PupsikTV</span>
         </a>
+        <div class="top-left-actions__menu">
+            <a href="admin-player.html" class="admin-player-link">
+                <span class="top-left-actions__label">Плеер</span>
+            </a>
+            <a href="trailers.html" class="admin-player-link">
+                <span class="top-left-actions__label">Трейлеры</span>
+            </a>
+            <a href="stats.html" aria-current="page" class="channel-stats-link">
+                <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
+                <span class="top-left-actions__label">Статистика</span>
+            </a>
+        </div>
+    </nav>
+    <main class="stats-shell">
 
         <section class="stats-hero">
             <div class="stats-hero__copy">
