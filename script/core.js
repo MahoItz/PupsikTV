@@ -1914,7 +1914,6 @@ function triggerAutoTitleSuggestions() {
     return;
   }
 
-  showSearchLoading("autoResultsContainer", "autoResults");
   debouncedKPSearch(query);
 }
 

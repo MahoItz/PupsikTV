@@ -614,131 +614,52 @@ function hasUppercaseLetters(value) {
   return /[A-ZА-ЯЁ]/.test(String(value || ''));
 }
 
-function createAutocompleteFetcher({
-  source,
-  resultsVar,
-  selectedVar,
-  containerId,
-  listId,
-  onPreview,
-  onReset,
-}) {
-  let activeRequestId = 0;
-
-  const clearState = () => {
-    resultsVar.set([]);
-    selectedVar.set(null);
-    if (onReset) {
-      onReset();
-    }
-    const list = document.getElementById(listId);
-    if (list) list.innerHTML = '';
-  };
-
-  const toggleContainer = (isVisible) => {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.style.display = isVisible ? 'block' : 'none';
-  };
-
-  const runSearch = async (query) => {
-    const trimmedQuery = (query || '').trim();
-    const requestId = ++activeRequestId;
-
-    if (!trimmedQuery) {
-      if (requestId !== activeRequestId) return;
-      toggleContainer(false);
-      clearState();
-      if (onPreview) onPreview();
-      return;
-    }
-
-    const sourceConfig = source(trimmedQuery) || {};
-    const {
-      url,
-      options,
-      mapResults,
-      formatItem,
-      handleError,
-      fallbackQueries,
-    } = sourceConfig;
-
-    const fallbackList = Array.isArray(fallbackQueries)
-      ? fallbackQueries
-      : typeof fallbackQueries === 'function'
-        ? fallbackQueries(trimmedQuery)
-        : [];
-
-    const queries = [trimmedQuery, ...(fallbackList || [])]
-      .map((item) => String(item || '').trim())
-      .filter(Boolean)
-      .filter((item, idx, arr) => arr.indexOf(item) === idx);
-
-    try {
-      for (const nextQuery of queries) {
-        if (requestId !== activeRequestId) return;
-        const nextConfig = source(nextQuery) || {};
-        const nextUrl = nextConfig.url || url;
-        const nextOptions = nextConfig.options || options;
-        const nextMapResults = nextConfig.mapResults || mapResults;
-        const nextFormatItem = nextConfig.formatItem || formatItem;
-        const nextHandleError = nextConfig.handleError || handleError;
-
-        const res = await fetch(nextUrl, nextOptions);
-        if (requestId !== activeRequestId) return;
-        if (!res.ok) {
-          if (nextHandleError) {
-            await nextHandleError(res);
+function createAutocompleteFetcher({ source, resultsVar, selectedVar, containerId, listId, onPreview, onReset }) {
+  let component;
+  const init = () => {
+    if (component) return component;
+    const inputIds = { autoResults: 'autoTitle', watchAutoResults: 'watchAutoTitle', gameAutoResults: 'gameAutoTitle', playedGameAutoResults: 'playedGameAutoTitle' };
+    const inputId = inputIds[listId];
+    component = window.PupsikMediaSearch.create({
+      input: document.getElementById(inputId),
+      button: document.getElementById(inputId.replace('Title', 'SearchBtn')),
+      container: document.getElementById(containerId),
+      list: document.getElementById(listId),
+      onReset: () => {
+        resultsVar.set([]);
+        selectedVar.set(null);
+        onReset?.();
+        onPreview?.();
+      },
+      search: async (query) => {
+        const config = source(query);
+        const fallback = typeof config.fallbackQueries === 'function' ? config.fallbackQueries(query) : config.fallbackQueries || [];
+        for (const value of [...new Set([query, ...fallback])]) {
+          const next = source(value);
+          const response = await fetch(next.url, next.options);
+          if (!response.ok) {
+            await next.handleError?.(response);
+            throw new Error(`Search request failed: ${response.status}`);
           }
-          if (requestId !== activeRequestId) return;
-          toggleContainer(false);
-          clearState();
-          if (onPreview) onPreview();
-          return;
+          const data = await response.json();
+          const results = next.mapResults ? next.mapResults(data) : data;
+          if (results.length) return results.slice(0, 8);
         }
-
-        const data = await res.json();
-        if (requestId !== activeRequestId) return;
-        const results = (nextMapResults ? nextMapResults(data) : data) || [];
+        return [];
+      },
+      onSelect: (item, index, option) => {
+        const results = [];
+        results[index] = item;
         resultsVar.set(results);
-
-        if (!results.length) {
-          continue;
-        }
-
-        const list = document.getElementById(listId);
-        if (!list) return;
-
-        list.innerHTML = '';
-        results.forEach((item, idx) => {
-          const div = document.createElement('div');
-          div.className = 'autocomplete-option';
-          div.dataset.index = idx;
-          div.textContent = nextFormatItem
-            ? nextFormatItem(item)
-            : item?.name || '';
-          list.appendChild(div);
-        });
-
-        if (requestId !== activeRequestId) return;
-        toggleContainer(true);
-        return;
-      }
-
-      toggleContainer(false);
-      clearState();
-      if (onPreview) onPreview();
-      return;
-    } catch (err) {
-      if (requestId !== activeRequestId) return;
-      console.error('Autocomplete fetch error', err);
-      toggleContainer(false);
-      clearState();
-      if (onPreview) onPreview();
-    }
+        option.dispatchEvent(new CustomEvent('media-search-select', { bubbles: true }));
+      },
+    });
+    return component;
   };
-
-  return debounce((query) => runSearch(query), 100);
+  const run = (query) => init().run(query);
+  run.init = init;
+  run.close = () => component?.close();
+  return run;
 }
 
 const debouncedKPSearch = createAutocompleteFetcher({
@@ -757,11 +678,6 @@ const debouncedKPSearch = createAutocompleteFetcher({
       },
     },
     mapResults: (data) => data.films || [],
-    formatItem: (m) => {
-      const year = m.year || '';
-      const name = m.nameRu || m.nameEn || '';
-      return `${name}${year ? ` (${year})` : ''}`;
-    },
     handleError: handleKinopoiskErrorResponse,
   }),
   resultsVar: { set: (value) => (kpResults = value) },
@@ -787,11 +703,6 @@ const debouncedWatchlistKPSearch = createAutocompleteFetcher({
       },
     },
     mapResults: (data) => data.films || [],
-    formatItem: (m) => {
-      const year = m.year || '';
-      const name = m.nameRu || m.nameEn || '';
-      return `${name}${year ? ` (${year})` : ''}`;
-    },
     handleError: handleKinopoiskErrorResponse,
   }),
   resultsVar: { set: (value) => (kpOrderResults = value) },
@@ -806,10 +717,6 @@ const debouncedRAWGSearch = createAutocompleteFetcher({
     url: buildIgdbUrl('search', { search: query, page_size: 5 }),
     options: { headers: getAdminAuthorizationHeaders() },
     mapResults: (data) => data.results || [],
-    formatItem: (g) => {
-      const year = g.released ? g.released.split('-')[0] : '';
-      return `${g.name}${year ? ` (${year})` : ''}`;
-    },
   }),
   resultsVar: { set: (value) => (rawgResults = value) },
   selectedVar: { set: (value) => (selectedRAWGGame = value) },
@@ -828,10 +735,6 @@ const debouncedPlayedRAWGSearch = createAutocompleteFetcher({
     url: buildIgdbUrl('search', { search: query, page_size: 5 }),
     options: { headers: getAdminAuthorizationHeaders() },
     mapResults: (data) => data.results || [],
-    formatItem: (g) => {
-      const year = g.released ? g.released.split('-')[0] : '';
-      return `${g.name}${year ? ` (${year})` : ''}`;
-    },
   }),
   resultsVar: { set: (value) => (rawgResults = value) },
   selectedVar: { set: (value) => (selectedRAWGGame = value) },
@@ -862,167 +765,11 @@ async function hydrateSelectedIgdbGame(game) {
 }
 
 async function handleKPSearch() {
-  const btn = document.getElementById('autoSearchBtn');
-  const loader = document.getElementById('autoSearchLoading');
-  if (loader) loader.style.display = 'inline-block';
-  if (btn) btn.disabled = true;
-  const title = document.getElementById('autoTitle').value.trim();
-  if (!title) {
-    alert('Введите название фильма');
-    if (loader) loader.style.display = 'none';
-    if (btn) btn.disabled = false;
-    return;
-  }
-
-  try {
-    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
-      title
-    )}&page=1`;
-    const res = await fetch(url, {
-      headers: {
-        'X-API-KEY': KINOPOISK_API_KEY,
-        'Content-Type': 'application/json',
-      },
-    });
-    const container = document.getElementById('autoResultsContainer');
-    const list = document.getElementById('autoResults');
-    if (!res.ok) {
-      await handleKinopoiskErrorResponse(res);
-      kpResults = [];
-      selectedKPMovie = null;
-      if (list) list.innerHTML = '';
-      if (container) container.style.display = 'none';
-      return;
-    }
-    const data = await res.json();
-    kpResults = data.films || [];
-    if (!kpResults.length && !hasUppercaseLetters(title)) {
-      const altTitle = capitalizeWords(title);
-      if (altTitle && altTitle !== title) {
-        const altRes = await fetch(
-          `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
-            altTitle
-          )}&page=1`,
-          {
-            headers: {
-              'X-API-KEY': KINOPOISK_API_KEY,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        if (altRes.ok) {
-          const altData = await altRes.json();
-          kpResults = altData.films || [];
-        }
-      }
-    }
-    list.innerHTML = '';
-    kpResults.forEach((m, idx) => {
-      const div = document.createElement('div');
-      div.className = 'autocomplete-option';
-      div.dataset.index = idx;
-      const year = m.year || '';
-      const name = m.nameRu || m.nameEn || '';
-      div.textContent = `${name}${year ? ` (${year})` : ''}`;
-      list.appendChild(div);
-    });
-    if (kpResults.length > 0) {
-      container.style.display = 'block';
-      selectedKPMovie = kpResults[0];
-      showKPPreview();
-    } else {
-      container.style.display = 'none';
-      selectedKPMovie = null;
-      showKPPreview();
-      alert('Ничего не найдено');
-    }
-  } catch (err) {
-    console.error('Kinopoisk search error', err);
-  }
-  if (loader) loader.style.display = 'none';
-  if (btn) btn.disabled = false;
+  return debouncedKPSearch(document.getElementById('autoTitle').value);
 }
 
 async function handleWatchlistSearch() {
-  const btn = document.getElementById('watchAutoSearchBtn');
-  const loader = document.getElementById('watchAutoSearchLoading');
-  if (loader) loader.style.display = 'inline-block';
-  if (btn) btn.disabled = true;
-  const title = document.getElementById('watchAutoTitle').value.trim();
-  if (!title) {
-    alert('Введите название фильма');
-    if (loader) loader.style.display = 'none';
-    if (btn) btn.disabled = false;
-    return;
-  }
-
-  try {
-    const url = `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
-      title
-    )}&page=1`;
-    const res = await fetch(url, {
-      headers: {
-        'X-API-KEY': KINOPOISK_API_KEY,
-        'Content-Type': 'application/json',
-      },
-    });
-    const container = document.getElementById('watchAutoResultsContainer');
-    const list = document.getElementById('watchAutoResults');
-    if (!res.ok) {
-      await handleKinopoiskErrorResponse(res);
-      kpOrderResults = [];
-      selectedKPOrderMovie = null;
-      if (list) list.innerHTML = '';
-      if (container) container.style.display = 'none';
-      return;
-    }
-    const data = await res.json();
-    kpOrderResults = data.films || [];
-    if (!kpOrderResults.length && !hasUppercaseLetters(title)) {
-      const altTitle = capitalizeWords(title);
-      if (altTitle && altTitle !== title) {
-        const altRes = await fetch(
-          `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(
-            altTitle
-          )}&page=1`,
-          {
-            headers: {
-              'X-API-KEY': KINOPOISK_API_KEY,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        if (altRes.ok) {
-          const altData = await altRes.json();
-          kpOrderResults = altData.films || [];
-        }
-      }
-    }
-    list.innerHTML = '';
-    kpOrderResults.forEach((m, idx) => {
-      const div = document.createElement('div');
-      div.className = 'autocomplete-option';
-      div.dataset.index = idx;
-      const year = m.year || '';
-      const name = m.nameRu || m.nameEn || '';
-      div.textContent = `${name}${year ? ` (${year})` : ''}`;
-      list.appendChild(div);
-    });
-    if (kpOrderResults.length > 0) {
-      container.style.display = 'block';
-      selectedKPOrderMovie = kpOrderResults[0];
-      showWatchlistKPPreview();
-    } else {
-      container.style.display = 'none';
-      selectedKPOrderMovie = null;
-      showWatchlistKPPreview();
-      alert('Ничего не найдено');
-    }
-  } catch (err) {
-    console.error('Kinopoisk search error', err);
-  }
-  if (loader) loader.style.display = 'none';
-  if (btn) btn.disabled = false;
+  return debouncedWatchlistKPSearch(document.getElementById('watchAutoTitle').value);
 }
 
 function showKPPreview() {
@@ -1222,58 +969,7 @@ function showWatchlistKPPreview() {
 }
 
 async function handleGameSearch() {
-  const btn = document.getElementById('gameAutoSearchBtn');
-  const loader = document.getElementById('gameAutoSearchLoading');
-  if (loader) loader.style.display = 'inline-block';
-  if (btn) btn.disabled = true;
-  const title = document.getElementById('gameAutoTitle').value.trim();
-  if (!title) {
-    alert('Введите название игры');
-    if (loader) loader.style.display = 'none';
-    if (btn) btn.disabled = false;
-    return;
-  }
-
-  try {
-    const res = await fetch(
-      buildIgdbUrl('search', { search: title, page_size: 5 }),
-      {
-        headers: getAdminAuthorizationHeaders(),
-      }
-    );
-    if (!res.ok) throw new Error(`IGDB search failed: ${res.status}`);
-    const data = await res.json();
-    rawgResults = data.results || [];
-    const container = document.getElementById('gameAutoResultsContainer');
-    const list = document.getElementById('gameAutoResults');
-    list.innerHTML = '';
-    rawgResults.forEach((g, idx) => {
-      const div = document.createElement('div');
-      div.className = 'autocomplete-option';
-      div.dataset.index = idx;
-      const year = g.released ? g.released.split('-')[0] : '';
-      div.textContent = `${g.name}${year ? ` (${year})` : ''}`;
-      list.appendChild(div);
-    });
-    if (rawgResults.length > 0) {
-      container.style.display = 'block';
-      selectedRAWGGame = await hydrateSelectedIgdbGame(rawgResults[0]);
-      await fetchSteamGridPosters(selectedRAWGGame.name);
-      showRAWGPreview();
-    } else {
-      container.style.display = 'none';
-      selectedRAWGGame = null;
-      steamGridPoster = null;
-      steamGridPosters = [];
-      resetRawgPosterCache();
-      showRAWGPreview();
-      alert('Ничего не найдено');
-    }
-  } catch (err) {
-    console.error('IGDB search error', err);
-  }
-  if (loader) loader.style.display = 'none';
-  if (btn) btn.disabled = false;
+  return debouncedRAWGSearch(document.getElementById('gameAutoTitle').value);
 }
 
 function showRAWGPreview() {
@@ -1324,57 +1020,7 @@ function showRAWGPreview() {
 }
 
 async function handlePlayedGameSearch() {
-  const btn = document.getElementById('playedGameAutoSearchBtn');
-  const loader = document.getElementById('playedGameAutoSearchLoading');
-  if (loader) loader.style.display = 'inline-block';
-  if (btn) btn.disabled = true;
-  const title = document.getElementById('playedGameAutoTitle').value.trim();
-  if (!title) {
-    alert('Введите название игры');
-    if (loader) loader.style.display = 'none';
-    if (btn) btn.disabled = false;
-    return;
-  }
-
-  try {
-    const res = await fetch(
-      buildIgdbUrl('search', { search: title, page_size: 5 }),
-      {
-        headers: getAdminAuthorizationHeaders(),
-      }
-    );
-    if (!res.ok) throw new Error(`IGDB search failed: ${res.status}`);
-    const data = await res.json();
-    rawgResults = data.results || [];
-    const container = document.getElementById('playedGameAutoResultsContainer');
-    const list = document.getElementById('playedGameAutoResults');
-    list.innerHTML = '';
-    rawgResults.forEach((g, idx) => {
-      const div = document.createElement('div');
-      div.className = 'autocomplete-option';
-      div.dataset.index = idx;
-      const year = g.released ? g.released.split('-')[0] : '';
-      div.textContent = `${g.name}${year ? ` (${year})` : ''}`;
-      list.appendChild(div);
-    });
-    if (rawgResults.length > 0) {
-      container.style.display = 'block';
-      selectedRAWGGame = await hydrateSelectedIgdbGame(rawgResults[0]);
-      await fetchSteamGridPosters(selectedRAWGGame.name);
-      showPlayedGamePreview();
-    } else {
-      container.style.display = 'none';
-      selectedRAWGGame = null;
-      steamGridPoster = null;
-      resetRawgPosterCache();
-      showPlayedGamePreview();
-      alert('Ничего не найдено');
-    }
-  } catch (err) {
-    console.error('IGDB search error', err);
-  }
-  if (loader) loader.style.display = 'none';
-  if (btn) btn.disabled = false;
+  return debouncedPlayedRAWGSearch(document.getElementById('playedGameAutoTitle').value);
 }
 
 function showPlayedGamePreview() {
@@ -3125,6 +2771,7 @@ document
   });
 
 function resetForm() {
+  [debouncedKPSearch, debouncedWatchlistKPSearch, debouncedRAWGSearch, debouncedPlayedRAWGSearch].forEach(search => search.close());
   document.getElementById('addMovieForm').reset();
   document.getElementById('addWatchlistForm').reset();
   document.getElementById('addGameForm')?.reset();
@@ -4630,26 +4277,17 @@ function initAdminFeatures() {
   if (twitchConnectBtn) {
     twitchConnectBtn.addEventListener('click', startTwitchAdminConnect);
   }
-  const searchBtn = document.getElementById('autoSearchBtn');
   const resultsContainer = document.getElementById('autoResults');
   const titleInput = document.getElementById('autoTitle');
-  if (searchBtn) searchBtn.addEventListener('click', handleKPSearch);
-  if (titleInput)
-    titleInput.addEventListener('input', () => {
-      const q = titleInput.value.trim();
-      syncRouletteAutofillState();
-      if (q) {
-        showSearchLoading('autoResultsContainer', 'autoResults');
-      } else {
-        document.getElementById('autoResultsContainer').style.display = 'none';
-        if (rouletteLastWinner || rouletteAutofillActive) {
-          clearRouletteLastWinner({ updateInput: false });
-        }
-      }
-      debouncedKPSearch(q);
-    });
+  debouncedKPSearch.init();
+  titleInput?.addEventListener('input', () => {
+    syncRouletteAutofillState();
+    if (!titleInput.value.trim() && (rouletteLastWinner || rouletteAutofillActive)) {
+      clearRouletteLastWinner({ updateInput: false });
+    }
+  });
   if (resultsContainer)
-    resultsContainer.addEventListener('click', function (e) {
+    resultsContainer.addEventListener('media-search-select', function (e) {
       const option = e.target.closest('.autocomplete-option');
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
@@ -4705,24 +4343,11 @@ function initAdminFeatures() {
     });
   }
 
-  const watchSearchBtn = document.getElementById('watchAutoSearchBtn');
   const watchResultsContainer = document.getElementById('watchAutoResults');
   const watchTitleInput = document.getElementById('watchAutoTitle');
-  if (watchSearchBtn)
-    watchSearchBtn.addEventListener('click', handleWatchlistSearch);
-  if (watchTitleInput)
-    watchTitleInput.addEventListener('input', () => {
-      const q = watchTitleInput.value.trim();
-      if (q) {
-        showSearchLoading('watchAutoResultsContainer', 'watchAutoResults');
-      } else {
-        document.getElementById('watchAutoResultsContainer').style.display =
-          'none';
-      }
-      debouncedWatchlistKPSearch(q);
-    });
+  debouncedWatchlistKPSearch.init();
   if (watchResultsContainer)
-    watchResultsContainer.addEventListener('click', function (e) {
+    watchResultsContainer.addEventListener('media-search-select', function (e) {
       const option = e.target.closest('.autocomplete-option');
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
@@ -4736,23 +4361,11 @@ function initAdminFeatures() {
         'none';
     });
 
-  const gameSearchBtn = document.getElementById('gameAutoSearchBtn');
   const gameResultsContainer = document.getElementById('gameAutoResults');
   const gameTitleInput = document.getElementById('gameAutoTitle');
-  if (gameSearchBtn) gameSearchBtn.addEventListener('click', handleGameSearch);
-  if (gameTitleInput)
-    gameTitleInput.addEventListener('input', () => {
-      const q = gameTitleInput.value.trim();
-      if (q) {
-        showSearchLoading('gameAutoResultsContainer', 'gameAutoResults');
-      } else {
-        document.getElementById('gameAutoResultsContainer').style.display =
-          'none';
-      }
-      debouncedRAWGSearch(q);
-    });
+  debouncedRAWGSearch.init();
   if (gameResultsContainer)
-    gameResultsContainer.addEventListener('click', async function (e) {
+    gameResultsContainer.addEventListener('media-search-select', async function (e) {
       const option = e.target.closest('.autocomplete-option');
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);
@@ -4774,30 +4387,13 @@ function initAdminFeatures() {
       if (preview) preview.removeAttribute('aria-busy');
     });
 
-  const playedSearchBtn = document.getElementById('playedGameAutoSearchBtn');
   const playedResultsContainer = document.getElementById(
     'playedGameAutoResults'
   );
   const playedTitleInput = document.getElementById('playedGameAutoTitle');
-  if (playedSearchBtn)
-    playedSearchBtn.addEventListener('click', handlePlayedGameSearch);
-  if (playedTitleInput)
-    playedTitleInput.addEventListener('input', () => {
-      const q = playedTitleInput.value.trim();
-      if (q) {
-        showSearchLoading(
-          'playedGameAutoResultsContainer',
-          'playedGameAutoResults'
-        );
-      } else {
-        document.getElementById(
-          'playedGameAutoResultsContainer'
-        ).style.display = 'none';
-      }
-      debouncedPlayedRAWGSearch(q);
-    });
+  debouncedPlayedRAWGSearch.init();
   if (playedResultsContainer)
-    playedResultsContainer.addEventListener('click', async function (e) {
+    playedResultsContainer.addEventListener('media-search-select', async function (e) {
       const option = e.target.closest('.autocomplete-option');
       if (!option) return;
       const idx = parseInt(option.dataset.index, 10);

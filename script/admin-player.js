@@ -57,9 +57,7 @@ const ADMIN_PLAYER_HISTORY_TTL_MS = 60 * 1000;
 })();
 
 let kinopoiskApiKey = "";
-let searchResults = [];
 let selectedMovie = null;
-let searchRequestId = 0;
 let currentHistory = [];
 
 function readHistoryCache() {
@@ -350,14 +348,6 @@ function buildMovieFromHistoryDataset(dataset) {
   };
 }
 
-function debounce(fn, delay) {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => fn(...args), delay);
-  };
-}
-
 function normalizeOrderPlayerProviders(payload) {
   if (!payload) return [];
   const data = payload.data ?? payload;
@@ -440,26 +430,6 @@ async function verifyAdminAccess() {
 function getMovieTitle(movie) {
   return movie?.nameRu || movie?.nameEn || "Без названия";
 }
-
-function renderResults() {
-  const list = document.getElementById("adminPlayerResults");
-  const container = document.getElementById("adminPlayerResultsContainer");
-  if (!list || !container) return;
-
-  list.innerHTML = "";
-  searchResults.forEach((movie, idx) => {
-    const option = document.createElement("div");
-    option.className = "autocomplete-option";
-    option.dataset.index = String(idx);
-    const year = movie?.year ? ` (${movie.year})` : "";
-    option.textContent = `${getMovieTitle(movie)}${year}`;
-    list.appendChild(option);
-  });
-
-  container.style.display = searchResults.length ? "block" : "none";
-}
-
-
 
 async function loadPlayerForMovie(movie) {
   const kpId = movie?.filmId;
@@ -563,49 +533,6 @@ async function loadPlayerForMovie(movie) {
   }
 }
 
-async function runSearch(query) {
-  const trimmedQuery = String(query || "").trim();
-  const requestId = ++searchRequestId;
-
-  if (!trimmedQuery) {
-    searchResults = [];
-    renderResults();
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(trimmedQuery)}&page=1`,
-      {
-        headers: {
-          "X-API-KEY": kinopoiskApiKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (requestId !== searchRequestId) return;
-    if (!response.ok) {
-      searchResults = [];
-      renderResults();
-      return;
-    }
-
-    const data = await response.json();
-    if (requestId !== searchRequestId) return;
-
-    searchResults = (data?.films || []).slice(0, 8);
-    renderResults();
-  } catch (error) {
-    if (requestId !== searchRequestId) return;
-    console.error("Kinopoisk search error", error);
-    searchResults = [];
-    renderResults();
-  }
-}
-
-const debouncedSearch = debounce(runSearch, 180);
-
 function setupSearchEvents() {
   const input = document.getElementById("adminPlayerSearchInput");
   const button = document.getElementById("adminPlayerSearchButton");
@@ -614,21 +541,21 @@ function setupSearchEvents() {
 
   if (!input || !button || !list || !resultsContainer) return;
 
-  input.addEventListener("input", () => debouncedSearch(input.value));
-  button.addEventListener("click", () => runSearch(input.value));
-
-  list.addEventListener("click", async (event) => {
-    const option = event.target.closest(".autocomplete-option");
-    if (!option) return;
-
-    const idx = Number(option.dataset.index);
-    selectedMovie = searchResults[Number.isNaN(idx) ? -1 : idx] || null;
-    if (!selectedMovie) return;
-
-    input.value = getMovieTitle(selectedMovie);
-    resultsContainer.style.display = "none";
-    await loadPlayerForMovie(selectedMovie);
-    await saveHistoryItem(selectedMovie);
+  window.PupsikMediaSearch.create({
+    input, button, container: resultsContainer, list,
+    search: async (query) => {
+      const response = await fetch(`${KINOPOISK_SEARCH_URL}?keyword=${encodeURIComponent(query)}&page=1`, {
+        headers: { "X-API-KEY": kinopoiskApiKey, "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error(`Search request failed: ${response.status}`);
+      const data = await response.json();
+      return (data.films || []).slice(0, 8);
+    },
+    onSelect: async (movie) => {
+      selectedMovie = movie;
+      await loadPlayerForMovie(movie);
+      await saveHistoryItem(movie);
+    },
   });
 
   const historyList = document.getElementById("adminPlayerHistoryList");

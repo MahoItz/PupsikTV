@@ -45,13 +45,13 @@
         <section class="admin-player-search">
           <label for="adminPlayerSearchInput">Название фильма</label>
           <div class="admin-player-search__input-wrap input-with-btn">
-            <input id="adminPlayerSearchInput" class="search-input" type="text" placeholder="Введите название фильма">
+            <input id="adminPlayerSearchInput" class="search-input" type="text" placeholder="Введите название фильма" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="adminPlayerResults">
             <button id="adminPlayerSearchButton" type="button" class="search-btn" aria-label="Поиск фильма">
               <i class="fas fa-search" aria-hidden="true"></i>
             </button>
           </div>
           <div id="adminPlayerResultsContainer" class="admin-player-search__results" style="display:none;">
-            <div id="adminPlayerResults" class="autocomplete-list"></div>
+            <div id="adminPlayerResults" class="autocomplete-list" role="listbox" aria-label="Найденные фильмы"></div>
           </div>
         </section>
 
@@ -107,6 +107,7 @@
   </footer>
 
   <script src="script/admin-session.js" defer></script>
+    <script src="script/media-search.js" defer></script>
   <script src="script/admin-player.js" defer></script>
   <script src="script/admin-navigation.js?v=20261007-admin-nav-2" defer></script>
 </body>
