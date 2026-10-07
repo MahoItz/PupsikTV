@@ -33,32 +33,23 @@
 .admin-player-search {
   position: relative;
   overflow: visible;
-  padding: 20px 22px;
-  background: linear-gradient(135deg, rgba(6, 20, 46, 0.92), rgba(12, 30, 56, 0.9));
-  box-shadow: 0 14px 30px rgba(2, 6, 14, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-.admin-player-search::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 12% 20%, rgba(0, 212, 255, 0.18), transparent 55%);
-  pointer-events: none;
-}
-
-.admin-player-search > * {
-  position: relative;
-  z-index: 1;
+  padding: 10px;
+  border-color: rgba(143, 217, 232, 0.18);
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(0, 212, 255, 0.08), transparent 75%),
+    #080f20;
+  transition: border-color 0.2s ease;
 }
 
 .admin-player-search label {
-  display: block;
-  font-weight: 800;
-  margin-bottom: 12px;
-  font-size: 1.05rem;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: #c9f6ff;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .admin-player-search__input-wrap {
@@ -74,6 +65,50 @@
 
 .admin-player-search__input-wrap .search-input {
   flex: 1;
+  height: 44px;
+  padding: 10px 58px 10px 14px;
+  border: 1px solid rgba(143, 217, 232, 0.1);
+  border-radius: 10px;
+  background: rgba(143, 217, 232, 0.03);
+  color: #e8faff;
+  font-size: 0.95rem;
+  font-weight: 400;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.admin-player-search__input-wrap .search-input::placeholder {
+  color: #8c9fb8;
+}
+
+.admin-player-search:focus-within {
+  border-color: rgba(143, 217, 232, 0.6);
+}
+
+.admin-player-search__input-wrap .search-input:focus {
+  border-color: rgba(143, 217, 232, 0.24);
+  background: rgba(143, 217, 232, 0.05);
+  box-shadow: none;
+}
+
+.admin-player-search__input-wrap .search-btn {
+  right: 4px;
+  width: 38px;
+  height: 36px;
+  border-radius: 8px;
+  color: #8fd9e8;
+  background: rgba(143, 217, 232, 0.06);
+  font-size: 0.95rem;
+}
+
+.admin-player-search__input-wrap .search-btn:hover {
+  color: #eefaff;
+  background: rgba(143, 217, 232, 0.14);
+}
+
+.admin-player-search__input-wrap .search-btn:focus-visible {
+  outline: 2px solid #89ecff;
+  outline-offset: 2px;
 }
 
 .admin-player-search__results {

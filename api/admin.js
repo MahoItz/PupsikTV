@@ -1390,11 +1390,18 @@ async function handleGamePosters(req, res) {
 }
 
 async function getPlayerHistory(supabase, req, res) {
+  const limit =
+    req.query?.limit === undefined
+      ? MAX_PLAYER_HISTORY
+      : Number(req.query.limit);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PLAYER_HISTORY) {
+    return res.status(400).json({ error: 'Invalid history limit' });
+  }
   const { data, error } = await supabase
     .from(ADMIN_PLAYER_HISTORY_TABLE)
     .select('created_at, kp_id, title, year, poster')
     .order('created_at', { ascending: false })
-    .limit(MAX_PLAYER_HISTORY);
+    .limit(limit);
 
   if (error) {
     console.error('Failed to load admin player history', error);

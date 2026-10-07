@@ -63,6 +63,9 @@ let historyLoading = false;
 let historyLoaded = false;
 let historyRequest = null;
 let historyNeedsRender = true;
+let recentLoading = false;
+let recentLoadFailed = false;
+let historyRevision = 0;
 
 function readHistoryCache({ allowStale = false } = {}) {
   try {
@@ -109,6 +112,7 @@ function updateHistoryState(list, options = {}) {
   const { shouldRender = false, etag = "" } = options;
   const safeList = writeHistoryCache(list, etag);
   currentHistory = safeList;
+  historyRevision++;
   historyNeedsRender = true;
   if (shouldRender) renderHistory(safeList);
   return safeList;
@@ -182,6 +186,29 @@ async function loadHistory() {
   } catch (error) {
     console.error("Failed to load admin player history", error);
     throw error;
+  }
+}
+
+async function loadRecentMovies() {
+  const revision = historyRevision;
+  recentLoading = true;
+  recentLoadFailed = false;
+  updateWelcomeStatus();
+  try {
+    const response = await fetch(window.Pupsik.apiUrl("/api/admin?action=player-history&limit=4"), {
+      headers: getAdminAuthHeaders(),
+    });
+    if (!response.ok) throw new Error(`Failed to fetch recent movies: ${response.status}`);
+    const payload = await response.json();
+    const items = Array.isArray(payload?.items) ? payload.items.slice(0, 4) : [];
+    // A full history refresh or a user action may have supplied newer data.
+    if (revision === historyRevision) renderRecentMovies(items);
+  } catch (error) {
+    console.error("Failed to load recent movies", error);
+    recentLoadFailed = true;
+  } finally {
+    recentLoading = false;
+    updateWelcomeStatus();
   }
 }
 
@@ -370,9 +397,11 @@ function updateWelcomeStatus() {
   if (!status || !movies || !hint) return;
   const hasMovies = movies.children.length > 0;
   status.hidden = hasMovies;
-  status.textContent = historyLoading
+  status.textContent = recentLoading
     ? "Загружаем последние фильмы…"
-    : "Здесь появятся ваши последние фильмы. Начните с поиска по названию.";
+    : recentLoadFailed
+      ? "Не удалось загрузить последние фильмы. Вы можете найти фильм по названию."
+      : "Здесь появятся ваши последние фильмы. Начните с поиска по названию.";
   hint.textContent = hasMovies
     ? "Ещё один просмотр? Выберите один из последних фильмов."
     : "Найдите фильм для своего следующего киновечера.";
@@ -738,6 +767,7 @@ async function initPage() {
     document.getElementById("adminPlayerHistory")?.addEventListener("toggle", event => {
       if (event.target.open) ensureHistoryLoaded();
     });
+    loadRecentMovies();
   } catch (error) {
     console.error("Admin player init error", error);
   }
