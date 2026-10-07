@@ -1712,10 +1712,16 @@
     </div>
     <div id="orderPlayerModal" class="modal">
         <div class="modal-content order-player-modal">
-            <span class="close" onclick="closeModal('orderPlayerModal')">&times;</span>
             <div class="order-player-header">
                 <div class="order-player-heading">
-                    <h2 id="orderPlayerTitle" class="order-player-title">Смотреть</h2>
+                    <h2 id="orderPlayerTitle" class="order-player-title">Фильм</h2>
+                    <button class="order-player-close" type="button" onclick="closeModal('orderPlayerModal')"
+                        aria-label="Закрыть плеер">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="m6 6 12 12M18 6 6 18" />
+                        </svg>
+                    </button>
                 </div>
                 <div class="order-player-actions">
                     <div class="order-player-controls">
@@ -1733,6 +1739,11 @@
                 </div>
             </div>
             <div class="order-player-frame-wrap">
+                <div id="orderPlayerSplash" class="order-player-splash" hidden>
+                    <img id="orderPlayerSplashBackdrop" class="order-player-splash__backdrop" alt="">
+                    <img id="orderPlayerSplashPoster" class="order-player-splash__poster" alt="" hidden>
+                    <p id="orderPlayerSplashStatus" class="order-player-splash__status" role="status">Подготовка плеера…</p>
+                </div>
                 <div id="orderPlayerLoader" class="order-player-loader" aria-hidden="true">
                     <div class="order-player-spinner"></div>
                     <div class="order-player-loader-text">Загружаю плеер…</div>

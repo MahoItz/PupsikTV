@@ -890,13 +890,48 @@ function setOrderPlayerLoading(isLoading, message) {
   loader.classList.toggle("is-visible", Boolean(isLoading));
 }
 
+let orderPlayerSession = 0;
+
+function resetOrderPlayerSplash() {
+  orderPlayerSession += 1;
+  const frame = document.getElementById("orderPlayerFrame");
+  if (frame) { frame.onload = null; frame.src = "about:blank"; }
+  setOrderPlayerLoading(false);
+}
+
+function showOrderPlayerSplash(order) {
+  const splash = document.getElementById("orderPlayerSplash");
+  const backdrop = document.getElementById("orderPlayerSplashBackdrop");
+  const poster = document.getElementById("orderPlayerSplashPoster");
+  const status = document.getElementById("orderPlayerSplashStatus");
+  if (!splash || !backdrop || !poster || !status) return;
+  const fallback = order.poster || KP_FALLBACK_POSTER_PLACEHOLDER;
+  splash.hidden = false;
+  splash.classList.add("is-poster");
+  poster.hidden = false;
+  poster.onerror = () => { poster.hidden = true; };
+  backdrop.onerror = () => { backdrop.removeAttribute("src"); };
+  backdrop.src = fallback;
+  poster.src = fallback;
+  status.textContent = "Подготовка плеера…";
+}
+
 function applyOrderPlayerUrl(url) {
   const frame = document.getElementById("orderPlayerFrame");
-  const safeUrl = url || "";
-
-  if (frame) {
-    frame.src = safeUrl || "about:blank";
-  }
+  const splash = document.getElementById("orderPlayerSplash");
+  const status = document.getElementById("orderPlayerSplashStatus");
+  if (splash) splash.hidden = false;
+  if (status) status.textContent = url ? "Загрузка плеера…" : "Плеер пока недоступен";
+  setOrderPlayerLoading(false);
+  if (!frame) return;
+  frame.hidden = false;
+  const session = orderPlayerSession;
+  frame.onload = () => {
+    if (session !== orderPlayerSession || !url) return;
+    if (splash) splash.hidden = true;
+    setOrderPlayerLoading(false);
+  };
+  frame.src = url || "about:blank";
 }
 
 function populateOrderPlayerSelect(select, items, getLabel) {
@@ -921,6 +956,11 @@ async function openOrderOnReyohoho(order) {
     return;
   }
 
+  resetOrderPlayerSplash();
+  const session = orderPlayerSession;
+  showOrderPlayerSplash(order);
+  const splashFrame = document.getElementById("orderPlayerFrame");
+  if (splashFrame) splashFrame.hidden = false;
   const modal = document.getElementById("orderPlayerModal");
   const titleEl = document.getElementById("orderPlayerTitle");
   const sourceSelect = document.getElementById("orderPlayerSourceSelect");
@@ -936,7 +976,7 @@ async function openOrderOnReyohoho(order) {
     : null;
 
   if (titleEl) {
-    const title = order?.title ? `Смотреть: ${order.title}` : "Смотреть";
+    const title = order?.title || "Фильм";
     titleEl.textContent = title;
   }
   if (modal) {
@@ -945,8 +985,6 @@ async function openOrderOnReyohoho(order) {
   if (typeof syncOrderPlayerTimings === "function") {
     syncOrderPlayerTimings(order);
   }
-  setOrderPlayerLoading(true, "Загрузка плеера…");
-  applyOrderPlayerUrl("");
   if (externalLink) {
     externalLink.href = buildOrderExternalPlayerUrl(kpId);
   }
@@ -957,6 +995,7 @@ async function openOrderOnReyohoho(order) {
       throw new Error(`Player request failed: ${response.status}`);
     }
     const payload = await response.json();
+    if (session !== orderPlayerSession) return;
     const providers = normalizeOrderPlayerProviders(payload);
 
     if (!providers.length) {
@@ -1012,9 +1051,6 @@ async function openOrderOnReyohoho(order) {
 
       const targetUrl =
         defaultTranslation?.iframeUrl || provider?.iframeUrl || "";
-      if (targetUrl) {
-        setOrderPlayerLoading(true, "Загрузка фильма…");
-      }
       applyOrderPlayerUrl(targetUrl);
     }
 
@@ -1039,22 +1075,15 @@ async function openOrderOnReyohoho(order) {
         const translation = translations[Number.isNaN(tIndex) ? 0 : tIndex];
       const targetUrl =
         translation?.iframeUrl || provider?.iframeUrl || "";
-      if (targetUrl) {
-        setOrderPlayerLoading(true, "Загрузка фильма…");
-      }
       applyOrderPlayerUrl(targetUrl);
     };
   }
 
-    const frame = document.getElementById("orderPlayerFrame");
-    if (frame) {
-      frame.onload = () => {
-        setOrderPlayerLoading(false);
-      };
-    }
-
     setProvider(initialProviderIndex);
   } catch (error) {
+    if (session !== orderPlayerSession) return;
+    const status = document.getElementById("orderPlayerSplashStatus");
+    if (status) status.textContent = "Не удалось загрузить плеер. Попробуйте открыть во вкладке.";
     console.error("Failed to load order player:", error);
     setOrderPlayerLoading(false);
     if (typeof showToastNotification === "function") {

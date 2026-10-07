@@ -2163,6 +2163,7 @@ function closeModal(modalId, shouldReset = false) {
     activeGameDetailsId = null;
   }
   if (modalId === "orderPlayerModal") {
+    if (typeof resetOrderPlayerSplash === "function") resetOrderPlayerSplash();
     const frame = document.getElementById("orderPlayerFrame");
     if (frame) {
       frame.src = "about:blank";
