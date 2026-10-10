@@ -1,6 +1,6 @@
 # Запуск PupsikTV на GitHub Pages и Supabase
 
-Сайт: `https://mahoitz.github.io/PupsikTV/`.
+Сайт: `https://pupsik-tv.com/`.
 
 API: `https://shwekurmzyzivtworjup.supabase.co/functions/v1/pupsik-api`.
 
@@ -61,7 +61,8 @@ Workflow собирает Deno-модули из текущих файлов `ap
 `verify_jwt = false` задан в `supabase/config.toml` только для этой функции:
 сайт использует собственные административные токены, проверяемые обработчиками.
 Публичные маршруты, включая конфигурацию и рейтинги, сохраняют прежние правила
-доступа. CORS разрешает `https://mahoitz.github.io` и локальную разработку на
+доступа. CORS разрешает `https://pupsik-tv.com`, `https://www.pupsik-tv.com`,
+`https://mahoitz.github.io` и локальную разработку на
 порту 3000. CORS не заменяет проверки токенов.
 
 Если деплой или запрос возвращает ошибку, откройте **Edge Functions → pupsik-api
@@ -74,10 +75,10 @@ JWT-проверка осталась включённой; повторите �
 1. Откройте репозиторий → **Settings → Pages**.
 2. В **Build and deployment → Source** выберите **GitHub Actions** вместо
    **Deploy from a branch**. Отдельный артефакт публикует только клиентские файлы.
-3. Поле **Custom domain** оставьте пустым.
+3. В поле **Custom domain** укажите `pupsik-tv.com`.
 4. Откройте **Actions → Deploy GitHub Pages → Run workflow**, выберите `main`.
 5. Дождитесь успешной публикации и откройте
-   `https://mahoitz.github.io/PupsikTV/`. Обновите страницу с очисткой кеша
+   `https://pupsik-tv.com/`. Обновите страницу с очисткой кеша
    (`Ctrl+F5`).
 
 Изменения `main` автоматически обновляют Pages. После изменений в `api/` или

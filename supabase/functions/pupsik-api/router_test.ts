@@ -19,6 +19,34 @@ function assert(value: unknown, message = "Assertion failed"): asserts value {
 const origin = "https://mahoitz.github.io";
 const base = "https://example.supabase.co/functions/v1/pupsik-api";
 
+Deno.test("custom domains allow API requests and rating preflight", async () => {
+  const router = createRouter({});
+  for (const domain of ["https://pupsik-tv.com", "https://www.pupsik-tv.com"]) {
+    const health = await router(
+      new Request(`${base}/health`, { headers: { Origin: domain } }),
+    );
+    assert(health.status === 200);
+    assert(health.headers.get("Access-Control-Allow-Origin") === domain);
+    const preflight = await router(
+      new Request(`${base}/trailer-ratings`, {
+        method: "OPTIONS",
+        headers: {
+          Origin: domain,
+          "Access-Control-Request-Method": "POST",
+          "Access-Control-Request-Headers": "content-type,authorization",
+        },
+      }),
+    );
+    assert(preflight.status === 204);
+    assert(preflight.headers.get("Access-Control-Allow-Origin") === domain);
+    const missing = await router(
+      new Request(`${base}/missing`, { headers: { Origin: domain } }),
+    );
+    assert(missing.status === 404);
+    assert(missing.headers.get("Access-Control-Allow-Origin") === domain);
+  }
+});
+
 Deno.test("all API handlers retain authentication and method checks without database writes", async () => {
   Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "test-service-key");
   const router = createRouter({

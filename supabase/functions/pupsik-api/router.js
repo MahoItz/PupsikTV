@@ -1,4 +1,6 @@
 const allowedOrigins = new Set([
+  "https://pupsik-tv.com",
+  "https://www.pupsik-tv.com",
   "https://mahoitz.github.io",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
