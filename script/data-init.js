@@ -602,7 +602,7 @@ async function loadGamesFromSupabase() {
       publishers: item.publishers || "",
       rawgId: item.rawg_id || null,
       streamsCompleted: Math.min(
-        3,
+        10,
         Math.max(0, Number.parseInt(item.streams_completed, 10) || 0)
       ),
     }));

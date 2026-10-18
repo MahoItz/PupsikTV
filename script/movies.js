@@ -1167,16 +1167,20 @@ function toggleOrderActionsMenu(menu, button) {
 }
 
 const GAME_ORDER_STREAM_TARGET = 3;
+const GAME_ORDER_STREAM_MAX = 10;
+const gameOrderStreamsPending = new Set();
 
 function normalizeGameOrderStreams(value) {
   return Math.min(
-    GAME_ORDER_STREAM_TARGET,
+    GAME_ORDER_STREAM_MAX,
     Math.max(0, Number.parseInt(value, 10) || 0)
   );
 }
 
 function createGameOrderStreamControls(game, showAdminControls) {
   const streamsCompleted = normalizeGameOrderStreams(game.streamsCompleted);
+  const segmentCount = Math.max(GAME_ORDER_STREAM_TARGET, streamsCompleted);
+  const isSaving = gameOrderStreamsPending.has(game.id);
   const progressRow = document.createElement("div");
   progressRow.className = "game-order-streams";
 
@@ -1188,7 +1192,7 @@ function createGameOrderStreamControls(game, showAdminControls) {
     minusBtn.textContent = "−";
     minusBtn.title = "Уменьшить число проведённых стримов";
     minusBtn.setAttribute("aria-label", "Уменьшить число проведённых стримов");
-    minusBtn.disabled = streamsCompleted <= 0;
+    minusBtn.disabled = isSaving || streamsCompleted <= 0;
     minusBtn.addEventListener("click", () =>
       updateGameOrderStreams(game.id, streamsCompleted - 1)
     );
@@ -1197,31 +1201,36 @@ function createGameOrderStreamControls(game, showAdminControls) {
 
   const progress = document.createElement("div");
   progress.className = "game-order-streams__bar";
+  progress.style.setProperty("--stream-segments", String(segmentCount));
   progress.setAttribute("role", "progressbar");
   progress.setAttribute("aria-label", "Количество проведённых стримов по игре");
   progress.setAttribute("aria-valuemin", "0");
-  progress.setAttribute("aria-valuemax", String(GAME_ORDER_STREAM_TARGET));
+  progress.setAttribute("aria-valuemax", String(GAME_ORDER_STREAM_MAX));
   progress.setAttribute("aria-valuenow", String(streamsCompleted));
-  progress.addEventListener("mouseenter", (event) => {
+  const showStreamsTooltip = (event) => {
     if (!ratingTooltip) return;
-    ratingTooltip.textContent = "Количество проведённых стримов";
+    const streamNumber = event.target.dataset?.streamNumber;
+    ratingTooltip.textContent = streamNumber
+      ? `Количество проведённых стримов: ${streamNumber}-й стрим`
+      : "Количество проведённых стримов";
     ratingTooltip.style.display = "block";
     ratingTooltip.style.left = event.pageX + 10 + "px";
     ratingTooltip.style.top = event.pageY + 10 + "px";
-  });
-  progress.addEventListener("mousemove", (event) => {
-    if (!ratingTooltip) return;
-    ratingTooltip.style.left = event.pageX + 10 + "px";
-    ratingTooltip.style.top = event.pageY + 10 + "px";
-  });
+  };
+  progress.addEventListener("mouseenter", showStreamsTooltip);
+  progress.addEventListener("mousemove", showStreamsTooltip);
   progress.addEventListener("mouseleave", () => {
     if (!ratingTooltip) return;
     ratingTooltip.style.display = "none";
   });
 
-  for (let index = 0; index < GAME_ORDER_STREAM_TARGET; index += 1) {
+  for (let index = 0; index < segmentCount; index += 1) {
     const segment = document.createElement("span");
     segment.className = "game-order-streams__segment";
+    if (index >= GAME_ORDER_STREAM_TARGET) {
+      segment.classList.add("game-order-streams__segment--extra");
+      segment.dataset.streamNumber = String(index + 1);
+    }
     if (index < streamsCompleted) {
       segment.classList.add("is-filled");
     }
@@ -1238,7 +1247,7 @@ function createGameOrderStreamControls(game, showAdminControls) {
     plusBtn.textContent = "+";
     plusBtn.title = "Увеличить число проведённых стримов";
     plusBtn.setAttribute("aria-label", "Увеличить число проведённых стримов");
-    plusBtn.disabled = streamsCompleted >= GAME_ORDER_STREAM_TARGET;
+    plusBtn.disabled = isSaving || streamsCompleted >= GAME_ORDER_STREAM_MAX;
     plusBtn.addEventListener("click", () =>
       updateGameOrderStreams(game.id, streamsCompleted + 1)
     );

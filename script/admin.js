@@ -1931,7 +1931,7 @@ document
           publishers: data.publishers || '',
           rawgId: data.rawg_id || null,
           streamsCompleted: Math.min(
-            3,
+            10,
             Math.max(0, Number.parseInt(data.streams_completed, 10) || 0)
           ),
         };
@@ -3466,12 +3466,13 @@ function switchPlayedGameMode(mode) {
 }
 async function updateGameOrderStreams(gameId, nextValue) {
   const game = gameOrders.find((item) => item.id === gameId);
-  if (!game) return;
+  if (!game || gameOrderStreamsPending.has(gameId)) return;
 
   const normalizedValue = normalizeGameOrderStreams(nextValue);
   const previousValue = normalizeGameOrderStreams(game.streamsCompleted);
   if (normalizedValue === previousValue) return;
 
+  gameOrderStreamsPending.add(gameId);
   game.streamsCompleted = normalizedValue;
   renderGames();
 
@@ -3503,7 +3504,6 @@ async function updateGameOrderStreams(gameId, nextValue) {
     game.streamsCompleted = normalizeGameOrderStreams(
       payload?.row?.streams_completed
     );
-    renderGames();
   } catch (err) {
     console.error('Error updating game order streams', err);
     game.streamsCompleted = previousValue;
@@ -3511,6 +3511,9 @@ async function updateGameOrderStreams(gameId, nextValue) {
     alert(
       'Не удалось сохранить количество проведённых стримов по игре. Попробуйте ещё раз.'
     );
+  } finally {
+    gameOrderStreamsPending.delete(gameId);
+    renderGames();
   }
 }
 

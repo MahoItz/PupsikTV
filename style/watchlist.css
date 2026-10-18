@@ -495,7 +495,7 @@
 
 .game-order-streams__bar {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--stream-segments, 3), minmax(0, 1fr));
     gap: 3px;
     flex: 1;
     min-width: 0;
@@ -512,6 +512,12 @@
     background: linear-gradient(135deg, #00d4ff 0%, #6ef7c8 100%);
     border-color: rgba(110, 247, 200, 0.7);
     box-shadow: 0 0 10px rgba(0, 212, 255, 0.22);
+}
+
+.game-order-streams__segment--extra.is-filled {
+    background: linear-gradient(135deg, #a78bfa 0%, #e879f9 100%);
+    border-color: rgba(232, 121, 249, 0.7);
+    box-shadow: 0 0 10px rgba(167, 139, 250, 0.22);
 }
 
 .game-order-streams__step {
