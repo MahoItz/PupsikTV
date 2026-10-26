@@ -128,6 +128,12 @@ async function uploadGamePosterToStorage({
       source = await readFileAsDataURL(file);
     } catch (err) {
       console.error('Error reading poster file', err);
+      globalThis.PupsikProblems?.report(
+        'poster-file',
+        'Не удалось прочитать файл постера. Выберите другой файл.',
+        err,
+        { type: 'warning' }
+      );
       return poster;
     }
   } else if (!source) {
@@ -153,13 +159,20 @@ async function uploadGamePosterToStorage({
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Poster upload failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Poster upload failed: ${response.status}`),
+        { status: response.status }
       );
     }
     return payload?.publicUrl || poster;
   } catch (err) {
     console.error('Error uploading game poster', err);
+    globalThis.PupsikProblems?.report(
+      'poster-upload',
+      'Не удалось загрузить постер игры. Проверьте постер после сохранения.',
+      err,
+      { type: 'warning' }
+    );
     return poster;
   }
 }
@@ -183,12 +196,19 @@ async function deleteGamePosterFromStorage(posterUrl) {
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Poster delete failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Poster delete failed: ${response.status}`),
+        { status: response.status }
       );
     }
   } catch (error) {
     console.error('Error deleting game poster from storage', error);
+    globalThis.PupsikProblems?.report(
+      'poster-delete',
+      'Запись обработана, но не удалось удалить старый постер из хранилища.',
+      error,
+      { type: 'warning' }
+    );
   }
 }
 
@@ -433,8 +453,9 @@ async function checkAiModelsStatus() {
     }
 
     if (!response.ok) {
-      throw new Error(
-        result?.error || `Failed to check models: ${response.status}`
+      throw Object.assign(
+        new Error(result?.error || `Failed to check models: ${response.status}`),
+        { status: response.status }
       );
     }
 
@@ -484,6 +505,12 @@ async function persistAiModelStatuses() {
     console.log('AI model statuses persisted to Supabase');
   } catch (err) {
     console.error('Failed to persist AI statuses', err);
+    globalThis.PupsikProblems?.report(
+      'ai-status-save',
+      'Не удалось сохранить результаты проверки моделей.',
+      err,
+      { type: 'warning' }
+    );
   }
 }
 
@@ -527,6 +554,12 @@ async function updateActiveAiModel(modelValue) {
     console.log(`AI system successfully switched to: ${modelName}`);
   } catch (err) {
     console.error('Failed to persist model switch', err);
+    globalThis.PupsikProblems?.report(
+      'ai-model-save',
+      'Не удалось сохранить выбранную модель.',
+      err,
+      { type: 'error' }
+    );
     setAiModelStatus('Не удалось сохранить модель. Попробуйте ещё раз.');
   }
 }
@@ -555,7 +588,10 @@ async function refreshKpQuota() {
     });
 
     if (!res.ok) {
-      throw new Error(`Quota fetch failed with ${res.status}`);
+      throw Object.assign(
+        new Error(`Quota fetch failed with ${res.status}`),
+        { status: res.status }
+      );
     }
 
     const data = await res.json();
@@ -567,6 +603,12 @@ async function refreshKpQuota() {
     }
   } catch (err) {
     console.error('Error refreshing Kinopoisk quota', err);
+    globalThis.PupsikProblems?.report(
+      'kp-quota',
+      'Не удалось проверить оставшийся лимит Кинопоиска.',
+      err,
+      { type: 'warning' }
+    );
     if (kpQuotaInfo) kpQuotaInfo.style.display = 'none';
   } finally {
     if (btn) btn.disabled = false;
@@ -593,6 +635,12 @@ async function handleKpApiChange(event) {
     applyKpApiSelection(normalizedValue);
   } catch (err) {
     console.error('Failed to save Kinopoisk API selection', err);
+    globalThis.PupsikProblems?.report(
+      'kp-selection',
+      'Не удалось сохранить выбранный API Кинопоиска.',
+      err,
+      { type: 'error' }
+    );
     setKpApiStatus('Не удалось сохранить API. Попробуйте ещё раз.');
   } finally {
     selectEl.disabled = false;
@@ -760,6 +808,12 @@ async function hydrateSelectedIgdbGame(game) {
     return details ? { ...game, ...details } : game;
   } catch (error) {
     console.error('IGDB details error', error);
+    globalThis.PupsikProblems?.report(
+      'game-details',
+      'Не удалось загрузить подробности игры. Часть полей может быть не заполнена.',
+      error,
+      { type: 'warning' }
+    );
     return game;
   }
 }
@@ -1261,8 +1315,9 @@ async function saveMovieOrder(orderData) {
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Movie order create failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Movie order create failed: ${response.status}`),
+        { status: response.status }
       );
     }
     const data = payload?.row;
@@ -1286,6 +1341,12 @@ async function saveMovieOrder(orderData) {
     return { ok: true, order: newOrder };
   } catch (err) {
     console.error('Error adding order', err);
+    globalThis.PupsikProblems?.report(
+      'order-create',
+      'Не удалось добавить заказ фильма. Введённые данные оставлены в форме.',
+      err,
+      { type: 'error' }
+    );
     return { ok: false, reason: 'error', error: err };
   }
 }
@@ -1394,6 +1455,12 @@ document
           poster = await readFileAsDataURL(fileInput.files[0]);
         } catch (err) {
           console.error('Error reading file', err);
+          globalThis.PupsikProblems?.report(
+            'poster-file',
+            'Не удалось прочитать файл. Проверьте формат и выберите его повторно.',
+            err,
+            { type: 'warning' }
+          );
         }
       }
       movieData = {
@@ -1500,8 +1567,9 @@ document
       );
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(
-          payload?.error || `Movie create failed: ${response.status}`
+        throw Object.assign(
+          new Error(payload?.error || `Movie create failed: ${response.status}`),
+          { status: response.status }
         );
       }
       const data = payload?.row;
@@ -1539,6 +1607,13 @@ document
       }
     } catch (err) {
       console.error('Error adding movie to Supabase', err);
+      globalThis.PupsikProblems?.report(
+        'movie-create',
+        'Не удалось завершить добавление фильма. Проверьте список перед повторной отправкой.',
+        err,
+        { type: 'error' }
+      );
+      return;
     } finally {
       isSubmittingMovieAdd = false;
       toggleSubmitLoading(submitBtn, false);
@@ -1644,6 +1719,12 @@ document
             poster = await readFileAsDataURL(fileInput.files[0]);
           } catch (err) {
             console.error('Error reading file', err);
+            globalThis.PupsikProblems?.report(
+              'poster-file',
+              'Не удалось прочитать файл. Проверьте формат и выберите его повторно.',
+              err,
+              { type: 'warning' }
+            );
           }
         }
         orderData = {
@@ -1746,6 +1827,12 @@ document
               }
             } catch (err) {
               console.error('Error fetching full game details', err);
+              globalThis.PupsikProblems?.report(
+                'game-details',
+                'Не удалось загрузить подробности игры. Проверьте поля перед сохранением.',
+                err,
+                { type: 'warning' }
+              );
             }
           }
 
@@ -1820,6 +1907,12 @@ document
             poster = await readFileAsDataURL(posterFile);
           } catch (err) {
             console.error('Error reading file', err);
+            globalThis.PupsikProblems?.report(
+              'poster-file',
+              'Не удалось прочитать файл. Проверьте формат и выберите его повторно.',
+              err,
+              { type: 'warning' }
+            );
           }
         }
 
@@ -1899,8 +1992,9 @@ document
         );
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(
-            payload?.error || `Game order create failed: ${response.status}`
+          throw Object.assign(
+            new Error(payload?.error || `Game order create failed: ${response.status}`),
+            { status: response.status }
           );
         }
         const data = payload?.row;
@@ -1950,6 +2044,13 @@ document
         }
       } catch (err) {
         console.error('Error adding game', err);
+        globalThis.PupsikProblems?.report(
+          'game-create',
+          'Не удалось завершить добавление игры. Проверьте список перед повторной отправкой.',
+          err,
+          { type: 'error' }
+        );
+        return;
       }
 
       closeModal('addGameModal', true);
@@ -2018,6 +2119,12 @@ document
           if (detailsRes.ok) fullGameDetails = await detailsRes.json();
         } catch (err) {
           console.error('Error fetching full game details', err);
+          globalThis.PupsikProblems?.report(
+            'game-details',
+            'Не удалось загрузить подробности игры. Проверьте поля перед сохранением.',
+            err,
+            { type: 'warning' }
+          );
         }
       }
       gameData = {
@@ -2061,6 +2168,12 @@ document
           poster = await readFileAsDataURL(posterFile);
         } catch (err) {
           console.error('Error reading file', err);
+          globalThis.PupsikProblems?.report(
+            'poster-file',
+            'Не удалось прочитать файл. Проверьте формат и выберите его повторно.',
+            err,
+            { type: 'warning' }
+          );
         }
       }
 
@@ -2136,8 +2249,9 @@ document
       );
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(
-          payload?.error || `Played game create failed: ${response.status}`
+        throw Object.assign(
+          new Error(payload?.error || `Played game create failed: ${response.status}`),
+          { status: response.status }
         );
       }
       const data = payload?.row;
@@ -2174,6 +2288,13 @@ document
       localStorage.setItem('gamesCache', JSON.stringify(allPlayedGames));
     } catch (err) {
       console.error('Error adding game', err);
+      globalThis.PupsikProblems?.report(
+        'game-create',
+        'Не удалось завершить добавление игры. Проверьте список перед повторной отправкой.',
+        err,
+        { type: 'error' }
+      );
+      return;
     }
 
     gamePage = 1;
@@ -2205,7 +2326,10 @@ async function submitRating() {
       source = await ensureCatalogItemDetails('watchlist', ratingMovieId);
     } catch (error) {
       console.warn('Unable to load order before promotion', error);
-      showToastNotification('Не удалось загрузить подробности заказа. Повторите попытку.', 'error');
+      showToastNotification(
+        'Не удалось загрузить подробности заказа. Повторите попытку.',
+        'error'
+      );
       return;
     }
     if (!source || isSubmittingRating || source.id !== ratingMovieId) return;
@@ -2295,8 +2419,9 @@ async function submitRating() {
       );
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(
-          payload?.error || `Movie promotion failed: ${response.status}`
+        throw Object.assign(
+          new Error(payload?.error || `Movie promotion failed: ${response.status}`),
+          { status: response.status }
         );
       }
       const data = payload?.row;
@@ -2344,8 +2469,9 @@ async function submitRating() {
       closeModal('rateMovieModal', true);
     } catch (err) {
       console.error('Error adding rated movie to Supabase', err);
-      alert(
-        'Не удалось переместить фильм в список просмотренных. Попробуйте ещё раз.'
+      showToastNotification(
+        'Не удалось переместить фильм в список просмотренных. Попробуйте ещё раз.',
+        'error'
       );
     } finally {
       isSubmittingRating = false;
@@ -2368,7 +2494,10 @@ async function submitGameRating() {
       source = await ensureCatalogItemDetails('gameOrders', ratingGameId);
     } catch (error) {
       console.warn('Unable to load order before promotion', error);
-      showToastNotification('Не удалось загрузить подробности заказа. Повторите попытку.', 'error');
+      showToastNotification(
+        'Не удалось загрузить подробности заказа. Повторите попытку.',
+        'error'
+      );
       return;
     }
     if (!source || source.id !== ratingGameId) return;
@@ -2450,8 +2579,9 @@ async function submitGameRating() {
       );
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(
-          payload?.error || `Game promotion failed: ${response.status}`
+        throw Object.assign(
+          new Error(payload?.error || `Game promotion failed: ${response.status}`),
+          { status: response.status }
         );
       }
       const data = payload?.row;
@@ -2498,8 +2628,9 @@ async function submitGameRating() {
       closeModal('rateGameModal', true);
     } catch (err) {
       console.error('Error adding rated game', err);
-      alert(
-        'Не удалось переместить игру в список пройденных. Попробуйте ещё раз.'
+      showToastNotification(
+        'Не удалось переместить игру в список пройденных. Попробуйте ещё раз.',
+        'error'
       );
     }
   }
@@ -2564,8 +2695,9 @@ document
       );
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(
-          payload?.error || `Movie update failed: ${response.status}`
+        throw Object.assign(
+          new Error(payload?.error || `Movie update failed: ${response.status}`),
+          { status: response.status }
         );
       }
 
@@ -2585,7 +2717,10 @@ document
       closeModal('editMovieModal', true);
     } catch (err) {
       console.error('Error updating movie in Supabase', err);
-      alert('Не удалось сохранить изменения фильма. Попробуйте ещё раз.');
+      showToastNotification(
+        'Не удалось сохранить изменения фильма. Попробуйте ещё раз.',
+        'error'
+      );
     }
   });
 
@@ -2650,8 +2785,9 @@ document
       );
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(
-          payload?.error || `Plan date update failed: ${response.status}`
+        throw Object.assign(
+          new Error(payload?.error || `Plan date update failed: ${response.status}`),
+          { status: response.status }
         );
       }
       const data = payload?.row;
@@ -2668,7 +2804,10 @@ document
       closeModal('planDateModal');
     } catch (err) {
       console.error('Error updating plan date', err);
-      alert('Не удалось сохранить время просмотра. Попробуйте ещё раз.');
+      showToastNotification(
+        'Не удалось сохранить время просмотра. Попробуйте ещё раз.',
+        'error'
+      );
     } finally {
       planDateOrderId = null;
       planDateOrderType = 'movie';
@@ -2749,8 +2888,9 @@ document
       );
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(
-          payload?.error || `Played game update failed: ${response.status}`
+        throw Object.assign(
+          new Error(payload?.error || `Played game update failed: ${response.status}`),
+          { status: response.status }
         );
       }
 
@@ -2764,8 +2904,9 @@ document
       closeModal('editPlayedGameModal', true);
     } catch (err) {
       console.error('Error updating played game', err);
-      alert(
-        'Не удалось сохранить изменения пройденной игры. Попробуйте ещё раз.'
+      showToastNotification(
+        'Не удалось сохранить изменения пройденной игры. Попробуйте ещё раз.',
+        'error'
       );
     }
   });
@@ -2989,8 +3130,9 @@ async function performDeleteMovie(id) {
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Movie delete failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Movie delete failed: ${response.status}`),
+        { status: response.status }
       );
     }
 
@@ -3003,8 +3145,9 @@ async function performDeleteMovie(id) {
     allMovies.splice(index, 0, removedMovie);
     localStorage.setItem('moviesCache', JSON.stringify(allMovies));
     renderMovies();
-    alert(
-      'Не удалось удалить фильм. Возможно, не хватает прав или запись уже удалена. Изменения отменены.'
+    showToastNotification(
+      'Не удалось удалить фильм. Возможно, не хватает прав или запись уже удалена. Изменения отменены.',
+      'error'
     );
   }
 }
@@ -3037,8 +3180,9 @@ async function performDeleteOrder(id) {
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Movie order delete failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Movie order delete failed: ${response.status}`),
+        { status: response.status }
       );
     }
 
@@ -3049,8 +3193,9 @@ async function performDeleteOrder(id) {
     console.error('Error deleting order from Supabase', err);
     watchlist.splice(index, 0, removedOrder);
     renderWatchlist();
-    alert(
-      'Не удалось удалить заказанный фильм. Возможно, не хватает прав или запись уже удалена. Изменения отменены.'
+    showToastNotification(
+      'Не удалось удалить заказанный фильм. Возможно, не хватает прав или запись уже удалена. Изменения отменены.',
+      'error'
     );
   }
 }
@@ -3084,16 +3229,18 @@ async function performDeleteGameOrder(id) {
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Game order delete failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Game order delete failed: ${response.status}`),
+        { status: response.status }
       );
     }
   } catch (err) {
     console.error('Error deleting game order from Supabase', err);
     gameOrders.splice(index, 0, removedOrder);
     renderGames();
-    alert(
-      'Не удалось удалить заказанную игру. Возможно, не хватает прав или запись уже удалена. Изменения отменены.'
+    showToastNotification(
+      'Не удалось удалить заказанную игру. Возможно, не хватает прав или запись уже удалена. Изменения отменены.',
+      'error'
     );
   }
 }
@@ -3496,8 +3643,9 @@ async function updateGameOrderStreams(gameId, nextValue) {
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Game order streams update failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Game order streams update failed: ${response.status}`),
+        { status: response.status }
       );
     }
 
@@ -3508,8 +3656,9 @@ async function updateGameOrderStreams(gameId, nextValue) {
     console.error('Error updating game order streams', err);
     game.streamsCompleted = previousValue;
     renderGames();
-    alert(
-      'Не удалось сохранить количество проведённых стримов по игре. Попробуйте ещё раз.'
+    showToastNotification(
+      'Не удалось сохранить количество проведённых стримов по игре. Попробуйте ещё раз.',
+      'error'
     );
   } finally {
     gameOrderStreamsPending.delete(gameId);
@@ -3545,15 +3694,19 @@ async function clearPlanDate(orderId) {
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Plan date clear failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Plan date clear failed: ${response.status}`),
+        { status: response.status }
       );
     }
   } catch (err) {
     console.error('Error clearing plan date', err);
     order.planDate = previousPlan;
     renderWatchlist();
-    alert('Не удалось удалить запланированное время. Попробуйте ещё раз.');
+    showToastNotification(
+      'Не удалось удалить запланированное время. Попробуйте ещё раз.',
+      'error'
+    );
   }
 }
 
@@ -3585,15 +3738,19 @@ async function clearGamePlanDate(gameId) {
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Game plan date clear failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Game plan date clear failed: ${response.status}`),
+        { status: response.status }
       );
     }
   } catch (err) {
     console.error('Error clearing game plan date', err);
     game.planDate = previousPlan;
     renderGames();
-    alert('Не удалось удалить запланированное время. Попробуйте ещё раз.');
+    showToastNotification(
+      'Не удалось удалить запланированное время. Попробуйте ещё раз.',
+      'error'
+    );
   }
 }
 
@@ -3628,8 +3785,9 @@ async function deletePlayedGame(id) {
     );
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Played game delete failed: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Played game delete failed: ${response.status}`),
+        { status: response.status }
       );
     }
 
@@ -3647,8 +3805,9 @@ async function deletePlayedGame(id) {
     }
     localStorage.setItem('gamesCache', JSON.stringify(allPlayedGames));
     renderPlayedGames();
-    alert(
-      'Не удалось удалить пройденную игру. Возможно, не хватает прав или запись уже удалена. Изменения отменены.'
+    showToastNotification(
+      'Не удалось удалить пройденную игру. Возможно, не хватает прав или запись уже удалена. Изменения отменены.',
+      'error'
     );
   }
 }
@@ -3861,7 +4020,10 @@ async function enterDetailsEdit(key) {
       record = await ensureCatalogItemDetails(catalog, recordId);
     } catch (error) {
       console.warn('Unable to load details before editing', error);
-      showToastNotification('Не удалось загрузить подробности. Повторите попытку.', 'error');
+      showToastNotification(
+        'Не удалось загрузить подробности. Повторите попытку.',
+        'error'
+      );
       return;
     }
     if (!record || modal.style.display === 'none' || String(modal.dataset.recordId) !== String(recordId)) return;
@@ -4016,8 +4178,9 @@ async function saveDetailsEdit(key) {
     );
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        result?.error || `Details update failed: ${response.status}`
+      throw Object.assign(
+        new Error(result?.error || `Details update failed: ${response.status}`),
+        { status: response.status }
       );
     }
 
@@ -4081,7 +4244,10 @@ async function saveDetailsEdit(key) {
     }
   } catch (err) {
     console.error('Failed to save details edit', err);
-    alert('Не удалось сохранить изменения. Попробуйте ещё раз.');
+    showToastNotification(
+      'Не удалось сохранить изменения. Попробуйте ещё раз.',
+      'error'
+    );
   }
 }
 
@@ -4261,14 +4427,16 @@ function initAdminFeatures() {
               }
               closeModal('adminModal');
             } else {
-              alert(
-                'Не удалось подтвердить сессию администратора. Попробуйте ещё раз.'
+              showToastNotification(
+                'Не удалось подтвердить сессию администратора. Попробуйте ещё раз.',
+                'error'
               );
             }
           } catch (err) {
             console.error('Failed to load environment for admin session', err);
-            alert(
-              'Не удалось получить настройки сервера. Попробуйте ещё раз позже.'
+            showToastNotification(
+              'Не удалось получить настройки сервера. Попробуйте ещё раз позже.',
+              'error'
             );
           }
         } else {
@@ -4429,6 +4597,12 @@ function initAdminFeatures() {
           preview.src = editPosterData;
         } catch (err) {
           console.error('Error reading file', err);
+          globalThis.PupsikProblems?.report(
+            'poster-file',
+            'Не удалось прочитать файл. Проверьте формат и выберите его повторно.',
+            err,
+            { type: 'warning' }
+          );
         }
       }
     });
@@ -4445,6 +4619,12 @@ function initAdminFeatures() {
           playedPreview.src = editPlayedGamePosterData;
         } catch (err) {
           console.error('Error reading file', err);
+          globalThis.PupsikProblems?.report(
+            'poster-file',
+            'Не удалось прочитать файл. Проверьте формат и выберите его повторно.',
+            err,
+            { type: 'warning' }
+          );
         }
       }
     });
@@ -4704,6 +4884,12 @@ async function fetchSteamGridPostersForTitle(title) {
     };
   } catch (err) {
     console.error('SteamGridDB fetch error', err);
+    globalThis.PupsikProblems?.report(
+      'poster-search',
+      'Не удалось загрузить подборку постеров. Можно выбрать файл вручную.',
+      err,
+      { type: 'warning' }
+    );
     return {
       selectedPoster: null,
       posters: [],
@@ -4932,6 +5118,12 @@ async function showSelectedFile(file, label, fileName, removeBtn, preview) {
       preview.style.display = 'block';
     } catch (err) {
       console.error('Error reading file', err);
+      globalThis.PupsikProblems?.report(
+        'poster-file',
+        'Не удалось прочитать файл. Проверьте формат и выберите его повторно.',
+        err,
+        { type: 'warning' }
+      );
     }
   }
 }

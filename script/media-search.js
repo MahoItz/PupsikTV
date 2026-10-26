@@ -102,6 +102,7 @@ window.PupsikMediaSearch = {
         if (request !== version) return;
         console.error('Media search failed', error);
         display('error');
+        if (globalThis.PupsikProblems) status.textContent = 'Ошибка поиска. ' + globalThis.PupsikProblems.describe(error, 'Повторите поиск через несколько секунд.');
       }
     }
 
@@ -111,7 +112,19 @@ window.PupsikMediaSearch = {
       const option = list.children[index];
       input.value = item.nameRu || item.name || item.nameEn || '';
       close();
-      Promise.resolve(onSelect(item, index, option)).catch(error => console.error('Media selection failed', error));
+      try {
+        Promise.resolve(onSelect(item, index, option)).catch(selectionFailed);
+      } catch (error) {
+        selectionFailed(error);
+      }
+    }
+    function selectionFailed(error) {
+      console.error('Media selection failed', error);
+      globalThis.PupsikProblems?.report(
+        'media-selection',
+        'Не удалось открыть выбранный фильм или игру. Выберите результат повторно.',
+        error
+      );
     }
     input.addEventListener('input', () => {
       close();

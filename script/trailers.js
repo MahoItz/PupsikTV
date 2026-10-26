@@ -198,7 +198,10 @@ async function persistSelectedKinopoiskApi(nextApi) {
 
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error(payload?.error || `Failed to update kp_api: ${response.status}`);
+    throw Object.assign(
+      new Error(payload?.error || `Failed to update kp_api: ${response.status}`),
+      { status: response.status }
+    );
   }
 
   return payload?.kp_api || normalizeKpApiValue(nextApi);
@@ -663,7 +666,10 @@ async function uploadBoostyReviewImage(file, title) {
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data?.error || `Failed to upload image: ${response.status}`);
+    throw Object.assign(
+      new Error(data?.error || `Failed to upload image: ${response.status}`),
+      { status: response.status }
+    );
   }
 
   return String(data?.imageUrl || "").trim();
@@ -686,7 +692,10 @@ async function uploadTrailerInfoPoster(file, title) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.error || `Failed to upload poster: ${response.status}`);
+    throw Object.assign(
+      new Error(data?.error || `Failed to upload poster: ${response.status}`),
+      { status: response.status }
+    );
   }
 
   return String(data?.publicUrl || "").trim();
@@ -882,13 +891,23 @@ async function fetchBoostyReviews() {
     });
     const payload = await response.json();
     if (!response.ok) {
-      throw new Error(payload?.error || `Failed to load Boosty reviews: ${response.status}`);
+      throw Object.assign(
+        new Error(payload?.error || `Failed to load Boosty reviews: ${response.status}`),
+        { status: response.status }
+      );
     }
 
     boostyReviews = Array.isArray(payload?.items) ? payload.items : [];
     boostyReviewsLoaded = true;
+    globalThis.PupsikProblems?.clear("boosty-load");
   } catch (error) {
     console.error("Failed to load Boosty reviews", error);
+    globalThis.PupsikProblems?.report(
+      "boosty-load",
+      "Не удалось загрузить обзоры Boosty. Список обзоров может быть неполным.",
+      error,
+      { type: "warning" }
+    );
     boostyReviews = [];
     boostyReviewsLoaded = false;
   }
@@ -908,7 +927,10 @@ async function createBoostyReview(payload) {
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data?.error || `Failed to create Boosty review: ${response.status}`);
+    throw Object.assign(
+      new Error(data?.error || `Failed to create Boosty review: ${response.status}`),
+      { status: response.status }
+    );
   }
 
   if (data?.item) {
@@ -933,7 +955,10 @@ async function fetchBoostyPreviewImage(url) {
   }
 
   if (!response.ok) {
-    throw new Error(data?.error || `Failed to fetch preview image: ${response.status}`);
+    throw Object.assign(
+      new Error(data?.error || `Failed to fetch preview image: ${response.status}`),
+      { status: response.status }
+    );
   }
 
   return String(data?.image || "").trim();
@@ -953,7 +978,10 @@ async function deleteBoostyReview(id) {
   }
 
   if (!response.ok) {
-    throw new Error(data?.error || `Failed to delete Boosty review: ${response.status}`);
+    throw Object.assign(
+      new Error(data?.error || `Failed to delete Boosty review: ${response.status}`),
+      { status: response.status }
+    );
   }
 
   boostyReviews = boostyReviews.filter((item) => Number(item.id) !== Number(id));
@@ -1055,7 +1083,10 @@ async function loadStoredTrailerActors(filmId, options = {}) {
   )
     .then(async (response) => {
       if (!response.ok) {
-        throw new Error(`Failed to load actors: ${response.status}`);
+        throw Object.assign(
+          new Error(`Failed to load actors: ${response.status}`),
+          { status: response.status }
+        );
       }
       const payload = await response.json();
       const items = Array.isArray(payload?.items) ? payload.items : [];
@@ -1096,7 +1127,10 @@ async function saveTrailerActors(filmId, staff) {
       }),
     });
     if (!response.ok) {
-      throw new Error(`Failed to save actors: ${response.status}`);
+      throw Object.assign(
+        new Error(`Failed to save actors: ${response.status}`),
+        { status: response.status }
+      );
     }
     const payload = await response.json();
     const savedItems = Array.isArray(payload?.items) ? payload.items : items;
@@ -3064,12 +3098,16 @@ async function fetchTrailers() {
   });
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error(payload?.error || `Failed to load trailers: ${response.status}`);
+    throw Object.assign(
+      new Error(payload?.error || `Failed to load trailers: ${response.status}`),
+      { status: response.status }
+    );
   }
   if (payload?.setupRequired) {
     setStatusText("trailerFormStatus", payload.message || "Нужно применить SQL-миграцию для страницы трейлеров.", true);
   }
   applyTrailerList(Array.isArray(payload?.items) ? payload.items : []);
+  globalThis.PupsikProblems?.clear("trailers-load");
 }
 
 async function createTrailer(payload) {
@@ -3083,7 +3121,10 @@ async function createTrailer(payload) {
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data?.error || `Failed to create trailer: ${response.status}`);
+    throw Object.assign(
+      new Error(data?.error || `Failed to create trailer: ${response.status}`),
+      { status: response.status }
+    );
   }
   const item = data?.item;
   if (!item) {
@@ -3111,7 +3152,10 @@ async function patchTrailer(id, changes) {
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data?.error || `Failed to update trailer: ${response.status}`);
+    throw Object.assign(
+      new Error(data?.error || `Failed to update trailer: ${response.status}`),
+      { status: response.status }
+    );
   }
   const updated = data?.item;
   if (!updated) {
@@ -3142,7 +3186,10 @@ async function removeTrailer(id) {
     payload = null;
   }
   if (!response.ok) {
-    throw new Error(payload?.error || `Failed to delete trailer: ${response.status}`);
+    throw Object.assign(
+      new Error(payload?.error || `Failed to delete trailer: ${response.status}`),
+      { status: response.status }
+    );
   }
 
   trailers = trailers.filter((item) => Number(item.id) !== Number(id));
@@ -3167,7 +3214,10 @@ async function submitTrailerUserRating(trailerId, rating) {
 
   const payload = await response.json();
   if (!response.ok) {
-    throw new Error(payload?.error || `Failed to submit trailer rating: ${response.status}`);
+    throw Object.assign(
+      new Error(payload?.error || `Failed to submit trailer rating: ${response.status}`),
+      { status: response.status }
+    );
   }
 
   return payload?.trailer || null;
@@ -3395,6 +3445,12 @@ async function runTrailerTitleSearch(query) {
   } catch (error) {
     if (requestId !== trailerTitleRequestId) return;
     console.error("Trailer title autocomplete failed", error);
+    globalThis.PupsikProblems?.report(
+      "trailer-search",
+      "Не удалось выполнить поиск трейлера. Попробуйте ещё раз или введите название вручную.",
+      error,
+      { type: "warning" }
+    );
     clearTrailerTitleSearch();
   }
 }
@@ -4582,6 +4638,12 @@ async function initPage() {
     });
   } catch (error) {
     console.error("Trailers page init error", error);
+    globalThis.PupsikProblems?.report(
+      "trailers-load",
+      "Не удалось загрузить страницу трейлеров полностью. Обновите страницу для повторной попытки.",
+      error,
+      { type: "error", critical: true }
+    );
     if (app) app.hidden = false;
     if (denied) denied.hidden = true;
   } finally {

@@ -44,6 +44,15 @@ const catalogDetailFields = {
 };
 const catalogDetailRequests = new Map();
 
+function reportCatalogProblem(catalog, error) {
+  const labels = { movies: "Фильмы", playedGames: "Пройденные игры", watchlist: "Заказанные фильмы", games: "Заказанные игры", settings: "Настройки рулетки" };
+  const items = catalog === "games" ? getCatalogItems("gameOrders") : getCatalogItems(catalog);
+  const cached = items.length > 0;
+  globalThis.PupsikProblems?.report(`catalog:${catalog}`,
+    `${labels[catalog]}: не удалось ${cached ? "обновить данные. Показана ранее загруженная версия." : "загрузить данные. Пустой список не означает, что записей нет."}`,
+    error, { critical: !cached && catalog !== "settings", type: "warning", fallback: "Откройте раздел заново или обновите страницу, чтобы повторить загрузку." });
+}
+
 function getCatalogItems(catalog) {
   if (catalog === "movies") return allMovies;
   if (catalog === "watchlist") return watchlist;
@@ -62,14 +71,16 @@ async function fetchCatalogRows(catalog, columns, ascending) {
   const rows = [];
   const seenIds = new Set();
   let total = null;
+  const signal = AbortSignal.timeout(30000);
   while (true) {
     const offset = rows.length;
-    const { data, error, count } = await supabaseClient
+    const { data, error, count, status } = await supabaseClient
       .from(config.table)
       .select(summaryColumns, offset === 0 ? { count: "exact" } : undefined)
+      .abortSignal(signal)
       .order("id", { ascending })
       .range(offset, offset + CATALOG_PAGE_SIZE - 1);
-    if (error) throw error;
+    if (error) throw Object.assign(error, { status });
     if (!Array.isArray(data)) throw new Error("Invalid catalog response");
     if (offset === 0 && Number.isInteger(count) && count >= 0) total = count;
     for (const row of data) {
@@ -140,6 +151,7 @@ function ensureCatalogItemDetails(catalog, id) {
       const { data, error } = await supabaseClient
         .from(config.table)
         .select(Object.keys(config.fields).join(", "))
+        .abortSignal(AbortSignal.timeout(20000))
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -385,6 +397,7 @@ async function loadSettingsFromSupabase() {
     return true;
   } catch (err) {
     console.error("Error loading settings from Supabase", err);
+    reportCatalogProblem("settings", err);
     return false;
   }
 }
@@ -474,9 +487,11 @@ async function loadMoviesFromSupabase() {
       recalculateMovieUserRatings(allMovies);
       persistCatalogCache("movies");
     }
+    globalThis.PupsikProblems?.clear("catalog:movies");
     return true;
   } catch (err) {
     console.error("Error loading movies from Supabase", err);
+    reportCatalogProblem("movies", err);
     return false;
   } finally {
     moviesLoading = false;
@@ -543,9 +558,11 @@ async function loadWatchlistFromSupabase() {
       };
     });
     watchlist = preserveCatalogDetails("watchlist", newWatchlist);
+    globalThis.PupsikProblems?.clear("catalog:watchlist");
     return true;
   } catch (err) {
     console.error("Error loading watchlist from Supabase", err);
+    reportCatalogProblem("watchlist", err);
     return false;
   } finally {
     watchlistLoading = false;
@@ -608,9 +625,11 @@ async function loadGamesFromSupabase() {
     }));
 
     gameOrders = preserveCatalogDetails("gameOrders", newGameOrders);
+    globalThis.PupsikProblems?.clear("catalog:games");
     return true;
   } catch (err) {
     console.error("Error loading game orders from Supabase", err);
+    reportCatalogProblem("games", err);
     return false;
   } finally {
     gameOrdersLoading = false;
@@ -684,9 +703,11 @@ async function loadPlayedGamesFromSupabase() {
       recalculateGameUserRatings(allPlayedGames);
       persistCatalogCache("playedGames");
     }
+    globalThis.PupsikProblems?.clear("catalog:playedGames");
     return true;
   } catch (err) {
     console.error("Error loading played games", err);
+    reportCatalogProblem("playedGames", err);
     return false;
   } finally {
     playedGamesLoading = false;
@@ -736,15 +757,21 @@ function ensureCatalogLoaded(catalog) {
     games: loadGamesFromSupabase,
     settings: loadSettingsFromSupabase,
   };
-  if (!supabaseClient || !loaders[catalog]) return Promise.resolve(false);
+  if (!loaders[catalog]) return Promise.resolve(false);
+  if (!supabaseClient) {
+    reportCatalogProblem(catalog, new Error("Catalog API unavailable"));
+    return Promise.resolve(false);
+  }
   const request = Promise.resolve().then(async () => {
     try {
       const loaded = await loaders[catalog]();
       if (!loaded) catalogLoadRequests.delete(catalog);
+      else globalThis.PupsikProblems?.clear(`catalog:${catalog}`);
       return loaded;
     } catch (error) {
       catalogLoadRequests.delete(catalog);
       console.error("Unable to load catalog", error);
+      reportCatalogProblem(catalog, error);
       return false;
     }
   });
@@ -825,11 +852,21 @@ document.addEventListener("DOMContentLoaded", async function () {
   const hadCatalogClient = Boolean(supabaseClient);
   void loadEnv()
     .then((env) => {
+      globalThis.PupsikProblems?.clear("configuration");
+      globalThis.PupsikProblems?.clear("server-settings");
       TMDB_ENABLED = Boolean(env.TMDB_ENABLED);
       // Retry if the public client only became available through configuration.
       if (!hadCatalogClient) void loadActiveCatalog();
     })
-    .catch((err) => console.warn("Server settings unavailable; public data can still load", err))
+    .catch((err) => {
+      console.warn("Server settings unavailable; public data can still load", err);
+      globalThis.PupsikProblems?.report(
+        "server-settings",
+        "Не удалось загрузить настройки сервера. Поиск, плеер и другие внешние сервисы могут быть недоступны.",
+        err,
+        { critical: !supabaseClient, type: "warning" }
+      );
+    })
     .then(() => restoreAdminSession())
     .catch((err) => console.warn("Failed to restore admin session", err));
 

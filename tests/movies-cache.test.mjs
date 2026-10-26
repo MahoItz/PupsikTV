@@ -23,10 +23,14 @@ const metadataChanges = {
 function createContext(row) {
   const writes = [];
   const context = vm.createContext({
+    AbortSignal,
     document: { addEventListener() {}, getElementById: () => null },
     supabaseClient: {
       from: () => ({
         select: () => ({
+          abortSignal() {
+            return this;
+          },
           order: () => ({
             range: async () => ({ data: [row], count: 1, error: null }),
           }),

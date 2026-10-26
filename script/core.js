@@ -615,8 +615,9 @@ async function persistSettingsPayload(payload) {
   }
 
   if (!response.ok) {
-    throw new Error(
-      result?.error || `Failed to persist settings: ${response.status}`
+    throw Object.assign(
+      new Error(result?.error || `Failed to persist settings: ${response.status}`),
+      { status: response.status }
     );
   }
 
@@ -738,7 +739,7 @@ async function persistVictoryVolume(value) {
 
 const debouncedPersistVictoryVolume = debounce((value) => {
   persistVictoryVolume(value).catch((err) =>
-    console.error("Failed to save victory volume", err)
+    globalThis.PupsikProblems?.report("sound-settings", "Не удалось сохранить громкость. После обновления страницы настройка может сброситься.", err)
   );
 }, 300);
 
@@ -761,7 +762,7 @@ function handleVictoryVolumeChange(event) {
   }
 
   persistVictoryVolume(normalized).catch((err) =>
-    console.error("Failed to save victory volume", err)
+    globalThis.PupsikProblems?.report("sound-settings", "Не удалось сохранить громкость. После обновления страницы настройка может сброситься.", err)
   );
 }
 
@@ -828,7 +829,7 @@ async function persistLoseVolume(value) {
 
 const debouncedPersistLoseVolume = debounce((value) => {
   persistLoseVolume(value).catch((err) =>
-    console.error("Failed to save lose volume", err)
+    globalThis.PupsikProblems?.report("sound-settings", "Не удалось сохранить громкость. После обновления страницы настройка может сброситься.", err)
   );
 }, 300);
 
@@ -851,7 +852,7 @@ function handleLoseVolumeChange(event) {
   }
 
   persistLoseVolume(normalized).catch((err) =>
-    console.error("Failed to save lose volume", err)
+    globalThis.PupsikProblems?.report("sound-settings", "Не удалось сохранить громкость. После обновления страницы настройка может сброситься.", err)
   );
 }
 
@@ -908,7 +909,7 @@ async function persistRouletteSpinVolume(value) {
 
 const debouncedPersistRouletteSpinVolume = debounce((value) => {
   persistRouletteSpinVolume(value).catch((err) =>
-    console.error("Failed to save roulette spin volume", err)
+    globalThis.PupsikProblems?.report("sound-settings", "Не удалось сохранить громкость. После обновления страницы настройка может сброситься.", err)
   );
 }, 300);
 
@@ -931,7 +932,7 @@ function handleRouletteSpinVolumeChange(event) {
   }
 
   persistRouletteSpinVolume(normalized).catch((err) =>
-    console.error("Failed to save roulette spin volume", err)
+    globalThis.PupsikProblems?.report("sound-settings", "Не удалось сохранить громкость. После обновления страницы настройка может сброситься.", err)
   );
 }
 
@@ -990,7 +991,6 @@ let gamePage = 1;
 const gamesPerPage = 12;
 let totalGamesPlayed = 0;
 let ratingGameId = null;
-let fatalErrorBannerShown = false;
 
 let moviesLoading = false;
 let watchlistLoading = false;
@@ -1080,38 +1080,9 @@ function toggleSectionLoading(container, isLoading, options = {}) {
 }
 
 function showFatalErrorBanner(message, error) {
-  if (error) {
-    console.error(message, error);
-  } else {
-    console.error(message);
-  }
-  if (fatalErrorBannerShown) return;
-  fatalErrorBannerShown = true;
-
-  const banner = document.createElement("div");
-  banner.className = "fatal-error-banner";
-  banner.textContent = message;
-  banner.style.position = "fixed";
-  banner.style.left = "0";
-  banner.style.right = "0";
-  banner.style.top = "0";
-  banner.style.padding = "16px";
-  banner.style.backgroundColor = "#8b0b0b";
-  banner.style.color = "#ffffff";
-  banner.style.textAlign = "center";
-  banner.style.fontSize = "16px";
-  banner.style.fontWeight = "600";
-  banner.style.zIndex = "9999";
-
-  const appendBanner = () => {
-    if (!document.body) {
-      window.addEventListener("DOMContentLoaded", appendBanner, { once: true });
-      return;
-    }
-    document.body.appendChild(banner);
-  };
-
-  appendBanner();
+  globalThis.PupsikProblems?.report("configuration", message, error, {
+    critical: true,
+  });
 }
 
 async function loadEnv(options = {}) {
@@ -2280,7 +2251,10 @@ async function loadStoredKinopoiskActors(filmId, options = {}) {
   )
     .then(async (response) => {
       if (!response.ok) {
-        throw new Error(`Failed to load actors: ${response.status}`);
+        throw Object.assign(
+          new Error(`Failed to load actors: ${response.status}`),
+          { status: response.status }
+        );
       }
       const payload = await response.json();
       const items = Array.isArray(payload?.items) ? payload.items : [];
@@ -2322,7 +2296,10 @@ async function saveKinopoiskActors(filmId, staff) {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to save actors: ${response.status}`);
+      throw Object.assign(
+        new Error(`Failed to save actors: ${response.status}`),
+        { status: response.status }
+      );
     }
 
     const payload = await response.json();

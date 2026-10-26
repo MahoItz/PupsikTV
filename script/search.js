@@ -120,12 +120,17 @@ async function fetchKinopoiskCandidates(query) {
     });
     if (!res.ok) {
       await handleKinopoiskErrorResponse(res);
-      return [];
+      throw Object.assign(new Error("Kinopoisk search unavailable"), { status: res.status });
     }
     const data = await res.json();
     return (data?.films || []).slice(0, KP_SELECTION_LIMIT);
   } catch (err) {
     console.error("Kinopoisk candidates error", err);
+    globalThis.PupsikProblems?.report(
+      'kinopoisk-search',
+      'Не удалось загрузить результаты поиска Кинопоиска.',
+      err
+    );
     return [];
   }
 }
