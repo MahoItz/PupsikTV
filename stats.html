@@ -1,119 +1,336 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PupsikTV Stats</title>
-    <link rel="icon" href="images/Pupsik_TV_Icon.webp">
-    <link rel="stylesheet" href="style/base.css">
-    <link rel="stylesheet" href="style/navigation.css?v=20261007-admin-nav-2">
-    <link rel="stylesheet" href="style/stats.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Статистика — PupsikTV</title>
+    <link rel="icon" href="images/Pupsik_TV_Icon.webp" />
+    <link rel="stylesheet" href="style/base.css" />
+    <link rel="stylesheet" href="style/navigation.css?v=20261007-admin-nav-2" />
+    <link rel="stylesheet" href="style/stats.css?v=20261026-tooltip-2" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <script src="script/site-config.js"></script>
-</head>
+  </head>
 
-<body class="stats-page">
-    <nav class="top-left-actions top-left-actions--bar top-left-actions--page" aria-label="Основная навигация">
-        <a href="./" class="top-left-actions__brand" aria-label="PupsikTV — главная страница">
-            <img src="images/Pupsik_TV_Icon.webp" alt="">
-            <span>PupsikTV</span>
+  <body class="stats-page">
+    <nav
+      class="top-left-actions top-left-actions--bar top-left-actions--page"
+      aria-label="Основная навигация"
+    >
+      <a
+        href="./"
+        class="top-left-actions__brand"
+        aria-label="PupsikTV — главная страница"
+      >
+        <img src="images/Pupsik_TV_Icon.webp" alt="" />
+        <span>PupsikTV</span>
+      </a>
+      <div class="top-left-actions__menu">
+        <a
+          href="admin-player.html"
+          class="admin-player-link"
+          data-admin-navigation
+          hidden
+          style="display: none"
+        >
+          <span class="top-left-actions__label">Плеер</span>
         </a>
-        <div class="top-left-actions__menu">
-            <a href="admin-player.html" class="admin-player-link" data-admin-navigation hidden style="display: none;">
-                <span class="top-left-actions__label">Плеер</span>
-            </a>
-            <a href="trailers.html" class="admin-player-link">
-                <span class="top-left-actions__label">Трейлеры</span>
-            </a>
-            <a href="stats.html" aria-current="page" class="channel-stats-link">
-                <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
-                <span class="top-left-actions__label">Статистика</span>
-            </a>
-        </div>
+        <a href="trailers.html" class="admin-player-link">
+          <span class="top-left-actions__label">Трейлеры</span>
+        </a>
+        <a href="stats.html" aria-current="page" class="channel-stats-link">
+          <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
+          <span class="top-left-actions__label">Статистика</span>
+        </a>
+      </div>
     </nav>
     <main class="stats-shell">
-
-        <section class="stats-hero">
-            <div class="stats-hero__copy">
-                <p class="stats-eyebrow">PupsikTV Analytics</p>
-                <h1>Статистика сайта</h1>
-                <p class="stats-hero__text">
-                    Самые важные цифры по фильмам, играм, заказам и зрителям в одном месте.
-                </p>
-            </div>
-            <div class="stats-hero__badge">
-                <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
-            </div>
-        </section>
-
-        <div id="statsError" class="stats-error" hidden></div>
-
-        <section id="statsLoading" class="stats-loading" aria-live="polite">
-            <div class="stats-loading__spinner" aria-hidden="true"></div>
-            <p>Загружаю статистику сайта…</p>
-        </section>
-
-        <div id="statsContent" hidden>
-            <section class="stats-section">
-                <div class="stats-section__header">
-                    <h2>Обзор</h2>
-                    <p id="statsUpdatedAt" class="stats-section__hint"></p>
-                </div>
-                <div id="statsOverview" class="stats-overview-grid"></div>
-            </section>
-
-            <section class="stats-layout-grid">
-                <article class="stats-panel">
-                    <div class="stats-section__header">
-                        <h2>Оценки фильмов</h2>
-                        <p class="stats-section__hint">Завершённые фильмы по шкале PupsikTV</p>
-                    </div>
-                    <div id="movieRatingDistribution" class="stats-bars"></div>
-                    <div class="stats-subsection">
-                        <div class="stats-section__header stats-section__header--subsection">
-                            <h3>Оценки зрителей</h3>
-                            <p class="stats-section__hint">Шкала зрителей</p>
-                        </div>
-                        <div id="viewerMovieRatingDistribution" class="stats-bars"></div>
-                    </div>
-                </article>
-
-                <article class="stats-panel">
-                    <div class="stats-section__header">
-                        <h2>Типы заказов</h2>
-                        <p class="stats-section__hint">Фильмы и игры по источнику заказа</p>
-                    </div>
-                    <div id="orderTypeBreakdown" class="stats-breakdown-grid"></div>
-                </article>
-            </section>
-
-            <section class="stats-layout-grid">
-                <article class="stats-panel">
-                    <div class="stats-section__header">
-                        <h2>Лидеры заказов</h2>
-                        <p class="stats-section__hint">Кто заказывал чаще всего</p>
-                    </div>
-                    <div id="leaderboards" class="leaderboard-grid"></div>
-                </article>
-
-                <article class="stats-panel">
-                    <div class="stats-section__header">
-                        <h2>Дополнительно</h2>
-                        <p class="stats-section__hint">Несколько быстрых срезов по базе</p>
-                    </div>
-                    <div id="statsHighlights" class="stats-highlights"></div>
-                </article>
-            </section>
+      <section class="stats-hero">
+        <div class="stats-hero__copy">
+          <p class="stats-eyebrow">PupsikTV · в цифрах</p>
+          <h1>Статистика</h1>
+          <p class="stats-hero__text">
+            Что смотрим, во что играем и как оцениваем.
+          </p>
         </div>
+        <div class="stats-hero__badge">
+          <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+        </div>
+      </section>
+
+      <div class="stats-toolbar">
+        <p
+          id="statsUpdatedAt"
+          class="stats-hint"
+          role="status"
+          aria-live="polite"
+        >
+          Данные ещё не загружены
+        </p>
+        <button id="statsRefresh" class="stats-button" type="button">
+          Обновить данные
+        </button>
+      </div>
+      <div id="statsError" class="stats-notice" role="status" hidden></div>
+
+      <section id="statsLoading" class="stats-loading" aria-live="polite">
+        <div class="stats-loading__spinner" aria-hidden="true"></div>
+        <p>Собираем статистику…</p>
+      </section>
+      <noscript
+        ><p class="stats-notice">
+          Для просмотра статистики включите JavaScript.
+        </p></noscript
+      >
+
+      <div id="statsContent" hidden>
+        <section class="stats-section">
+          <div class="stats-section__header">
+            <h2>Обзор</h2>
+            <p class="stats-hint">За всё время · очередь на сегодня</p>
+          </div>
+          <div id="statsOverview" class="stats-overview-grid"></div>
+        </section>
+
+        <section
+          class="stats-panel stats-section"
+          aria-labelledby="activityTitle"
+        >
+          <div class="stats-section__header">
+            <div>
+              <h2 id="activityTitle">Активность</h2>
+              <p class="stats-hint">
+                Просмотренные фильмы и пройденные игры по дате завершения
+              </p>
+            </div>
+            <div class="stats-filters">
+              <label class="stats-select-label"
+                >Каталог
+                <select id="activityScope">
+                  <option value="all">Фильмы и игры</option>
+                  <option value="movies">Фильмы</option>
+                  <option value="games">Игры</option>
+                </select>
+              </label>
+              <label class="stats-select-label"
+                >Период
+                <select id="activityPeriod">
+                  <option value="30">30 дней</option>
+                  <option value="90">90 дней</option>
+                  <option value="365" selected>Год</option>
+                  <option value="all">Всё время</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div
+            id="activitySummary"
+            class="stats-activity-summary"
+            aria-live="polite"
+          ></div>
+          <div class="stats-legend">
+            <span
+              ><i class="stats-dot stats-dot--movies" aria-hidden="true"></i
+              >Фильмы</span
+            ><span
+              ><i class="stats-dot stats-dot--games" aria-hidden="true"></i
+              >Игры</span
+            >
+          </div>
+          <div id="activityPlot" class="stats-activity-plot">
+            <div id="activityChart" class="stats-activity-chart"></div>
+            <div
+              id="activityTooltip"
+              class="stats-chart-tooltip"
+              role="tooltip"
+              hidden
+            ></div>
+          </div>
+          <p id="activityNote" class="stats-hint stats-footnote"></p>
+          <details class="stats-details">
+            <summary>Данные графика в таблице</summary>
+            <div id="activityTable" class="stats-table-wrap"></div>
+          </details>
+        </section>
+
+        <section class="stats-layout-grid">
+          <article class="stats-panel" aria-labelledby="ratingTitle">
+            <div class="stats-section__header">
+              <div>
+                <h2 id="ratingTitle">Оценки</h2>
+                <p class="stats-hint">Шкала от 0 до 11 · за всё время</p>
+              </div>
+              <label class="stats-select-label"
+                >Каталог<select id="ratingScope">
+                  <option value="movies">Фильмы</option>
+                  <option value="games">Игры</option>
+                </select></label
+              >
+            </div>
+            <div id="ratingSummary" class="stats-mini-grid"></div>
+            <div
+              class="stats-segmented"
+              data-control="ratingSource"
+              role="group"
+              aria-label="Чьи оценки показывать"
+            >
+              <button type="button" value="pupsik" aria-pressed="true">
+                Pupsik</button
+              ><button type="button" value="viewers" aria-pressed="false">
+                Зрители
+              </button>
+            </div>
+            <p id="ratingCaption" class="stats-hint stats-chart-caption"></p>
+            <div id="ratingDistribution" class="stats-bars"></div>
+            <p id="ratingNote" class="stats-hint stats-footnote"></p>
+          </article>
+          <article class="stats-panel" aria-labelledby="orderTypeTitle">
+            <div class="stats-section__header">
+              <div>
+                <h2 id="orderTypeTitle">Откуда заказы</h2>
+                <p class="stats-hint">Архив и текущая очередь · за всё время</p>
+              </div>
+            </div>
+            <div
+              class="stats-segmented"
+              data-control="orderScope"
+              role="group"
+              aria-label="Типы заказов по каталогу"
+            >
+              <button type="button" value="all" aria-pressed="true">Все</button
+              ><button type="button" value="movies" aria-pressed="false">
+                Фильмы</button
+              ><button type="button" value="games" aria-pressed="false">
+                Игры
+              </button>
+            </div>
+            <div id="orderTypeBreakdown" class="stats-bars"></div>
+            <p id="orderTypeNote" class="stats-hint stats-footnote"></p>
+          </article>
+        </section>
+
+        <section class="stats-layout-grid">
+          <article class="stats-panel" aria-labelledby="leadersTitle">
+            <div class="stats-section__header">
+              <div>
+                <h2 id="leadersTitle">Лидеры заказов</h2>
+                <p class="stats-hint">
+                  По никам · архив и очередь за всё время
+                </p>
+              </div>
+            </div>
+            <div
+              class="stats-segmented"
+              data-control="leaderScope"
+              role="group"
+              aria-label="Рейтинг заказчиков"
+            >
+              <button type="button" value="all" aria-pressed="true">Все</button
+              ><button type="button" value="movies" aria-pressed="false">
+                Фильмы</button
+              ><button type="button" value="games" aria-pressed="false">
+                Игры</button
+              ><button type="button" value="roulette" aria-pressed="false">
+                Рулетка
+              </button>
+            </div>
+            <div id="leaderboards" class="leaderboard-list"></div>
+            <button
+              id="leadersMore"
+              class="stats-button stats-button--more"
+              type="button"
+              aria-expanded="false"
+              aria-controls="leaderboards"
+              hidden
+            >
+              Показать 10
+            </button>
+            <p id="leaderNote" class="stats-hint stats-footnote"></p>
+          </article>
+          <article class="stats-panel" aria-labelledby="queueTitle">
+            <div class="stats-section__header">
+              <div>
+                <h2 id="queueTitle">В очереди</h2>
+                <p class="stats-hint">Ожидание текущих заказов на сегодня</p>
+              </div>
+            </div>
+            <div id="queueStats" class="stats-queue-grid"></div>
+            <p class="stats-hint stats-footnote">
+              Время ожидания — от добавления заказа. Медиана: половина заказов
+              ждёт не дольше этого срока. Это не прогноз даты просмотра или
+              прохождения.
+            </p>
+          </article>
+        </section>
+
+        <section class="stats-layout-grid">
+          <article class="stats-panel" aria-labelledby="genresTitle">
+            <div class="stats-section__header">
+              <div>
+                <h2 id="genresTitle">Популярные жанры</h2>
+                <p class="stats-hint">По просмотренному и пройденному</p>
+              </div>
+              <label class="stats-select-label"
+                >Каталог<select id="genreScope">
+                  <option value="movies">Фильмы</option>
+                  <option value="games">Игры</option>
+                </select></label
+              >
+            </div>
+            <div id="genreChart" class="stats-bars"></div>
+            <p id="genreNote" class="stats-hint stats-footnote"></p>
+          </article>
+          <article class="stats-panel" aria-labelledby="disagreementTitle">
+            <div class="stats-section__header">
+              <div>
+                <h2 id="disagreementTitle">Мнения разошлись</h2>
+                <p class="stats-hint">
+                  Фильмы с наибольшей разницей средних оценок
+                </p>
+              </div>
+              <label class="stats-select-label"
+                >Минимум голосов<select id="minimumVotes">
+                  <option value="3">3 голоса</option>
+                  <option value="5" selected>5 голосов</option>
+                  <option value="10">10 голосов</option>
+                </select></label
+              >
+            </div>
+            <div id="disagreements" class="stats-disagreements"></div>
+            <p class="stats-hint stats-footnote">
+              Средняя зрителей рассчитана по доступной истории голосования.
+              Рядом показано число голосов.
+            </p>
+          </article>
+        </section>
+
+        <details
+          class="stats-panel stats-section stats-details stats-diagnostics"
+        >
+          <summary>Полнота данных и исторические итоги</summary>
+          <p class="stats-hint stats-footnote">
+            Исторические итоги сохранены в каталоге. Они могут включать старые
+            оценки, для которых нет однозначной записи в истории голосования. Мы
+            не объединяем такие записи автоматически.
+          </p>
+          <div id="statsDiagnostics" class="stats-diagnostics-grid"></div>
+        </details>
+      </div>
     </main>
     <footer class="site-footer">
-        <p class="site-footer__text">Дата создания сайта: <span class="site-footer__date">6 июля 2025</span></p>
+      <p class="site-footer__text">
+        Дата создания сайта: <span class="site-footer__date">6 июля 2025</span>
+      </p>
     </footer>
 
     <script src="script/vendor/supabase-2.81.1.js" defer></script>
-    <script src="script/stats.js" defer></script>
-  <script src="script/admin-navigation.js?v=20261007-admin-nav-2" defer></script>
-</body>
-
+    <script src="script/stats.js?v=20261026-tooltip-2" defer></script>
+    <script
+      src="script/admin-navigation.js?v=20261007-admin-nav-2"
+      defer
+    ></script>
+  </body>
 </html>
