@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="style/controls.css?v=20261027-dropdown-1">
     <link rel="stylesheet" href="style/movies.css">
     <link rel="stylesheet" href="style/watchlist.css">
-    <link rel="stylesheet" href="style/modals.css?v=20261027-3">
+    <link rel="stylesheet" href="style/modals.css?v=20261027-5">
     <link rel="stylesheet" href="style/rating-modals.css">
     <link rel="stylesheet" href="style/forms.css?v=20261027-dropdown-1">
     <link rel="stylesheet" href="style/ratings.css">
@@ -1797,17 +1797,13 @@
                             <select id="watchlistOverviewScheduleFilter">
                                 <option value="">Все</option>
                                 <option value="scheduled">Запланированные</option>
-                                <option value="unscheduled">Без расписания</option>
+                                <option value="unscheduled">Без даты</option>
                             </select>
                         </span>
                     </label>
                 </div>
-                <div class="watchlist-overview-modal__summary">
-                    <p id="watchlistOverviewCount" class="watchlist-overview-modal__count" aria-live="polite"></p>
-                    <button id="watchlistOverviewReset" class="watchlist-overview-reset" type="button" disabled>Сбросить фильтры</button>
-                </div>
             </div>
-            <div id="watchlistOverviewGrid" class="watchlist-overview-grid"></div>
+            <div id="watchlistOverviewGrid" class="watchlist-overview-groups"></div>
         </div>
     </div>
     <div id="gameOrderDetailsModal" class="modal">
@@ -2345,7 +2341,7 @@
     <script src="script/core.js" defer></script>
     <script src="script/feature-loader.js" defer></script>
     <script src="script/data-init.js" defer></script>
-    <script src="script/movies.js?v=20261027-3" defer></script>
+    <script src="script/movies.js?v=20261027-5" defer></script>
     <script src="script/search.js" defer></script>
     <script src="script/modals.js?v=20261027-1" defer></script>
     <script src="script/forms.js" defer></script>

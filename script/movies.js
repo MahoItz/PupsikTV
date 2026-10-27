@@ -1598,6 +1598,21 @@ function renderWatchlist() {
 
 let watchlistOverviewReturnState = null;
 
+function getWatchlistOverviewPlanTime(order) {
+  if (!order.planDate) return null;
+  const time = new Date(order.planDate).getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+function formatWatchlistOverviewPlanDate(value) {
+  const date = new Date(value);
+  const day = date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+  const timePart = /[T ](\d{2}:\d{2})/.exec(value)?.[1];
+  if (!timePart || timePart === "00:00") return day;
+  const time = date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+  return `${day} ${time}`;
+}
+
 function getWatchlistOverviewFilters() {
   return {
     query: (document.getElementById("watchlistOverviewSearch")?.value || "")
@@ -1614,8 +1629,9 @@ function getWatchlistOverviewItems() {
   return watchlist
     .filter((item) => {
       if (orderType && item.orderType !== orderType) return false;
-      if (schedule === "scheduled" && !item.planDate) return false;
-      if (schedule === "unscheduled" && item.planDate) return false;
+      const hasPlan = getWatchlistOverviewPlanTime(item) !== null;
+      if (schedule === "scheduled" && !hasPlan) return false;
+      if (schedule === "unscheduled" && hasPlan) return false;
       if (!query) return true;
 
       const searchableText = [
@@ -1630,16 +1646,12 @@ function getWatchlistOverviewItems() {
         .toLocaleLowerCase();
       return searchableText.includes(query);
     })
-    .map((item, index) => ({ item, index }))
+    .map((item, index) => ({ item, index, planTime: getWatchlistOverviewPlanTime(item) }))
     .sort((a, b) => {
-      const aHasPlan = Boolean(a.item.planDate);
-      const bHasPlan = Boolean(b.item.planDate);
+      const aHasPlan = a.planTime !== null;
+      const bHasPlan = b.planTime !== null;
       if (aHasPlan !== bHasPlan) return aHasPlan ? -1 : 1;
-      if (aHasPlan && bHasPlan) {
-        const aDate = new Date(a.item.planDate).getTime();
-        const bDate = new Date(b.item.planDate).getTime();
-        if (aDate !== bDate) return aDate - bDate;
-      }
+      if (aHasPlan && bHasPlan && a.planTime !== b.planTime) return a.planTime - b.planTime;
       return a.index - b.index;
     })
     .map(({ item }) => item);
@@ -1647,11 +1659,9 @@ function getWatchlistOverviewItems() {
 
 function renderWatchlistOverview() {
   const grid = document.getElementById("watchlistOverviewGrid");
-  const count = document.getElementById("watchlistOverviewCount");
-  if (!grid || !count) return;
+  if (!grid) return;
 
   const items = getWatchlistOverviewItems();
-  count.textContent = `Найдено: ${items.length} из ${watchlist.length}`;
   grid.innerHTML = "";
 
   if (items.length === 0) {
@@ -1659,8 +1669,35 @@ function renderWatchlistOverview() {
     return;
   }
 
+  const groups = [
+    { key: "scheduled", title: "Запланированные фильмы", items: [] },
+    { key: "unscheduled", title: "Без даты", items: [] },
+  ];
   items.forEach((item) => {
-    grid.appendChild(createWatchlistOverviewCard(item));
+    groups[getWatchlistOverviewPlanTime(item) === null ? 1 : 0].items.push(item);
+  });
+
+  groups.forEach((group) => {
+    if (!group.items.length) return;
+
+    const section = document.createElement("section");
+    section.className = "watchlist-overview-group";
+    const title = document.createElement("h3");
+    title.id = `watchlistOverview-${group.key}-title`;
+    title.className = "watchlist-overview-group__title";
+    title.textContent = group.title;
+    section.setAttribute("aria-labelledby", title.id);
+
+    const total = document.createElement("span");
+    total.className = "watchlist-overview-group__count";
+    total.textContent = String(group.items.length);
+    title.appendChild(total);
+
+    const cards = document.createElement("div");
+    cards.className = "watchlist-overview-grid";
+    group.items.forEach((item) => cards.appendChild(createWatchlistOverviewCard(item)));
+    section.append(title, cards);
+    grid.appendChild(section);
   });
 }
 
@@ -1733,11 +1770,16 @@ function createWatchlistOverviewCard(order) {
   const orderBy = order.orderBy && order.orderBy !== "null" ? order.orderBy : "не указан";
   orderedBy.textContent = `Заказал: ${orderBy}`;
 
-  const schedule = document.createElement("span");
+  const planTime = getWatchlistOverviewPlanTime(order);
+  const schedule = document.createElement(planTime !== null ? "time" : "span");
   schedule.className = "watchlist-overview-card__schedule";
-  schedule.textContent = order.planDate
-    ? `Запланировано: ${formatDateTime(order.planDate)}`
-    : "Не запланирован";
+  if (planTime !== null) {
+    schedule.classList.add("watchlist-overview-card__schedule--scheduled");
+    schedule.dateTime = new Date(planTime).toISOString();
+    schedule.textContent = formatWatchlistOverviewPlanDate(order.planDate);
+  } else {
+    schedule.textContent = "Без даты";
+  }
 
   content.append(title, duration, orderedBy, schedule);
   card.append(poster, content);
@@ -1758,27 +1800,15 @@ function openWatchlistOverviewModal({ restoreState = false } = {}) {
   const scheduleFilter = document.getElementById(
     "watchlistOverviewScheduleFilter"
   );
-  const resetButton = document.getElementById("watchlistOverviewReset");
-  if (!modal || !search || !typeFilter || !scheduleFilter || !resetButton) return;
+  if (!modal || !search || !typeFilter || !scheduleFilter) return;
 
   const returnState = restoreState ? watchlistOverviewReturnState : null;
   watchlistOverviewReturnState = null;
 
-  const update = () => {
-    resetButton.disabled = !(search.value || typeFilter.value || scheduleFilter.value);
-    renderWatchlistOverview();
-  };
-
   if (!modal.dataset.initialized) {
-    search.addEventListener("input", update);
-    typeFilter.addEventListener("change", update);
-    scheduleFilter.addEventListener("change", update);
-    resetButton.addEventListener("click", () => {
-      search.value = "";
-      typeFilter.value = "";
-      scheduleFilter.value = "";
-      update();
-    });
+    search.addEventListener("input", renderWatchlistOverview);
+    typeFilter.addEventListener("change", renderWatchlistOverview);
+    scheduleFilter.addEventListener("change", renderWatchlistOverview);
     modal.dataset.initialized = "true";
   }
 
@@ -1786,7 +1816,7 @@ function openWatchlistOverviewModal({ restoreState = false } = {}) {
   typeFilter.value = returnState?.orderType || "";
   scheduleFilter.value = returnState?.schedule || "";
   modal.style.display = "block";
-  update();
+  renderWatchlistOverview();
 
   if (returnState?.focusCard) {
     const index = getWatchlistOverviewItems().findIndex((item) =>
@@ -1796,7 +1826,8 @@ function openWatchlistOverviewModal({ restoreState = false } = {}) {
         Boolean(item.__virtual) === Boolean(returnState.order.__virtual)
       )
     );
-    document.getElementById("watchlistOverviewGrid")?.children[index]?.focus({ preventScroll: true });
+    document.getElementById("watchlistOverviewGrid")
+      ?.querySelectorAll(".watchlist-overview-card")[index]?.focus({ preventScroll: true });
   }
 
   modal.querySelector(".watchlist-overview-modal")?.scrollTo({
