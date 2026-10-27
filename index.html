@@ -13,12 +13,12 @@
     <link rel="stylesheet" href="style/loaders.css">
     <link rel="stylesheet" href="style/layout.css">
     <link rel="stylesheet" href="style/buttons.css">
-    <link rel="stylesheet" href="style/controls.css">
+    <link rel="stylesheet" href="style/controls.css?v=20261027-dropdown-1">
     <link rel="stylesheet" href="style/movies.css">
     <link rel="stylesheet" href="style/watchlist.css">
-    <link rel="stylesheet" href="style/modals.css">
+    <link rel="stylesheet" href="style/modals.css?v=20261027-3">
     <link rel="stylesheet" href="style/rating-modals.css">
-    <link rel="stylesheet" href="style/forms.css">
+    <link rel="stylesheet" href="style/forms.css?v=20261027-dropdown-1">
     <link rel="stylesheet" href="style/ratings.css">
     <link rel="stylesheet" href="style/responsive.css">
     <link rel="stylesheet" href="style/file-upload.css">
@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="style/autocomplete.css">
     <link rel="stylesheet" href="style/music-menu.css">
     <link rel="stylesheet" href="style/diagnostic.css" data-essential="true">
+    <link rel="stylesheet" href="style/selects.css?v=20261027-1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -1768,37 +1769,43 @@
             <span class="close" onclick="closeModal('watchlistOverviewModal')" role="button" tabindex="0"
                 aria-label="Закрыть">&times;</span>
             <div class="watchlist-overview-modal__header">
-                <div>
-                    <h2 id="watchlistOverviewTitle">Все заказанные фильмы</h2>
-                    <p id="watchlistOverviewCount" class="watchlist-overview-modal__count" aria-live="polite"></p>
-                </div>
+                <h2 id="watchlistOverviewTitle">Все заказанные фильмы</h2>
             </div>
-            <div class="watchlist-overview-filters">
-                <label class="watchlist-overview-search" for="watchlistOverviewSearch">
-                    <span class="sr-only">Поиск фильмов</span>
-                    <input id="watchlistOverviewSearch" type="search" placeholder="Поиск по названию, жанру или заказчику"
-                        autocomplete="off">
-                </label>
-                <label class="watchlist-overview-filter" for="watchlistOverviewTypeFilter">
-                    <span>Тип заказа</span>
-                    <select id="watchlistOverviewTypeFilter">
-                        <option value="">Все</option>
-                        <option value="Донат">Донат</option>
-                        <option value="Баллы канала">Баллы канала</option>
-                        <option value="Рулетка">Рулетка</option>
-                        <option value="Шары">Шары</option>
-                        <option value="Аукцион">Аукцион</option>
-                    </select>
-                </label>
-                <label class="watchlist-overview-filter" for="watchlistOverviewScheduleFilter">
-                    <span>Расписание</span>
-                    <select id="watchlistOverviewScheduleFilter">
-                        <option value="">Все</option>
-                        <option value="scheduled">Запланированные</option>
-                        <option value="unscheduled">Без расписания</option>
-                    </select>
-                </label>
-                <button id="watchlistOverviewReset" class="btn btn-secondary" type="button">Сбросить</button>
+            <div class="watchlist-overview-controls" role="search" aria-label="Поиск и фильтры заказанных фильмов">
+                <div class="watchlist-overview-filters">
+                    <label class="watchlist-overview-search" for="watchlistOverviewSearch">
+                        <span>Поиск</span>
+                        <input id="watchlistOverviewSearch" class="search-input" type="search" placeholder="По названию, жанру или заказчику"
+                            autocomplete="off">
+                    </label>
+                    <label class="watchlist-overview-filter sort-controls" for="watchlistOverviewTypeFilter">
+                        <span>Тип заказа</span>
+                        <span class="sort-merge">
+                            <select id="watchlistOverviewTypeFilter">
+                                <option value="">Все</option>
+                                <option value="Донат">Донат</option>
+                                <option value="Баллы канала">Баллы канала</option>
+                                <option value="Рулетка">Рулетка</option>
+                                <option value="Шары">Шары</option>
+                                <option value="Аукцион">Аукцион</option>
+                            </select>
+                        </span>
+                    </label>
+                    <label class="watchlist-overview-filter sort-controls" for="watchlistOverviewScheduleFilter">
+                        <span>Расписание</span>
+                        <span class="sort-merge">
+                            <select id="watchlistOverviewScheduleFilter">
+                                <option value="">Все</option>
+                                <option value="scheduled">Запланированные</option>
+                                <option value="unscheduled">Без расписания</option>
+                            </select>
+                        </span>
+                    </label>
+                </div>
+                <div class="watchlist-overview-modal__summary">
+                    <p id="watchlistOverviewCount" class="watchlist-overview-modal__count" aria-live="polite"></p>
+                    <button id="watchlistOverviewReset" class="watchlist-overview-reset" type="button" disabled>Сбросить фильтры</button>
+                </div>
             </div>
             <div id="watchlistOverviewGrid" class="watchlist-overview-grid"></div>
         </div>
@@ -2338,7 +2345,7 @@
     <script src="script/core.js" defer></script>
     <script src="script/feature-loader.js" defer></script>
     <script src="script/data-init.js" defer></script>
-    <script src="script/movies.js" defer></script>
+    <script src="script/movies.js?v=20261027-2" defer></script>
     <script src="script/search.js" defer></script>
     <script src="script/modals.js" defer></script>
     <script src="script/forms.js" defer></script>

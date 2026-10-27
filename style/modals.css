@@ -101,56 +101,103 @@
 
 .watchlist-overview-modal__header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .watchlist-overview-modal h2 {
     margin-bottom: 6px;
 }
 
-.watchlist-overview-modal__count {
-    color: var(--text-secondary);
-    font-size: 0.92rem;
+.watchlist-overview-modal__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.watchlist-overview-filters {
+.watchlist-overview-modal .watchlist-overview-modal__count {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+}
+
+.watchlist-overview-reset {
+    flex-shrink: 0;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.watchlist-overview-reset:hover:not(:disabled) {
+    border-color: rgba(0, 212, 255, 0.3);
+    background: rgba(0, 212, 255, 0.08);
+    color: var(--text-primary);
+}
+
+.watchlist-overview-reset:focus-visible {
+    outline: 2px solid var(--secondary-color);
+    outline-offset: 3px;
+}
+
+.watchlist-overview-reset:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.watchlist-overview-controls {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(150px, 0.45fr)) auto;
-    align-items: end;
     gap: 12px;
-    margin: 22px 0;
+    margin: 18px 0 22px;
     padding: 14px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
     background: rgba(10, 12, 22, 0.55);
 }
 
-.watchlist-overview-search input,
-.watchlist-overview-filter select {
-    width: 100%;
-    min-height: 40px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 9px;
-    background: rgba(12, 14, 18, 0.8);
-    color: var(--text-primary);
-    font: inherit;
+.watchlist-overview-filters {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(150px, 0.45fr));
+    align-items: end;
+    gap: 12px;
 }
 
-.watchlist-overview-search input {
-    padding: 0 12px;
+.watchlist-overview-search .search-input {
+    min-width: 0;
+    height: 50px;
 }
 
+.watchlist-overview-search,
 .watchlist-overview-filter {
     display: grid;
+    min-width: 0;
     gap: 5px;
     color: var(--text-secondary);
     font-size: 0.78rem;
 }
 
+.watchlist-overview-filter .sort-merge {
+    width: 100%;
+    max-width: none;
+}
+
 .watchlist-overview-filter select {
-    padding: 0 9px;
+    width: 100%;
+    min-width: 0;
 }
 
 .watchlist-overview-grid {
@@ -228,7 +275,7 @@
 }
 
 @media (max-width: 760px) {
-    .watchlist-overview-modal {
+    .modal-content.watchlist-overview-modal {
         width: 100%;
         min-height: 100%;
         max-height: none;
@@ -242,10 +289,6 @@
     }
 
     .watchlist-overview-search {
-        grid-column: 1 / -1;
-    }
-
-    .watchlist-overview-filters .btn {
         grid-column: 1 / -1;
     }
 

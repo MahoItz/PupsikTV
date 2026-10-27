@@ -92,10 +92,10 @@
     top: calc(100% + 6px);
     left: 0;
     right: 0;
-    background: rgba(20, 25, 40, 1);
-    border: 1px solid rgba(0, 212, 255, 0.4);
+    background: var(--dropdown-bg);
+    border: 1px solid var(--dropdown-border);
     border-radius: var(--border-radius-small);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--dropdown-shadow);
     max-height: calc(4 * 48px);
     overflow-y: auto;
     z-index: 5;
@@ -137,7 +137,7 @@
 }
 
 .user-picker-item:hover {
-    background: rgba(0, 212, 255, 0.12);
+    background: var(--dropdown-hover);
 }
 
 .user-picker-name {

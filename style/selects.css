@@ -1,0 +1,89 @@
+/* Shared with the requester picker; native selects retain their form behavior. */
+:root {
+    --dropdown-bg: rgb(20, 25, 40);
+    --dropdown-border: rgba(0, 212, 255, 0.4);
+    --dropdown-hover: rgba(0, 212, 255, 0.12);
+    --dropdown-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+}
+
+select option {
+    background: var(--dropdown-bg);
+    color: var(--text-primary);
+}
+
+@supports (appearance: base-select) and selector(select::picker(select)) {
+    select:not([multiple]):not([size]),
+    select:not([multiple]):not([size])::picker(select) {
+        appearance: base-select;
+    }
+
+    select:not([multiple]):not([size]) {
+        align-items: center;
+        gap: 10px;
+    }
+
+    select:not([multiple]):not([size])::picker-icon {
+        flex-shrink: 0;
+        margin-inline-start: auto;
+        color: var(--text-secondary);
+    }
+
+    select:not([multiple]):not([size]):open::picker-icon {
+        rotate: 180deg;
+    }
+
+    select:not([multiple]):not([size])::picker(select) {
+        min-inline-size: anchor-size(width);
+        inline-size: max-content;
+        max-inline-size: calc(100vw - 24px);
+        max-block-size: min(288px, 50dvh);
+        margin-block: 6px;
+        padding: 4px;
+        border: 1px solid var(--dropdown-border);
+        border-radius: var(--border-radius-small);
+        background: var(--dropdown-bg);
+        color: var(--text-primary);
+        box-shadow: var(--dropdown-shadow);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 212, 255, 0.6) rgba(255, 255, 255, 0.06);
+    }
+
+    select:not([multiple]):not([size]) option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 40px;
+        padding: 8px 12px;
+        border-radius: 5px;
+        background: transparent;
+        color: var(--text-primary);
+        font: inherit;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        cursor: pointer;
+    }
+
+    select:not([multiple]):not([size]) option:checked,
+    select:not([multiple]):not([size]) option:hover:not(:disabled),
+    select:not([multiple]):not([size]) option:focus-visible {
+        background: var(--dropdown-hover);
+    }
+
+    select:not([multiple]):not([size]) option:focus-visible {
+        outline: 1px solid var(--dropdown-border);
+        outline-offset: -1px;
+    }
+
+    select:not([multiple]):not([size]) option::checkmark {
+        order: 1;
+        margin-inline-start: auto;
+        color: var(--secondary-color);
+    }
+
+    select:not([multiple]):not([size]) option:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}

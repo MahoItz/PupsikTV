@@ -1738,8 +1738,12 @@ function openWatchlistOverviewModal() {
   const resetButton = document.getElementById("watchlistOverviewReset");
   if (!modal || !search || !typeFilter || !scheduleFilter || !resetButton) return;
 
+  const update = () => {
+    resetButton.disabled = !(search.value || typeFilter.value || scheduleFilter.value);
+    renderWatchlistOverview();
+  };
+
   if (!modal.dataset.initialized) {
-    const update = () => renderWatchlistOverview();
     search.addEventListener("input", update);
     typeFilter.addEventListener("change", update);
     scheduleFilter.addEventListener("change", update);
@@ -1747,8 +1751,7 @@ function openWatchlistOverviewModal() {
       search.value = "";
       typeFilter.value = "";
       scheduleFilter.value = "";
-      renderWatchlistOverview();
-      search.focus();
+      update();
     });
     modal.dataset.initialized = "true";
   }
@@ -1758,8 +1761,7 @@ function openWatchlistOverviewModal() {
   scheduleFilter.value = "";
   modal.style.display = "block";
   modal.scrollTop = 0;
-  renderWatchlistOverview();
-  search.focus();
+  update();
 }
 
 function renderWatchlistPagination(totalPages) {
