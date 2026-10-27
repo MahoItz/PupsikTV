@@ -1596,6 +1596,8 @@ function renderWatchlist() {
   renderWatchlistOverviewIfOpen();
 }
 
+let watchlistOverviewReturnState = null;
+
 function getWatchlistOverviewFilters() {
   return {
     query: (document.getElementById("watchlistOverviewSearch")?.value || "")
@@ -1663,15 +1665,36 @@ function renderWatchlistOverview() {
 }
 
 function openWatchlistOverviewDetails(order) {
-  closeModal("watchlistOverviewModal");
+  const modal = document.getElementById("watchlistOverviewModal");
+  const details = document.getElementById("orderDetailsModal");
+  if (!order || !modal || !details || modal.style.display !== "block") return;
+
+  const returnState = {
+    query: document.getElementById("watchlistOverviewSearch")?.value || "",
+    orderType: document.getElementById("watchlistOverviewTypeFilter")?.value || "",
+    schedule: document.getElementById("watchlistOverviewScheduleFilter")?.value || "",
+    scrollTop: modal.querySelector(".watchlist-overview-modal")?.scrollTop || 0,
+    modalScrollTop: modal.scrollTop,
+    order,
+    focusCard: document.activeElement?.classList.contains("watchlist-overview-card"),
+  };
 
   if (!order?.__virtual && order?.id !== undefined && order?.id !== null) {
+    if (!watchlist.some((item) => item.id === order.id)) return;
     openOrderDetailsModal(order.id);
-    return;
+  } else if (typeof openOrderDetailsModalFromData === "function") {
+    openOrderDetailsModalFromData(order);
   }
 
-  if (typeof openOrderDetailsModalFromData === "function") {
-    openOrderDetailsModalFromData(order);
+  if (details.style.display === "block") {
+    watchlistOverviewReturnState = returnState;
+    closeModal("watchlistOverviewModal");
+  }
+}
+
+function restoreWatchlistOverviewAfterDetails() {
+  if (watchlistOverviewReturnState) {
+    openWatchlistOverviewModal({ restoreState: true });
   }
 }
 
@@ -1728,7 +1751,7 @@ function renderWatchlistOverviewIfOpen() {
   }
 }
 
-function openWatchlistOverviewModal() {
+function openWatchlistOverviewModal({ restoreState = false } = {}) {
   const modal = document.getElementById("watchlistOverviewModal");
   const search = document.getElementById("watchlistOverviewSearch");
   const typeFilter = document.getElementById("watchlistOverviewTypeFilter");
@@ -1737,6 +1760,9 @@ function openWatchlistOverviewModal() {
   );
   const resetButton = document.getElementById("watchlistOverviewReset");
   if (!modal || !search || !typeFilter || !scheduleFilter || !resetButton) return;
+
+  const returnState = restoreState ? watchlistOverviewReturnState : null;
+  watchlistOverviewReturnState = null;
 
   const update = () => {
     resetButton.disabled = !(search.value || typeFilter.value || scheduleFilter.value);
@@ -1756,12 +1782,28 @@ function openWatchlistOverviewModal() {
     modal.dataset.initialized = "true";
   }
 
-  search.value = "";
-  typeFilter.value = "";
-  scheduleFilter.value = "";
+  search.value = returnState?.query || "";
+  typeFilter.value = returnState?.orderType || "";
+  scheduleFilter.value = returnState?.schedule || "";
   modal.style.display = "block";
-  modal.scrollTop = 0;
   update();
+
+  if (returnState?.focusCard) {
+    const index = getWatchlistOverviewItems().findIndex((item) =>
+      item === returnState.order || (
+        item.id != null &&
+        item.id === returnState.order.id &&
+        Boolean(item.__virtual) === Boolean(returnState.order.__virtual)
+      )
+    );
+    document.getElementById("watchlistOverviewGrid")?.children[index]?.focus({ preventScroll: true });
+  }
+
+  modal.querySelector(".watchlist-overview-modal")?.scrollTo({
+    top: returnState?.scrollTop || 0,
+    behavior: "instant",
+  });
+  modal.scrollTop = returnState?.modalScrollTop || 0;
 }
 
 function renderWatchlistPagination(totalPages) {
