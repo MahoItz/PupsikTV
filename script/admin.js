@@ -4143,8 +4143,9 @@ async function saveDetailsEdit(key) {
       const currentPoster = record[localKey] || '';
       const pendingPoster = state?.pendingPoster || currentPoster;
       if (pendingPoster !== currentPoster) {
+        const optimizedPoster = await readRemoteImageAsOptimizedDataURL(pendingPoster);
         const uploadedPoster = await uploadGamePosterToStorage({
-          poster: pendingPoster,
+          poster: optimizedPoster,
           title: record.title || '',
           folder: config.posterEditor.folder,
         });
@@ -4684,11 +4685,11 @@ let rawgOptimizedPosterSource = null;
 
 let rawgOptimizedPosterPromise = null;
 
-const POSTER_MAX_WIDTH = 660;
+const POSTER_MAX_WIDTH = 440;
 
-const POSTER_MAX_HEIGHT = 930;
+const POSTER_MAX_HEIGHT = 660;
 
-const POSTER_OUTPUT_QUALITY = 0.85;
+const POSTER_OUTPUT_QUALITY = 0.8;
 
 const SUPPORTS_WEBP = (() => {
   try {

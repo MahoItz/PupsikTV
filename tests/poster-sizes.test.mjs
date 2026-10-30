@@ -71,3 +71,55 @@ test('poster size filter uses available originals and selection saves the origin
   container.children[0].children[1].onclick();
   assert.equal(context.steamGridPoster, 'full-large');
 });
+
+test('poster optimization fits a large source into 440 by 660 without enlarging small images', async () => {
+  const source = readFileSync(
+    new URL('../script/admin.js', import.meta.url),
+    'utf8'
+  );
+  const start = source.indexOf('const POSTER_MAX_WIDTH');
+  const end = source.indexOf('\nasync function readFileAsDataURL', start);
+  let dimensions = [600, 900];
+  let canvas;
+  let outputQuality;
+  class ImageStub {
+    set src(value) {
+      this.naturalWidth = dimensions[0];
+      this.naturalHeight = dimensions[1];
+      queueMicrotask(() => this.onload());
+    }
+  }
+  const context = {
+    Image: ImageStub,
+    URL: { createObjectURL: () => 'blob:poster', revokeObjectURL() {} },
+    document: {
+      createElement: () => {
+        canvas = {
+          toDataURL: () => 'data:image/webp;base64,test',
+          getContext: () => ({ drawImage() {} }),
+          toBlob: (callback, type, quality) => {
+            outputQuality = quality;
+            callback({ type });
+          },
+        };
+        return canvas;
+      },
+    },
+    FileReader: class {
+      readAsDataURL() {
+        this.result = 'data:image/webp;base64,test';
+        queueMicrotask(() => this.onload());
+      }
+    },
+    queueMicrotask,
+  };
+  vm.runInNewContext(source.slice(start, end), context);
+  await context.optimizeImageBlobToDataURL({ type: 'image/png' });
+  assert.deepEqual(
+    [canvas.width, canvas.height, outputQuality],
+    [440, 660, 0.8]
+  );
+  dimensions = [342, 482];
+  await context.optimizeImageBlobToDataURL({ type: 'image/png' });
+  assert.deepEqual([canvas.width, canvas.height], [342, 482]);
+});
