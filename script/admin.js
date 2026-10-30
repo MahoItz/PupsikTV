@@ -3844,7 +3844,7 @@ async function setupDetailsPosterEditor(key, record) {
     const dedupeKey = `${url}|${thumb}`;
     if (!url || seen.has(dedupeKey)) return;
     seen.add(dedupeKey);
-    posters.push({ url, thumb });
+    posters.push({ url, thumb, width: poster.width, height: poster.height });
   };
 
   appendPoster({ url: originalPoster, thumb: originalPoster });
@@ -4660,7 +4660,9 @@ function initAdminFeatures() {
       } catch (err) {
         console.error('Error optimizing SteamGrid poster', err);
       }
-      createPosterOverlay(playedPreview, steamGridPosters, true);
+      createPosterOverlay(playedPreview, steamGridPosters, true, {
+        selectedPoster: steamGridPoster,
+      });
     });
   }
 }
@@ -4682,11 +4684,11 @@ let rawgOptimizedPosterSource = null;
 
 let rawgOptimizedPosterPromise = null;
 
-const POSTER_MAX_WIDTH = 440;
+const POSTER_MAX_WIDTH = 660;
 
-const POSTER_MAX_HEIGHT = 660;
+const POSTER_MAX_HEIGHT = 930;
 
-const POSTER_OUTPUT_QUALITY = 0.78;
+const POSTER_OUTPUT_QUALITY = 0.85;
 
 const SUPPORTS_WEBP = (() => {
   try {
@@ -4874,12 +4876,14 @@ async function fetchSteamGridPostersForTitle(title) {
         return {
           url: proxyPosterUrl(url),
           thumb: proxyPosterUrl(thumb),
+          width: Number(g.width) || null,
+          height: Number(g.height) || null,
         };
       })
       .filter(Boolean);
     return {
       selectedPoster:
-        normalizedPosters[0]?.thumb || normalizedPosters[0]?.url || null,
+        (normalizedPosters.find((poster) => poster.width === 600 && poster.height === 900) || normalizedPosters[0])?.url || null,
       posters: normalizedPosters,
     };
   } catch (err) {
@@ -4911,7 +4915,7 @@ function createPosterOverlay(
   placeBelow = false,
   options = {}
 ) {
-  if (!targetImg || !Array.isArray(posters) || posters.length < 2) return;
+  if (!targetImg || !Array.isArray(posters) || posters.length === 0) return;
   const overlay = document.createElement('div');
   overlay.className = 'poster-overlay' + (placeBelow ? ' below' : '');
   if (options.absoluteBelow) {
@@ -4928,6 +4932,28 @@ function createPosterOverlay(
 
   const container = document.createElement('div');
   container.className = 'thumb-container';
+  const row = document.createElement('div');
+  row.className = 'poster-overlay-row';
+
+  const dimensions = [...new Set(posters
+    .filter((poster) => poster?.width && poster?.height)
+    .map((poster) => `${poster.width}x${poster.height}`))];
+  dimensions.sort((a, b) => a === '600x900' ? -1 : b === '600x900' ? 1 : 0);
+  const sizeSelect = document.createElement('select');
+  sizeSelect.className = 'poster-size-select';
+  sizeSelect.setAttribute('aria-label', 'Разрешение постеров');
+  for (const size of dimensions) {
+    const option = document.createElement('option');
+    option.value = size;
+    option.textContent = size.replace('x', ' × ') + (size === '600x900' ? ' (рекомендуется)' : '');
+    sizeSelect.appendChild(option);
+  }
+  if (!dimensions.length) {
+    const option = document.createElement('option');
+    option.textContent = 'Разрешение недоступно';
+    sizeSelect.appendChild(option);
+    sizeSelect.disabled = true;
+  }
 
   const maxVisible = 4;
   let startIdx = 0;
@@ -4938,9 +4964,12 @@ function createPosterOverlay(
 
   function render() {
     container.innerHTML = '';
-    const endIdx = Math.min(startIdx + maxVisible, posters.length);
+    const visiblePosters = dimensions.length
+      ? posters.filter((poster) => !poster?.width || !poster?.height || `${poster.width}x${poster.height}` === sizeSelect.value)
+      : posters;
+    const endIdx = Math.min(startIdx + maxVisible, visiblePosters.length);
     for (let i = startIdx; i < endIdx; i++) {
-      const entry = posters[i];
+      const entry = visiblePosters[i];
       const poster =
         typeof entry === 'string'
           ? { url: entry, thumb: entry }
@@ -4952,7 +4981,7 @@ function createPosterOverlay(
       const wrapper = document.createElement('div');
       wrapper.className = 'thumb-wrapper';
       const thumbUrl = poster.thumb || poster.url;
-      if (selectedPoster === thumbUrl) {
+      if (selectedPoster === poster.url) {
         wrapper.classList.add('active');
       }
 
@@ -4962,7 +4991,7 @@ function createPosterOverlay(
 
       const img = document.createElement('img');
       img.className = 'poster-thumb';
-      if (selectedPoster === thumbUrl) {
+      if (selectedPoster === poster.url) {
         img.classList.add('selected');
       }
       img.style.display = 'none';
@@ -4976,15 +5005,15 @@ function createPosterOverlay(
       img.src = thumbUrl;
       img.onclick = () => {
         if (syncGlobalSelection) {
-          steamGridPoster = thumbUrl;
+          steamGridPoster = poster.url;
         }
-        targetImg.src = thumbUrl;
-        selectedPoster = thumbUrl;
+        targetImg.src = poster.url;
+        selectedPoster = poster.url;
         if (!onSelect && targetImg.id === 'editPlayedGamePosterPreview') {
-          editPlayedGamePosterData = thumbUrl;
+          editPlayedGamePosterData = poster.url;
         }
         if (!onSelect && targetImg.id === 'editPlayedGamePosterPreview') {
-          const selection = thumbUrl;
+          const selection = poster.url;
           readRemoteImageAsOptimizedDataURL(selection)
             .then((optimized) => {
               if (!optimized || selection !== selectedPoster) return;
@@ -5001,7 +5030,7 @@ function createPosterOverlay(
         }
         if (onSelect) {
           onSelect({
-            selectedPoster: thumbUrl,
+            selectedPoster: poster.url,
             poster,
             targetImg,
           });
@@ -5013,7 +5042,7 @@ function createPosterOverlay(
     }
 
     prev.style.visibility = startIdx > 0 ? 'visible' : 'hidden';
-    next.style.visibility = endIdx < posters.length ? 'visible' : 'hidden';
+    next.style.visibility = endIdx < visiblePosters.length ? 'visible' : 'hidden';
   }
 
   prev.onclick = () => {
@@ -5024,15 +5053,24 @@ function createPosterOverlay(
   };
 
   next.onclick = () => {
-    if (startIdx + maxVisible < posters.length) {
+    const visibleCount = dimensions.length
+      ? posters.filter((poster) => !poster?.width || !poster?.height || `${poster.width}x${poster.height}` === sizeSelect.value).length
+      : posters.length;
+    if (startIdx + maxVisible < visibleCount) {
       startIdx += maxVisible;
       render();
     }
   };
 
-  overlay.appendChild(prev);
-  overlay.appendChild(container);
-  overlay.appendChild(next);
+  sizeSelect.addEventListener('change', () => {
+    startIdx = 0;
+    render();
+  });
+  overlay.appendChild(sizeSelect);
+  row.appendChild(prev);
+  row.appendChild(container);
+  row.appendChild(next);
+  overlay.appendChild(row);
 
   if (options.absoluteBelow) {
     const parent = targetImg.parentElement;

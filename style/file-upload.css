@@ -34,6 +34,16 @@
     gap: 12px;
 }
 
+.poster-overlay .poster-size-select {
+    width: 100%;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: #1a1c30;
+    color: var(--text-primary);
+}
+
 .file-upload-label:hover {
     border-color: var(--secondary-color);
     color: var(--text-primary);
@@ -154,12 +164,22 @@
         0 0 0 1px rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(10px);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 16px;
     padding: 12px 16px;
     z-index: 5;
     border-radius: 0 0 var(--border-radius-small) var(--border-radius-small);
+}
+
+.poster-overlay-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
 }
 
 .poster-overlay.below {
@@ -183,12 +203,17 @@
     bottom: auto;
     transform: none;
     margin: 0;
-    width: max-content;
+    width: min(440px, calc(100vw - 48px));
     max-width: min(440px, calc(100vw - 48px));
     gap: 10px;
     padding: 10px 12px;
     border-radius: var(--border-radius-small);
     z-index: 12;
+}
+
+.poster-overlay--absolute-below .poster-size-select {
+    width: calc(100% - 34px);
+    align-self: flex-start;
 }
 
 .details-poster-change-btn {
@@ -232,7 +257,7 @@
 
 .poster-overlay--absolute-below .thumb-container {
     gap: 8px;
-    padding: 2px 26px 2px 0;
+    padding: 2px 0;
 }
 
 .poster-overlay--absolute-below .thumb-wrapper {
@@ -271,6 +296,7 @@
 
 .poster-overlay .thumb-container {
     display: flex;
+    min-width: 0;
     overflow: hidden;
     gap: 10px;
     padding: 4px 2px;
@@ -280,6 +306,8 @@
 .poster-overlay .thumb-wrapper {
     position: relative;
     width: 78px;
+    flex: 0 1 78px;
+    min-width: 0;
     aspect-ratio: 2 / 3;
     display: flex;
     align-items: center;
