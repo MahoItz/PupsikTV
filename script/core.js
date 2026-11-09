@@ -483,6 +483,7 @@ function closeSettingsPanel() {
 
 function toggleTopLeftActionsMenu(forceState) {
   if (!topLeftActionsToggle || !topLeftActionsMenu) return;
+  if (topLeftActionsToggle.hidden) return;
 
   const isOpen = !topLeftActionsMenu.hasAttribute("hidden");
   const nextState =
@@ -555,10 +556,17 @@ function initTopLeftActionsMenu() {
     if (rulesButton && rulesButton.parentElement !== topLeftActions) {
       topLeftActions.appendChild(rulesButton);
     }
-    topLeftActionsMenu.removeAttribute("hidden");
-    topLeftActionsToggle.hidden = true;
-    topLeftActionsToggle.setAttribute("aria-expanded", "true");
-    return;
+    const mobileNavigation = window.matchMedia("(max-width: 768px)");
+    const syncNavigation = () => {
+      const isMobile = mobileNavigation.matches;
+      const hadMenuFocus = topLeftActionsMenu.contains(document.activeElement);
+      topLeftActionsMenu.toggleAttribute("hidden", isMobile);
+      topLeftActionsToggle.hidden = !isMobile;
+      topLeftActionsToggle.setAttribute("aria-expanded", String(!isMobile));
+      if (isMobile && hadMenuFocus) topLeftActionsToggle.focus();
+    };
+    mobileNavigation.addEventListener("change", syncNavigation);
+    syncNavigation();
   }
 
   topLeftActionsToggle.addEventListener("click", (event) => {

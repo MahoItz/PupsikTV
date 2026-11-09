@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Pupsik TV</title>
     <link rel="icon" href="images/Pupsik_TV_Icon.webp">
     <link rel="stylesheet" href="style/base.css">
@@ -101,13 +101,13 @@
                 <div id="moviesSection" class="list-content">
                     <div class="list-toolbar">
                         <div class="search-controls search-with-count">
-                            <input type="text" class="search-input" placeholder="Поиск фильмов..."
-                                onkeyup="debouncedSearchMovies(this.value)">
+                            <input type="search" class="search-input" placeholder="Поиск фильмов…" aria-label="Поиск фильмов" enterkeyhint="search"
+                                oninput="debouncedSearchMovies(this.value)">
                             <span class="search-count">Всего: <span id="moviesCount">0</span></span>
                         </div>
                         <div class="sort-controls">
                             <div class="sort-merge">
-                                <select onchange="sortMovies(this.value)">
+                                <select aria-label="Сортировка фильмов" onchange="sortMovies(this.value)">
                                     <option value="date">По дате</option>
                                     <option value="title">По названию</option>
                                     <option value="year">По году</option>
@@ -115,7 +115,7 @@
                                 </select>
                                 <span class="sort-divider" aria-hidden="true"></span>
                                 <button id="sortOrderBtn" class="btn btn-icon btn-sort-toggle"
-                                    onclick="toggleSortOrder()">
+                                    type="button" aria-label="Изменить направление сортировки фильмов" onclick="toggleSortOrder()">
                                     <img src="images/sort_arrow.webp" alt="arrow" class="sort-arrow">
                                 </button>
                             </div>
@@ -185,13 +185,13 @@
                 <div id="gamesListSection" class="list-content" style="display:none;">
                     <div class="list-toolbar">
                         <div class="search-controls search-with-count">
-                            <input type="text" class="search-input" placeholder="Поиск игр..."
-                                onkeyup="debouncedSearchPlayedGames(this.value)">
+                            <input type="search" class="search-input" placeholder="Поиск игр…" aria-label="Поиск игр" enterkeyhint="search"
+                                oninput="debouncedSearchPlayedGames(this.value)">
                             <span class="search-count">Всего: <span id="gamesCount">0</span></span>
                         </div>
                         <div class="sort-controls">
                             <div class="sort-merge">
-                                <select onchange="sortPlayedGames(this.value)">
+                                <select aria-label="Сортировка игр" onchange="sortPlayedGames(this.value)">
                                     <option value="date">По дате</option>
                                     <option value="title">По названию</option>
                                     <option value="year">По году</option>
@@ -2326,10 +2326,10 @@
         </div>
     </aside>
 
-    <nav class="mobile-tabs" id="mobileTabs">
-        <button data-tab="movies" class="active">Фильмы</button>
-        <button data-tab="watchlist">Заказанные фильмы</button>
-        <button data-tab="games">Заказанные игры</button>
+    <nav class="mobile-tabs" id="mobileTabs" aria-label="Разделы каталога">
+        <button type="button" data-tab="movies" class="active" aria-pressed="true"><i class="fa-solid fa-film" aria-hidden="true"></i><span>Каталог</span></button>
+        <button type="button" data-tab="watchlist" aria-pressed="false"><i class="fa-solid fa-list-check" aria-hidden="true"></i><span>Заказы фильмов</span></button>
+        <button type="button" data-tab="games" aria-pressed="false"><i class="fa-solid fa-gamepad" aria-hidden="true"></i><span>Заказы игр</span></button>
     </nav>
     <script src="script/vendor/supabase-2.81.1.js" defer></script>
     <script src="script/toast.js" defer></script>

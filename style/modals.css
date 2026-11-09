@@ -11,6 +11,7 @@
     backdrop-filter: blur(8px);
     animation: fadeIn 0.3s ease-out;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 @keyframes fadeIn {
@@ -33,6 +34,7 @@
     max-width: 550px;
     max-height: 90vh;
     overflow-y: auto;
+    overscroll-behavior: contain;
     scroll-behavior: smooth;
     border: 2px solid rgba(0, 212, 255, 0.3);
     box-shadow:
@@ -2474,4 +2476,54 @@ body.order-player-fullscreen #orderPlayerModal .modal-content {
     inset: 0;
     z-index: 1;
     min-height: 0;
+}
+
+@media (max-width: 600px) {
+    .modal .modal-content,
+    :is(#movieDetailsModal, #gameDetailsModal, #orderDetailsModal, #gameOrderDetailsModal, #fortuneMovieModal) .modal-content {
+        width: calc(100% - 20px);
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        margin: max(12px, env(safe-area-inset-top)) auto;
+        padding: 52px 16px 20px;
+    }
+
+    .modal .close {
+        top: 6px;
+        right: 6px;
+        z-index: 5;
+        background: var(--modal-bg);
+    }
+
+    .modal .modal-content h2 {
+        font-size: 1.25rem;
+        overflow-wrap: anywhere;
+    }
+
+    :is(#movieDetailsModal, #gameDetailsModal, #orderDetailsModal, #gameOrderDetailsModal) .movie-details-info {
+        min-width: 0;
+        width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    :is(#movieDetailsModal, #gameDetailsModal, #orderDetailsModal, #gameOrderDetailsModal) .movie-details-poster-wrap {
+        align-self: center;
+    }
+
+    :is(#movieDetailsModal, #gameDetailsModal, #orderDetailsModal, #gameOrderDetailsModal) .movie-details-poster {
+        width: 128px;
+        min-height: 0;
+        max-height: 192px;
+        object-fit: contain;
+    }
+
+    .modal .modal-buttons,
+    .modal .movie-details-actions {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .modal .btn,
+    .modal .order-player-controls select {
+        min-height: 44px;
+    }
 }

@@ -88,12 +88,62 @@
 }
 
 @media (max-width: 600px) {
+    .container {
+        padding-inline: max(10px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-right));
+    }
+
+    .left-panel,
+    .right-panel {
+        padding: 14px;
+    }
+
+    #headerLogo {
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+    }
+
+    #headerLogo .social-links {
+        position: relative;
+        top: auto;
+        right: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        margin-top: 10px;
+        gap: 8px;
+    }
+
+    #headerLogo .social-link {
+        width: 44px;
+        height: 44px;
+    }
+
+    #headerLogo .social-link i {
+        font-size: 1.1rem;
+    }
+
+    .main-content {
+        scroll-margin-top: 12px;
+    }
+
     .list-toolbar {
         gap: 8px;
     }
 
     .search-controls.search-with-count .search-input {
-        padding-right: 120px;
+        padding-right: 14px;
+    }
+
+    .search-controls.search-with-count .search-count {
+        position: static;
+        transform: none;
+        height: auto;
+        justify-content: flex-end;
+        gap: 4px;
+        padding: 4px 2px 0;
+    }
+
+    .search-count::before {
+        display: none;
     }
 
     .sort-controls,
@@ -101,9 +151,15 @@
         width: 100%;
     }
 
+    .sort-controls {
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+
     .sort-merge {
         justify-content: space-between;
-        width: 100%;
+        flex: 1;
+        min-width: 0;
         max-width: none;
     }
 
@@ -114,24 +170,140 @@
     }
 
     .order-type-filter-menu {
-        left: 0;
-        right: auto;
+        left: auto;
+        right: 0;
+        max-width: calc(100vw - 50px);
+    }
+
+    .movies-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .movies-grid > .movie-card {
+        --mobile-poster-width: clamp(88px, 26vw, 120px);
+        display: grid;
+        grid-template-columns: var(--mobile-poster-width) minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .movies-grid > .movie-card > :is(.movie-poster, .movie-poster-placeholder) {
+        grid-area: 1 / 1;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        aspect-ratio: 2 / 3;
+        margin: 0;
+        border-radius: 10px 0 10px 0;
+    }
+
+    .movies-grid > .movie-card > .order-badge {
+        width: calc(var(--mobile-poster-width) - 12px);
+        padding-inline: 4px;
+        font-size: 0.7rem;
+    }
+
+    .movies-grid .movie-info {
+        grid-area: 1 / 2;
+        min-width: 0;
+        height: auto;
+        padding: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .movies-grid .movie-header {
+        padding-right: 0;
+    }
+
+    .movies-grid :is(.movie-original-title, .movie-genres) {
+        font-size: 0.8rem;
+    }
+
+    .movies-grid .movie-rating {
+        gap: 4px;
+        margin: 0 0 8px;
+        padding: 4px 0;
+    }
+
+    .movies-grid .movie-rating .rating-item {
+        flex: 1 1 44px;
+        min-width: 0;
+        gap: 4px;
+        padding: 4px;
+    }
+
+    .movies-grid .movie-rating img {
+        width: 20px;
+        height: 20px;
+    }
+
+    .movies-grid .movie-rating span {
+        font-size: 0.85rem;
+    }
+
+    .movies-grid .movie-footer {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .movies-grid .movie-actions {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .movies-grid .movie-actions .btn {
+        width: 100%;
+        min-height: 44px;
+        padding: 8px;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .pagination .page-btn {
+        min-width: 36px;
+        min-height: 44px;
+        padding: 6px;
+    }
+
+    .pagination .ellipsis {
+        padding-inline: 2px;
+    }
+
+    .order-info {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .order-card {
+        gap: 10px;
+    }
+
+    .order-poster {
+        width: 30%;
+        height: auto;
+        align-self: flex-start;
+    }
+
+    .watchlist-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .watchlist-overview-trigger-row {
+        flex-wrap: wrap;
+    }
+
+    .list-tabs button {
+        min-height: 44px;
     }
 }
 
 @media (max-width: 480px) {
     header h1 {
         font-size: 1.8rem;
-    }
-
-    .movies-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-    
-    .btn {
-        width: 100%;
-        justify-content: center;
     }
 
     .main-content {

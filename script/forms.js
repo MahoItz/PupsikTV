@@ -410,10 +410,14 @@ function showTab(tab) {
   activeTab = tab;
   document.querySelectorAll("#mobileTabs button").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.tab === tab);
+    btn.setAttribute("aria-pressed", String(btn.dataset.tab === tab));
   });
   updateTabVisibility();
   updateListVisibility();
   void loadActiveCatalog();
+  if (window.innerWidth <= 768) {
+    document.querySelector(".main-content")?.scrollIntoView({ block: "start" });
+  }
 }
 
 function updateTabVisibility() {

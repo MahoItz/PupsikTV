@@ -2326,6 +2326,15 @@ function setupRatingStars(containerId = "ratingStars") {
   const ratingInput = inputId ? document.getElementById(inputId) : null;
 
   stars.forEach((star) => {
+    star.setAttribute("role", "button");
+    star.setAttribute("tabindex", "0");
+    star.setAttribute("aria-label", `Оценка ${star.dataset.rating} из 11`);
+    star.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        star.click();
+      }
+    });
     star.addEventListener("click", function () {
       const rating = parseInt(this.dataset.rating);
       setRatingStars(containerId, rating);

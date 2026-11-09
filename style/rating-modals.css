@@ -350,5 +350,42 @@
         width: 112px;
         font-size: 1.3rem;
     }
+
+}
+
+@media (max-width: 768px) {
+    .rating-stars:is(.modal-rating-stars, .trailer-rating-stars) {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(44px, 1fr));
+        gap: 8px;
+        padding: 10px;
+    }
+
+    /* Numbered touch targets replace the icon masks on narrow screens. */
+    .rating-stars:is(.modal-rating-stars, .trailer-rating-stars) .rating-star:is(.rating-label, :not(.rating-label)) {
+        width: 100%;
+        max-width: none;
+        height: 44px;
+        min-height: 44px;
+        border-radius: 8px;
+        -webkit-mask: none !important;
+        mask: none !important;
+    }
+
+    .rating-stars:is(.modal-rating-stars, .trailer-rating-stars) .rating-star::after {
+        content: attr(data-rating);
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1;
+        color: #f4fbff;
+    }
+
+    .rating-stars:is(.modal-rating-stars, .trailer-rating-stars) .rating-star.hovered::after {
+        color: #151523;
+    }
 }
 

@@ -2400,3 +2400,61 @@
         min-width: 172px;
     }
 }
+
+@media (max-width: 768px) {
+    .music-menu:not(.collapsed) {
+        width: 100%;
+        height: 100dvh;
+        max-height: 100dvh;
+        padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        overscroll-behavior: contain;
+        background: #0f0f23;
+    }
+
+    .music-menu:not(.collapsed) .music-menu-content {
+        flex: 0 0 auto;
+    }
+
+    .music-menu:not(.collapsed) .fortune-body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .music-menu:not(.collapsed) .fortune-side {
+        height: auto;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .music-menu:not(.collapsed) .fortune-wheel-card {
+        order: -1;
+        flex: none;
+        height: auto;
+        padding: 12px;
+    }
+
+    .music-menu:not(.collapsed) .fortune-wheel-wrap {
+        flex: none;
+        width: 100%;
+        max-width: min(100%, calc(100dvh - 220px));
+        max-height: none;
+    }
+
+    .music-menu:not(.collapsed) .fortune-wheel-card__header {
+        padding-right: 48px;
+    }
+
+    .music-menu:not(.collapsed) .collapse-music-menu {
+        display: none;
+    }
+
+    .music-menu:not(.collapsed) :is(.fortune-button, .close-music-menu, .music-play-pause, .music-loop) {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .music-menu:not(.collapsed) .fortune-section {
+        flex: none;
+    }
+}
