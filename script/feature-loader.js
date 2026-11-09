@@ -11,17 +11,22 @@ function loadFeatureScript(path) {
   if (featureScriptRequests.has(path)) return featureScriptRequests.get(path);
   const request = new Promise((resolve, reject) => {
     const script = document.createElement('script');
+    if (script.dataset) script.dataset.optionalFeature = 'true';
     script.src = window.Pupsik.assetUrl(path);
-    script.onload = () => resolve();
-    script.onerror = () => {
+    const timer = setTimeout(() => fail('Дополнительный код загружается слишком долго. Проверьте сеть и попробуйте ещё раз.'), 20000);
+    script.onload = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    function fail(message) {
+      clearTimeout(timer);
+      script.onload = null;
+      script.onerror = null;
       script.remove();
       featureScriptRequests.delete(path);
-      reject(
-        new Error(
-          'Не удалось загрузить дополнительный код. Попробуйте ещё раз.'
-        )
-      );
-    };
+      reject(new Error(message));
+    }
+    script.onerror = () => fail('Не удалось загрузить дополнительный код. Проверьте сеть и попробуйте ещё раз.');
     document.head.appendChild(script);
   });
   featureScriptRequests.set(path, request);

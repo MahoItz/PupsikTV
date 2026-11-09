@@ -2129,6 +2129,7 @@ function parseDuration(durationStr) {
 
 function closeModal(modalId, shouldReset = false) {
   const modal = document.getElementById(modalId);
+  const wasOpen = modal?.style.display === "block";
   if (modal) {
     modal.style.display = "none";
   }
@@ -2194,6 +2195,13 @@ function closeModal(modalId, shouldReset = false) {
   }
   if (shouldReset) {
     resetForm();
+  }
+  if (
+    modalId === "orderDetailsModal" &&
+    wasOpen &&
+    typeof restoreWatchlistOverviewAfterDetails === "function"
+  ) {
+    restoreWatchlistOverviewAfterDetails();
   }
 }
 

@@ -205,6 +205,12 @@ async function loadRecentMovies() {
     if (revision === historyRevision) renderRecentMovies(items);
   } catch (error) {
     console.error("Failed to load recent movies", error);
+    globalThis.PupsikProblems?.report(
+      "player-history-load",
+      "Не удалось обновить недавние фильмы. История может быть неполной.",
+      error,
+      { type: "warning" }
+    );
     recentLoadFailed = true;
   } finally {
     recentLoading = false;
@@ -262,6 +268,12 @@ async function saveHistoryItem(movie) {
     return updateHistoryState(normalized, { shouldRender: true, etag });
   } catch (error) {
     console.error("Failed to save admin player history", error);
+    globalThis.PupsikProblems?.report(
+      "player-history-save",
+      "Фильм открыт, но не удалось сохранить его в истории.",
+      error,
+      { type: "warning" }
+    );
     return currentHistory;
   }
 }
@@ -288,6 +300,12 @@ async function deleteHistoryItem(kpId) {
     return updateHistoryState(normalized, { shouldRender: true, etag });
   } catch (error) {
     console.error("Failed to delete admin player history", error);
+    globalThis.PupsikProblems?.report(
+      "player-history-delete",
+      "Не удалось подтвердить удаление из истории. После обновления запись может появиться снова.",
+      error,
+      { type: "warning" }
+    );
     return currentHistory;
   }
 }
@@ -593,7 +611,10 @@ async function loadPlayerForMovie(movie) {
   try {
     const response = await fetch(`${ORDER_PLAYER_API_URL}${kpId}`);
     if (!response.ok) {
-      throw new Error(`Player request failed: ${response.status}`);
+      throw Object.assign(
+        new Error(`Player request failed: ${response.status}`),
+        { status: response.status }
+      );
     }
 
     const payload = await response.json();
@@ -667,6 +688,12 @@ async function loadPlayerForMovie(movie) {
     setProvider(initialProviderIndex);
   } catch (error) {
     console.error("Failed to load order player:", error);
+    globalThis.PupsikProblems?.report(
+      "player-load",
+      "Не удалось загрузить источники плеера. Выберите фильм повторно или попробуйте позже.",
+      error,
+      { type: "error" }
+    );
     setPlayerLoading(false);
     const titleElement = document.getElementById("adminPlayerTitle");
     if (titleElement) {
@@ -770,6 +797,12 @@ async function initPage() {
     loadRecentMovies();
   } catch (error) {
     console.error("Admin player init error", error);
+    globalThis.PupsikProblems?.report(
+      "player-init",
+      "Не удалось открыть страницу плеера. Обновите страницу; если требуется, войдите на главной странице.",
+      error,
+      { type: "error" }
+    );
   }
 }
 

@@ -363,8 +363,9 @@ async function translateGameDescription(text, modelValue) {
 
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(
-      payload.error || `Ошибка перевода: код ответа ${response.status}`
+    throw Object.assign(
+      new Error(payload.error || `Ошибка перевода: код ответа ${response.status}`),
+      { status: response.status }
     );
   }
   if (!isRussianGameDescriptionTranslation(payload.translated)) {

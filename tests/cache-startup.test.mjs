@@ -36,6 +36,9 @@ function setup({
       events.push(`api:${table}`);
       return {
         select: () => ({
+          abortSignal() {
+            return this;
+          },
           order: () => ({
             range: () =>
               new Promise((resolve) => refreshes.push(resolve)).then(
@@ -52,6 +55,7 @@ function setup({
     },
   };
   const context = vm.createContext({
+    AbortSignal,
     console: { warn() {}, error() {} },
     window: { innerWidth: 390 },
     activeTab: 'movies',

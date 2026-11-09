@@ -46,7 +46,10 @@ async function submitUserMovieRating() {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(payload?.error || ("Failed to submit rating: " + response.status));
+      throw Object.assign(
+        new Error(payload?.error || ("Failed to submit rating: " + response.status)),
+        { status: response.status }
+      );
     }
 
     if (movie && payload?.movie) {
@@ -111,7 +114,10 @@ async function submitUserGameRating() {
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(payload?.error || ("Failed to submit rating: " + response.status));
+      throw Object.assign(
+        new Error(payload?.error || ("Failed to submit rating: " + response.status)),
+        { status: response.status }
+      );
     }
     const newSum = Number(payload?.game?.game_rating_sum ?? currentSum) || 0;
     const newCount = Number(payload?.game?.game_rating_count ?? currentCount) || 0;
@@ -188,7 +194,10 @@ async function submitUserMovieRating() {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(payload?.error || ("Failed to submit rating: " + response.status));
+      throw Object.assign(
+        new Error(payload?.error || ("Failed to submit rating: " + response.status)),
+        { status: response.status }
+      );
     }
 
     if (movie && payload?.movie) {
@@ -209,7 +218,7 @@ async function submitUserMovieRating() {
     console.error("Error submitting user rating", err);
     setUserRateStatus(
       "userRateStatus",
-      err?.message || "Не удалось сохранить оценку",
+      globalThis.PupsikProblems?.describe(err, "Не удалось сохранить оценку. Повторите попытку.") || "Не удалось сохранить оценку. Повторите попытку.",
       true
     );
   } finally {
@@ -258,7 +267,10 @@ async function submitUserGameRating() {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(payload?.error || ("Failed to submit rating: " + response.status));
+      throw Object.assign(
+        new Error(payload?.error || ("Failed to submit rating: " + response.status)),
+        { status: response.status }
+      );
     }
 
     const newSum = Number(payload?.game?.game_rating_sum ?? currentSum) || 0;
@@ -279,7 +291,7 @@ async function submitUserGameRating() {
     console.error("Error submitting user game rating", err);
     setUserRateStatus(
       "userRateGameStatus",
-      err?.message || "Не удалось сохранить оценку",
+      globalThis.PupsikProblems?.describe(err, "Не удалось сохранить оценку. Повторите попытку.") || "Не удалось сохранить оценку. Повторите попытку.",
       true
     );
   } finally {

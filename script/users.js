@@ -60,6 +60,12 @@ async function loadUsersFromSupabase({ force = false } = {}) {
     return usersList;
   } catch (err) {
     console.error("Failed to load users list", err);
+    globalThis.PupsikProblems?.report(
+      'users-load',
+      'Не удалось загрузить список заказчиков. Имя можно ввести вручную.',
+      err,
+      { type: 'warning' }
+    );
     return [];
   }
 }
@@ -179,8 +185,9 @@ async function deleteUserFromSupabase(name) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Failed to delete user: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Failed to delete user: ${response.status}`),
+        { status: response.status }
       );
     }
 
@@ -189,6 +196,12 @@ async function deleteUserFromSupabase(name) {
     usersLoaded = true;
   } catch (err) {
     console.error("Failed to delete user", err);
+    globalThis.PupsikProblems?.report(
+      'user-delete',
+      'Не удалось удалить заказчика.',
+      err,
+      { type: 'error' }
+    );
   }
 }
 
@@ -216,8 +229,9 @@ async function recordUserOrder({ userName, type }) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Failed to update user stats: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Failed to update user stats: ${response.status}`),
+        { status: response.status }
       );
     }
 
@@ -233,6 +247,12 @@ async function recordUserOrder({ userName, type }) {
     usersLoaded = true;
   } catch (err) {
     console.error("Failed to update user stats", err);
+    globalThis.PupsikProblems?.report(
+      'user-statistics',
+      'Заказ добавлен, но счётчик заказчика не обновился. Не отправляйте заказ повторно.',
+      err,
+      { type: 'warning' }
+    );
   }
 }
 
@@ -261,8 +281,9 @@ async function removeUserOrder({ userName, type }) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(
-        payload?.error || `Failed to decrement user stats: ${response.status}`
+      throw Object.assign(
+        new Error(payload?.error || `Failed to decrement user stats: ${response.status}`),
+        { status: response.status }
       );
     }
 
@@ -281,6 +302,12 @@ async function removeUserOrder({ userName, type }) {
     usersLoaded = true;
   } catch (err) {
     console.error("Failed to decrement user stats", err);
+    globalThis.PupsikProblems?.report(
+      'user-statistics',
+      'Запись обработана, но счётчик заказчика не обновился.',
+      err,
+      { type: 'warning' }
+    );
   }
 }
 

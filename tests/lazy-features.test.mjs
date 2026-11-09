@@ -14,6 +14,8 @@ function setup() {
   const notices = [];
   let initializations = 0;
   const context = vm.createContext({
+    setTimeout,
+    clearTimeout,
     console: { error() {} },
     Pupsik: { assetUrl: (path) => `https://example.com/PupsikTV/${path}` },
     document: {

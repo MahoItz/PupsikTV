@@ -53,6 +53,10 @@ function copyScheduledMoviesToClipboard() {
   });
   
   // Копируем в буфер обмена
+  if (!navigator.clipboard?.writeText) {
+    showToastNotification("Копирование недоступно в этом браузере. Откройте сайт по HTTPS и проверьте разрешение на буфер обмена.", "warning");
+    return;
+  }
   navigator.clipboard.writeText(formattedList)
     .then(() => {
       showToastNotification(`Список из ${scheduledMovies.length} запланированных фильмов скопирован в буфер обмена`, "success");

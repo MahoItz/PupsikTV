@@ -216,12 +216,13 @@ test('Pages artifact contains client files and excludes server source', () => {
     const sdkPath = html.match(/src="(script\/vendor\/supabase-[^"]+\.js)"/);
     assert.ok(sdkPath, `${name}: local Supabase library`);
     assert.ok(existsSync(resolve(root, 'dist/pages', sdkPath[1])));
-    assert.ok(
-      html.indexOf(sdkPath[0]) <
-        html.indexOf(
-          `src="script/${name === 'index.html' ? 'core' : 'stats'}.js"`
-        )
+    const pageScript = html.match(
+      new RegExp(
+        `src="script/${name === 'index.html' ? 'core' : 'stats'}\\.js(?:\\?[^"\\s]*)?"`
+      )
     );
+    assert.ok(pageScript, `${name}: page script`);
+    assert.ok(html.indexOf(sdkPath[0]) < html.indexOf(pageScript[0]));
   }
   for (const name of [
     'api',

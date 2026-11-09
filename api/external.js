@@ -25,7 +25,13 @@ let igdbAccessTokenExpiresAt = 0;
 
 function normalizeIgdbCoverUrl(url) {
   if (typeof url !== 'string' || !url.trim()) return null;
-  const normalized = url.trim().replace(/^http:/, 'https:');
+  const normalized = url
+    .trim()
+    .replace(/^http:/, 'https:')
+    .replace(
+      /(images\.igdb\.com\/igdb\/image\/upload\/)t_thumb\//,
+      '$1t_cover_big_2x/'
+    );
   return normalized.startsWith('//') ? `https:${normalized}` : normalized;
 }
 
@@ -335,7 +341,7 @@ async function handleSteamGridDb(req, res) {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    const gridUrl = `https://www.steamgriddb.com/api/v2/grids/game/${id}?dimensions=600x900`;
+    const gridUrl = `https://www.steamgriddb.com/api/v2/grids/game/${id}?dimensions=600x900,660x930,342x482`;
     const gridRes = await fetch(gridUrl, { headers });
     if (!gridRes.ok) {
       return res.status(gridRes.status).json({ error: 'Grid request failed' });
@@ -346,6 +352,8 @@ async function handleSteamGridDb(req, res) {
       ? gridData.data.map((g) => ({
           url: g.url,
           thumb: g.thumb || g.url,
+          width: g.width,
+          height: g.height,
         }))
       : [];
     return res.status(200).json({ posters });

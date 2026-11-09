@@ -1075,6 +1075,12 @@ async function loadFortuneBanwordsFromSettings() {
       return fortuneBanwords;
     } catch (err) {
       console.error('Failed to load fortune banwords', err);
+      globalThis.PupsikProblems?.report(
+        'roulette-rules',
+        'Не удалось загрузить ограничения рулетки. Список ограничений может быть неполным.',
+        err,
+        { type: 'warning' }
+      );
       updateFortuneBanwordMatchers([]);
       return fortuneBanwords;
     }
@@ -1593,6 +1599,12 @@ async function fetchFortuneSuggestions(force = false) {
     }
   } catch (err) {
     console.error('Не удалось загрузить предложенные фильмы', err);
+    globalThis.PupsikProblems?.report(
+      'roulette-suggestions',
+      'Не удалось загрузить предложенные фильмы. Откройте список повторно.',
+      err,
+      { type: 'warning' }
+    );
   } finally {
     fortuneSuggestionsState.isFetching = false;
   }
@@ -3030,6 +3042,12 @@ const debouncedFortuneKPSearch = debounce(async (query) => {
     setFortuneAutocompleteVisible(Boolean(fortuneKpResults.length));
   } catch (err) {
     console.error('Kinopoisk autocomplete error for fortune', err);
+    globalThis.PupsikProblems?.report(
+      'roulette-search',
+      'Не удалось выполнить поиск фильма для рулетки.',
+      err,
+      { type: 'error' }
+    );
     resetFortuneAutocomplete();
   }
 }, 120);

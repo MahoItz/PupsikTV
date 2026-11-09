@@ -44,6 +44,7 @@ function setup({
     publishers: 'Publisher',
   }));
   const context = vm.createContext({
+    AbortSignal,
     console: { warn() {}, error() {} },
     allMovies: [],
     allPlayedGames: [],
@@ -73,6 +74,9 @@ function setup({
             const project = (row) =>
               Object.fromEntries(select.map((column) => [column, row[column]]));
             return {
+              abortSignal() {
+                return this;
+              },
               order(key, { ascending }) {
                 return {
                   async range(from, to) {
