@@ -41,6 +41,7 @@ async function request(url, fetchImpl) {
     URL,
     Buffer,
     AbortSignal,
+    console: { error() {} },
     fetch: fetchImpl,
   };
   vm.runInNewContext(read('../api/external.js'), context);
@@ -69,12 +70,12 @@ async function request(url, fetchImpl) {
   return res;
 }
 
-test('server returns poster bytes, image type and cache headers with redirects disabled', async () => {
+test('server returns poster bytes, image type and cache headers with automatic redirects disabled', async () => {
   let calls = 0;
   const res = await request(sourceUrl, async (url, options) => {
     calls++;
     assert.equal(url, sourceUrl);
-    assert.equal(options.redirect, 'error');
+    assert.equal(options.redirect, 'manual');
     assert.ok(options.signal);
     return new Response(new Uint8Array([255, 216, 255]), {
       headers: { 'content-type': 'image/jpeg' },
@@ -144,4 +145,108 @@ test('connection failures and upstream HTTP errors do not return cacheable image
   );
   assert.equal(missing.statusCode, 404);
   assert.equal(missing.headers['Cache-Control'], undefined);
+});
+
+test('server follows the real Kinopoisk redirect chain with a shared timeout', async () => {
+  const urls = [
+    sourceUrl,
+    'https://st.kp.yandex.net/images/film_iphone/iphone360_687670.jpg',
+    'https://avatars.mds.yandex.net/get-kinopoisk-image/4303601/bb040be7-b083-4d2a-a141-99216a5226dc/360',
+  ];
+  let calls = 0;
+  let signal;
+  const res = await request(sourceUrl, async (url, options) => {
+    assert.equal(url, urls[calls]);
+    assert.equal(options.redirect, 'manual');
+    if (signal) assert.equal(options.signal, signal);
+    signal = options.signal;
+    calls++;
+    if (calls < urls.length)
+      return new Response('', {
+        status: 302,
+        headers: { Location: urls[calls] },
+      });
+    return new Response(new Uint8Array([255, 216, 255]), {
+      headers: { 'content-type': 'image/jpeg' },
+    });
+  });
+  assert.equal(calls, 3);
+  assert.equal(res.statusCode, 200);
+});
+
+test('every redirect destination is validated before a network request', async () => {
+  for (const location of [
+    'https://127.0.0.1/private',
+    'https://st.kp.yandex.net.evil.test/images/film_iphone/iphone360_687670.jpg',
+    'http://st.kp.yandex.net/images/film_iphone/iphone360_687670.jpg',
+    'https://user:pass@st.kp.yandex.net/images/film_iphone/iphone360_687670.jpg',
+    'https://st.kp.yandex.net:444/images/film_iphone/iphone360_687670.jpg',
+    'https://st.kp.yandex.net/api/private',
+    'https://st.kp.yandex.net/images/film_iphone/iphone360_123.jpg',
+    'https://st.kp.yandex.net/images/film_iphone/iphone360_687670.jpg?url=http://127.0.0.1',
+    'https://avatars.mds.yandex.net/api/private',
+    'https://avatars.mds.yandex.net/get-kinopoisk-image/123/a/360?url=http://127.0.0.1',
+    'https://avatars.mds.yandex.net/get-kinopoisk-image/123/a%2fb/360',
+    'https://[invalid',
+  ]) {
+    let calls = 0;
+    const res = await request(sourceUrl, async () => {
+      calls++;
+      return new Response('', { status: 302, headers: { Location: location } });
+    });
+    assert.equal(calls, 1, location);
+    assert.equal(res.statusCode, 502, location);
+    assert.equal(res.headers['Cache-Control'], undefined);
+  }
+});
+
+test('redirect loops, missing locations and chains beyond three redirects fail without caching', async () => {
+  for (const mode of ['loop', 'missing', 'long']) {
+    let calls = 0;
+    const res = await request(sourceUrl, async () => {
+      calls++;
+      const location =
+        mode === 'loop'
+          ? 'https://st.kp.yandex.net/images/film_iphone/iphone360_687670.jpg'
+          : mode === 'long'
+            ? `https://avatars.mds.yandex.net/get-kinopoisk-image/123/image${calls}/360`
+            : null;
+      return new Response('', {
+        status: 302,
+        headers: location ? { Location: location } : {},
+      });
+    });
+    assert.equal(calls, mode === 'loop' ? 2 : mode === 'missing' ? 1 : 4);
+    assert.equal(res.statusCode, 502);
+    assert.equal(res.headers['Cache-Control'], undefined);
+  }
+});
+
+test('full posters, actor photos and the upstream placeholder use only their matching CDN paths', async () => {
+  for (const [input, path] of [
+    [sourceUrl.replace('kp_small', 'kp'), '/images/film_big/687670.jpg'],
+    [
+      sourceUrl.replace('posters/kp_small', 'actor_posters/kp'),
+      '/images/actor_iphone/iphone360_687670.jpg',
+    ],
+    [sourceUrl, '/images/no-poster.gif'],
+  ]) {
+    let calls = 0;
+    const res = await request(input, async (url) => {
+      calls++;
+      if (calls === 1)
+        return new Response('', {
+          status: 301,
+          headers: { Location: `https://st.kp.yandex.net${path}` },
+        });
+      assert.equal(url, `https://st.kp.yandex.net${path}`);
+      return new Response(new Uint8Array([1]), {
+        headers: {
+          'content-type': path.endsWith('gif') ? 'image/gif' : 'image/jpeg',
+        },
+      });
+    });
+    assert.equal(res.statusCode, 200);
+    assert.equal(calls, 2);
+  }
 });

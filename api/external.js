@@ -264,6 +264,66 @@ async function getSelectedKinopoiskApiKey() {
   );
 }
 
+function isKinopoiskRedirectTarget(target, initial) {
+  if (
+    target.protocol !== 'https:' ||
+    target.port ||
+    target.username ||
+    target.password ||
+    target.search ||
+    target.hash
+  )
+    return false;
+  if (target.hostname === 'st.kp.yandex.net') {
+    const [, kind, size, id] = initial.pathname.match(
+      /^\/images\/(posters|actor_posters)\/(kp|kp_small)\/(\d+)\./
+    );
+    const expectedPath =
+      kind === 'actor_posters'
+        ? `/images/actor_iphone/iphone360_${id}.jpg`
+        : size === 'kp_small'
+          ? `/images/film_iphone/iphone360_${id}.jpg`
+          : `/images/film_big/${id}.jpg`;
+    return (
+      target.pathname === expectedPath ||
+      target.pathname === '/images/no-poster.gif'
+    );
+  }
+  return (
+    target.hostname === 'avatars.mds.yandex.net' &&
+    /^\/get-kinopoisk-image\/\d+\/[a-zA-Z0-9_-]+\/(?:360|x1000)$/.test(
+      target.pathname
+    )
+  );
+}
+
+async function fetchKinopoiskImage(initial) {
+  const signal = AbortSignal.timeout(15000);
+  const visited = new Set();
+  let target = initial;
+  for (let hop = 0; hop <= 3; hop++) {
+    const address = target.toString();
+    if (visited.has(address)) break;
+    visited.add(address);
+    const response = await fetch(address, { redirect: 'manual', signal });
+    if (![301, 302, 303, 307, 308].includes(response.status)) return response;
+    const location = response.headers.get('location');
+    await response.body?.cancel();
+    if (!location) break;
+    let next;
+    try {
+      next = new URL(location, target);
+    } catch {
+      break;
+    }
+    if (!isKinopoiskRedirectTarget(next, initial)) break;
+    target = next;
+  }
+  const error = new Error('Invalid Kinopoisk image redirect chain');
+  error.status = 502;
+  throw error;
+}
+
 async function handlePosterProxy(req, res) {
   const url = req.query.url;
   if (!url) {
@@ -309,12 +369,9 @@ async function handlePosterProxy(req, res) {
         }
       : undefined;
 
-    const response = await fetch(target.toString(), {
-      headers,
-      ...(isKinopoiskImage
-        ? { redirect: 'error', signal: AbortSignal.timeout(15000) }
-        : {}),
-    });
+    const response = isKinopoiskImage
+      ? await fetchKinopoiskImage(target)
+      : await fetch(target.toString(), { headers });
     if (!response.ok) {
       return res
         .status(response.status)
@@ -356,8 +413,15 @@ async function handlePosterProxy(req, res) {
     res.setHeader('Cache-Control', 'public, max-age=86400');
     res.setHeader('Content-Type', contentType);
     return res.status(200).send(buffer);
-  } catch {
-    return res.status(500).json({ error: 'Server error' });
+  } catch (error) {
+    console.error('[poster-proxy] Image fetch failed', {
+      host: target.hostname,
+      name: error.name,
+      code: error.code || error.cause?.code || 'UPSTREAM_ERROR',
+    });
+    return res
+      .status(error.status === 502 ? 502 : 500)
+      .json({ error: 'Server error' });
   }
 }
 
