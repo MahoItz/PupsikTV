@@ -66,7 +66,7 @@ window.PupsikMediaSearch = {
         poster.className = 'media-search-poster';
         poster.alt = '';
         poster.loading = 'lazy';
-        poster.src = item.posterUrlPreview || item.posterUrl || item.background_image || 'images/placeholder-poster.webp';
+        poster.src = window.Pupsik.posterUrl(item.posterUrlPreview || item.posterUrl || item.background_image || 'images/placeholder-poster.webp');
         poster.addEventListener('error', () => { poster.src = 'images/placeholder-poster.webp'; }, { once: true });
         const content = document.createElement('span');
         content.className = 'media-search-content';

@@ -281,7 +281,23 @@ async function handlePosterProxy(req, res) {
     return res.status(400).json({ error: 'Unsupported protocol' });
   }
 
-  if (!isAllowedHost(target.hostname)) {
+  const isKinopoiskImage = target.hostname === 'kinopoiskapiunofficial.tech';
+  if (
+    isKinopoiskImage &&
+    (target.protocol !== 'https:' ||
+      target.port ||
+      target.username ||
+      target.password ||
+      target.search ||
+      target.hash ||
+      !/^\/images\/(?:posters\/(?:kp|kp_small)|actor_posters\/kp)\/\d+\.(?:jpg|jpeg|png|webp)$/.test(
+        target.pathname
+      ))
+  ) {
+    return res.status(400).json({ error: 'Invalid Kinopoisk image URL' });
+  }
+
+  if (!isKinopoiskImage && !isAllowedHost(target.hostname)) {
     return res.status(400).json({ error: 'Host not allowed' });
   }
 
@@ -295,6 +311,9 @@ async function handlePosterProxy(req, res) {
 
     const response = await fetch(target.toString(), {
       headers,
+      ...(isKinopoiskImage
+        ? { redirect: 'error', signal: AbortSignal.timeout(15000) }
+        : {}),
     });
     if (!response.ok) {
       return res
@@ -302,9 +321,38 @@ async function handlePosterProxy(req, res) {
         .json({ error: 'Image request failed' });
     }
 
-    const buffer = Buffer.from(await response.arrayBuffer());
     const contentType =
       response.headers.get('content-type') || 'application/octet-stream';
+    let buffer;
+    if (isKinopoiskImage) {
+      if (!/^image\/(?:jpeg|png|webp|gif)(?:;|$)/i.test(contentType)) {
+        await response.body?.cancel();
+        return res.status(502).json({ error: 'Invalid image response' });
+      }
+      const maxBytes = 10 * 1024 * 1024;
+      if (Number(response.headers.get('content-length')) > maxBytes) {
+        await response.body?.cancel();
+        return res.status(502).json({ error: 'Image too large' });
+      }
+      const reader = response.body?.getReader();
+      if (!reader)
+        return res.status(502).json({ error: 'Empty image response' });
+      const chunks = [];
+      let size = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > maxBytes) {
+          await reader.cancel();
+          return res.status(502).json({ error: 'Image too large' });
+        }
+        chunks.push(Buffer.from(value));
+      }
+      buffer = Buffer.concat(chunks, size);
+    } else {
+      buffer = Buffer.from(await response.arrayBuffer());
+    }
     res.setHeader('Cache-Control', 'public, max-age=86400');
     res.setHeader('Content-Type', contentType);
     return res.status(200).send(buffer);

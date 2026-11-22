@@ -1196,7 +1196,7 @@ function positionTrailerActorTooltip(event) {
 function showTrailerActorTooltip(event, actor) {
   if (!actor?.poster_url) return;
   const tooltip = ensureTrailerActorTooltip();
-  tooltip._image.src = actor.poster_url;
+  tooltip._image.src = window.Pupsik.posterUrl(actor.poster_url);
   tooltip._image.alt = actor.actor_name || "";
   tooltip._title.textContent = actor.actor_name || "";
   tooltip._subtitle.textContent = actor.profession_text || "";
@@ -1794,7 +1794,7 @@ function populateTrailerInfoEditForm(trailer = getSelectedTrailer()) {
   if (countryInput) countryInput.value = draft.country;
   if (descriptionInput) descriptionInput.value = draft.description;
   if (poster) {
-    poster.src = draft.posterPreview;
+    poster.src = window.Pupsik.posterUrl(draft.posterPreview);
     poster.alt = draft.title ? `Постер: ${draft.title}` : "Постер фильма";
     poster.onerror = () => {
       poster.onerror = null;
@@ -1849,7 +1849,7 @@ function applyTrailerInfoManualPoster(file) {
 
   trailerInfoManualPosterFile = file;
   trailerInfoManualPosterPreviewUrl = URL.createObjectURL(file);
-  poster.src = trailerInfoManualPosterPreviewUrl;
+  poster.src = window.Pupsik.posterUrl(trailerInfoManualPosterPreviewUrl);
   poster.alt = "Постер фильма";
   poster.onerror = () => {
     poster.onerror = null;
@@ -2432,7 +2432,7 @@ function renderTrailerItem(item) {
 
   const poster = document.createElement("img");
   poster.className = "trailer-item__poster";
-  poster.src = resolveTrailerPosterSrc(item.poster, item.kinopoisk_id);
+  poster.src = window.Pupsik.posterUrl(resolveTrailerPosterSrc(item.poster, item.kinopoisk_id));
   poster.alt = item.title ? `Постер: ${item.title}` : "Постер трейлера";
   poster.loading = "lazy";
   poster.onerror = () => {
@@ -2681,7 +2681,7 @@ function renderWatchedTrailerCard(item) {
   card.dataset.id = String(item.id);
 
   const poster = document.createElement("img");
-  poster.src = resolveTrailerPosterSrc(item.poster, item.kinopoisk_id);
+  poster.src = window.Pupsik.posterUrl(resolveTrailerPosterSrc(item.poster, item.kinopoisk_id));
   poster.alt = item.title || "Постер трейлера";
   poster.className = "movie-poster";
   poster.loading = "lazy";
@@ -3266,7 +3266,7 @@ function openTrailerUserRateModal(trailerId) {
 
   userRatingTrailerId = Number(trailerId);
   title.textContent = trailer.title || "Без названия";
-  poster.src = resolveTrailerPosterSrc(trailer.poster, trailer.kinopoisk_id);
+  poster.src = window.Pupsik.posterUrl(resolveTrailerPosterSrc(trailer.poster, trailer.kinopoisk_id));
   poster.alt = trailer.title || "Постер трейлера";
   poster.onerror = () => {
     poster.onerror = null;
@@ -3295,7 +3295,7 @@ function openTrailerUserRateModal(trailerId) {
 
   userRatingTrailerId = Number(trailerId);
   title.textContent = trailer.title || "Без названия";
-  poster.src = resolveTrailerPosterSrc(trailer.poster, trailer.kinopoisk_id);
+  poster.src = window.Pupsik.posterUrl(resolveTrailerPosterSrc(trailer.poster, trailer.kinopoisk_id));
   poster.alt = trailer.title || "Постер трейлера";
   poster.onerror = () => {
     poster.onerror = null;
@@ -3359,7 +3359,7 @@ function renderSelectedTrailerMovieCard(movie = selectedTrailerSearchMovie) {
 
   title.textContent = resolvedTitle;
   meta.textContent = movie?.year ? String(movie.year) : "Год не указан";
-  poster.src = resolvedPoster;
+  poster.src = window.Pupsik.posterUrl(resolvedPoster);
   poster.alt = `Постер: ${resolvedTitle}`;
   poster.onerror = () => {
     poster.onerror = null;
@@ -3628,7 +3628,7 @@ function renderStoredKinopoiskInfo(info) {
   renderTrailerActors(actors, actorNames, info?.kinopoiskId);
   renderTrailerReleaseValue(release, info?.releaseDate || "");
 
-  poster.src = resolveTrailerPosterSrc(info?.posterUrl, info?.kinopoiskId);
+  poster.src = window.Pupsik.posterUrl(resolveTrailerPosterSrc(info?.posterUrl, info?.kinopoiskId));
   poster.alt = resolvedTitle ? `Постер: ${resolvedTitle}` : "Постер фильма";
   poster.onerror = () => {
     poster.onerror = null;
@@ -3704,10 +3704,10 @@ function renderKinopoiskInfo(details, staff) {
     "";
   renderTrailerReleaseValue(release, releaseValue);
 
-  poster.src = resolveTrailerPosterSrc(
+  poster.src = window.Pupsik.posterUrl(resolveTrailerPosterSrc(
     details?.posterUrl || details?.posterUrlPreview,
     details?.kinopoiskId
-  );
+  ));
   poster.alt = resolvedTitle ? `Постер: ${resolvedTitle}` : "Постер фильма";
   poster.onerror = () => {
     poster.onerror = null;
@@ -4782,7 +4782,7 @@ function renderStoredGameInfo(trailer) {
   renderTrailerReleaseValue(release, info.releaseDate || "");
   if (!info.releaseDate && !hasAdminAccess) release.textContent = "Дата релиза не объявлена";
   const poster = document.getElementById("trailerPoster");
-  poster.src = trailer.poster || info.posterUrl || POSTER_PLACEHOLDER;
+  poster.src = window.Pupsik.posterUrl(trailer.poster || info.posterUrl || POSTER_PLACEHOLDER);
   poster.alt = "Обложка: " + (trailer.title || "Игра");
   poster.onerror = () => { poster.onerror = null; poster.src = POSTER_PLACEHOLDER; };
   const link = document.getElementById("trailerKinopoiskLink");

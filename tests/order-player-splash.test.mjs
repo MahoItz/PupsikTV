@@ -22,6 +22,7 @@ function setup() {
     ])
   );
   const context = vm.createContext({
+    window: { Pupsik: { posterUrl: (url) => url } },
     document: { getElementById: (id) => ids[id] },
     setOrderPlayerLoading() {},
     KP_FALLBACK_POSTER_PLACEHOLDER: 'fallback.webp',

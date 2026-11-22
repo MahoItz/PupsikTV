@@ -9,6 +9,18 @@
     apiUrl(path) {
       return `${apiBase}/${String(path).replace(/^\/?api(?:\/|$)/, "").replace(/^\//, "")}`;
     },
+    posterUrl(value) {
+      if (!value || typeof value !== "string") return value;
+      try {
+        const url = new URL(value);
+        if (url.hostname === "kinopoiskapiunofficial.tech" && url.pathname.startsWith("/images/")) {
+          return `${apiBase}/external?provider=poster-proxy&url=${encodeURIComponent(value)}`;
+        }
+      } catch {
+        // Relative assets and data URLs keep their original location.
+      }
+      return value;
+    },
     assetUrl(path) {
       return new URL(String(path).replace(/^\//, ""), siteBase).href;
     },

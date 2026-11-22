@@ -3046,11 +3046,11 @@ function openRateModal(id) {
   }
   if (item) {
     document.getElementById('rateMovieTitle').textContent = item.title;
-    document.getElementById('rateMoviePoster').src = item.poster;
+    document.getElementById('rateMoviePoster').src = window.Pupsik.posterUrl(item.poster);
   } else {
     document.getElementById('rateMovieTitle').textContent = '';
     document.getElementById('rateMoviePoster').src =
-      'https://via.placeholder.com/300x400?text=Нет+постера';
+      window.Pupsik.posterUrl('https://via.placeholder.com/300x400?text=Нет+постера');
   }
   document.getElementById('rateMovieModal').style.display = 'block';
   setRatingStars('rateMovieStars', null);
@@ -3064,11 +3064,11 @@ function openRateGameModal(id) {
   const item = gameOrders.find((g) => g.id === id);
   if (item) {
     document.getElementById('rateGameTitle').textContent = item.title;
-    document.getElementById('rateGamePoster').src = item.poster;
+    document.getElementById('rateGamePoster').src = window.Pupsik.posterUrl(item.poster);
   } else {
     document.getElementById('rateGameTitle').textContent = '';
     document.getElementById('rateGamePoster').src =
-      'https://via.placeholder.com/300x400?text=Нет+постера';
+      window.Pupsik.posterUrl('https://via.placeholder.com/300x400?text=Нет+постера');
   }
   document.getElementById('rateGameModal').style.display = 'block';
   setRatingStars('rateGameStars', null);
@@ -3084,7 +3084,7 @@ function openEditModal(id) {
   document.getElementById('editGenre').value = movie.genre || '';
   document.getElementById('editMovieOrderBy').value = movie.orderBy || '';
   document.getElementById('editMovieOrderType').value = movie.orderType || '';
-  document.getElementById('editPosterPreview').src = movie.poster;
+  document.getElementById('editPosterPreview').src = window.Pupsik.posterUrl(movie.poster);
   document.getElementById('editPoster').value = '';
   editPosterData = null;
 
@@ -3265,7 +3265,7 @@ function openEditPlayedGameModal(id) {
   document.getElementById('editPlayedGameOrderBy').value = game.orderBy || '';
   document.getElementById('editPlayedGameOrderType').value =
     game.orderType || '';
-  preview.src = game.poster;
+  preview.src = window.Pupsik.posterUrl(game.poster);
   document.getElementById('editPlayedGamePoster').value = '';
   setRatingStars('editPlayedGameRatingStars', game.rating);
   setupRatingStars('editPlayedGameRatingStars');
@@ -4209,7 +4209,7 @@ async function saveDetailsEdit(key) {
       const posterEl = document.getElementById(config.posterEditor.imageId);
       if (posterEl) {
         posterEl.src =
-          record[config.posterEditor.localKey] || DEFAULT_POSTER_PLACEHOLDER;
+          window.Pupsik.posterUrl(record[config.posterEditor.localKey] || DEFAULT_POSTER_PLACEHOLDER);
       }
     }
 
@@ -5003,12 +5003,12 @@ function createPosterOverlay(
       img.onerror = () => {
         spinner.remove();
       };
-      img.src = thumbUrl;
+      img.src = window.Pupsik.posterUrl(thumbUrl);
       img.onclick = () => {
         if (syncGlobalSelection) {
           steamGridPoster = poster.url;
         }
-        targetImg.src = poster.url;
+        targetImg.src = window.Pupsik.posterUrl(poster.url);
         selectedPoster = poster.url;
         if (!onSelect && targetImg.id === 'editPlayedGamePosterPreview') {
           editPlayedGamePosterData = poster.url;
@@ -5021,7 +5021,7 @@ function createPosterOverlay(
               if (targetImg.id === 'editPlayedGamePosterPreview') {
                 editPlayedGamePosterData = optimized;
               }
-              if (targetImg.src === selection) {
+              if (targetImg.src === window.Pupsik.posterUrl(selection)) {
                 targetImg.src = optimized;
               }
             })

@@ -367,7 +367,7 @@ function renderHistory(list) {
     const posterWrap = document.createElement("span");
     posterWrap.className = "admin-player-history-item__poster";
     const poster = document.createElement("img");
-    poster.src = item.poster || "images/placeholder-poster.webp";
+    poster.src = window.Pupsik.posterUrl(item.poster || "images/placeholder-poster.webp");
     poster.alt = item.title ? `Постер: ${item.title}` : "Постер фильма";
     poster.loading = "lazy";
     posterWrap.appendChild(poster);
@@ -444,7 +444,7 @@ function renderRecentMovies(list) {
     const artwork = document.createElement("span");
     artwork.className = "admin-player-recent__artwork";
     const poster = document.createElement("img");
-    poster.src = item.poster || "images/placeholder-poster.webp";
+    poster.src = window.Pupsik.posterUrl(item.poster || "images/placeholder-poster.webp");
     poster.alt = "";
     poster.loading = "lazy";
     poster.addEventListener("error", () => {

@@ -99,7 +99,7 @@ function openUserRateModal(id) {
   userRatingMovieId = id;
   if (movie) {
     document.getElementById("userRateMovieTitle").textContent = movie.title;
-    document.getElementById("userRateMoviePoster").src = movie.poster;
+    document.getElementById("userRateMoviePoster").src = window.Pupsik.posterUrl(movie.poster);
     setRatingStars("userRateStars", null);
   }
   document.getElementById("userRateModal").style.display = "block";
@@ -117,7 +117,7 @@ function openUserRateGameModal(id) {
     const titleEl = document.getElementById("userRateGameTitle");
     if (titleEl) titleEl.textContent = game.title;
     const posterEl = document.getElementById("userRateGamePoster");
-    if (posterEl) posterEl.src = game.poster;
+    if (posterEl) posterEl.src = window.Pupsik.posterUrl(game.poster);
     setRatingStars("userRateGameStars", null);
   }
   const modal = document.getElementById("userRateGameModal");
@@ -147,7 +147,7 @@ function openUserRateModal(id) {
 
   if (movie) {
     document.getElementById("userRateMovieTitle").textContent = movie.title;
-    document.getElementById("userRateMoviePoster").src = movie.poster;
+    document.getElementById("userRateMoviePoster").src = window.Pupsik.posterUrl(movie.poster);
   }
 
   const modal = document.getElementById("userRateModal");
@@ -183,7 +183,7 @@ function openUserRateGameModal(id) {
     const titleEl = document.getElementById("userRateGameTitle");
     if (titleEl) titleEl.textContent = game.title;
     const posterEl = document.getElementById("userRateGamePoster");
-    if (posterEl) posterEl.src = game.poster;
+    if (posterEl) posterEl.src = window.Pupsik.posterUrl(game.poster);
   }
 
   const modal = document.getElementById("userRateGameModal");
@@ -282,7 +282,7 @@ function positionActorPhotoTooltip(event) {
 function showActorPhotoTooltip(event, actor) {
   if (!actor?.poster_url) return;
   const tooltip = ensureActorPhotoTooltip();
-  tooltip._image.src = actor.poster_url;
+  tooltip._image.src = window.Pupsik.posterUrl(actor.poster_url);
   tooltip._image.alt = actor.actor_name || "";
   tooltip._title.textContent = actor.actor_name || "";
   tooltip._subtitle.textContent = actor.profession_text || "";
@@ -1299,7 +1299,7 @@ function cleanupDetailsPosterEditor(key, { restorePoster = true } = {}) {
   }
 
   if (restorePoster && state.previewEl) {
-    state.previewEl.src = state.originalPoster || DEFAULT_POSTER_PLACEHOLDER;
+    state.previewEl.src = window.Pupsik.posterUrl(state.originalPoster || DEFAULT_POSTER_PLACEHOLDER);
   }
 
   detailsPosterEditState.delete(key);
@@ -1349,7 +1349,7 @@ function openMovieDetailsModal(id) {
   const posterEl = document.getElementById("movieDetailsPoster");
   if (posterEl) {
     const posterSrc = movie.poster || DEFAULT_POSTER_PLACEHOLDER;
-    posterEl.src = posterSrc;
+    posterEl.src = window.Pupsik.posterUrl(posterSrc);
     posterEl.alt = title ? `Постер: ${title}` : "Постер фильма";
     posterEl.onerror = () => {
       posterEl.src = DEFAULT_POSTER_PLACEHOLDER;
@@ -1518,7 +1518,7 @@ function renderGameDetailsModal(game, modal) {
   const posterEl = document.getElementById("gameDetailsPoster");
   if (posterEl) {
     const posterSrc = game.poster || DEFAULT_POSTER_PLACEHOLDER;
-    posterEl.src = posterSrc;
+    posterEl.src = window.Pupsik.posterUrl(posterSrc);
     posterEl.alt = title ? `Постер: ${title}` : "Постер игры";
     posterEl.onerror = () => {
       posterEl.src = DEFAULT_POSTER_PLACEHOLDER;
@@ -1853,7 +1853,7 @@ function renderOrderDetailsModal(order) {
   const posterEl = document.getElementById("orderDetailsPoster");
   if (posterEl) {
     const posterSrc = order.poster || DEFAULT_POSTER_PLACEHOLDER;
-    posterEl.src = posterSrc;
+    posterEl.src = window.Pupsik.posterUrl(posterSrc);
     posterEl.alt = title ? `Постер: ${title}` : "Постер фильма";
     posterEl.onerror = () => {
       posterEl.src = DEFAULT_POSTER_PLACEHOLDER;
@@ -2024,7 +2024,7 @@ function openGameOrderDetailsModal(id) {
   const posterEl = document.getElementById("gameOrderDetailsPoster");
   if (posterEl) {
     const posterSrc = game.poster || DEFAULT_POSTER_PLACEHOLDER;
-    posterEl.src = posterSrc;
+    posterEl.src = window.Pupsik.posterUrl(posterSrc);
     posterEl.alt = title ? `Постер: ${title}` : "Постер игры";
     posterEl.onerror = () => {
       posterEl.src = DEFAULT_POSTER_PLACEHOLDER;

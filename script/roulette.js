@@ -493,7 +493,7 @@ function showFortuneWinnerModal(label) {
   }
 
   if (fortuneWinnerPosterEl) {
-    fortuneWinnerPosterEl.src = resolveFortuneWinnerPoster(fortuneWinnerMovie);
+    fortuneWinnerPosterEl.src = window.Pupsik.posterUrl(resolveFortuneWinnerPoster(fortuneWinnerMovie));
     fortuneWinnerPosterEl.alt = fortuneWinnerMovie.displayText
       ? `Постер: ${fortuneWinnerMovie.displayText}`
       : 'Постер выигравшего фильма';

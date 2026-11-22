@@ -105,7 +105,7 @@ function createKpFallbackCard(film) {
   const poster = document.createElement("img");
   const title = film?.nameRu || film?.nameEn || "Без названия";
   poster.src =
-    film?.posterUrlPreview || film?.posterUrl || KP_FALLBACK_POSTER_PLACEHOLDER;
+    window.Pupsik.posterUrl(film?.posterUrlPreview || film?.posterUrl || KP_FALLBACK_POSTER_PLACEHOLDER);
   poster.alt = title;
   poster.loading = "lazy";
   poster.className = "kp-fallback-poster";
@@ -627,7 +627,7 @@ function createMovieCard(
   }
 
   const poster = document.createElement("img");
-  poster.src = movie.poster;
+  poster.src = window.Pupsik.posterUrl(movie.poster);
   poster.alt = movie.title;
   poster.className = "movie-poster";
   poster.loading = "lazy";
@@ -911,8 +911,8 @@ function showOrderPlayerSplash(order) {
   poster.hidden = false;
   poster.onerror = () => { poster.hidden = true; };
   backdrop.onerror = () => { backdrop.removeAttribute("src"); };
-  backdrop.src = fallback;
-  poster.src = fallback;
+  backdrop.src = window.Pupsik.posterUrl(fallback);
+  poster.src = window.Pupsik.posterUrl(fallback);
   status.textContent = "Подготовка плеера…";
 }
 
@@ -1373,7 +1373,7 @@ function createOrderCard(order, showActions = isAdmin, showOrderBy = true) {
   card.appendChild(infoBtn);
 
   const poster = document.createElement("img");
-  poster.src = order.poster;
+  poster.src = window.Pupsik.posterUrl(order.poster);
   poster.alt = order.title;
   poster.className = "order-poster";
   poster.loading = "lazy";
@@ -1744,7 +1744,7 @@ function createWatchlistOverviewCard(order) {
 
   const poster = document.createElement("img");
   poster.className = "watchlist-overview-card__poster";
-  poster.src = order.poster || KP_FALLBACK_POSTER_PLACEHOLDER;
+  poster.src = window.Pupsik.posterUrl(order.poster || KP_FALLBACK_POSTER_PLACEHOLDER);
   poster.alt = "";
   poster.loading = "lazy";
   poster.onerror = () => {
@@ -2005,7 +2005,7 @@ function createGameCard(game, showActions = isAdmin) {
   card.appendChild(infoBtn);
 
   const poster = document.createElement("img");
-  poster.src = game.poster;
+  poster.src = window.Pupsik.posterUrl(game.poster);
   poster.alt = game.title;
   poster.className = "order-poster";
   poster.loading = "lazy";
@@ -2437,7 +2437,7 @@ function createPlayedGameCard(
   }
 
   const poster = document.createElement("img");
-  poster.src = game.poster;
+  poster.src = window.Pupsik.posterUrl(game.poster);
   poster.alt = game.title;
   poster.className = "movie-poster";
   poster.loading = "lazy";

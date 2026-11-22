@@ -30,7 +30,7 @@ function setup() {
     ].map((id) => [id, new Element()])
   );
   const context = vm.createContext({
-    window: {},
+    window: { Pupsik: { posterUrl: (url) => url } },
     console,
     document: {
       getElementById: (id) => ids[id],
@@ -150,7 +150,10 @@ test('collapsed history does not create list cards or poster images', () => {
 test('recommendations load on a first visit without loading or caching the full list', async () => {
   const ui = setup();
   const requests = [];
-  ui.context.window.Pupsik = { apiUrl: (path) => path };
+  ui.context.window.Pupsik = {
+    apiUrl: (path) => path,
+    posterUrl: (url) => url,
+  };
   ui.context.fetch = async (url) => {
     requests.push(url);
     return {
@@ -171,7 +174,10 @@ test('recommendations load on a first visit without loading or caching the full 
 test('late recommendations cannot replace fresher full history or user changes', async () => {
   const ui = setup();
   let resolve;
-  ui.context.window.Pupsik = { apiUrl: (path) => path };
+  ui.context.window.Pupsik = {
+    apiUrl: (path) => path,
+    posterUrl: (url) => url,
+  };
   ui.context.fetch = () =>
     new Promise((done) => {
       resolve = done;

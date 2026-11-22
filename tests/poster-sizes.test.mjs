@@ -38,6 +38,7 @@ test('poster size filter uses available originals and selection saves the origin
   };
   const target = { parentElement: parent, src: '', id: 'preview' };
   const context = {
+    window: { Pupsik: { posterUrl: (url) => url } },
     document: { createElement: (tag) => new Element(tag) },
     steamGridPoster: null,
   };

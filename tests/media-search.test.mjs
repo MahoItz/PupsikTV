@@ -48,7 +48,7 @@ function setup(search) {
   const document = new Element();
   document.createElement = () => new Element();
   const context = {
-    window: {},
+    window: { Pupsik: { posterUrl: (url) => url } },
     document,
     console: { error() {} },
     setTimeout,
